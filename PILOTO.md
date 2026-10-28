@@ -26,6 +26,9 @@ puede entregar algo jugable y revisado con 2 intervenciones de Jorge o menos.
 - Paleta y tipografía de la skill moki-marca. Sin neón ni glow.
 - Juice con niveles Nada/Poquito/Mucho/Hardcore; sonido tras el primer gesto; movimiento reducido respetado.
 
+## Arte y animación (prioridad de Jorge)
+Tiene que verse bonito y agradable. El director de arte escribe ARTE.md antes de producir y aprueba cada hito visual. Ningún juego se cierra sin ARTE: APROBADO.
+
 ## Tecnología
 Phaser 3 + Vite, todo local, sin CDNs. Resultado estático en dist/. Funciona en celular y compu.
 
