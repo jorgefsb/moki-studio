@@ -4,7 +4,8 @@ export const CONFIG = {
   gravity: 2200, // px/s²
   jumpVelocity: 720, // px/s
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
-  jumpCutMultiplier: 0.62, // vy *= esto al soltar antes (toque rápido ≈55 px: libra la caja de 44; la de 64 pide mantener)
+  jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
+  jumpMinPx: 55, // altura mínima de un toque (libra la caja de 44 con holgura; la de 64 pide mantener)
   coyoteMs: 90,
   jumpBufferMs: 110,
 
@@ -25,11 +26,25 @@ export const CONFIG = {
   // Moki
   squashMax: 0.03,
 
-  // Escena (placeholders de T1)
-  world: { width: 960, height: 540, groundY: 440 },
-  player: { x: 190, width: 40, height: 56 },
+  // Escena: la banda jugable es 960x540 lógicos; en pantallas más altas el diorama se extiende arriba y abajo.
+  world: { width: 960, height: 540, groundY: 440, minVisibleWidth: 640 },
+  // Moki mide ~20% de la banda (ARTE.md sección 6); la caja de colisión es más chica que el dibujo.
+  player: { x: 190, width: 38, height: 92, spriteHeight: 110 },
   obstacleSizes: [
-    { width: 36, height: 44 },
-    { width: 44, height: 64 },
+    { key: 'caja', width: 48, height: 44 },
+    { key: 'torre', width: 48, height: 64 },
   ],
+  pickupSize: 30,
+
+  // Arte y animación (ARTE.md sección 10)
+  art: {
+    anticipationMs: 100, // squash de despegue
+    landingMs: 130, // squash y asentado al aterrizar
+    tiltMaxDeg: 6,
+    runBobPx: 2.5,
+    parallax: { clouds: 0.1, far: 0.3, mid: 0.6 },
+    checkpointLabelMs: 1600,
+    checkpointFlagMs: 280,
+    collectMs: 200,
+  },
 };

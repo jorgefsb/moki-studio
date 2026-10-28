@@ -1,21 +1,28 @@
+import '@fontsource/outfit/latin-700.css';
+import '@fontsource/inter/latin-400.css';
 import Phaser from 'phaser';
-import { CONFIG } from './config.js';
 import { RunScene } from './scenes/RunScene.js';
 
-const { width, height } = CONFIG.world;
+// Las fuentes se piden antes de crear el juego para que el HUD mida bien desde el primer cuadro.
+async function boot() {
+  try {
+    await Promise.all([document.fonts.load('700 22px Outfit'), document.fonts.load('400 16px Inter')]);
+  } catch (e) {
+    // sin fuentes sigue jugable con la de respaldo
+  }
 
-const game = new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  width,
-  height,
-  backgroundColor: '#e9dcc3',
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  scene: [RunScene],
-});
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    parent: 'game',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F4E8D5',
+    scale: { mode: Phaser.Scale.RESIZE },
+    scene: [RunScene],
+  });
 
-// Para probar desde la consola / capturas.
-window.__moki = game;
+  // Para probar desde la consola / capturas.
+  window.__moki = game;
+}
+
+boot();
