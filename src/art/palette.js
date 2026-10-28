@@ -24,10 +24,10 @@ export function rgba(hex, alpha) {
 
 export const TONE = {
   kraftLight: mix(PAL.kraft, PAL.paper, 0.35),
-  kraftFar: mix(PAL.kraft, PAL.paper, 0.5),
-  kraftMid: mix(PAL.kraft, PAL.paper, 0.2),
+  kraftFar: mix(PAL.kraft, PAL.paper, 0.55),
+  kraftMid: mix(PAL.kraft, PAL.paper, 0.32),
   kraftDark: mix(PAL.kraft, PAL.ink, 0.28),
-  kraftDanger: mix(PAL.kraft, PAL.ink, 0.16),
+  kraftDanger: mix(PAL.kraft, PAL.ink, 0.34), // peligro: cartón mucho más oscuro que el fondo
   cloud: mix(PAL.paper, '#FFFFFF', 0.45),
 };
 

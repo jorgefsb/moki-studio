@@ -42,6 +42,8 @@ export class RunScene extends Phaser.Scene {
     this.sky = a('paper', 0);
     this.skyGrad = this.add.image(0, 0, 'skyGrad').setOrigin(0, 0).setDepth(0.5);
     this.clouds = a('clouds', 1);
+    // Velo de papel en el borde superior: las nubes se desvanecen en vez de cortarse en seco.
+    this.topFade = this.add.image(0, 0, 'topFade').setOrigin(0, 0).setDepth(1.5);
     this.far = a('far', 2);
     this.mid = a('mid', 3);
     this.surface = a('groundSurface', 4);
@@ -50,8 +52,9 @@ export class RunScene extends Phaser.Scene {
     this.shade = this.add.image(0, 0, 'groundShade').setOrigin(0, 0).setDepth(4.1);
     this.folds = [];
 
-    this.mokiShadow = this.add.image(C.player.x, C.world.groundY, 'shadow').setDepth(9);
-    this.moki = this.add.image(C.player.x, C.world.groundY, 'moki').setDepth(12);
+    this.px = C.player.xMax;
+    this.mokiShadow = this.add.image(this.px, C.world.groundY, 'shadow').setDepth(9);
+    this.moki = this.add.image(this.px, C.world.groundY, 'moki').setDepth(12);
     // Nunca espejado: sin flipX ni escala negativa en ningún punto del código.
     this.mokiScale = C.player.spriteHeight / MOKI_PX_H;
 
@@ -122,6 +125,7 @@ export class RunScene extends Phaser.Scene {
     this.zoom = z;
     this.vw = W / z;
     this.vh = H / z;
+    this.px = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio));
     this.top = -Math.max(0, this.vh - C.world.height) * 0.6;
     this.bottom = this.top + this.vh;
 
@@ -133,6 +137,7 @@ export class RunScene extends Phaser.Scene {
     this.sky.setPosition(0, this.top).setSize(this.vw, this.vh);
     this.skyGrad.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
     this.clouds.setPosition(0, g - 900).setSize(this.vw, 900);
+    this.topFade.setPosition(0, this.top).setDisplaySize(this.vw, 56);
     this.far.setPosition(0, g + 12 - 300).setSize(this.vw, 300);
     this.mid.setPosition(0, g + 10 - 360).setSize(this.vw, 360);
     this.surface.setPosition(0, g - 8).setSize(this.vw, 22);
@@ -143,7 +148,7 @@ export class RunScene extends Phaser.Scene {
     this.folds.forEach((f) => f.destroy());
     this.folds = [];
     for (let y = g + 62; y < this.bottom; y += 120) {
-      this.folds.push(this.add.tileSprite(0, y, this.vw, 4, 'groundFold').setOrigin(0, 0).setDepth(4.2));
+      this.folds.push(this.add.tileSprite(0, y, this.vw, 6, 'groundFold').setOrigin(0, 0).setDepth(4.2));
     }
 
     const m = 16 / z;
@@ -230,7 +235,7 @@ export class RunScene extends Phaser.Scene {
       .image(x, C.world.groundY + 1, 'shadow')
       .setDepth(8)
       .setAlpha(alpha)
-      .setDisplaySize(w, 14);
+      .setDisplaySize(w, 18);
   }
 
   sway(sprite) {
@@ -242,8 +247,8 @@ export class RunScene extends Phaser.Scene {
   spawnObstacle() {
     const size = Phaser.Utils.Array.GetRandom(C.obstacleSizes);
     const x = this.vw + 80;
-    const sprite = this.add.image(x, C.world.groundY, size.key).setOrigin(0.5, 1).setDepth(10);
-    const shadow = this.addShadow(x + 6, size.width * 1.5, 0.3);
+    const sprite = this.add.image(x, C.world.groundY + 2, size.key).setOrigin(0.5, 1).setDepth(10);
+    const shadow = this.addShadow(x + 9, size.width * 1.45, 0.4); // sombra corta hacia abajo-derecha
     const o = {
       x,
       size,
@@ -284,7 +289,7 @@ export class RunScene extends Phaser.Scene {
   spawnCheckpoint() {
     const g = C.world.groundY;
     const x = this.vw + 120;
-    const shadow = this.addShadow(x + 8, 110, 0.3);
+    const shadow = this.addShadow(x + 10, 110, 0.38);
     const base = this.add.image(x, g + 2, 'cpBase').setOrigin(0.5, 1).setDepth(10);
     const pole = this.add.image(x, g - 20, 'cpPole').setOrigin(0.5, 1).setDepth(10);
     const flag = this.add.image(x + 4, g - 20 - 112 + 6, 'cpFlag').setOrigin(0, 0.5).setDepth(10.1).setScale(0.12, 1);
@@ -396,7 +401,7 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       o.x -= step;
       o.sprite.x = o.x;
-      o.shadow.x = o.x + 6;
+      o.shadow.x = o.x + 9;
       if (!o.entered && o.x < this.vw - 20) {
         o.entered = true;
         this.sway(o.sprite);
@@ -419,7 +424,7 @@ export class RunScene extends Phaser.Scene {
         this.tweens.add({ targets: cp.flag, scaleX: 1, duration: C.art.checkpointFlagMs, ease: 'Cubic.easeOut' });
       }
       if (cp.deployed && !this.reduced) cp.flag.y = g - 20 - 112 + 6 + Math.sin(this.t / 420) * 1.5;
-      if (!cp.passed && cp.x < C.player.x - 30) {
+      if (!cp.passed && cp.x < this.px - 30) {
         cp.passed = true;
         this.showBanner('Aprendizaje guardado', C.art.checkpointLabelMs);
       }
@@ -431,7 +436,7 @@ export class RunScene extends Phaser.Scene {
     this.checkpoints = this.checkpoints.filter((cp) => (cp.x < outX ? (cp.destroy(), false) : true));
 
     // Recoger piezas
-    const px = C.player.x;
+    const px = this.px;
     const half = C.pickupSize / 2 + C.player.width / 2 - 4;
     const top = this.y - C.player.height;
     for (const k of this.pickups) {
@@ -447,9 +452,9 @@ export class RunScene extends Phaser.Scene {
     const pt = this.y - ph;
     const pb = this.y - 2;
     for (const o of this.obstacles) {
-      const ol = o.x - o.size.width / 2 + 5;
-      const or = o.x + o.size.width / 2 - 5;
-      const ot = g - o.size.height + 5;
+      const ol = o.x - o.size.width / 2 + C.hitboxShrink.x;
+      const or = o.x + o.size.width / 2 - C.hitboxShrink.x;
+      const ot = g - o.size.height + C.hitboxShrink.top;
       if (pl < or && pl + pw > ol && pt < g && pb > ot) {
         this.dead = true;
         this.deadFor = 0;
@@ -480,7 +485,7 @@ export class RunScene extends Phaser.Scene {
     const n = Phaser.Math.Between(3, 5);
     for (let i = 0; i < n; i++) {
       const chip = this.add
-        .image(C.player.x - 10 + Math.random() * 16, g - 2, i % 2 ? 'chipKraft' : 'chipPaper')
+        .image(this.px - 10 + Math.random() * 16, g - 2, i % 2 ? 'chipKraft' : 'chipPaper')
         .setDepth(13)
         .setAngle(Math.random() * 360);
       const up = 10 + Math.random() * 14;
@@ -508,7 +513,8 @@ export class RunScene extends Phaser.Scene {
 
       let target = 0;
       if (!grounded) {
-        target = this.vy < 0 ? -A.tiltMaxDeg * Math.min(1, -this.vy / C.jumpVelocity) : A.tiltMaxDeg * Math.min(1, this.vy / 700);
+        // Siempre hacia adelante (en sentido horario): 4° al subir, hasta 6° al caer.
+        target = this.vy < 0 ? A.tiltRiseDeg : A.tiltRiseDeg + (A.tiltMaxDeg - A.tiltRiseDeg) * Math.min(1, this.vy / 700);
       }
       this.tilt += (target - this.tilt) * Math.min(1, dt * 14);
       tilt = this.tilt;
@@ -525,14 +531,14 @@ export class RunScene extends Phaser.Scene {
     const h = C.player.spriteHeight * sy;
     this.moki.setScale(k * sx, k * sy);
     this.moki.setAngle(tilt);
-    this.moki.setPosition(C.player.x, this.y + bob - h / 2 + 2);
+    this.moki.setPosition(this.px, this.y + bob - h / 2 + 2);
 
     // Sombra de contacto: siempre presente; marca la altura del salto.
     const air = Math.max(0, g - this.y);
     const f = 1 / (1 + air / 150);
     const widen = 1 + squash * 6;
-    this.mokiShadow.setPosition(C.player.x + 5, g + 1);
-    this.mokiShadow.setDisplaySize(86 * (0.5 + 0.5 * f) * widen, 16 * (0.6 + 0.4 * f));
+    this.mokiShadow.setPosition(this.px + 8, g + 1);
+    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * widen, 22 * (0.6 + 0.4 * f));
     this.mokiShadow.setAlpha(0.28 * (0.4 + 0.6 * f) * (grounded && bob < -1 ? 0.92 : 1));
   }
 

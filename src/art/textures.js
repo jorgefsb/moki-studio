@@ -164,11 +164,13 @@ const ground = {
     return c;
   },
   fold() {
-    const [c, x] = mk(256, 4);
-    x.fillStyle = rgba(PAL.border, 0.7);
-    x.fillRect(0, 1, 256, 1.5);
-    x.fillStyle = rgba(PAL.paper, 0.3);
-    x.fillRect(0, 2.5, 256, 1);
+    const [c, x] = mk(256, 6);
+    x.fillStyle = rgba(PAL.ink, 0.22);
+    x.fillRect(0, 1, 256, 2);
+    x.fillStyle = rgba(PAL.border, 0.8);
+    x.fillRect(0, 2, 256, 1.5);
+    x.fillStyle = rgba(PAL.paper, 0.4);
+    x.fillRect(0, 3.5, 256, 1.5);
     return c;
   },
 };
@@ -179,7 +181,7 @@ function shadowTex() {
   x.scale(1, 0.25);
   const g = x.createRadialGradient(0, 0, 0, 0, 0, 64);
   g.addColorStop(0, rgba(PAL.ink, 1));
-  g.addColorStop(0.55, rgba(PAL.ink, 0.75));
+  g.addColorStop(0.7, rgba(PAL.ink, 0.85));
   g.addColorStop(1, rgba(PAL.ink, 0));
   x.fillStyle = g;
   x.fillRect(-64, -64, 128, 128);
@@ -219,7 +221,7 @@ function cloudsLayer() {
     }
   };
   for (let i = 0; i < 10; i++) place((i + 0.5) * (WRAP / 10) + (r() - 0.5) * 80, 500 + r() * 300, 22 + r() * 22);
-  for (let i = 0; i < 8; i++) place((i + 0.5) * (WRAP / 8) + (r() - 0.5) * 120, 60 + r() * 420, 20 + r() * 20);
+  for (let i = 0; i < 8; i++) place((i + 0.5) * (WRAP / 8) + (r() - 0.5) * 120, 60 + r() * 320, 20 + r() * 20);
   return c;
 }
 
@@ -267,13 +269,10 @@ function farLayer() {
       cut(x, (g) => g.roundRect(hx + w / 2 - 7, base - 26, 14, 26, 2), { ...edge, fill: mix(fill, PAL.paper, 0.4), shadow: null });
     });
   });
-  // pilas de cajas
+  // arbustos redondos (nada de cajas: no se confunden con los obstáculos del plano de juego)
   [400, 880, 1340, 1790].forEach((bx, i) => {
-    const base = H - 30;
-    each(() => {
-      cut(x, (g) => g.roundRect(bx, base - 34, 44, 34, 3), edge);
-      cut(x, (g) => g.roundRect(bx + 8 + i * 2, base - 62, 36, 28, 3), edge);
-    });
+    const path = hillPath(bx, bx + 96 + i * 8, H + 4, 30 + i * 3, r);
+    each(() => cut(x, path, edge));
   });
   return c;
 }
@@ -333,22 +332,10 @@ function midLayer() {
       cut(x, (g) => g.roundRect(px - 26, base - 160, 52, 7, 2), edge(TONE.kraftDark));
     });
   });
-  // pilas de libros
+  // arbustos de cartón (redondeados, claros): sin pilas de cajas/libros pegadas al suelo
   [740, 1580].forEach((bx, i) => {
-    const tones = [PAL.kraft, mix(PAL.kraft, PAL.paper, 0.45), mix(PAL.border, PAL.paper, 0.25), mix(PAL.kraft, PAL.ink, 0.18)];
-    let y = base;
-    for (let k = 0; k < 4; k++) {
-      const bw = 78 - k * 6 + (i * 6) % 10;
-      const bh = 16 + ((k * 5) % 7);
-      const ox = bx + ((k * 7 + i * 5) % 12) - 6;
-      y -= bh;
-      const yy = y;
-      each(() => {
-        cut(x, (g) => g.roundRect(ox, yy, bw, bh, 3), edge(tones[k % tones.length]));
-        x.fillStyle = rgba(PAL.paper, 0.35);
-        x.fillRect(ox + 8, yy + bh / 2 - 1, 18, 2);
-      });
-    }
+    const path = hillPath(bx, bx + 120 + i * 20, base + 4, 40 + i * 6, r);
+    each(() => cut(x, path, edge(mix(TONE.kraftMid, PAL.ink, 0.06))));
   });
   return c;
 }
@@ -378,29 +365,29 @@ function block(x, ox, oy, w, h, { body, tape, seed }) {
   x.clip();
   fibers(x, W, H, r, { count: 90, color: PAL.ink, alpha: 0.1 });
   fibers(x, W, H, r, { count: 70, color: PAL.paper, alpha: 0.2 });
-  // tapa: borde claro + canto de 5 px más oscuro
+  // tapa: borde claro + canto de 6 px más oscuro (ARTE: 4 a 6 px en el plano de juego)
   x.fillStyle = mix(body, PAL.paper, 0.32);
   x.fillRect(ox, oy, w, 3);
   x.fillStyle = mix(body, PAL.ink, 0.34);
-  x.fillRect(ox, oy + 3, w, 5);
+  x.fillRect(ox, oy + 3, w, 6);
   // pliegue central
   x.strokeStyle = rgba(PAL.border, 0.65);
   x.lineWidth = 1.5;
   x.beginPath();
-  x.moveTo(ox + w * 0.62, oy + 8);
+  x.moveTo(ox + w * 0.62, oy + 9);
   x.lineTo(ox + w * 0.62, oy + h);
   x.stroke();
   x.strokeStyle = rgba(PAL.paper, 0.25);
   x.beginPath();
-  x.moveTo(ox + w * 0.62 + 1.5, oy + 8);
+  x.moveTo(ox + w * 0.62 + 1.5, oy + 9);
   x.lineTo(ox + w * 0.62 + 1.5, oy + h);
   x.stroke();
   x.fillStyle = rgba(PAL.ink, 0.16);
   x.fillRect(ox, oy + h - 4, w, 4);
   // cinta naranja
   if (tape) {
-    const tx = ox + w * 0.18;
-    const tw = 15;
+    const tx = ox + w * 0.16;
+    const tw = Math.round(w * 0.26);
     const th = h * 0.7;
     x.fillStyle = PAL.accent;
     x.beginPath();
@@ -424,20 +411,21 @@ function block(x, ox, oy, w, h, { body, tape, seed }) {
   x.restore();
 }
 
+// Los dibujos miden 4 px más que la caja de juego (contorno claro de 2 px por lado).
 function caja() {
-  const [c, x] = mk(52, 48);
-  block(x, 2, 2, 48, 44, { body: TONE.kraftDanger, tape: true, seed: 41 });
+  const [c, x] = mk(64, 60);
+  block(x, 2, 2, 60, 56, { body: TONE.kraftDanger, tape: true, seed: 41 });
   return c;
 }
 
 function torre() {
-  const [c, x] = mk(52, 68);
-  block(x, 2, 34, 48, 32, { body: TONE.kraftDanger, tape: true, seed: 42 });
+  const [c, x] = mk(64, 88);
+  block(x, 2, 44, 60, 42, { body: TONE.kraftDanger, tape: true, seed: 42 });
   x.save();
-  x.translate(26, 34);
+  x.translate(32, 44);
   x.rotate(-0.026);
-  x.translate(-26, -34);
-  block(x, 3, 2, 46, 32, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
+  x.translate(-32, -44);
+  block(x, 3, 2, 58, 42, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
   x.restore();
   return c;
 }
@@ -573,6 +561,7 @@ export function buildTextures(scene) {
   add('paper', paperTile());
   add('kraft', kraftTile());
   add('skyGrad', gradient(2, 320, [[0, rgba(PAL.kraft, 0)], [0.55, rgba(PAL.kraft, 0.06)], [1, rgba(PAL.kraft, 0.26)]]));
+  add('topFade', gradient(2, 64, [[0, rgba(PAL.paper, 1)], [1, rgba(PAL.paper, 0)]]));
   add('groundShade', gradient(2, 256, [[0, rgba(PAL.ink, 0)], [1, rgba(PAL.ink, 0.34)]]));
   add('groundSurface', ground.surface());
   add('groundCanto', ground.canto());
