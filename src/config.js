@@ -4,7 +4,7 @@ export const CONFIG = {
   gravity: 2200, // px/s²
   jumpVelocity: 720, // px/s
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
-  jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
+  jumpCutMultiplier: 0.62, // vy *= esto al soltar antes (toque rápido ≈55 px: libra la caja de 44; la de 64 pide mantener)
   coyoteMs: 90,
   jumpBufferMs: 110,
 
