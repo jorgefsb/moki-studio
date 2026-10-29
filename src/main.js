@@ -25,6 +25,9 @@ async function boot() {
   const q = new URLSearchParams(window.location.search);
   if (import.meta.env.DEV || q.has('debug') || q.get('anim') === 'debug') {
     game.moki = {
+      // Bots de DISENO ('tap' | 'hold' | 'adjust') y tabla de alturas de salto; módulo aparte, solo en depuración.
+      bot: (kind, maxSec) => import('./debug/bots.js').then((m) => m.runBot(game.scene.scenes[0], kind, maxSec)),
+      jumpTable: () => import('./debug/bots.js').then((m) => m.jumpTable()),
       // Estado para que el probador mida sin adivinar: demo activo, pantalla actual y ángulos del títere.
       state() {
         const s = game.scene.scenes[0];

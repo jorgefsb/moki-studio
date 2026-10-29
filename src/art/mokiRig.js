@@ -208,7 +208,7 @@ function deadTarget(tMs) {
   const a = clamp((tMs - C.art.hitStopMs) / 220, 0, 1);
   const e = easeOutCubic(a);
   // Botas separadas (cercana adelante, lejana atrás) para leer "se atoró"
-  return { nT: lerp(30, 42, e), nR: 0, nB: -6 * e, fT: lerp(-20, -28, e), fR: 4 * e, fB: 8 * e, dy: 8 * e, tilt: lerp(3, C.art.tiltMaxDeg, e) };
+  return { nT: lerp(30, 46, e), nR: 0, nB: -8 * e, fT: lerp(-20, -33, e), fR: 4 * e, fB: 10 * e, dy: 9.5 * e, tilt: lerp(3, C.art.tiltMaxDeg, e) };
 }
 
 // ---------- El rig ----------

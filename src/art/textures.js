@@ -720,16 +720,21 @@ function groundPiece(kind, seed) {
   x.lineWidth = 1.5;
   x.lineJoin = 'round';
   if (kind === 'grass') {
-    const blades = 6 + Math.floor(r() * 4);
+    // papel de punta redonda, apenas más oscuro que el suelo y de la mitad de alto (nada de púas)
+    const soft = mix(PAL.kraft, PAL.ink, 0.17);
+    const softer = mix(PAL.kraft, PAL.ink, 0.1);
+    const blades = 5 + Math.floor(r() * 3);
     for (let i = 0; i < blades; i++) {
-      const bx = 6 + (i / (blades - 1)) * (W - 12);
-      const h = 14 + r() * 18;
-      const lean = (r() - 0.5) * 12;
-      x.fillStyle = i % 2 ? dark : mid;
+      const bx = 8 + (i / (blades - 1)) * (W - 16);
+      const h = 7 + r() * 7;
+      const lean = (r() - 0.5) * 5;
+      const bw = 4.2;
+      x.fillStyle = i % 2 ? soft : softer;
       x.beginPath();
-      x.moveTo(bx - 2.6, H - 5);
-      x.quadraticCurveTo(bx + lean * 0.4, H - 5 - h * 0.6, bx + lean, H - 5 - h);
-      x.quadraticCurveTo(bx + lean * 0.5 + 2.4, H - 5 - h * 0.5, bx + 2.6, H - 5);
+      x.moveTo(bx - bw, H - 6);
+      x.lineTo(bx - bw + lean * 0.4, H - 6 - h);
+      x.arc(bx + lean, H - 6 - h, bw, Math.PI, 0, false); // punta redonda
+      x.lineTo(bx + bw, H - 6);
       x.closePath();
       x.fill();
     }

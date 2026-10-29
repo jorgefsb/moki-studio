@@ -618,7 +618,7 @@ export class RunScene extends Phaser.Scene {
     const pick = () => `gp-${kinds[this.fgPick % kinds.length]}${(this.fgPick++ >> 1) % 3}`;
     const x = this.vw + 90;
     if (this.t >= this.fgNext) {
-      this.fgNext = this.t + F.minGapSec * 170 + Math.random() * 600;
+      this.fgNext = this.t + F.minGapSec * 70 + Math.random() * 360; // 3 a 4 piezas repartidas a la vista en 1280
       const sprite = this.add.image(x, 0, pick()).setOrigin(0.5, 1).setDepth(20);
       // la pieza queda dentro de los 40 px de abajo: su borde superior no sube de bottom-40
       const yMin = this.bottom - 40 + sprite.height;
@@ -976,7 +976,9 @@ export class RunScene extends Phaser.Scene {
     const o = this.obstacles.find((q) => !q.handled && q.x > this.px - 4 && (q.plan === 'tap' || q.plan === 'hold'));
     if (!o) return;
     const kind = o.plan;
-    const lead = airTravel(kind, this.speed) / 2 + this.speed * 0.07;
+    // Dos cajas pegadas (CC): un salto largo centrado en el par
+    const pair = this.obstacles.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;
+    const lead = airTravel(kind, this.speed) / 2 + this.speed * 0.07 - pair; // despega más tarde: el apex cae en el centro del par
     if (o.x - this.px <= lead && this.grounded) {
       o.handled = true;
       this.press();
