@@ -3,7 +3,7 @@
 globalThis.__JORGE_INTERVENTIONS__ = 0;
 const { GAME_LEVEL } = await import('../src/tramos.js');
 const { validateLevel } = await import('../src/niveles/validar.js');
-const { generarNivel } = await import('../src/niveles/generar.js');
+const { generarNivel, filasPiezas } = await import('../src/niveles/generar.js');
 
 console.log('clasico', validateLevel(GAME_LEVEL), validateLevel(GAME_LEVEL, 'tap').sec, validateLevel(GAME_LEVEL, 'hold').tramo);
 
@@ -22,6 +22,8 @@ let minClear = Infinity;
 const tapAt = [];
 const holdTramo = {};
 const uso = {};
+const filas = [];
+let jitFail = 0;
 for (const s of seeds) {
   const L = generarNivel(s);
   fb += L.fallbacks.length;
@@ -34,13 +36,18 @@ for (const s of seeds) {
   const h = validateLevel(L, 'hold');
   if (h.ok) bad.push([s, 'hold termina']);
   else holdTramo[h.tramo] = (holdTramo[h.tramo] || 0) + 1;
-  // uso de sorpresas/bloques: firma del guion por tramo
-  L.tramos.forEach((tr) => tr.script.forEach(([, c]) => (uso[c] = (uso[c] || 0) + 1)));
+  for (const j of [-40, 40]) {
+    const r = validateLevel(L, null, j);
+    if (!r.ok || r.minClear < 4) jitFail++;
+  }
+  L.tramos.forEach((tr) => filas.push(filasPiezas(tr.script)));
+  L.bloques.forEach((ids) => ids.forEach((id) => (uso[id] = (uso[id] || 0) + 1)));
 }
 // mismo seed = mismo nivel
 const same = JSON.stringify(generarNivel('2026-10-29').entities) === JSON.stringify(generarNivel('2026-10-29').entities);
 const diff = JSON.stringify(generarNivel('2026-10-29').entities) !== JSON.stringify(generarNivel('2026-10-30').entities);
-console.log({ niveles: seeds.length, fallos: bad.length, respaldoTramos: fb, holguraMinPx: minClear, tapMuereSeg: [Math.min(...tapAt), Math.max(...tapAt)], holdMuereEnTramo: holdTramo, mismaSemillaMismoNivel: same, otraFechaOtroNivel: diff });
+filas.sort((a, b) => a - b);
+console.log({ niveles: seeds.length, fallosConJitter40: jitFail, filasPiezasPorPagina: { media: +(filas.reduce((a, b) => a + b, 0) / filas.length).toFixed(3), max: +filas[filas.length - 1].toFixed(3) }, fallos: bad.length, respaldoTramos: fb, holguraMinPx: minClear, tapMuereSeg: [Math.min(...tapAt), Math.max(...tapAt)], holdMuereEnTramo: holdTramo, mismaSemillaMismoNivel: same, otraFechaOtroNivel: diff });
 if (bad.length) console.log(bad.slice(0, 10));
-console.log('codigos', uso);
-process.exit(bad.length || !same || !diff ? 1 : 0);
+console.log('bloques (veces en todos los niveles)', Object.fromEntries(Object.entries(uso).sort((a, b) => b[1] - a[1])));
+process.exit(bad.length || jitFail || fb || !same || !diff ? 1 : 0);

@@ -35,6 +35,5 @@ export const BLOQUES = [
 
 // Especiales (no se sortean)
 export const T1_INTRO = [[2.5, 'C+A3'], [5, 'C'], [7.5, 'T+A3up'], [10, 'P5']]; // T1 0-12 s, absoluto: el tutorial depende de esto
-export const RELLENO = (dur) => ({ id: 'relleno', dur, ev: [[0, 'P5']], dif: 1, tags: ['descanso'] }); // 1.5 a 4.5 s
 
 export const SORPRESAS = { 1: [['regalo7', 1]], 2: [['ambar', 2], ['regalo-ambar', 1]], 3: [['viga-arco', 2], ['regalo-ambar', 1]], 4: [['ola', 3], ['viga-arco', 1]] };

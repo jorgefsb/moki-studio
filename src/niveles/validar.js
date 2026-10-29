@@ -17,7 +17,8 @@ function box(type) {
 
 // level: salida de buildLevel. Devuelve { ok, sec, tramo, cause, D, minClear } (minClear: px de holgura más justa).
 // force: 'tap' | 'hold' juega todo con ese salto (prueba del instrumento: el de solo toque debe morir en la primera torre).
-export function validateLevel(level, force = null) {
+// jitterMs: el bot despega ese tanto antes (-) o después (+) del punto ideal (NIVELES: todo se libra con ±40 ms).
+export function validateLevel(level, force = null, jitterMs = 0) {
   const obs = level.entities.filter((e) => e.kind === 'obs').map((e) => ({ ...e, box: box(e.type), handled: false }));
   const pw = C.player.width - 6;
   const ph = C.player.height - 6;
@@ -48,7 +49,7 @@ export function validateLevel(level, force = null) {
       if (o) {
         const pair = obs.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;
         const plan = force || o.plan;
-        if (o.D - dist <= airTravel(plan, speed) / 2 - pair) {
+        if (o.D - dist <= airTravel(plan, speed) / 2 - pair - (jitterMs / 1000) * speed) {
           o.handled = true;
           jump = { t0: t, pts: simulateJump(HOLD_MS[plan]).pts };
         }
