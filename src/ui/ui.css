@@ -105,3 +105,7 @@
 .ui-card.compact .ui-pill, .ui-card.compact .ui-btn { margin-top: 8px; }
 
 @media (prefers-reduced-motion: reduce) { .ui-demo { animation: none; } }
+
+.ui-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ui-head .ui-tag { margin: 0; flex: none; }
+.ui-head h2 { margin-bottom: 4px; }

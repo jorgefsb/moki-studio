@@ -20,7 +20,8 @@ export function simulateJump(holdMs) {
     if (!released && t * 1000 >= holdMs) {
       released = true;
       if (jumping && vy < 0 && t * 1000 < C.jumpHoldMaxMs) {
-        let cut = vy * C.jumpCutMultiplier;
+        const f = Math.min(1, Math.max(0, (t * 1000 - C.jumpHoldRamp.fromMs) / (C.jumpHoldRamp.toMs - C.jumpHoldRamp.fromMs)));
+        let cut = vy * (C.jumpCutMultiplier + (1 - C.jumpCutMultiplier) * f);
         if (rise + (cut * cut) / (2 * C.gravity) < C.jumpMinPx) cut = -Math.sqrt(2 * C.gravity * (C.jumpMinPx - rise));
         vy = Math.max(vy, cut);
         jumping = false;

@@ -161,8 +161,10 @@ export function createUI() {
       scrim.style.background = 'rgba(34,33,31,0.18)';
       const card = el('div', rect.compact ? 'ui-card compact' : 'ui-card');
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto' });
-      card.append(el('h2', '', t('end.title')));
-      if (d.isNew) card.append(el('span', 'ui-tag', t('end.new')));
+      const head = el('div', 'ui-head');
+      head.append(el('h2', '', t('end.title')));
+      if (d.isNew) head.append(el('span', 'ui-tag', t('end.new')));
+      card.append(head);
       const rows = el('dl', 'ui-rows');
       const row = (k, v) => {
         rows.append(el('dt', '', k), el('dd', '', v));

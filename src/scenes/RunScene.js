@@ -426,7 +426,10 @@ export class RunScene extends Phaser.Scene {
     // Tap: si suelta pronto mientras sube, recorta el salto.
     if (this.jumping && this.vy < 0 && this.t - this.jumpStartAt < C.jumpHoldMaxMs) {
       const rise = C.world.groundY - this.y;
-      let cut = this.vy * C.jumpCutMultiplier;
+      // Entre fromMs y toMs el corte se afloja hasta 1 (salto completo): 120 ms de mantener ya libra la torre
+      const held = this.t - this.jumpStartAt;
+      const f = clamp((held - C.jumpHoldRamp.fromMs) / (C.jumpHoldRamp.toMs - C.jumpHoldRamp.fromMs), 0, 1);
+      let cut = this.vy * (C.jumpCutMultiplier + (1 - C.jumpCutMultiplier) * f);
       // Un toque rápido nunca baja de jumpMinPx de altura.
       if (rise + (cut * cut) / (2 * C.gravity) < C.jumpMinPx) cut = -Math.sqrt(2 * C.gravity * (C.jumpMinPx - rise));
       this.vy = Math.max(this.vy, cut);
@@ -1030,7 +1033,7 @@ export class RunScene extends Phaser.Scene {
         if (tut.state === 'decel') tut.state = 'stopped';
         // no pasa de la distancia ideal aunque se haya perdido un cuadro
         const gap = tut.obs.x - this.px - tut.stopDist;
-        if (gap < 0) out.shift = gap;
+        if (gap < 0) out.shift = -gap; // positivo: updateRun hace dist -= shift, que aleja la caja; con el signo al revés el desvío crecía cada cuadro
       }
       this.stepTutHand();
     } else if (tut.state === 'rewind') {
