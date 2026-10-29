@@ -178,13 +178,18 @@ function makeRunner(G, theta0, roll) {
 function airTarget(vy, tMs) {
   const r = clamp(-vy / 720, 0, 1);
   const f = clamp(vy / 700, 0, 1);
+  // Estirón (FEEL.md, director): con juice la cadera pasa del agachón a +3% de estirón a los 80 ms (el salto ya salió
+  // en el cuadro del toque) y regresa a -2 px a los 150 ms. Con Nada, la anticipación de siempre.
+  const S = C.art.squashPx;
+  const stretch = C.juice >= 1;
   if (tMs < 90 && vy <= 0) {
     const a = tMs / 90;
-    return { nT: lerp(32, 14, a), nR: 3 * a, nB: 0, fT: lerp(-26, -14, a), fR: 3 * a, fB: 0, dy: C.art.squashPx * Math.sin(Math.PI * a), tilt: lerp(3, 0, a) };
+    const dy = stretch ? lerp(S, -S, easeOutCubic(clamp(tMs / 80, 0, 1))) : S * Math.sin(Math.PI * a);
+    return { nT: lerp(32, 14, a), nR: 3 * a, nB: 0, fT: lerp(-26, -14, a), fR: 3 * a, fB: 0, dy, tilt: lerp(3, 0, a) };
   }
   if (tMs < 150 && vy < 0) {
     const a = (tMs - 90) / 60;
-    return { nT: lerp(14, 28, a), nR: 0, nB: 8 * a, fT: lerp(-14, -22, a), fR: 2 * a, fB: 4 * a, dy: -2 * a, tilt: lerp(0, 2, a) };
+    return { nT: lerp(14, 28, a), nR: 0, nB: 8 * a, fT: lerp(-14, -22, a), fR: 2 * a, fB: 4 * a, dy: stretch ? lerp(-S, -2, a) : -2 * a, tilt: lerp(0, 2, a) };
   }
   if (vy < -120) {
     return { nT: 38, nR: 6, nB: lerp(12, 18, r), fT: -22, fR: 4, fB: lerp(8, 14, r), dy: lerp(-1, -2, r), tilt: 2 + r };
@@ -213,6 +218,9 @@ function deadTarget(dm) {
   const e = easeOutCubic(clamp((dm - 140) / 140, 0, 1));
   const out = {};
   for (const key of Object.keys(A)) out[key] = lerp(A[key], B[key], e);
+  // Doblez de papel (FEEL.md, director): con juice el cuerpo se dobla hasta 6° en 120 ms y se asienta los 180 ms
+  // siguientes con la sentadilla de siempre. Solo cambia la inclinación; con Nada queda el tropiezo aprobado (T3b3).
+  if (C.juice >= 1) out.tilt = dm < 120 ? C.art.tiltMaxDeg * easeOutCubic(clamp(dm / 120, 0, 1)) : C.art.tiltMaxDeg;
   return out;
 }
 

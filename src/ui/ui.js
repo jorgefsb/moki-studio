@@ -2,7 +2,10 @@
 import './ui.css';
 import { CONFIG as C } from '../config.js';
 import { t } from '../i18n.js';
+import { feel, JUICE_NAMES } from '../feel.js';
 import { EMBED } from '../embed.js';
+
+const reducedMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -60,9 +63,14 @@ export function createUI() {
       state.demo = d;
     },
     hideDemo() {
-      if (state.demo) state.demo.remove();
+      // Al dar Jugar la leyenda se va hacia abajo en 140 ms en vez de desaparecer en seco
+      const d = state.demo;
       state.demo = null;
       ui.hideModo();
+      if (!d) return;
+      if (reducedMQ.matches || feel.level === 0) return d.remove();
+      d.classList.add('out');
+      setTimeout(() => d.remove(), 150);
     },
 
     // Modo de la partida en el título (NIVELES.md §7): un toque al chip alterna Reto del día / Libre; el resto de la pantalla sigue arrancando.
@@ -130,13 +138,18 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect }, onGo) {
+    showFail({ hint, meta, prompt, rect, isNew }, onGo) {
       ui.hideFail();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'transparent';
       const card = el('div', 'ui-card compact ui-fail');
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, opacity: '0', transform: 'translateY(18px)', transition: 'opacity 250ms ease-out, transform 250ms ease-out' });
-      card.append(el('h2', '', hint));
+      if (isNew) {
+        // Nueva mejor marca también al fallar: la etiqueta brinca con el stinger (popRecord)
+        const head = el('div', 'ui-head');
+        head.append(el('h2', '', hint), el('span', 'ui-tag', t('end.new')));
+        card.append(head);
+      } else card.append(el('h2', '', hint));
       if (meta) card.append(el('p', 'meta', meta));
       const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
@@ -162,9 +175,22 @@ export function createUI() {
         card.style.transform = 'translateY(0)';
       });
     },
+    // Nueva mejor marca: la etiqueta brinca y el borde de la tarjeta destella en naranja (sin glow)
+    popRecord() {
+      const card = (state.fail && state.fail.card) || (state.final && state.final.card);
+      if (!card) return;
+      const tag = card.querySelector('.ui-tag');
+      [tag, card].forEach((n) => {
+        if (!n) return;
+        n.classList.remove('pop');
+        void n.offsetWidth; // reinicia la animación
+        n.classList.add('pop');
+      });
+    },
     unlockFail() {
       if (!state.fail) return;
       state.fail.pill.disabled = false;
+      state.fail.pill.classList.add('ready');
       state.fail.pill.focus({ preventScroll: true });
     },
     hideFail() {
@@ -183,7 +209,13 @@ export function createUI() {
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
       const card = el('div', rect.compact ? 'ui-card compact' : 'ui-card');
-      Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto' });
+      // Entra igual que la tarjeta de fallo: sube 18 px con fundido de 250 ms
+      const still = reducedMQ.matches || feel.level === 0;
+      Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto', opacity: '0', transform: still ? 'none' : 'translateY(18px)', transition: still ? 'opacity 150ms ease-out' : 'opacity 250ms ease-out, transform 250ms ease-out' });
+      requestAnimationFrame(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      });
       const head = el('div', 'ui-head');
       head.append(el('h2', '', t('end.title')));
       if (d.isNew) head.append(el('span', 'ui-tag', t('end.new')));
@@ -214,7 +246,7 @@ export function createUI() {
       again.addEventListener('click', onAgain);
       how.addEventListener('click', onHow);
       primary = onAgain;
-      state.final = { scrim, primary: onAgain };
+      state.final = { scrim, card, primary: onAgain };
       again.focus({ preventScroll: true });
     },
     hideFinal() {
@@ -281,9 +313,18 @@ export function createUI() {
         snd.setAttribute('aria-pressed', String(ui.soundOn));
       });
       state.pauseSound = snd;
+      // Efectos (UX §5): cicla Nada / Poquito / Mucho, y Hardcore cuando ya llegaste a la meta
+      const juiceText = () => t('pause.juice', { n: t(`juice.${JUICE_NAMES[feel.level]}`) });
+      const jz = el('button', 'ui-btn secondary', juiceText());
+      jz.type = 'button';
+      jz.addEventListener('click', () => {
+        feel.cycle();
+        jz.textContent = juiceText();
+        feel.buzz(12, 2);
+      });
       resume.addEventListener('click', onResume);
       home.addEventListener('click', onHome);
-      stack.append(resume, snd, home);
+      stack.append(resume, snd, jz, home);
       card.append(stack);
       scrim.append(card);
       root.appendChild(scrim);
