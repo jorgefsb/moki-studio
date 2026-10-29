@@ -93,7 +93,15 @@ Base: AUDIO.md y el tema "Un saltito más" (96 BPM, Web Audio). Pico de sesión 
 | estudio-lider | master | Merges, bitácora, congelado |
 | Director | — | Gauntlet a ciegas por pieza; luz y atmósfera (si sobra tiempo, a la rama base) |
 
-### Siguientes 2 semanas
+### Resultado del sprint (congelado 50cfe1d, REPORTE-SPRINT.md)
+Entró: Reto del día y Libre con bloques y semilla (clásico intacto), papeles por página, celular vertical C y modo embed, feel 1 y 2 (doblez de choque, juice por niveles), tarjeta de fallo de una línea. QA final: PASA lo medido. **No medido:** 60 fps y carga <3 s (la máquina estuvo en AMARILLO/ROJO todo el sprint). **Se cayó:** sol, cordillera y atmósfera (gauntlet R1 sin mejora; la noche la rechazó arte y el contraste se midió con un instrumento que incluía posiciones fuera del lienzo).
+
+### Siguientes 2 semanas, en este orden
+1. **Instrumento primero:** `moki.contrast` mide solo posiciones dentro del lienzo; volver a medir la atmósfera de 2fce31a y que arte juzgue esa noche antes de rehacer nada.
+2. **Fondo con magnitud** (receta en `evidencia/GAUNTLET.md`): valores de capa muy separados (lejos casi color de cielo, cerca casi tinta), halo que se derrama sobre el horizonte, suelo 2-3 pasos más oscuro y a la mitad de alto, sin línea blanca de contorno. Se gana el gauntlet contra la vara o no se integra; la legibilidad (8) no baja.
+3. **60 fps y carga <3 s medidos** en una máquina sin carga o en un celular real.
+4. **Personas reales:** 3 a 5 jugadores en celular; ms de toque, duración, y alguien que oiga la mezcla.
+
 Pendientes que dejó la QA del sprint: el fondo no pone postes ni pinos detrás de un obstáculo (a 1280 un poste se leía como parte de la torre); mejor marca por modo si no entró hoy. Densidad del generado: hoy trae ~20% menos obstáculos y el doble de filas de piezas que el clásico (decisión A, amable); revisar con personas. Cuaderno de 3 notas y sellos; racha con perdón; tarjeta para compartir; modo Paseo; Vuelta rápida; obstáculos pop-up; luz de lámpara, perspectiva atmosférica, hito gigante y clima; 40+ bloques; hueco en el suelo; papeles temáticos con arte nuevo; **pruebas con 3-5 personas reales en celular** (ms de toque, duración real, mezcla oída).
 
 ### v1 pública
