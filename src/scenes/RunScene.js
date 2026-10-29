@@ -5,6 +5,7 @@ import { buildTextures } from '../art/textures.js';
 import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
 import { createUI } from '../ui/ui.js';
+import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
 import { load, save, num } from '../storage.js';
 import { GAME_LEVEL, buildDemo } from '../tramos.js';
@@ -47,6 +48,11 @@ export class RunScene extends Phaser.Scene {
 
     this.ui = createUI();
     this.ui.onPause = () => this.pauseGame();
+    // Botón de sonido (moki.sound): refleja solo la preferencia, sin importar el juice
+    this.ui.onSound = () => audio.toggle();
+    this.ui.sfx = (n) => audio.sfx(n);
+    this.ui.soundOn = !audio.muted;
+    audio.onChange((muted) => this.ui.setSound(!muted));
     this.buildWorld();
     this.buildHud();
     this.buildTutorialUI();
@@ -155,6 +161,10 @@ export class RunScene extends Phaser.Scene {
     const kb = this.input.keyboard;
     kb.on('keydown', (e) => {
       this.lastInputAt = this.time.now;
+      if (e.key === 'm' || e.key === 'M') {
+        audio.toggle();
+        return;
+      }
       const onButton = e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'A');
       if (this.ui.modalOpen) {
         if (onButton) return; // el botón enfocado se activa solo con Espacio/Enter
@@ -190,9 +200,16 @@ export class RunScene extends Phaser.Scene {
     });
     this.input.on('pointerup', () => this.release());
     this.input.on('pointerupoutside', () => this.release());
-    // Nada de salto "pegado" ni partida corriendo con la pestaña oculta.
+    // Primer gesto (pointerdown, pointerup, touchend, click o keydown): ahí nace el AudioContext, nunca antes.
+    const firstGesture = () => {
+      audio.unlock();
+      if (audio.unlocked) ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((n) => window.removeEventListener(n, firstGesture, true));
+    };
+    ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((n) => window.addEventListener(n, firstGesture, true));
+    // Nada de salto "pegado" ni partida corriendo con la pestaña oculta; el audio hace fade y se suspende.
     const lose = () => {
       this.release();
+      audio.hide();
       if (this.screen === 'play') this.pauseGame();
     };
     window.addEventListener('blur', lose);
@@ -319,6 +336,11 @@ export class RunScene extends Phaser.Scene {
     this.accel = 0;
     this.tut = { stage: load('moki.tutorial') === '1' ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
+    this.ui.showSoundButton('hud');
+    audio.unlock(); // el gesto que arranca la partida habilita el sonido
+    audio.setTramo(0);
+    audio.setStreak(0);
+    audio.setState(this.tut.stage < 4 ? 'tutorial' : 'playing');
     this.distLabel.set(`0 ${t('hud.m')}`);
     this.pieceLabel.set('0');
     this.lastM = 0;
@@ -330,6 +352,8 @@ export class RunScene extends Phaser.Scene {
     this.ui.hideFail();
     this.ui.hidePause();
     this.ui.showPauseButton(false);
+    this.ui.showSoundButton('title');
+    audio.setState('title'); // si ya hubo gesto, el demo suena en modo título; antes del gesto no suena nada
     this.demo = true;
     this.screen = 'demo';
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
@@ -397,6 +421,8 @@ export class RunScene extends Phaser.Scene {
     this.pausedFrom = this.screen;
     this.screen = 'pause';
     this.release();
+    audio.setState('paused');
+    audio.sfx('pause');
     this.tweens.pauseAll();
     this.ui.showPause({ onResume: () => this.resumeGame(), onHome: () => this.goHome() });
   }
@@ -407,6 +433,9 @@ export class RunScene extends Phaser.Scene {
     this.tweens.resumeAll();
     this.screen = this.pausedFrom || 'play';
     this.rampT = 0; // reanudar no cuenta como salto: el mundo acelera en 600 ms
+    audio.show(); // "Seguir" es un gesto: el audio vuelve aquí (no se reanuda solo al volver a la pestaña)
+    audio.setState(this.tut && this.tut.stage < 4 ? 'tutorial' : 'playing');
+    audio.sfx('pause', { resume: true });
   }
 
   goHome() {
@@ -528,6 +557,16 @@ export class RunScene extends Phaser.Scene {
     if (tutorial.shift) this.dist -= tutorial.shift;
 
     this.stepJump(dt);
+    // Salto alto: al mantener 140 ms suena el segundo "bip" que sube (AUDIO §5)
+    if (this.jumping && this.holding && !this.highPlayed && this.t - this.jumpStartAt >= 140) {
+      this.highPlayed = true;
+      audio.sfx('jumpHigh', { holdMs: this.t - this.jumpStartAt });
+    }
+    // La racha se acaba a los 0.9 s sin piezas
+    if (this.combo > 0 && this.t - this.lastPickAt > C.combo.windowMs) {
+      this.combo = 0;
+      audio.setStreak(0);
+    }
     this.stepWorld(step);
     this.stepEntities(step, dtMs);
     this.particles.update(dtMs, step);
@@ -558,6 +597,8 @@ export class RunScene extends Phaser.Scene {
       this.jumpStartAt = this.t;
       this.takeoffAt = this.t;
       this.pressedAt = -1e9;
+      this.highPlayed = false;
+      audio.sfx('jump');
       // Ya lo soltó antes de que empezara el salto (tap muy corto con buffer).
       if (!this.holding) this.release();
     }
@@ -571,7 +612,10 @@ export class RunScene extends Phaser.Scene {
       if (!this.grounded) {
         this.lastGroundedAt = this.t;
         this.landAt = this.t;
-        if (impact > 260) this.particles.burst('land', this.px, C.world.groundY);
+        if (impact > 260) {
+          this.particles.burst('land', this.px, C.world.groundY);
+          audio.sfx('land', { fall: impact / C.jumpVelocity });
+        }
       }
       this.grounded = true;
       this.jumping = false;
@@ -706,6 +750,8 @@ export class RunScene extends Phaser.Scene {
       this.accel = 0; // se recalcula hacia la velocidad del tramo con rampa de 2 s
       this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue };
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
+      audio.stinger('checkpoint');
+      audio.setTramo(this.tramoIdx);
       this.rig.startHop();
       this.particles.burst('confetti', this.px + 20, g - 20 - 112);
     }
@@ -764,9 +810,14 @@ export class RunScene extends Phaser.Scene {
     for (const [from, v] of R.steps) if (this.combo >= from) mult = v;
     this.pieces += 1;
     this.pieceValue += (k.amber ? C.amberValue : 1) * mult;
+    audio.setStreak(this.combo);
+    audio.sfx(k.amber ? 'amber' : 'pickup', { index: this.combo - 1 });
     if (k.arc) {
       this.arcGot[k.arc] = (this.arcGot[k.arc] || 0) + 1;
-      if (this.arcGot[k.arc] === k.arcN) this.pieceValue += C.arcBonus; // arco completo
+      if (this.arcGot[k.arc] === k.arcN) {
+        this.pieceValue += C.arcBonus; // arco completo
+        audio.sfx('arc');
+      }
     }
     this.pieceLabel.set(String(this.pieces));
     this.particles.burst('collect', k.x, k.y);
@@ -913,6 +964,7 @@ export class RunScene extends Phaser.Scene {
       if (tut.obs.x < this.px - 40) {
         tut.state = 'off';
         this.showBanner(t('tut.ok'), T.okMs);
+        audio.sfx('eso');
         if (tut.stage === 3) {
           tut.stage = 4;
           save('moki.tutorial', '1');
@@ -948,6 +1000,12 @@ export class RunScene extends Phaser.Scene {
     const cycle = T.handPulseMs * T.handPulses;
     const ph = tut.handT % (cycle + T.repeatMs);
     const inPulses = ph < cycle;
+    // un tic por pulso de la mano
+    const pulseIdx = inPulses ? Math.floor(ph / T.handPulseMs) + Math.floor(tut.handT / (cycle + T.repeatMs)) * 10 : -1;
+    if (pulseIdx !== tut.lastPulse) {
+      if (pulseIdx >= 0 && !this.reduced) audio.sfx('handTic');
+      tut.lastPulse = pulseIdx;
+    }
     const hold = tut.kind === 'hold';
     let down = 0; // 0 arriba, 1 abajo
     let ring = 0;
@@ -979,7 +1037,7 @@ export class RunScene extends Phaser.Scene {
     const kind = o.plan;
     // Dos cajas pegadas (CC): un salto largo centrado en el par
     const pair = this.obstacles.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;
-    const lead = airTravel(kind, this.speed) / 2 + this.speed * 0.07 - pair; // despega más tarde: el apex cae en el centro del par
+    const lead = airTravel(kind, this.speed) / 2 + (kind === 'tap' ? C.demo.leadTap : C.demo.leadHold) - pair; // despega más tarde: el apex cae en el centro del par
     if (o.x - this.px <= lead && this.grounded) {
       o.handled = true;
       this.press();
@@ -1050,7 +1108,15 @@ export class RunScene extends Phaser.Scene {
     this.cardShown = false;
     this.particles.burst('crash', this.px + 12, this.y - 10);
     // La mejor marca se guarda también al fallar (no en el demo)
-    if (!this.demo && this.score > num('moki.best', 0)) save('moki.best', this.score);
+    const prevBest = num('moki.best', 0);
+    const isNew = !this.demo && this.score > prevBest;
+    if (isNew) save('moki.best', this.score);
+    // Sonido: tropiezo amable, la música baja (ducking), stinger de fallo a los 80 ms y, si hay récord, el de récord después
+    audio.sfx('stumble');
+    audio.setState('dead');
+    audio.setStreak(0);
+    audio.stinger('fail');
+    if (isNew && prevBest > 0) setTimeout(() => this.screen === 'dead' && audio.stinger('record'), 1700);
   }
 
   updateDead(dtMs) {
@@ -1076,6 +1142,8 @@ export class RunScene extends Phaser.Scene {
     if (!this.cardShown && this.deadFor >= (this.reduced ? 150 : 250)) {
       this.cardShown = true;
       this.showFailCard();
+      audio.cardUp(); // con la tarjeta visible la música se mantiene a 30% con lowpass 1200 Hz
+      audio.sfx('card');
     }
     if (this.cardShown && this.deadFor >= C.retryLockoutMs) this.ui.unlockFail();
   }
@@ -1113,6 +1181,8 @@ export class RunScene extends Phaser.Scene {
     this.pieceValue = cp.pieceValue;
     this.resetRun(this.level, cp.dist);
     this.screen = 'play';
+    audio.setStreak(0);
+    audio.setState('playing'); // reintento: la música vuelve a 100% en 600 ms
     const target = this.level.tramos[this.tramoIdx].speed;
     this.speed = FIXED_SPEED || target * C.respawnSpeedMult;
     this.accel = FIXED_SPEED ? 0 : (target - this.speed) / C.respawnEaseSec;
@@ -1134,7 +1204,9 @@ export class RunScene extends Phaser.Scene {
     this.rig.startHop();
     save('moki.done', '1'); // abre Hardcore (decisión del líder)
     const best = num('moki.best', 0);
-    this.finalData = { isNew: this.score > best };
+    this.finalData = { isNew: this.score > best, hadBest: best > 0 };
+    audio.setState('finished'); // la música baja a 0 y suena el stinger del final
+    audio.stinger('final');
     if (this.score > best) save('moki.best', this.score);
     this.ui.showPauseButton(false);
   }
@@ -1161,6 +1233,8 @@ export class RunScene extends Phaser.Scene {
   }
 
   showFinalCard() {
+    audio.finalCard(); // música a 35%, solo la base, con lowpass 2.5 kHz
+    if (this.finalData.isNew && this.finalData.hadBest) setTimeout(() => this.screen === 'final' && audio.stinger('record'), 2600);
     const rect = this.failRect();
     const wide = this.scale.width >= 700 && this.scale.width > this.scale.height * 0.9;
     const r = wide ? rect : { ...rect, maxHeight: this.scale.height - rect.top - 16 };

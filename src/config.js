@@ -25,6 +25,10 @@ export const CONFIG = {
   pairGapSec: 0.9,
   waveGapSec: 0.8,
 
+  // Audio (AUDIO.md §3): el maestro es fijo; solo se calibran los dos buses
+  // Calibrado con OfflineAudioContext: música con todas las capas = -18 dBFS de pico, efectos principales ≈ -12 dBFS
+  audio: { master: 0.125, sfxBus: 5.7, musicBus: 0.72, echoWet: 0.18, echoFeedback: 0.25 },
+
   // Piezas y puntaje
   pickupReach: { dx: 30, dy: 34, bodyCenter: 46 }, // la caja de recogida sigue el cuerpo, no todo Moki
   combo: { windowMs: 900, steps: [[1, 1], [3, 2], [6, 3]] }, // [desde N piezas seguidas, valor]
@@ -40,7 +44,8 @@ export const CONFIG = {
 
   // Tutorial (UX.md §4)
   tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
-  demo: { idleReturnMs: 20000, stripMs: 400 },
+  // leadTap/leadHold: px extra respecto de la mitad del recorrido aéreo al despegar (se calibra contra la física real, sin god)
+  demo: { idleReturnMs: 20000, stripMs: 400, leadTap: 0, leadHold: 0 },
 
   // Moki
   squashMax: 0.03,

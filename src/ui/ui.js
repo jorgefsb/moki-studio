@@ -16,10 +16,32 @@ export function createUI() {
   document.body.appendChild(root);
 
   let primary = null; // acción del botón/gesto principal de la tarjeta abierta
-  const state = { demo: null, fail: null, final: null, asi: null, pause: null, pauseBtn: null };
+  const state = { demo: null, fail: null, final: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null };
+
+  // Todo botón suena (AUDIO §5): se engancha en la fase de captura, antes de que el botón actúe
+  root.addEventListener(
+    'click',
+    (e) => {
+      const b = e.target.closest && e.target.closest('button, a');
+      if (b && !b.classList.contains('ui-soundbtn') && !(state.pauseSound && b === state.pauseSound) && ui.sfx) ui.sfx('ui');
+    },
+    true
+  );
+
+  // Bocina de papel: con ondas = prendido; con una cuerda tachada = apagado (el estado no depende solo del color)
+  const iconSvg = (on) =>
+    `<svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true" focusable="false"><path d="M4 11h5l6-5v16l-6-5H4z" fill="#22211F"/>${
+      on
+        ? '<path d="M18 10c2 2.5 2 5.5 0 8M21 7c3.6 4.2 3.6 9.8 0 14" fill="none" stroke="#22211F" stroke-width="2.2" stroke-linecap="round"/>'
+        : '<path d="M19 10l7 8M26 10l-7 8" fill="none" stroke="#22211F" stroke-width="2.4" stroke-linecap="round"/>'
+    }</svg>`;
 
   const ui = {
     root,
+    sfx: null, // enganchado por la escena: sonido de botón
+    soundOn: true,
+    soundBtnEl: null,
+    onSound: null,
     get modalOpen() {
       return !!(state.fail || state.final || state.asi || state.pause);
     },
@@ -56,6 +78,31 @@ export function createUI() {
       b.addEventListener('pointerdown', (e) => e.stopPropagation());
       root.appendChild(b);
       state.pauseBtn = b;
+    },
+
+    // Botón de sonido (AUDIO §8): 'title' arriba a la derecha, 'hud' a la izquierda del botón de pausa
+    showSoundButton(mode) {
+      if (state.soundBtn) state.soundBtn.remove();
+      state.soundBtn = null;
+      if (!mode) return;
+      const b = el('button', `ui-soundbtn ${mode}`);
+      b.type = 'button';
+      b.setAttribute('aria-label', t('aria.sound'));
+      b.addEventListener('click', () => ui.onSound && ui.onSound());
+      b.addEventListener('pointerdown', (e) => e.stopPropagation());
+      root.appendChild(b);
+      state.soundBtn = b;
+      ui.setSound(ui.soundOn);
+    },
+    setSound(on) {
+      ui.soundOn = on;
+      const b = state.soundBtn;
+      if (b) {
+        b.innerHTML = iconSvg(on);
+        b.setAttribute('aria-pressed', String(on));
+      }
+      const p = state.pauseSound;
+      if (p) p.textContent = t(on ? 'pause.sound.on' : 'pause.sound.off');
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
@@ -192,9 +239,17 @@ export function createUI() {
       resume.type = 'button';
       const home = el('button', 'ui-btn secondary', t('pause.home'));
       home.type = 'button';
+      const snd = el('button', 'ui-btn secondary', t(ui.soundOn ? 'pause.sound.on' : 'pause.sound.off'));
+      snd.type = 'button';
+      snd.setAttribute('aria-pressed', String(ui.soundOn));
+      snd.addEventListener('click', () => {
+        if (ui.onSound) ui.onSound();
+        snd.setAttribute('aria-pressed', String(ui.soundOn));
+      });
+      state.pauseSound = snd;
       resume.addEventListener('click', onResume);
       home.addEventListener('click', onHome);
-      stack.append(resume, home);
+      stack.append(resume, snd, home);
       card.append(stack);
       scrim.append(card);
       root.appendChild(scrim);
@@ -206,6 +261,7 @@ export function createUI() {
       if (!state.pause) return;
       state.pause.remove();
       state.pause = null;
+      state.pauseSound = null;
       primary = null;
     },
     onPause: null,

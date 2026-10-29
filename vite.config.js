@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
 // "Así lo hicimos" cuenta las intervenciones de Jorge desde BITACORA.md al compilar.
@@ -14,8 +14,32 @@ function jorgeInterventions() {
   }
 }
 
+// Solo en `vite` (desarrollo): POST /__save?name=archivo escribe en evidencia/ (para guardar el render offline del tema).
+// No existe en el build.
+const saveEvidence = () => ({
+  name: 'moki-save-evidence',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use('/__save', (req, res) => {
+      const name = new URL(req.url, 'http://x').searchParams.get('name') || '';
+      if (req.method !== 'POST' || !/^[a-z0-9._-]+$/i.test(name)) {
+        res.statusCode = 400;
+        res.end('no');
+        return;
+      }
+      const chunks = [];
+      req.on('data', (c) => chunks.push(c));
+      req.on('end', () => {
+        writeFileSync(new URL(`./evidencia/${name}`, import.meta.url), Buffer.concat(chunks));
+        res.end('ok');
+      });
+    });
+  },
+});
+
 export default defineConfig({
   base: './',
   define: { __JORGE_INTERVENTIONS__: JSON.stringify(jorgeInterventions()) },
+  plugins: [saveEvidence()],
   build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
 });

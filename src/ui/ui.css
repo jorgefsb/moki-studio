@@ -69,6 +69,14 @@
 }
 .ui-pausebtn i { display: block; width: 6px; height: 18px; background: #22211f; border-radius: 2px; }
 
+.ui-soundbtn {
+  position: absolute; top: 12px; width: 48px; height: 48px; padding: 0; margin: 0; pointer-events: auto; cursor: pointer;
+  background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
+  display: flex; align-items: center; justify-content: center;
+}
+.ui-soundbtn.hud { left: calc(50% - 80px); }
+.ui-soundbtn.title { right: 16px; top: 64px; }
+
 .ui-pause { position: relative; width: min(320px, calc(100vw - 48px)); padding: 18px 20px 20px; }
 .ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
 .ui-pause .ui-btn { margin: 0; width: 100%; }

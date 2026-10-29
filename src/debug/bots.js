@@ -26,7 +26,7 @@ export function runBot(s, kind, maxSec = 150) {
         const mode = kind === 'tap' ? 'tap' : kind === 'hold' ? 'hold' : o.plan;
         // Dos cajas pegadas: un solo salto largo centrado en el par (a media distancia de las dos)
         const pair = s.obstacles.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;
-        const lead = airTravel(mode, s.speed) / 2 + s.speed * 0.03 - pair; // despega más tarde: el apex cae en el centro del par
+        const lead = airTravel(mode, s.speed) / 2 - pair; // despega más tarde: el apex cae en el centro del par
         if (o.x - s.px <= lead) {
           o.handled = true;
           s.press();
