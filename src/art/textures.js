@@ -536,6 +536,35 @@ function checkpointFlag() {
   return c;
 }
 
+// Primer plano (ARTE §7): tiras de cartulina y hojas con borde rasgado, fuera del carril de juego.
+// ragged 'top' = asoma desde abajo; 'bottom' = cuelga desde arriba.
+function fgStrip(w, h, seed, fill, ragged) {
+  const pad = 8;
+  const [c, x] = mk(w + pad * 2, h + pad * 2);
+  const r = rng(seed);
+  const n = Math.max(3, Math.round(w / 24));
+  const edge = [];
+  for (let i = 0; i <= n; i++) edge.push(3 + r() * 9);
+  const path = (g) => {
+    const x0 = pad;
+    const x1 = pad + w;
+    const y0 = pad;
+    const y1 = pad + h;
+    if (ragged === 'top') {
+      g.moveTo(x0, y1);
+      for (let i = 0; i <= n; i++) g.lineTo(x0 + (i * w) / n, y0 + edge[i]);
+      g.lineTo(x1, y1);
+    } else {
+      g.moveTo(x0, y0);
+      for (let i = 0; i <= n; i++) g.lineTo(x0 + (i * w) / n, y1 - edge[i]);
+      g.lineTo(x1, y0);
+    }
+    g.closePath();
+  };
+  cut(x, path, { fill, edgeW: 3, shadow: { alpha: 0.28, blur: 8, dx: 0, dy: ragged === 'top' ? -2 : 3 }, r, fiberCount: 70 });
+  return c;
+}
+
 function chip(color, seed) {
   const [c, x] = mk(10, 8);
   const r = rng(seed);
@@ -578,4 +607,12 @@ export function buildTextures(scene) {
   add('cpFlag', checkpointFlag());
   add('chipKraft', chip(PAL.kraft, 71));
   add('chipPaper', chip(PAL.paper, 72));
+  add('fgUpA', fgStrip(150, 58, 81, PAL.kraft, 'top'));
+  add('fgUpB', fgStrip(110, 48, 82, PAL.paper, 'top'));
+  add('fgUpC', fgStrip(190, 44, 83, TONE.kraftDark, 'top'));
+  add('fgDownA', fgStrip(150, 52, 84, PAL.kraft, 'bottom'));
+  add('fgDownB', fgStrip(120, 44, 85, PAL.paper, 'bottom'));
+  add('fgDownC', fgStrip(180, 40, 86, TONE.kraftDark, 'bottom'));
+  add('chipOrange', chip(PAL.accent, 73));
+  add('chipAmber', chip(PAL.warm, 74));
 }

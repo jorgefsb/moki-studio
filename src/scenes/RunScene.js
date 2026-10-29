@@ -2,9 +2,14 @@ import Phaser from 'phaser';
 import { CONFIG as C } from '../config.js';
 import { PAL, TONE } from '../art/palette.js';
 import { buildTextures } from '../art/textures.js';
+import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
+import { Particles } from '../art/particles.js';
 import mokiLado from '../../assets/moki/moki-lado.webp';
+import mokiSaluda from '../../assets/moki/moki-saluda.webp';
 
-const MOKI_PX_H = 260; // alto del .webp de moki-lado
+const Q = new URLSearchParams(window.location.search);
+const FIXED_SPEED = Number(Q.get('speed')) || 0; // ?speed=320|450|560 fija la velocidad para capturas comparables
+const ANIM_DEBUG = Q.get('anim') === 'debug';
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 const FONT_UI = 'Inter, sans-serif';
 const FONT_NUM = 'Outfit, sans-serif';
@@ -17,10 +22,12 @@ export class RunScene extends Phaser.Scene {
 
   preload() {
     this.load.image('moki', mokiLado);
+    this.load.image('mokiSaluda', mokiSaluda);
   }
 
   create() {
     buildTextures(this);
+    buildMokiPieces(this);
 
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     this.reduced = mq.matches;
@@ -54,9 +61,16 @@ export class RunScene extends Phaser.Scene {
 
     this.px = C.player.xMax;
     this.mokiShadow = this.add.image(this.px, C.world.groundY, 'shadow').setDepth(9);
-    this.moki = this.add.image(this.px, C.world.groundY, 'moki').setDepth(12);
-    // Nunca espejado: sin flipX ni escala negativa en ningún punto del código.
-    this.mokiScale = C.player.spriteHeight / MOKI_PX_H;
+    // Moki es un títere recortado (src/art/mokiRig.js). Nunca espejado: ni flipX ni escala negativa.
+    this.rig = createMokiRig(this);
+    this.rig.debugOn = ANIM_DEBUG;
+    this.particles = new Particles(this);
+    if (ANIM_DEBUG) {
+      // Lectura de medición en el DOM (la cámara con zoom deformaría un texto del lienzo).
+      this.debugEl = document.createElement('pre');
+      this.debugEl.style.cssText = 'position:fixed;left:8px;bottom:8px;margin:0;padding:6px 8px;font:13px monospace;background:#F4E8D5;color:#22211F;border:2px solid #8A7E70;z-index:50;pointer-events:none';
+      document.body.appendChild(this.debugEl);
+    }
 
     this.obstacles = [];
     this.pickups = [];
@@ -138,8 +152,9 @@ export class RunScene extends Phaser.Scene {
     this.skyGrad.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
     this.clouds.setPosition(0, g - 900).setSize(this.vw, 900);
     this.topFade.setPosition(0, this.top).setDisplaySize(this.vw, 56);
-    this.far.setPosition(0, g + 12 - 300).setSize(this.vw, 300);
-    this.mid.setPosition(0, g + 10 - 360).setSize(this.vw, 360);
+    this.base = { far: g + 12 - 300, mid: g + 10 - 360 };
+    this.far.setPosition(0, this.base.far).setSize(this.vw, 300);
+    this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360);
     this.surface.setPosition(0, g - 8).setSize(this.vw, 22);
     this.canto.setPosition(0, g + 14).setSize(this.vw, 6);
     const frontH = Math.max(40, this.bottom - (g + 20));
@@ -176,7 +191,15 @@ export class RunScene extends Phaser.Scene {
     this.landAt = -1e9;
     this.tilt = 0;
     this.runPhase = 0;
-    this.speed = C.runSpeedStart;
+    this.speed = FIXED_SPEED || C.runSpeedStart;
+    this.rig.reset();
+    this.particles.clear();
+    (this.fg || []).forEach((f) => f.sprite.destroy());
+    this.fg = [];
+    this.fgNext = 3000; // primera tira a los 3 s
+    this.fgSide = false;
+    this.fgPick = 0;
+    this.deadFor = 0;
     this.nextSpawnIn = 640; // calma inicial: el primer obstáculo llega tras ~2 s
     this.nextCheckpointAt = C.checkpointEverySec * 1000;
     this.dist = 0;
@@ -192,6 +215,7 @@ export class RunScene extends Phaser.Scene {
 
   press() {
     if (this.dead) return;
+    this.rig.cancelHop(); // la mecánica manda: la celebración se cancela
     this.holding = true;
     this.pressedAt = this.t;
   }
@@ -317,19 +341,35 @@ export class RunScene extends Phaser.Scene {
     const dt = dtMs / 1000;
 
     if (this.dead) {
+      // Tropiezo (ANIMACION.md 3.4): hit-stop de 60 ms, luego el mundo frena en 220 ms y todo se asienta.
       this.deadFor += dtMs;
-      if (this.deadFor > 500) this.restart();
+      if (this.deadFor > 800) {
+        this.restart();
+        return;
+      }
+      if (this.deadFor >= C.art.hitStopMs || this.reduced) {
+        this.t += dtMs;
+        const u = Math.min(1, (this.deadFor - C.art.hitStopMs) / 220);
+        this.speed = this.deadSpeed * (1 - easeOutCubic(this.reduced ? 1 : u));
+        const step = this.speed * dt;
+        this.dist += step;
+        this.stepWorld(step, dt);
+        this.moveEntities(step);
+        this.particles.update(dtMs, step);
+        this.stepMoki(dtMs);
+      }
       return;
     }
     this.t += dtMs;
-    this.speed = Math.min(C.runSpeedMax, this.speed + C.runSpeedRampPerSec * dt);
+    if (!FIXED_SPEED) this.speed = Math.min(C.runSpeedMax, this.speed + C.runSpeedRampPerSec * dt);
     const step = this.speed * dt;
     this.dist += step;
 
     this.stepJump(dt);
     this.stepWorld(step, dt);
     this.stepEntities(step, dt);
-    this.stepMoki(dt);
+    this.particles.update(dtMs, step);
+    this.stepMoki(dtMs);
     this.stepHud();
   }
 
@@ -356,7 +396,7 @@ export class RunScene extends Phaser.Scene {
       if (!this.grounded) {
         this.lastGroundedAt = this.t;
         this.landAt = this.t;
-        if (impact > 260) this.dust();
+        if (impact > 260) this.particles.burst('land', this.px, C.world.groundY);
       }
       this.grounded = true;
       this.jumping = false;
@@ -377,6 +417,44 @@ export class RunScene extends Phaser.Scene {
     this.canto.tilePositionX = this.dist;
     this.front.tilePositionX = this.dist;
     this.folds.forEach((f) => (f.tilePositionX = this.dist));
+
+    // Profundidad con el salto: las capas lejanas bajan unos px cuando Moki sube (sin zoom de cámara).
+    const V = C.art.vertical;
+    const lift = this.reduced ? 0 : Math.max(0, C.world.groundY - this.y);
+    this.far.y = this.base.far + Math.min(V.maxPx, lift * V.far);
+    this.mid.y = this.base.mid + Math.min(V.maxPx, lift * V.mid);
+    this.stepForeground(step);
+  }
+
+  // Primer plano a 1.3x: tiras de cartulina FUERA del carril (nunca entre groundY-130 y groundY+10).
+  // En pantallas altas llenan el suelo vacío bajo el diorama.
+  stepForeground(step) {
+    const F = C.art.foreground;
+    const g = C.world.groundY;
+    for (const f of this.fg) {
+      f.x -= step * F.speed;
+      f.sprite.x = f.x;
+    }
+    this.fg = this.fg.filter((f) => (f.x < -f.sprite.width ? (f.sprite.destroy(), false) : true));
+    if (this.reduced || this.dead || this.t < this.fgNext) return;
+    const room = this.bottom - (g + 24); // espacio libre bajo el carril
+    const tall = room > 150;
+    this.fgNext = this.t + (tall ? 1500 : F.minGapSec * 1000) + Math.random() * 900;
+    this.fgSide = !this.fgSide;
+    const x = this.vw + 90;
+    if (this.fgSide || tall) {
+      const key = ['fgUpA', 'fgUpB', 'fgUpC'][this.fgPick++ % 3];
+      const sprite = this.add.image(x, 0, key).setOrigin(0, 1).setDepth(20);
+      const hFree = Math.max(0, room);
+      // pegada al borde inferior; en vertical a veces flota más arriba, siempre bajo g+24
+      const lift = tall && this.fgPick % 2 ? Math.min(hFree - sprite.height, 40 + Math.random() * (hFree - sprite.height - 40)) : 0;
+      sprite.y = this.bottom + 8 - Math.max(0, lift);
+      this.fg.push({ x, sprite });
+    } else {
+      const key = ['fgDownA', 'fgDownB', 'fgDownC'][this.fgPick++ % 3];
+      const sprite = this.add.image(x, this.top - 8, key).setOrigin(0, 0).setDepth(20);
+      this.fg.push({ x, sprite });
+    }
   }
 
   stepEntities(step, dt) {
@@ -398,37 +476,7 @@ export class RunScene extends Phaser.Scene {
       this.nextSpawnIn = Math.max(this.nextSpawnIn, 520);
     }
 
-    for (const o of this.obstacles) {
-      o.x -= step;
-      o.sprite.x = o.x;
-      o.shadow.x = o.x + 9;
-      if (!o.entered && o.x < this.vw - 20) {
-        o.entered = true;
-        this.sway(o.sprite);
-      }
-    }
-    for (const k of this.pickups) {
-      k.x -= step;
-      if (!k.taken) {
-        k.sprite.x = k.x;
-        k.shadow.x = k.x + 4;
-      }
-    }
-    for (const cp of this.checkpoints) {
-      cp.x -= step;
-      cp.base.x = cp.pole.x = cp.x;
-      cp.flag.x = cp.x + 4;
-      cp.shadow.x = cp.x + 8;
-      if (!cp.deployed && cp.x < this.vw - 40) {
-        cp.deployed = true;
-        this.tweens.add({ targets: cp.flag, scaleX: 1, duration: C.art.checkpointFlagMs, ease: 'Cubic.easeOut' });
-      }
-      if (cp.deployed && !this.reduced) cp.flag.y = g - 20 - 112 + 6 + Math.sin(this.t / 420) * 1.5;
-      if (!cp.passed && cp.x < this.px - 30) {
-        cp.passed = true;
-        this.showBanner('Aprendizaje guardado', C.art.checkpointLabelMs);
-      }
-    }
+    this.moveEntities(step);
 
     // Limpieza
     this.obstacles = this.obstacles.filter((o) => (o.x < outX ? (o.destroy(), false) : true));
@@ -458,14 +506,55 @@ export class RunScene extends Phaser.Scene {
       if (pl < or && pl + pw > ol && pt < g && pb > ot) {
         this.dead = true;
         this.deadFor = 0;
+        this.deadSpeed = this.speed;
+        this.holding = false;
+        this.particles.burst('crash', px + 12, this.y - 10);
         this.showBanner('Choque', 0);
         break;
       }
     }
   }
 
+  moveEntities(step) {
+    const g = C.world.groundY;
+    for (const o of this.obstacles) {
+      o.x -= step;
+      o.sprite.x = o.x;
+      o.shadow.x = o.x + 9;
+      if (!o.entered && o.x < this.vw - 20) {
+        o.entered = true;
+        this.sway(o.sprite);
+      }
+    }
+    for (const k of this.pickups) {
+      k.x -= step;
+      if (!k.taken) {
+        k.sprite.x = k.x;
+        k.shadow.x = k.x + 4;
+      }
+    }
+    for (const cp of this.checkpoints) {
+      cp.x -= step;
+      cp.base.x = cp.pole.x = cp.x;
+      cp.flag.x = cp.x + 4;
+      cp.shadow.x = cp.x + 8;
+      if (!cp.deployed && cp.x < this.vw - 40) {
+        cp.deployed = true;
+        this.tweens.add({ targets: cp.flag, scaleX: 1, duration: C.art.checkpointFlagMs, ease: 'Cubic.easeOut' });
+      }
+      if (cp.deployed && !this.reduced) cp.flag.y = g - 20 - 112 + 6 + Math.sin(this.t / 420) * 1.5;
+      if (!cp.passed && cp.x < this.px - 30) {
+        cp.passed = true;
+        this.showBanner('Aprendizaje guardado', C.art.checkpointLabelMs);
+        this.rig.startHop();
+        this.particles.burst('confetti', cp.x + 4, g - 20 - 112);
+      }
+    }
+  }
+
   collect(k) {
     k.taken = true;
+    this.particles.burst('collect', k.x, k.y);
     this.pieces += 1;
     this.pieceLabel.set(String(this.pieces));
     this.tweens.add({
@@ -479,67 +568,46 @@ export class RunScene extends Phaser.Scene {
     this.tweens.add({ targets: k.shadow, alpha: 0, duration: C.art.collectMs });
   }
 
-  dust() {
-    if (this.reduced) return;
+  // Moki: el títere (src/art/mokiRig.js) hace todo el dibujo y la animación; aquí solo se le pasa el estado
+  // y se dibuja la sombra de contacto, que marca la altura del salto.
+  stepMoki(dtMs) {
     const g = C.world.groundY;
-    const n = Phaser.Math.Between(3, 5);
-    for (let i = 0; i < n; i++) {
-      const chip = this.add
-        .image(this.px - 10 + Math.random() * 16, g - 2, i % 2 ? 'chipKraft' : 'chipPaper')
-        .setDepth(13)
-        .setAngle(Math.random() * 360);
-      const up = 10 + Math.random() * 14;
-      this.tweens.add({ targets: chip, y: g - up, duration: 170, yoyo: true, ease: 'Quad.easeOut' });
-      this.tweens.add({ targets: chip, x: chip.x - 14 - Math.random() * 26, angle: chip.angle + 90, duration: 340, ease: 'Sine.easeOut' });
-      this.tweens.add({ targets: chip, alpha: 0, delay: 200, duration: 160, onComplete: () => chip.destroy() });
-    }
-  }
+    this.rig.update(
+      {
+        x: this.px,
+        y: this.y,
+        grounded: this.grounded,
+        vy: this.vy,
+        speed: this.speed,
+        t: this.t,
+        takeoffAt: this.takeoffAt,
+        landAt: this.landAt,
+        dead: this.dead,
+        reduced: this.reduced,
+        dist: this.dist,
+      },
+      dtMs
+    );
 
-  // Moki: títere de papel. Anticipa, actúa, asienta. Squash ≤ 3%, nunca espejado.
-  stepMoki(dt) {
-    const A = C.art;
-    const S = C.squashMax;
-    const g = C.world.groundY;
-    const grounded = this.grounded;
-
-    let squash = 0;
-    let tilt = 0;
-    let bob = 0;
+    let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {
-      const tk = this.t - this.takeoffAt;
-      if (tk >= 0 && tk < A.anticipationMs) squash = S * Math.sin((Math.PI * tk) / A.anticipationMs);
       const ld = this.t - this.landAt;
-      if (ld >= 0 && ld < A.landingMs) squash = Math.max(squash, S * (1 - easeOutCubic(ld / A.landingMs)));
-
-      let target = 0;
-      if (!grounded) {
-        // Siempre hacia adelante (en sentido horario): 4° al subir, hasta 6° al caer.
-        target = this.vy < 0 ? A.tiltRiseDeg : A.tiltRiseDeg + (A.tiltMaxDeg - A.tiltRiseDeg) * Math.min(1, this.vy / 700);
-      }
-      this.tilt += (target - this.tilt) * Math.min(1, dt * 14);
-      tilt = this.tilt;
-
-      if (grounded) {
-        this.runPhase += (dt * this.speed) / 48;
-        bob = -Math.abs(Math.sin(this.runPhase)) * A.runBobPx;
-      }
+      if (ld >= 0 && ld < C.art.landingMs) sink = 1 - easeOutCubic(ld / C.art.landingMs);
     }
-
-    const k = this.mokiScale;
-    const sy = 1 - squash;
-    const sx = 1 + squash * 0.6;
-    const h = C.player.spriteHeight * sy;
-    this.moki.setScale(k * sx, k * sy);
-    this.moki.setAngle(tilt);
-    this.moki.setPosition(this.px, this.y + bob - h / 2 + 2);
-
-    // Sombra de contacto: siempre presente; marca la altura del salto.
     const air = Math.max(0, g - this.y);
     const f = 1 / (1 + air / 150);
-    const widen = 1 + squash * 6;
     this.mokiShadow.setPosition(this.px + 8, g + 1);
-    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * widen, 22 * (0.6 + 0.4 * f));
-    this.mokiShadow.setAlpha(0.28 * (0.4 + 0.6 * f) * (grounded && bob < -1 ? 0.92 : 1));
+    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.12), 22 * (0.6 + 0.4 * f));
+    this.mokiShadow.setAlpha(0.28 * (0.4 + 0.6 * f));
+
+    if (this.debugEl) {
+      const d = this.rig.debug;
+      this.debugEl.textContent =
+        `v ${this.speed.toFixed(0)} px/s  fase ${d.phi.toFixed(2)}\n` +
+        `periodo ${(d.period * 1000).toFixed(0)} ms  ciclo ${d.cyclePx.toFixed(1)} px\n` +
+        `deslizamiento apoyo ${d.slide.toFixed(2)} px  (ultimo ${d.lastSlide.toFixed(2)}, max ${d.maxSlide.toFixed(2)})\n` +
+        `vaiven cadera ${d.bob.toFixed(2)} px  hundimiento pie ${d.sink.toFixed(2)} px`;
+    }
   }
 
   stepHud() {

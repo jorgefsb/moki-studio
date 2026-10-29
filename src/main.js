@@ -21,8 +21,18 @@ async function boot() {
     scene: [RunScene],
   });
 
-  // Para probar desde la consola / capturas.
-  window.__moki = game;
+  // Para probar desde la consola / capturas: solo en dev o con ?debug (igual que el modo invulnerable).
+  const q = new URLSearchParams(window.location.search);
+  if (import.meta.env.DEV || q.has('debug') || q.get('anim') === 'debug') {
+    game.moki = {
+      // Estado para que el probador mida sin adivinar: demo activo, pantalla actual y ángulos del títere.
+      state() {
+        const s = game.scene.scenes[0];
+        return { demo: !!s.demo, screen: s.screen || 'juego', angles: s.rig ? s.rig.getAngles() : null };
+      },
+    };
+    window.__moki = game;
+  }
 }
 
 boot();
