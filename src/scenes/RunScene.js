@@ -348,6 +348,7 @@ export class RunScene extends Phaser.Scene {
     this.tutSetState('off');
     this.tutArc.setVisible(false);
     if (this.ambient) this.ambient.reset();
+    if (this.ambient) this.ambient.biomas = this.demo ? null : level.biomas || null; // biomas de papel por tramo (NIVELES.md §8)
     if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
   }
 

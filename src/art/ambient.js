@@ -18,6 +18,15 @@ const toTint = (target) => {
 
 // Hora del día por tramo. farVeil tiñe colinas lejanas y nubes; la capa media (detrás de la banda de juego) no se toca:
 // ahí el contraste obstáculo/fondo no baja del de la mañana (2.34). Solo el cielo y el plano lejano cambian.
+// Biomas de papel (NIVELES.md §8): una mezcla extra sobre el cielo y el plano lejano de la hora del día, uno por tramo
+// según la semilla del nivel. La capa media, el suelo y los obstáculos no se tocan (ahí vive el contraste medido).
+const BIOMA = {
+  kraft: { c: hex('#B99168'), sky: 0.1, far: 0.06 },
+  cuaderno: { c: hex('#B7B3AD'), sky: 0.08, far: 0.06 },
+  periodico: { c: hex('#8A7E70'), sky: 0.1, far: 0.08 },
+  cartulina: { c: hex('#F4E8D5'), sky: 0.3, far: 0 },
+};
+
 export const DAY = [
   { name: 'manana', sky: hex('#F8ECD8'), farVeil: 0xffffff, farAlpha: 0.78, bands: 0, shadowK: 1.35, obs: 0xffffff }, // cálido y claro, colinas pálidas, sombras largas
   { name: 'mediodia', sky: hex('#EBDBC5'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), farAlpha: 1, bands: 0, shadowK: 0.85, obs: 0xe0e0e0 },
@@ -97,14 +106,21 @@ export class Ambient {
     this.applyDay(0);
   }
 
+  // Cielo y velo lejano de la hora i con el bioma de ese tramo (en la noche, la mitad para no lavarla)
+  tone(i, key) {
+    const b = this.biomas && BIOMA[this.biomas[i]];
+    const base = key === 'sky' ? DAY[i].sky : DAY[i].farVeil;
+    return b ? lerpColor(base, b.c, b[key] * (i === 3 ? 0.5 : 1)) : base;
+  }
+
   applyDay(dtFrac) {
     const d = this.day;
     d.t = Math.min(1, d.t + dtFrac);
     const A = DAY[d.from];
     const B = DAY[d.to];
     const s = this.scene;
-    const sk = lerpColor(A.sky, B.sky, d.t);
-    const far = lerpColor(A.farVeil, B.farVeil, d.t);
+    const sk = lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t);
+    const far = lerpColor(this.tone(d.from, 'far'), this.tone(d.to, 'far'), d.t);
     s.sky.setTint(toTint(sk));
     s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo
     s.far.setTint(far);
