@@ -136,3 +136,10 @@
 - 29-oct 11:20 · Probador · RE-QA FINAL de 8ac54f0: PASA todo. Pico -7.9/-8.1/-8.0 dBFS sin recortes, pieza +2.7-3.9 dB y salto +4.2 sobre la música, regresión completa igual, noche 2.17-2.72, letrero detrás. Evidencia en 1a795bc.
 - 29-oct 11:22 · Director de arte · Veredicto final: ARTE: APROBADO. Moki fiel a assets/moki y diorama coherente. 3 pendientes para v2: poses nuevas, tarjetas sobre el HUD, fibra repetida y grises fríos de noche.
 - 29-oct 11:23 · Líder · PILOTO CERRADO en 8ac54f0. REPORTE-FINAL.md en la raíz. Prueba de éxito 5/5. Jorge intervino 2 veces. Nada publicado; publica Spark cuando decida.
+
+## Sprint 29-oct (hasta 11:00 CDMX, todos en Opus)
+- 29-oct 09:24 CDMX · Líder → PRODUCTOR (orden de Spark 15:21Z). Director de juego (estudio-director) manda en visión y prioridades. Asientos nuevos: estudio-niveles, estudio-feel, estudio-investigador. Reglas de integración:
+  - Worktrees (fuera de git, en `.worktrees/`): base → `sprint/base` (constructor: celular vertical y embed), niveles → `sprint/niveles`, feel → `sprint/feel`. Puertos de dev: base 5173, niveles 5174, feel 5175.
+  - Cada entrega: commit local en su rama + fila a estudio-lider con commit, qué cambió y qué verificar. Yo integro a master y abro fila de QA rápida al probador por cada integración (línea base 8ac54f0).
+  - `src/config.js` es compartido: cada quien agrega su bloque, sin reordenar ni reformatear lo ajeno. Antes de entregar, `git merge master` en su rama.
+  - Últimas entregas para integrar: 10:30 CDMX. Congelado de master: 10:50 CDMX, QA final del sprint → REPORTE-SPRINT.md del probador. Nada se publica, nada de push.
