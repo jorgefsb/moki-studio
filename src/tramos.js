@@ -16,7 +16,7 @@ const T2 = [[2, 'C'], [4, 'T'], [6, 'C.C'], [9, 'T'], [11, 'CC+Aup'], [13.5, 'P5
 const T3 = [[2, 'V'], [4.5, 'VC'], [7, 'V+P5'], [9.5, 'T'], [11.5, 'T.V'], [14.5, 'C.V'], [17, 'VC'], [19.5, 'P5'], [21.5, 'V+Adn'], [24, 'CC'], [26, 'T.C']];
 const T4 = [[2, 'VC'], [4, 'T.V'], [6.5, 'CC'], [8.5, 'OLA'], [15.5, 'P5'], [17.5, 'T'], [19.5, 'C.V'], [22, 'P5'], [24, 'T.C'], [26, 'VC'], [27.5, 'P5']];
 
-const SCRIPTS = [T1, T2, T3, T4];
+export const SCRIPTS = [T1, T2, T3, T4]; // guion clásico: respaldo del generador y ?nivel=clasico
 
 // Arcos: alturas de las piezas sobre el suelo (DISENO §4) y separación.
 const ARCS = {

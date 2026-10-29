@@ -62,6 +62,29 @@ export function createUI() {
     hideDemo() {
       if (state.demo) state.demo.remove();
       state.demo = null;
+      ui.hideModo();
+    },
+
+    // Modo de la partida en el título (NIVELES.md §7): un toque al chip alterna Reto del día / Libre; el resto de la pantalla sigue arrancando.
+    showModo(modo, onToggle) {
+      ui.hideModo();
+      const b = el('button', 'ui-modo');
+      b.type = 'button';
+      b.setAttribute('aria-label', t('modo.aria'));
+      b.append(el('b', '', t(modo === 'libre' ? 'modo.libre' : 'modo.reto')), el('span', '', t(modo === 'libre' ? 'modo.libre.d' : 'modo.reto.d')));
+      b.addEventListener('pointerdown', (e) => e.stopPropagation());
+      b.addEventListener('keydown', (e) => e.stopPropagation());
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (ui.sfx) ui.sfx();
+        onToggle();
+      });
+      root.appendChild(b);
+      state.modo = b;
+    },
+    hideModo() {
+      if (state.modo) state.modo.remove();
+      state.modo = null;
     },
 
     showPauseButton(on) {

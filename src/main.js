@@ -64,7 +64,9 @@ async function boot() {
           musicBus: a.bus ? a.bus.musicBus.gain.value : null,
         })),
       // Bots de DISENO ('tap' | 'hold' | 'adjust') y tabla de alturas de salto; módulo aparte, solo en depuración.
-      bot: (kind, maxSec) => import('./debug/bots.js').then((m) => m.runBot(game.scene.scenes[0], kind, maxSec)),
+      bot: (kind, maxSec, seed) => import('./debug/bots.js').then((m) => m.runBot(game.scene.scenes[0], kind, maxSec, seed)),
+      // Nivel actual: semilla, modo, biomas y respaldo (NIVELES.md)
+      nivel: () => { const l = game.scene.scenes[0].level; return l && { seed: l.seed, modo: l.modo, biomas: l.biomas, fallbacks: l.fallbacks, piezas: l.pieceTotal }; },
       jumpTable: () => import('./debug/bots.js').then((m) => m.jumpTable()),
       // Mediciones de audio con OfflineAudioContext (niveles, eco, costura del loop, wav de evidencia)
       audio: () => import('./debug/audioMeasure.js'),

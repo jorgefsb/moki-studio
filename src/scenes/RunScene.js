@@ -10,6 +10,7 @@ import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
 import { load, save, num } from '../storage.js';
 import { GAME_LEVEL, buildDemo } from '../tramos.js';
+import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump } from '../jumpmodel.js';
 import mokiLado from '../../assets/moki/moki-lado.webp';
 import mokiSaluda from '../../assets/moki/moki-saluda.webp';
@@ -19,6 +20,8 @@ const FIXED_SPEED = Number(Q.get('speed')) || 0; // ?speed=320|450|560 fija la v
 const ANIM_DEBUG = Q.get('anim') === 'debug';
 const START_TUT = Q.get('tut') === '2' ? 2 : 0; // ?tut=2 salta a la lección 2
 const START_SCREEN = Q.get('screen'); // ?screen=play salta el demo (pruebas)
+const SEED = Q.get('seed'); // ?seed=2026-10-29 | 123 fija el nivel; ?nivel=clasico usa los 4 tramos escritos a mano
+const CLASICO = Q.get('nivel') === 'clasico';
 const GOD = Q.has('god') && (import.meta.env.DEV || Q.has('debug')); // sin choques, solo para pruebas
 const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -39,6 +42,7 @@ export class RunScene extends Phaser.Scene {
   }
 
   create() {
+    this.modo = load('moki.modo') === 'libre' ? 'libre' : 'reto'; // Reto del día por defecto (NIVELES.md §7)
     performance.mark('c0');
     this.texQueue = buildTextures(this); // lo esencial ya; el resto se genera después, una textura por cuadro
     performance.mark('c1');
@@ -357,6 +361,22 @@ export class RunScene extends Phaser.Scene {
     if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
   }
 
+  showModo() {
+    this.ui.showModo(this.modo, () => {
+      this.modo = this.modo === 'libre' ? 'reto' : 'libre';
+      save('moki.modo', this.modo);
+      this.showModo();
+    });
+  }
+
+  // Nivel de la partida (NIVELES.md §7): Reto del día = fecha local; Libre = semilla nueva por partida.
+  // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
+  makeLevel(seed) {
+    if (CLASICO) return GAME_LEVEL;
+    const modo = this.modo;
+    return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo);
+  }
+
   startGame() {
     this.ui.hideDemo();
     this.ui.hideFinal();
@@ -374,8 +394,8 @@ export class RunScene extends Phaser.Scene {
     this.pieces = 0;
     this.pieceValue = 0;
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
-    this.resetRun(GAME_LEVEL, 0);
-    this.speed = FIXED_SPEED || GAME_LEVEL.tramos[0].speed;
+    this.resetRun(this.makeLevel(), 0);
+    this.speed = FIXED_SPEED || this.level.tramos[0].speed;
     this.accel = 0;
     this.tut = { stage: load('moki.tutorial') === '1' ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
@@ -415,6 +435,7 @@ export class RunScene extends Phaser.Scene {
     this.pieceLabel.set('0');
     this.lastM = 0;
     this.ui.showDemo(this.coarse);
+    this.showModo();
     this.demoStripping = false;
   }
 
@@ -1380,6 +1401,7 @@ export class RunScene extends Phaser.Scene {
     this.ui.showAsi(C.jorgeInterventions, () => this.ui.hideAsi());
   }
 
+  // "Otra vez": en Reto repite el nivel del día; en Libre sale uno nuevo (startGame sortea otra semilla)
   playAgain() {
     this.startGame();
     this.tut = { stage: 4, state: 'off' }; // "Otra vez": sin tutorial
