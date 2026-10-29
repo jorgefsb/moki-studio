@@ -5,7 +5,7 @@ export const CONFIG = {
   jumpVelocity: 720, // px/s
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
   jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
-  jumpHoldRamp: { fromMs: 100, toMs: 118 }, // entre estos ms de mantener el corte se afloja hasta el salto completo
+  jumpHoldRamp: { fromMs: 110, toMs: 145 }, // entre estos ms de mantener el corte se afloja hasta el salto completo
   jumpMinPx: 62, // altura mínima de un toque: libra la caja (exige 38) y queda >= 15 px por debajo de la torre de 96 (exige 78)
   coyoteMs: 90,
   jumpBufferMs: 110,
@@ -63,8 +63,8 @@ export const CONFIG = {
   player: { xMax: 190, xRatio: 0.28, width: 38, height: 92, spriteHeight: 110 },
   obstacleSizes: {
     caja: { width: 60, height: 56 },
-    torre: { width: 60, height: 104 }, // exige 86 de salto: el toque (apex 62-72) queda >= 14 px abajo y mantener 120 ms ya la libra
-    viga: { width: 91, height: 32, hangBottom: 180 }, // colgante: 20% más ancha que antes; castiga saltar de más (pico > 94 px)
+    torre: { width: 60, height: 92 }, // exige 76 de salto: se libra manteniendo desde ~130 ms; el toque (apex 62-72) no la libra
+    viga: { width: 91, height: 32, hangBottom: 190 }, // colgante: 20% más ancha que antes; castiga saltar de más (pico > 94 px)
   },
   hitboxShrink: { x: 18, top: 16 }, // las cajas castigan menos de lo que se ven
   pickupSize: 30,

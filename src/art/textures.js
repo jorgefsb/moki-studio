@@ -420,13 +420,13 @@ function caja() {
 
 // Torre de 100 px: dos cajas de 50, la de arriba ladeada medio grado como pila de cartón.
 function torre() {
-  const [c, x] = mk(64, 108);
-  block(x, 2, 54, 60, 52, { body: TONE.kraftDanger, tape: true, seed: 42 });
+  const [c, x] = mk(64, 96);
+  block(x, 2, 48, 60, 44, { body: TONE.kraftDanger, tape: true, seed: 42 });
   x.save();
-  x.translate(32, 54);
+  x.translate(32, 48);
   x.rotate(-0.026);
-  x.translate(-32, -54);
-  block(x, 3, 2, 58, 52, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
+  x.translate(-32, -48);
+  block(x, 3, 2, 58, 44, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
   x.restore();
   return c;
 }
