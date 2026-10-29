@@ -154,11 +154,7 @@ function paperSun(R) {
   const [c, x] = mk(S, S);
   const o = S / 2;
   const r = rng(91);
-  [[1.9, 0.22], [1.45, 0.38]].forEach(([k, a]) => {
-    x.globalAlpha = a;
-    cut(x, (g) => g.arc(o, o, R * k, 0, Math.PI * 2), { fill: mix(PAL.paper, PAL.warm, 0.18), edgeW: 0, shadow: null, r, fiberCount: 20 });
-  });
-  x.globalAlpha = 1;
+  // sin anillos de halo: ARTE.md prohíbe el glow (rechazo de arte, sprint)
   cut(x, (g) => g.arc(o, o, R, 0, Math.PI * 2), { fill: mix(PAL.paper, PAL.warm, 0.42), edgeW: 2, shadow: { alpha: 0.1, blur: 6, dx: 2, dy: 3 }, r, fiberCount: 40 });
   return c;
 }

@@ -134,7 +134,9 @@ export const CONFIG = {
   // Las capas lejana y media ya traen 0.55 y 0.32 de papel en su color: estos velos se suman (de día ~0.64 / ~0.40).
   // near: el frente y el suelo van al revés, hacia tinta (gauntlet R0: frente oscuro), con alfa near.
   // on: false apaga velos, cordillera y sol de una vez (el fondo queda como en master).
-  atmosphere: { on: true, far: 0.2, mid: 0.12, near: 0.16 },
+  // night: valores de la hora noche (arte rechazó la noche deslavada): velos casi fuera, suelo más hacia tinta,
+  // cielo 22% hacia tinta y cordillera rellena hacia #3a342d. Se mezclan con el fundido de la hora.
+  atmosphere: { on: true, far: 0.2, mid: 0.12, near: 0.16, night: { far: 0.08, mid: 0.05, near: 0.26, sky: 0.22, ridge: 0x3a342d } },
   // Gauntlet R0: cordillera extra detrás de los cerros (silueta de la capa lejana, más grande y casi color cielo)
   // y sol de papel bajo detrás de las colinas (de noche se apaga y queda la lámpara).
   // ridge.mix: cuánto del tono de los cerros lejanos conserva (0 = color del cielo). sun.x: fracción del ancho;

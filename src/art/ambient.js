@@ -119,7 +119,11 @@ export class Ambient {
     const A = DAY[d.from];
     const B = DAY[d.to];
     const s = this.scene;
-    const sk = lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t);
+    // nt: cuánto es de noche (0 de día, 1 de noche, sigue el fundido). Arte rechazó la noche deslavada:
+    // de noche el cielo baja hacia tinta, los velos casi se van y la cordillera se rellena hacia tinta.
+    const nt = d.to === 3 ? d.t : d.from === 3 ? 1 - d.t : 0;
+    const NI = C.atmosphere.night;
+    const sk = lerpColor(lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t), hex(PAL.ink), NI.sky * nt);
     const far = lerpColor(this.tone(d.from, 'far'), this.tone(d.to, 'far'), d.t);
     s.sky.setTint(toTint(sk));
     s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo
@@ -130,9 +134,13 @@ export class Ambient {
     if (s.farVeil) {
       s.farVeil.setTintFill(sk);
       s.midVeil.setTintFill(sk);
-      if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha(C.atmosphere.far * this.farAlpha());
-      // cordillera extra: el plano más lejano, casi del color del cielo (cada plano más claro hacia atrás)
-      s.ridge.setTintFill(lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix));
+      const A2 = C.atmosphere;
+      if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha((A2.far + (NI.far - A2.far) * nt) * this.farAlpha());
+      if (s.midVeil.texture.key === 'mid') s.midVeil.setAlpha(A2.mid + (NI.mid - A2.mid) * nt);
+      s.nearVeil.setAlpha(A2.near + (NI.near - A2.near) * nt);
+      // cordillera extra: de día casi del color del cielo; de noche rellena hacia tinta (#3a342d) para no verse niebla
+      const ridgeDay = lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix);
+      s.ridge.setTintFill(lerpColor(ridgeDay, NI.ridge, nt));
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
@@ -170,11 +178,11 @@ export class Ambient {
     this.fired.stars = true;
     const band = this.flightY();
     if (!band) return;
-    const n = 5 + Math.floor(this.r() * 3);
+    const n = (s.vw > 700 ? 7 : 5) + Math.floor(this.r() * 2); // arte: 7-8 en ancho, 5-6 en celular
     for (let i = 0; i < n; i++) {
       const x = s.vw * (0.2 + (0.78 * (i + this.r() * 0.6)) / n);
       const y = band[0] - 10 + this.r() * Math.max(10, (band[1] - band[0]) * 0.55);
-      const sp = s.add.image(x, y, 'ambStar').setOrigin(0.5, 0).setDepth(1.25).setScale(0.001);
+      const sp = s.add.image(x, y, 'ambStar').setOrigin(0.5, 0).setDepth(1.95).setScale(0.001); // sobre la cordillera (1.9): antes la tapaba
       this.stars.push({ s: sp, x0: x, d0: s.dist });
       if (s.reduced) sp.setScale(1);
       else {
