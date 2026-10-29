@@ -258,12 +258,21 @@ export class RunScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
     const g = C.world.groundY;
-    const z = Math.min(H / C.world.height, W / C.world.minVisibleWidth);
+    const P = C.portrait;
+    const portrait = W / H <= P.maxAspect;
+    const minW = C.world.minVisibleWidth;
+    const z = Math.min(H / C.world.height, W / (portrait ? P.visibleWidth : minW));
     this.zoom = z;
     this.vw = W / z;
     this.vh = H / z;
-    this.px = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio));
-    this.top = -Math.max(0, this.vh - C.world.height) * 0.6;
+    // Lo que se ve delante de Moki nunca baja de lo que se ve con minVisibleWidth (misma reacción).
+    const ahead = minW - Math.min(C.player.xMax, minW * C.player.xRatio);
+    this.px = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio, this.vw - ahead));
+    const spare = Math.max(0, this.vh - C.world.height);
+    // En vertical el suelo queda a groundAt del alto, sin sacar de cuadro ninguna parte de la banda jugable
+    this.top = portrait ? Math.min(0, Math.max(-spare, g - P.groundAt * this.vh)) : -spare * 0.6;
+    this.farS = portrait ? P.farScale : 1;
+    this.midS = portrait ? P.midScale : 1;
     this.bottom = this.top + this.vh;
 
     const cam = this.cameras.main;
@@ -275,9 +284,10 @@ export class RunScene extends Phaser.Scene {
     this.skyGrad.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
     this.clouds.setPosition(0, g - 900).setSize(this.vw, 900);
     this.topFade.setPosition(0, this.top).setDisplaySize(this.vw, 56);
-    this.base = { far: g + 12 - 300, mid: g + 10 - 360 };
-    this.far.setPosition(0, this.base.far).setSize(this.vw, 300);
-    this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360);
+    // Las capas escaladas conservan su pie sobre el suelo; crecen hacia arriba
+    this.base = { far: g + 12 - 300 * this.farS, mid: g + 10 - 360 * this.midS };
+    this.far.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
+    this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
     this.surface.setPosition(0, g - 8).setSize(this.vw, 22);
     this.canto.setPosition(0, g + 14).setSize(this.vw, 6);
     const frontH = Math.max(40, this.bottom - (g + 20));
@@ -809,8 +819,9 @@ export class RunScene extends Phaser.Scene {
     const p = C.art.parallax;
     // Con movimiento reducido el fondo se queda quieto; el plano de juego sí corre (es la mecánica).
     this.clouds.tilePositionX = this.reduced ? 0 : this.dist * p.clouds;
-    this.far.tilePositionX = this.reduced ? 0 : this.dist * p.far;
-    this.mid.tilePositionX = this.reduced ? 0 : this.dist * p.mid;
+    // tilePosition va en px de textura (Phaser lo multiplica por tileScale): se divide para que el paralaje no cambie
+    this.far.tilePositionX = this.reduced ? 0 : (this.dist * p.far) / this.farS;
+    this.mid.tilePositionX = this.reduced ? 0 : (this.dist * p.mid) / this.midS;
     this.surface.tilePositionX = this.dist;
     this.canto.tilePositionX = this.dist;
     this.front.tilePositionX = this.dist;

@@ -119,4 +119,11 @@ export const CONFIG = {
     checkpointFlagMs: 280,
     collectMs: 200,
   },
+
+  // Celular vertical (ancho/alto <= maxAspect): se ve un mundo más angosto y Moki se corre a la izquierda,
+  // de modo que lo que se ve por delante de Moki (tiempo de reacción) es igual que con world.minVisibleWidth.
+  // visibleWidth 460 en 390x844: zoom 0.72 -> 0.85, Moki 79 -> 93 px, x de Moki 151 -> 71.
+  // Composición (director, opción C): groundAt = altura del suelo en pantalla (0.66 = 66% desde arriba);
+  // farScale/midScale agrandan los cerros lejanos y la capa media para llenar el cielo (el paralaje corre igual).
+  portrait: { maxAspect: 0.75, visibleWidth: 460, groundAt: 0.66, farScale: 1.8, midScale: 1.3 },
 };

@@ -3,6 +3,7 @@ import './ui.css';
 import { CONFIG as C } from '../config.js';
 import { t } from '../i18n.js';
 import { feel, JUICE_NAMES } from '../feel.js';
+import { EMBED } from '../embed.js';
 
 const reducedMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -233,10 +234,14 @@ export function createUI() {
       again.type = 'button';
       const how = el('button', 'ui-btn secondary', t('end.how'));
       how.type = 'button';
-      const link = el('a', 'ui-link', t('end.link'));
-      link.href = 'https://jorgesuarez.com.mx';
-      link.rel = 'noopener';
-      card.append(again, how, el('br'), link);
+      card.append(again, how);
+      if (!EMBED) {
+        // En embed la página padre ya trae la liga de regreso
+        const link = el('a', 'ui-link', t('end.link'));
+        link.href = 'https://jorgesuarez.com.mx';
+        link.rel = 'noopener';
+        card.append(el('br'), link);
+      }
       scrim.append(card);
       root.appendChild(scrim);
       again.addEventListener('click', onAgain);
@@ -266,13 +271,16 @@ export function createUI() {
       }
       const foot = el('div', 'foot');
       foot.append(el('p', 'jorge', t(interventions === 1 ? 'how.jorge.one' : 'how.jorge.many', { n: interventions })));
-      const link = el('a', 'ui-link', t('end.link'));
-      link.href = 'https://jorgesuarez.com.mx';
-      link.rel = 'noopener';
       const back = el('button', 'ui-btn primary', t('how.back'));
       back.type = 'button';
       back.addEventListener('click', onBack);
-      foot.append(link, back);
+      if (!EMBED) {
+        const link = el('a', 'ui-link', t('end.link'));
+        link.href = 'https://jorgesuarez.com.mx';
+        link.rel = 'noopener';
+        foot.append(link);
+      }
+      foot.append(back);
       asi.append(wrap, foot);
       root.appendChild(asi);
       primary = onBack;
