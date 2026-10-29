@@ -9,10 +9,10 @@ const lum = (c) => {
 };
 const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
-export async function measureContrast(s, type = 'torre') {
+export async function measureContrast(s, type = 'torre', days = [0, 1, 2, 3]) {
   const px = (x, y) => new Promise((res) => s.game.renderer.snapshotPixel(Math.round(x), Math.round(y), (c) => res([c.r, c.g, c.b])));
   const out = {};
-  for (const day of [0, 1, 2, 3]) {
+  for (const day of days) {
     s.screen = 'play';
     s.startGame();
     s.tut = { stage: 4, state: 'off' };

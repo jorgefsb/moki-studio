@@ -502,12 +502,12 @@ export class RunScene extends Phaser.Scene {
     const o = { D: e.D, type: e.type, plan: e.plan, size, x, entered: false, passed: false, handled: false };
     if (e.type === 'viga') {
       const topY = g - size.hangBottom - size.height;
-      o.sprite = this.add.image(x, topY - 2, 'viga').setOrigin(0.5, 0).setDepth(10);
+      o.sprite = this.add.image(x, topY - 2, this.ambient ? this.ambient.obsKey('viga') : 'viga').setOrigin(0.5, 0).setDepth(10);
       o.threads = [-34, 34].map((dx) => this.add.tileSprite(x + dx, this.top - 10, 6, 10, 'hilo').setOrigin(0.5, 0).setDepth(9.5));
       o.shadow = this.addShadow(x + 6, size.width * 1.15, 0.3);
       o.topY = topY;
     } else {
-      o.sprite = this.add.image(x, g + 2, e.type).setOrigin(0.5, 1).setDepth(10);
+      o.sprite = this.add.image(x, g + 2, this.ambient ? this.ambient.obsKey(e.type) : e.type).setOrigin(0.5, 1).setDepth(10);
       const sk = this.ambient ? this.ambient.shadowK : 1; // mañana y tarde: sombras largas y suaves; mediodía: cortas
       o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }

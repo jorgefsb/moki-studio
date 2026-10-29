@@ -5,6 +5,9 @@ import { PICKUP_SCALE } from './theme.js';
 
 const { noise, osc, lp, shape } = voiceTools;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+// T3g: el bus de efectos baja 4.5 dB (5.7 a 3.4) para que los picos de sesión (piezas con racha + arco + salto) queden <= -7 dBFS;
+// el salto y su bip recuperan +3 dB, o sea quedan 1.5 dB bajo el nivel de antes y se siguen oyendo sobre la música
+const JUMP_BOOST = 1.41;
 
 // Opciones comunes: reduced baja picos 20%, sube el ataque mínimo a 8 ms y pasa todo por lowpass de 3.5 kHz
 function prep(ctx, dest, o) {
@@ -32,11 +35,11 @@ export function jump(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
   const a = Math.max(0.003, P.atkMin);
   // despegue: triangular de 330 a 520 Hz en 90 ms
-  gl(ctx, P.out, t, 'triangle', 330 * P.d, 520 * P.d, 90, 0.35 * P.pk * P.v, a, 0.11);
+  gl(ctx, P.out, t, 'triangle', 330 * P.d, 520 * P.d, 90, 0.35 * JUMP_BOOST * P.pk * P.v, a, 0.11);
   // "bip" de juguete: pulso 25% una octava arriba, al 20%, detrás de lowpass 2.5 kHz
   const f = lp(ctx, 2500, 0.5);
   const g = ctx.createGain();
-  shape(g, t, a, 0.35 * P.pk * P.v * 0.2, t + 0.11);
+  shape(g, t, a, 0.35 * JUMP_BOOST * P.pk * P.v * 0.2, t + 0.11);
   const os = ctx.createOscillator();
   os.setPeriodicWave(pulseWave(ctx));
   os.frequency.setValueAtTime(660 * P.d, t);
@@ -53,7 +56,7 @@ export function jump(ctx, dest, t, o = {}) {
   bp.frequency.value = 2500;
   bp.Q.value = 1;
   const ng = ctx.createGain();
-  shape(ng, t, 0.003, 0.04 * P.pk, t + 0.012);
+  shape(ng, t, 0.003, 0.04 * JUMP_BOOST * P.pk, t + 0.012);
   nz.connect(bp);
   bp.connect(ng);
   ng.connect(P.out);
@@ -65,7 +68,7 @@ export function jump(ctx, dest, t, o = {}) {
 export function jumpHigh(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
   const g = ctx.createGain();
-  shape(g, t, Math.max(0.003, P.atkMin), 0.4 * P.pk * P.v, t + 0.17);
+  shape(g, t, Math.max(0.003, P.atkMin), 0.4 * JUMP_BOOST * P.pk * P.v, t + 0.17);
   const os = osc(ctx, 'triangle', 540 * P.d, t, t + 0.17);
   os.frequency.exponentialRampToValueAtTime(780 * P.d, t + 0.05);
   os.connect(g);

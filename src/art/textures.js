@@ -342,7 +342,9 @@ function midLayer() {
 
 // ---------- Piezas del plano de juego ----------
 
-function block(x, ox, oy, w, h, { body, tape, seed }) {
+function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
+  // dim: variante de noche (T3g): el cartón se oscurece hacia la tinta y la cinta/franjas conservan #FF6B35
+  const body = dim ? mix(body0, PAL.ink, dim) : body0;
   const r = rng(seed);
   const W = x.canvas.width;
   const H = x.canvas.height;
@@ -426,29 +428,29 @@ function block(x, ox, oy, w, h, { body, tape, seed }) {
 }
 
 // Los dibujos miden 4 px más que la caja de juego (contorno claro de 2 px por lado).
-function caja() {
+function caja(dim = 0) {
   const [c, x] = mk(64, 60);
-  block(x, 2, 2, 60, 56, { body: TONE.kraftDanger, tape: true, seed: 41 });
+  block(x, 2, 2, 60, 56, { body: TONE.kraftDanger, tape: true, seed: 41, dim });
   return c;
 }
 
 // Torre de 100 px: dos cajas de 50, la de arriba ladeada medio grado como pila de cartón.
-function torre() {
+function torre(dim = 0) {
   const [c, x] = mk(64, 96);
-  block(x, 2, 48, 60, 44, { body: TONE.kraftDanger, tape: true, seed: 42 });
+  block(x, 2, 48, 60, 44, { body: TONE.kraftDanger, tape: true, seed: 42, dim });
   x.save();
   x.translate(32, 48);
   x.rotate(-0.026);
   x.translate(-32, -48);
-  block(x, 3, 2, 58, 44, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
+  block(x, 3, 2, 58, 44, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43, dim });
   x.restore();
   return c;
 }
 
 // Viga colgante: tablón de cartón con franja naranja, colgado de dos hilos (títere). 76x32 de juego.
-function viga() {
+function viga(dim = 0) {
   const [c, x] = mk(95, 36);
-  block(x, 2, 2, 91, 32, { body: TONE.kraftDanger, tape: false, seed: 91 });
+  block(x, 2, 2, 91, 32, { body: TONE.kraftDanger, tape: false, seed: 91, dim });
   x.save();
   x.beginPath();
   x.roundRect(2, 2, 91, 32, 6);
@@ -1046,6 +1048,9 @@ export function buildTextures(scene) {
   defer('far', () => farLayer());
   defer('mid', () => midLayer());
   defer('viga', () => viga());
+  defer('caja_n', () => caja(0.7));
+  defer('torre_n', () => torre(0.7));
+  defer('viga_n', () => viga(0.7));
   defer('hilo', () => hilo());
   defer('hand', () => hand());
   defer('keycap', () => keycap());

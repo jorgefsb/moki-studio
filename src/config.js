@@ -28,7 +28,7 @@ export const CONFIG = {
 
   // Audio (AUDIO.md §3): el maestro es fijo; solo se calibran los dos buses
   // Calibrado con OfflineAudioContext: música con todas las capas = -18 dBFS de pico, efectos principales ≈ -12 dBFS
-  audio: { master: 0.125, sfxBus: 5.7, musicBus: 0.78, echoWet: 0.33, echoFeedback: 0.25 },
+  audio: { master: 0.125, sfxBus: 3.4, musicBus: 0.78, echoWet: 0.33, echoFeedback: 0.25 },
 
   // Piezas y puntaje
   pickupReach: { dx: 30, dy: 34, bodyCenter: 46 }, // la caja de recogida sigue el cuerpo, no todo Moki

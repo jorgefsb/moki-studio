@@ -22,7 +22,7 @@ export const DAY = [
   { name: 'manana', sky: hex('#F8ECD8'), farVeil: 0xffffff, farAlpha: 0.78, bands: 0, shadowK: 1.35, obs: 0xffffff }, // cálido y claro, colinas pálidas, sombras largas
   { name: 'mediodia', sky: hex('#EBDBC5'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), farAlpha: 1, bands: 0, shadowK: 0.85, obs: 0xe0e0e0 },
   { name: 'tarde', sky: hex('#DFC9AF'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.12)), farAlpha: 1, bands: 1, shadowK: 1.5, obs: 0xd0d0d0 }, // bandas de fibra arriba
-  { name: 'noche', sky: hex('#A69682'), farVeil: hex('#B3ADB0'), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0x8a8a8a }, // marrón tinta; el plano lejano más frío
+  { name: 'noche', sky: hex('#A69682'), farVeil: hex('#B3ADB0'), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0xffffff }, // marrón tinta; el plano lejano más frío
 ];
 
 const NEED = { plane: 'ambPlane', birds: 'ambBird1', butterflies: 'ambButterfly', sign: 'paper', moki: 'mokiSaluda', balloon: 'ambBalloon' };
@@ -44,6 +44,7 @@ export class Ambient {
     this.bands = scene.add.tileSprite(0, 0, 10, 10, 'paper').setOrigin(0, 0).setDepth(1.4).setAlpha(0);
     this.day = { from: 0, to: 0, t: 1, dur: 1 };
     this.obsTint = 0xffffff;
+    this.night = false; // texturas de noche en los obstáculos (cartón oscuro, cinta y franjas en #FF6B35)
     this.resetState();
   }
 
@@ -112,6 +113,7 @@ export class Ambient {
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
     s.obstacles.forEach((o) => o.sprite && o.sprite.setTint(this.obsTint));
+    this.setNight(d.to === 3 ? d.t >= 0.5 : d.from === 3 ? d.t < 0.5 : false);
     s.clouds.setTint(lerpColor(0xffffff, far, 0.6));
     // bandas de fibra (tarde y, más tenues, noche): capas de papel, no un degradado liso
     const bandA = A.bands + (B.bands - A.bands) * d.t;
@@ -124,6 +126,18 @@ export class Ambient {
     this.lamp.setPosition(Math.max(70, s.vw * 0.12), s.top + (s.vw < 700 ? 74 / s.zoom : 4)); // en pantalla angosta cuelga bajo la fila del HUD
     // estrellas de papel: solo en la noche, cuando ya cayó del todo
     if (d.to === 3 && d.t >= 1 && !this.stars.length && !this.fired.stars && s.textures.exists('ambStar')) this.spawnStars();
+  }
+
+  // Cartón oscuro de noche conservando la cinta: se cambia la textura a mitad del fundido (a mano, como un cambio de escena de papel)
+  setNight(on) {
+    const s = this.scene;
+    if (on === this.night) return;
+    if (on && !s.textures.exists('caja_n')) return; // aún se genera: lo reintenta el siguiente cuadro
+    this.night = on;
+    s.obstacles.forEach((o) => o.sprite && o.sprite.setTexture(this.obsKey(o.type)));
+  }
+  obsKey(type) {
+    return this.night && this.scene.textures.exists(`${type}_n`) ? `${type}_n` : type;
   }
 
   spawnStars() {
@@ -356,6 +370,7 @@ export class Ambient {
   update(dtMs, ctx) {
     const s = this.scene;
     if (this.day.t < 1) this.applyDay(dtMs / this.day.dur);
+    else if (this.day.to === 3 && !this.night) this.setNight(true); // las texturas de noche se generan después: reintenta
     if (s.reduced) {
       this.stars.forEach((st) => (st.s.x = st.x0)); // versiones fijas: sin eventos que viajen
       return;
