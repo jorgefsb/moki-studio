@@ -314,6 +314,24 @@ function farLayer() {
   return c;
 }
 
+// Cordillera extra (gauntlet R0): solo cerros, sin casitas ni canto; el color lo pone el tintFill de la escena.
+function ridgeLayer() {
+  const H = 300;
+  const [c, x] = mk(WRAP, H);
+  const r = rng(34);
+  const edge = { fill: '#FFFFFF', edgeW: 0, shadow: null, r, fiberCount: 0 };
+  [[-200, 760, 175], [560, 1300, 140], [1150, 1980, 185], [1760, 2300, 150]].forEach(([a, b, p]) => {
+    const path = hillPath(a, b, H + 4, p, r);
+    [-WRAP, 0, WRAP].forEach((off) => {
+      x.save();
+      x.translate(off, 0);
+      cut(x, path, edge);
+      x.restore();
+    });
+  });
+  return c;
+}
+
 function midLayer() {
   const H = 360;
   const [c, x] = mk(WRAP, H);
@@ -1084,6 +1102,7 @@ export function buildTextures(scene) {
   add('chipPaper', chip(PAL.paper, 72));
   // capas de fondo: entran con fundido apenas están listas
   defer('clouds', () => cloudsLayer());
+  defer('ridge', () => ridgeLayer());
   defer('far', () => farLayer());
   defer('mid', () => midLayer());
   defer('viga', () => viga());

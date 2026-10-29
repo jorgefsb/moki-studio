@@ -706,14 +706,10 @@ export class RunScene extends Phaser.Scene {
       this.texQueue = null;
       return;
     }
-    const layer = { clouds: this.clouds, far: this.far, mid: this.mid }[key];
+    const layer = { clouds: this.clouds, ridge: this.ridge, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);
       this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut' });
-      if (key === 'far') {
-        this.ridge.setTexture('far');
-        this.tweens.add({ targets: this.ridge, alpha: 1, duration: 320, ease: 'Sine.easeOut' });
-      }
       const veil = { far: this.farVeil, mid: this.midVeil }[key];
       if (veil) {
         veil.setTexture(key);
@@ -853,7 +849,7 @@ export class RunScene extends Phaser.Scene {
     // tilePosition va en px de textura (Phaser lo multiplica por tileScale): se divide para que el paralaje no cambie
     this.far.tilePositionX = this.reduced ? 0 : (this.dist * p.far) / this.farS;
     this.mid.tilePositionX = this.reduced ? 0 : (this.dist * p.mid) / this.midS;
-    this.ridge.tilePositionX = 517 + (this.reduced ? 0 : (this.dist * C.ridge.parallax) / this.ridgeS); // 517: otra parte de la tira, no los mismos cerros
+    this.ridge.tilePositionX = this.reduced ? 0 : (this.dist * C.ridge.parallax) / this.ridgeS;
     this.farVeil.tilePositionX = this.far.tilePositionX;
     this.midVeil.tilePositionX = this.mid.tilePositionX;
     this.surface.tilePositionX = this.dist;
