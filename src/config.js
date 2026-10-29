@@ -5,23 +5,42 @@ export const CONFIG = {
   jumpVelocity: 720, // px/s
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
   jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
-  jumpMinPx: 66, // altura mínima de un toque (libra la caja baja de 56 con holgura; la torre de 84 pide mantener)
+  jumpMinPx: 66, // altura mínima de un toque. La torre efectiva (100-16) exige 82: el toque queda ≥15 px abajo (DISENO pedía 70; no sale ese margen)
   coyoteMs: 90,
   jumpBufferMs: 110,
 
-  // Carrera
+  // Carrera: la velocidad la fija cada tramo y sube con una rampa de 2 s en el checkpoint
   runSpeedStart: 320, // px/s
-  runSpeedMax: 560,
-  runSpeedRampPerSec: 2, // px/s²
+  runSpeedMax: 470,
+  tramos: [{ speed: 320 }, { speed: 350 }, { speed: 385 }, { speed: 420 }],
+  tramoEaseSec: 2,
+  respawnEaseSec: 1,
+  respawnSpeedMult: 0.85,
+  respawnCalmSec: 2,
+  retryLockoutMs: 700, // la tarjeta de fallo no acepta toque antes (guarda contra el toque de pánico)
 
-  // Obstáculos
-  obstacleGapMin: 420, // px entre obstáculos
-  obstacleGapMax: 900,
-  pickupChance: 0.6, // por hueco
+  // Guion (DISENO.md §3 y §8)
+  cajaPegadaGapPx: 84,
+  minGapSec: 0.75,
+  pairGapSec: 0.9,
+  waveGapSec: 0.8,
+
+  // Piezas y puntaje
+  pickupReach: { dx: 30, dy: 34, bodyCenter: 46 }, // la caja de recogida sigue el cuerpo, no todo Moki
+  combo: { windowMs: 900, steps: [[1, 1], [3, 2], [6, 3]] }, // [desde N piezas seguidas, valor]
+  arcBonus: 5,
+  amberValue: 5,
+  scorePerPiece: 10,
+  scorePerMeter: 1,
+  jorgeInterventions: __JORGE_INTERVENTIONS__, // cuenta de BITACORA.md al compilar
 
   // Nivel
   checkpointEverySec: 30,
   levelLengthSec: 120,
+
+  // Tutorial (UX.md §4)
+  tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
+  demo: { idleReturnMs: 20000, stripMs: 400 },
 
   // Moki
   squashMax: 0.03,
@@ -33,11 +52,12 @@ export const CONFIG = {
   // Moki mide ~20% de la banda (ARTE.md sección 6); la caja de colisión es más chica que el dibujo.
   // x: posición horizontal (28% del ancho visible, tope xMax) para dejar tiempo de reacción en celular.
   player: { xMax: 190, xRatio: 0.28, width: 38, height: 92, spriteHeight: 110 },
-  obstacleSizes: [
-    { key: 'caja', width: 60, height: 56 },
-    { key: 'torre', width: 60, height: 84 },
-  ],
-  hitboxShrink: { x: 14, top: 16 }, // las cajas castigan menos de lo que se ven
+  obstacleSizes: {
+    caja: { width: 60, height: 56 },
+    torre: { width: 60, height: 100 }, // más alta: el toque ya no la libra
+    viga: { width: 76, height: 32, hangBottom: 180 }, // colgante: castiga saltar de más (pico > 94 px)
+  },
+  hitboxShrink: { x: 18, top: 16 }, // las cajas castigan menos de lo que se ven
   pickupSize: 30,
 
   // Títere recortado de moki-lado.webp (ANIMACION.md §1). Cajas en píxeles de la fuente (134x260),
@@ -57,7 +77,8 @@ export const CONFIG = {
       pivot: { x: 24, y: 150 }, // hombro dentro del recorte (px de moki-saluda)
       shoulder: { x: 70, y: 146 }, // hombro en moki-lado
       maxDeg: 18,
-      lagMs: 30, // retraso suave respecto a la pierna opuesta
+      lagMs: 40, // tope del retraso (ms) y filtro de las transiciones del aire
+      phaseLag: 0.07, // retraso respecto a la pierna opuesta, en fracción de ciclo
     },
     sole: { x: 69, y: 256 }, // punto de la suela que se bloquea al suelo
     farTint: 0xc9bfb1, // pierna lejana: copia del recorte, papel en sombra
@@ -72,7 +93,7 @@ export const CONFIG = {
     tiltMaxDeg: 6,
     theta0: 38, // ángulo del tobillo al contacto/despegue (grados). La bota pisa plana: el paso lo da el tobillo (46 src), no la pierna entera
     duty: 0.35, // fracción del ciclo que cada pierna pasa en apoyo
-    cycleBobPx: 3, // subida de la cadera entre contacto y media pisada
+    cycleBobPx: 3.5, // subida de la cadera entre contacto y media pisada
     retractMax: 7, // px de recogida de la pierna en balanceo
     tiltRunDeg: 3,
     squashPx: 3.3, // hundimiento máximo (3% de 110)

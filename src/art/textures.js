@@ -418,15 +418,146 @@ function caja() {
   return c;
 }
 
+// Torre de 100 px: dos cajas de 50, la de arriba ladeada medio grado como pila de cartón.
 function torre() {
-  const [c, x] = mk(64, 88);
-  block(x, 2, 44, 60, 42, { body: TONE.kraftDanger, tape: true, seed: 42 });
+  const [c, x] = mk(64, 104);
+  block(x, 2, 52, 60, 50, { body: TONE.kraftDanger, tape: true, seed: 42 });
   x.save();
-  x.translate(32, 44);
+  x.translate(32, 52);
   x.rotate(-0.026);
-  x.translate(-32, -44);
-  block(x, 3, 2, 58, 42, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
+  x.translate(-32, -52);
+  block(x, 3, 2, 58, 50, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
   x.restore();
+  return c;
+}
+
+// Viga colgante: tablón de cartón con franja naranja, colgado de dos hilos (títere). 76x32 de juego.
+function viga() {
+  const [c, x] = mk(80, 36);
+  block(x, 2, 2, 76, 32, { body: TONE.kraftDanger, tape: false, seed: 91 });
+  x.save();
+  x.beginPath();
+  x.roundRect(2, 2, 76, 32, 6);
+  x.clip();
+  // franja naranja diagonal, en la forma de la cinta de las cajas
+  x.fillStyle = PAL.accent;
+  x.beginPath();
+  x.moveTo(22, 9);
+  x.lineTo(36, 9);
+  x.lineTo(30, 34);
+  x.lineTo(16, 34);
+  x.closePath();
+  x.fill();
+  x.beginPath();
+  x.moveTo(46, 9);
+  x.lineTo(60, 9);
+  x.lineTo(54, 34);
+  x.lineTo(40, 34);
+  x.closePath();
+  x.fill();
+  x.restore();
+  // ojales donde se atan los hilos
+  x.fillStyle = PAL.ink;
+  for (const ox of [12, 68]) {
+    x.beginPath();
+    x.arc(ox, 8, 2.2, 0, TAU);
+    x.fill();
+  }
+  return c;
+}
+
+// Hilo de títere, tileable en vertical.
+function hilo() {
+  const [c, x] = mk(6, 16);
+  x.fillStyle = rgba(PAL.border, 0.9);
+  x.fillRect(2, 0, 2, 16);
+  x.fillStyle = rgba(PAL.paper, 0.45);
+  x.fillRect(2, 0, 1, 16);
+  return c;
+}
+
+// Mano de papel (UX §4): papel #F4E8D5, canto kraft, índice que señala hacia arriba. Sin naranja.
+function hand() {
+  const [c, x] = mk(64, 84);
+  const r = rng(95);
+  const palm = (g) => {
+    g.roundRect(14, 34, 38, 44, 12);
+    g.roundRect(24, 6, 14, 40, 7); // índice
+    g.roundRect(8, 44, 14, 24, 7); // pulgar
+  };
+  cut(x, palm, { fill: PAL.paper, edgeW: 0, shadow: { alpha: 0.28, blur: 6, dx: 1, dy: 3 }, r, fiberCount: 70 });
+  x.strokeStyle = PAL.kraft;
+  x.lineWidth = 3;
+  x.lineJoin = 'round';
+  x.beginPath();
+  palm(x);
+  x.stroke();
+  // cuatro dedos plegados como líneas de doblez
+  x.strokeStyle = rgba(PAL.border, 0.7);
+  x.lineWidth = 1.5;
+  for (const ox of [30, 38, 46]) {
+    x.beginPath();
+    x.moveTo(ox, 42);
+    x.lineTo(ox, 52);
+    x.stroke();
+  }
+  return c;
+}
+
+function tokenAmber() {
+  const [c, x] = mk(36, 40);
+  const r = rng(52);
+  x.fillStyle = mix(PAL.warm, PAL.ink, 0.28);
+  x.beginPath();
+  x.arc(18, 21, 15, 0, TAU);
+  x.fill();
+  x.fillStyle = PAL.warm;
+  x.beginPath();
+  x.arc(18, 18, 15, 0, TAU);
+  x.fill();
+  x.save();
+  x.beginPath();
+  x.arc(18, 18, 15, 0, TAU);
+  x.clip();
+  fibers(x, 36, 40, r, { count: 50, color: PAL.ink, alpha: 0.1 });
+  fibers(x, 36, 40, r, { count: 40, color: PAL.paper, alpha: 0.22 });
+  x.restore();
+  x.strokeStyle = mix(PAL.warm, PAL.paper, 0.45);
+  x.lineWidth = 3;
+  x.beginPath();
+  x.arc(18, 18, 12.5, 0, TAU);
+  x.stroke();
+  x.strokeStyle = rgba(PAL.border, 0.75);
+  x.lineWidth = 1.5;
+  x.beginPath();
+  x.moveTo(9, 22);
+  x.quadraticCurveTo(18, 14, 27, 22);
+  x.stroke();
+  return c;
+}
+
+// Meta: arco de papel con bandera ámbar (la meta es checkpoint, ARTE §8).
+function metaArch() {
+  const [c, x] = mk(220, 190);
+  const r = rng(97);
+  const post = (px) => cut(x, (g) => g.roundRect(px, 22, 14, 164, 4), { fill: TONE.kraftDark, edgeW: 2, shadow: { alpha: 0.28, blur: 6, dx: 4, dy: 2 }, r, fiberCount: 40 });
+  post(8);
+  post(198);
+  cut(x, (g) => g.roundRect(4, 14, 212, 26, 6), { fill: PAL.kraft, edgeW: 3, shadow: { alpha: 0.3, blur: 6, dx: 0, dy: 4 }, r, fiberCount: 80 });
+  // banderines ámbar colgando del arco
+  const tri = (cx) => {
+    x.fillStyle = PAL.warm;
+    x.beginPath();
+    x.moveTo(cx - 14, 40);
+    x.lineTo(cx + 14, 40);
+    x.lineTo(cx, 70);
+    x.closePath();
+    x.fill();
+    x.strokeStyle = rgba(PAL.paper, 0.55);
+    x.lineWidth = 1.5;
+    x.stroke();
+  };
+  [52, 90, 130, 168].forEach(tri);
   return c;
 }
 
@@ -565,6 +696,71 @@ function fgStrip(w, h, seed, fill, ragged) {
   return c;
 }
 
+// Piezas chicas de primer plano y de suelo: pasto de papel, piedras y bordes de cartón rasgado.
+// Más oscuras que el suelo, con un poco de desenfoque y sombra de contacto (ARTE §7, T3b2).
+function groundPiece(kind, seed) {
+  const r = rng(seed);
+  const dark = mix(PAL.kraft, PAL.ink, 0.46);
+  const mid = mix(PAL.kraft, PAL.ink, 0.34);
+  const W = kind === 'torn' ? 76 : kind === 'grass' ? 44 : 38;
+  const H = kind === 'torn' ? 30 : kind === 'grass' ? 38 : 26;
+  const [c, x] = mk(W, H);
+  // sombra de contacto, tenue y desenfocada
+  x.save();
+  x.filter = 'blur(2px)';
+  x.fillStyle = rgba(PAL.ink, 0.32);
+  x.beginPath();
+  x.ellipse(W / 2 + 2, H - 4, W * 0.4, 3.4, 0, 0, TAU);
+  x.fill();
+  x.restore();
+  x.save();
+  x.filter = 'blur(0.7px)';
+  x.fillStyle = dark;
+  x.strokeStyle = rgba(PAL.ink, 0.5);
+  x.lineWidth = 1.5;
+  x.lineJoin = 'round';
+  if (kind === 'grass') {
+    const blades = 6 + Math.floor(r() * 4);
+    for (let i = 0; i < blades; i++) {
+      const bx = 6 + (i / (blades - 1)) * (W - 12);
+      const h = 14 + r() * 18;
+      const lean = (r() - 0.5) * 12;
+      x.fillStyle = i % 2 ? dark : mid;
+      x.beginPath();
+      x.moveTo(bx - 2.6, H - 5);
+      x.quadraticCurveTo(bx + lean * 0.4, H - 5 - h * 0.6, bx + lean, H - 5 - h);
+      x.quadraticCurveTo(bx + lean * 0.5 + 2.4, H - 5 - h * 0.5, bx + 2.6, H - 5);
+      x.closePath();
+      x.fill();
+    }
+  } else if (kind === 'stone') {
+    const w = W * (0.62 + r() * 0.3);
+    const h = H * (0.5 + r() * 0.18);
+    x.beginPath();
+    x.ellipse(W / 2, H - 6 - h / 2, w / 2, h / 2, (r() - 0.5) * 0.3, 0, TAU);
+    x.fill();
+    x.stroke();
+    x.fillStyle = rgba(PAL.paper, 0.18);
+    x.beginPath();
+    x.ellipse(W / 2 - w * 0.12, H - 6 - h * 0.65, w * 0.22, h * 0.16, -0.2, 0, TAU);
+    x.fill();
+  } else {
+    // cartón rasgado: polígono irregular con canto más claro arriba
+    const n = 9;
+    x.beginPath();
+    for (let i = 0; i <= n; i++) x.lineTo(5 + (i / n) * (W - 10), 6 + r() * 8);
+    x.lineTo(W - 5, H - 6);
+    x.lineTo(5, H - 6);
+    x.closePath();
+    x.fill();
+    x.stroke();
+    x.fillStyle = rgba(PAL.paper, 0.2);
+    x.fillRect(8, 10, W - 16, 2);
+  }
+  x.restore();
+  return c;
+}
+
 function chip(color, seed) {
   const [c, x] = mk(10, 8);
   const r = rng(seed);
@@ -601,12 +797,20 @@ export function buildTextures(scene) {
   add('mid', midLayer());
   add('caja', caja());
   add('torre', torre());
+  add('viga', viga());
+  add('hilo', hilo());
+  add('hand', hand());
+  add('tokenAmber', tokenAmber());
+  add('metaArch', metaArch());
   add('token', token());
   add('cpBase', checkpointBase());
   add('cpPole', checkpointPole());
   add('cpFlag', checkpointFlag());
   add('chipKraft', chip(PAL.kraft, 71));
   add('chipPaper', chip(PAL.paper, 72));
+  ['grass', 'stone', 'torn'].forEach((kind, i) => {
+    for (let v = 0; v < 3; v++) add(`gp-${kind}${v}`, groundPiece(kind, 120 + i * 10 + v));
+  });
   add('fgUpA', fgStrip(150, 58, 81, PAL.kraft, 'top'));
   add('fgUpB', fgStrip(110, 48, 82, PAL.paper, 'top'));
   add('fgUpC', fgStrip(190, 44, 83, TONE.kraftDark, 'top'));

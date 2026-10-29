@@ -144,6 +144,7 @@ function makeRunner(G, theta0, roll) {
 
   return {
     duty,
+    thMax: Math.max(Math.abs(th0), Math.abs(th1), 1), // amplitud máxima de la pierna (para normalizar el brazo)
     // píxeles lógicos de suelo por ciclo completo (dos pasos): D / duty
     cyclePx: (2 * cx0 * k) / duty,
     // altura de la cadera sobre la suela (src): sube a media pisada, baja al contacto
@@ -206,7 +207,8 @@ function armAir(vy, tMs) {
 function deadTarget(tMs) {
   const a = clamp((tMs - C.art.hitStopMs) / 220, 0, 1);
   const e = easeOutCubic(a);
-  return { nT: lerp(30, 38, e), nR: 0, nB: 0, fT: lerp(-20, -18, e), fR: 4 * e, fB: 0, dy: 8 * e, tilt: lerp(3, C.art.tiltMaxDeg, e) };
+  // Botas separadas (cercana adelante, lejana atrás) para leer "se atoró"
+  return { nT: lerp(30, 42, e), nR: 0, nB: -6 * e, fT: lerp(-20, -28, e), fR: 4 * e, fB: 8 * e, dy: 8 * e, tilt: lerp(3, C.art.tiltMaxDeg, e) };
 }
 
 // ---------- El rig ----------
@@ -264,8 +266,8 @@ export function createMokiRig(scene) {
     w: 1,
     wasGrounded: true,
     air: { nT: 32, nR: 0, nB: 0, fT: -26, fR: 3, fB: 0, dy: 0, tilt: 3, nA: 0, fA: 0 },
-    armN: 0, // ángulos mostrados de los brazos (grados, adelante positivo), con retraso suave
-    armF: 0,
+    armAirN: 0, // brazos en el aire (filtrados); en carrera salen de la fase de la pierna opuesta
+    armAirF: 0,
     packAng: 0,
     packDy: 0,
     lastHip: null,
@@ -306,8 +308,8 @@ export function createMokiRig(scene) {
       st.packDy = 0;
       st.lastHip = null;
       st.sal = 0;
-      st.armN = 0;
-      st.armF = 0;
+      st.armAirN = 0;
+      st.armAirF = 0;
       if (saluda) saluda.setAlpha(0);
       root.setAlpha(1);
     },
@@ -370,7 +372,8 @@ export function createMokiRig(scene) {
       else if (hopping) tgt = airTarget(clamp(-248 + C.gravity * (st.hopT - 80) / 1000, -248, 248), st.hopT);
       else tgt = airTarget(s.vy, s.t - s.takeoffAt);
       if (reduced) tgt = { ...tgt, dy: s.dead ? 8 : 0, tilt: 0, nR: 0, fR: 0, nB: 0, fB: 0 };
-      Object.assign(tgt, s.dead ? { nA: 20, fA: 20 } : hopping ? armAir(-200, st.hopT) : armAir(s.vy, s.t - s.takeoffAt));
+      // Tropiezo: el brazo cercano ~20° adelante; el lejano casi pegado (<= 6°) para que no asome como cinta
+      Object.assign(tgt, s.dead ? { nA: 20, fA: 4 } : hopping ? armAir(-200, st.hopT) : armAir(s.vy, s.t - s.takeoffAt));
       if (reduced) {
         tgt.nA *= 0.5;
         tgt.fA *= 0.5;
@@ -395,16 +398,20 @@ export function createMokiRig(scene) {
 
       // Brazos: cada uno en oposición a la pierna de su lado (el cercano va con la pierna lejana),
       // ±18° y un retraso suave de 1 a 2 cuadros. Nunca pasan de la horizontal.
+      // En carrera cada brazo sale de la fase de la pierna opuesta, retrasada d de ciclo (tope lagMs): senoide de
+      // péndulo, sin filtro, así conserva ±18° a toda velocidad. El filtro queda solo para el aire y la transición.
       const maxA = R.arm.maxDeg * (reduced ? 0.5 : 1);
-      const armRunN = maxA * clamp(far.th / 24, -1, 1);
-      const armRunF = maxA * clamp(near.th / 24, -1, 1);
-      const armTargetN = lerp(air.nA, armRunN, w);
-      const armTargetF = lerp(air.fA, armRunF, w);
+      const period = runner.cyclePx / Math.max(s.speed, 60); // s por ciclo
+      const dLag = Math.min(R.arm.phaseLag, R.arm.lagMs / 1000 / period);
+      const wrap = (ph) => ((ph % 1) + 1) % 1;
+      const pend = (ph) => clamp(runner.at(wrap(ph), hRun).th / runner.thMax, -1, 1); // pierna opuesta con la fase retrasada
+      const armRunN = maxA * pend(st.phi + 0.5 - dLag);
+      const armRunF = maxA * pend(st.phi - dLag);
       const lag = 1 - Math.exp(-dtMs / R.arm.lagMs);
-      st.armN += (armTargetN - st.armN) * lag;
-      st.armF += (armTargetF - st.armF) * lag;
-      const armN = clamp(st.armN, -40, 40);
-      const armF = clamp(st.armF, -40, 40);
+      st.armAirN += (air.nA - st.armAirN) * lag;
+      st.armAirF += (air.fA - st.armAirF) * lag;
+      const armN = clamp(lerp(st.armAirN, armRunN, w), -40, 40);
+      const armF = clamp(lerp(st.armAirF, armRunF, w), -40, 40);
 
       // Mochila con retraso (resorte sobreamortiguado)
       const hipWorld = hipY * k - hopY;
@@ -445,7 +452,7 @@ export function createMokiRig(scene) {
         const sy2 = hipY + soy;
         armNear.setPosition(sox, sy2).setAngle(tilt - armN);
         shArm.setPosition(sox + so.x, sy2 + so.y).setAngle(tilt - armN);
-        armFar.setPosition(sox - 3 / k, sy2).setAngle(tilt - armF);
+        armFar.setPosition(sox + 1.5 / k, sy2).setAngle(tilt - armF); // hombro lejano 1.5 px adelante para que asome
       }
       debug.angles = { nearLeg: nTh, farLeg: fTh, nearArm: armN, farArm: armF, tilt };
 

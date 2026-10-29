@@ -1,0 +1,88 @@
+/* Interfaz DOM sobre el lienzo: tarjetas de papel, botones de 48 px, foco visible. Paleta del kit, sin neón ni glow. */
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  font-family: Inter, sans-serif;
+  color: #22211f;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+#ui [hidden] { display: none !important; }
+#ui button, #ui a { font: inherit; color: inherit; touch-action: manipulation; }
+
+.ui-scrim { position: absolute; inset: 0; pointer-events: auto; background: rgba(34, 33, 31, 0.28); }
+.ui-scrim.pause { background: rgba(34, 33, 31, 0.4); display: flex; align-items: center; justify-content: center; }
+
+.ui-card {
+  position: absolute;
+  box-sizing: border-box;
+  background: #f4e8d5;
+  border: 3px solid #8a7e70;
+  border-radius: 18px;
+  box-shadow: 0 6px 0 rgba(34, 33, 31, 0.22);
+  padding: 18px 20px 20px;
+  text-align: left;
+  overflow: hidden;
+}
+.ui-card h2 { margin: 0 0 8px; font: 700 28px/34px Outfit, sans-serif; letter-spacing: 0; }
+.ui-card p { margin: 0 0 6px; font: 400 18px/24px Inter, sans-serif; }
+.ui-card .meta { font-size: 16px; line-height: 22px; color: #22211f; opacity: 0.78; }
+@media (min-width: 900px) { .ui-card h2 { font-size: 40px; line-height: 46px; } }
+
+.ui-pill, .ui-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; min-width: 48px; padding: 0 22px; margin-top: 10px;
+  border: 3px solid #22211f; border-radius: 999px;
+  font: 700 18px/1 Outfit, sans-serif; cursor: pointer;
+}
+.ui-pill, .ui-btn.primary { background: #ff6b35; color: #22211f; }
+.ui-btn.secondary { background: #f4e8d5; color: #22211f; border-color: #b99168; }
+.ui-pill[disabled] { opacity: 0.45; cursor: default; }
+.ui-btn + .ui-btn { margin-left: 8px; }
+#ui button:focus-visible, #ui a:focus-visible { outline: 3px solid #22211f; outline-offset: 2px; }
+.dark #ui button:focus-visible { outline-color: #f4e8d5; }
+
+.ui-rows { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; margin: 10px 0 4px; font: 400 18px/24px Inter, sans-serif; }
+.ui-rows dd { margin: 0; font: 700 22px/24px Outfit, sans-serif; text-align: right; }
+.ui-rows dt { align-self: center; }
+.ui-tag { display: inline-block; margin: 2px 0 6px; padding: 2px 10px; border: 2px solid #22211f; border-radius: 999px; background: #ff6b35; font: 700 14px/20px Outfit, sans-serif; }
+.ui-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; margin-top: 8px; font: 400 16px Inter, sans-serif; text-decoration: underline; color: #22211f; }
+
+.ui-demo {
+  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%) rotate(-1.5deg);
+  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 8px 16px;
+  background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px;
+  box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
+  font: 400 16px/22px Inter, sans-serif; white-space: nowrap; pointer-events: none;
+  animation: ui-demo-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.ui-demo b { font: 700 16px Outfit, sans-serif; }
+@keyframes ui-demo-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) rotate(-1.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-1.5deg); } }
+
+.ui-pausebtn {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 48px; height: 48px; padding: 0; margin: 0; pointer-events: auto; cursor: pointer;
+  background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.ui-pausebtn i { display: block; width: 6px; height: 18px; background: #22211f; border-radius: 2px; }
+
+.ui-pause { position: relative; width: min(320px, calc(100vw - 48px)); padding: 18px 20px 20px; }
+.ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
+.ui-pause .ui-btn { margin: 0; width: 100%; }
+
+.ui-asi { position: absolute; inset: 0; pointer-events: auto; background: #0a0a0a; color: #fff; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.ui-asi .wrap { box-sizing: border-box; width: min(720px, 100%); margin: 0 auto; padding: 24px 16px 32px; }
+.ui-asi h2 { margin: 0; font: 700 32px/38px Outfit, sans-serif; }
+.ui-asi .sub { margin: 4px 0 18px; font: 400 18px/24px Inter, sans-serif; color: #b7b3ad; }
+.ui-asi .panel { background: #161616; border-radius: 14px; padding: 12px 16px; margin: 8px 0; display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
+.ui-asi .panel b { font: 700 18px Outfit, sans-serif; }
+.ui-asi .panel span { font: 400 16px/22px Inter, sans-serif; color: #b7b3ad; text-align: right; }
+.ui-asi .jorge { margin: 14px 0 6px; font: 700 20px Outfit, sans-serif; }
+.ui-asi .ui-btn.light { background: #fff; color: #0a0a0a; border-color: #fff; }
+.ui-asi .ui-btn.ghost { background: transparent; color: #fff; border-color: #8a7e70; }
+.ui-asi a.ui-btn { text-decoration: none; }
+
+@media (prefers-reduced-motion: reduce) { .ui-demo { animation: none; } }

@@ -1,0 +1,73 @@
+// Todo texto de la interfaz sale de aquí (UX.md §11). Esta versión es solo en español (decisión del líder, 29-oct).
+// Los EN quedan guardados para una versión en inglés; hoy no hay selector de idioma.
+const ES = {
+  'title.demo.touch': 'Toca para jugar',
+  'title.demo.kbd': 'Toca o presiona una tecla',
+  'demo.word': 'Demo',
+  'tut.tap.touch': 'Toca',
+  'tut.tap.kbd': 'Espacio',
+  'tut.hold.touch': 'Mantén',
+  'tut.hold.kbd': 'Mantén Espacio',
+  'tut.ok': '¡Eso!',
+  'hud.cp': 'Aprendizaje guardado',
+  'hud.m': 'm',
+  'aria.pause': 'Pausa',
+  'fail.l1': 'La siguiente partida empieza con lo aprendido',
+  'fail.l2': 'Cada salto empieza por observar',
+  'fail.l3': 'Fallar, ajustar y volver a intentar',
+  'fail.hint.caja': 'La caja se libra con un toque.',
+  'fail.hint.torre': 'La torre pide mantener un poquito más.',
+  'fail.hint.viga': 'La viga pide un salto bajito.',
+  'fail.cp': 'Sigues desde el checkpoint',
+  'fail.start': 'Empiezas de nuevo',
+  'fail.pct': 'Llegaste al {n}%',
+  'fail.go.touch': 'Toca para seguir',
+  'fail.go.kbd': 'Espacio para seguir',
+  'end.title': '¡Llegaste!',
+  'end.dist': 'Distancia',
+  'end.pieces': 'Piezas',
+  'end.score': 'Puntaje',
+  'end.best': 'Mejor marca',
+  'end.new': 'Nueva marca',
+  'end.again': 'Otra vez',
+  'end.how': 'Así lo hicimos',
+  'end.link': 'jorgesuarez.com.mx',
+  'how.title': 'Así lo hicimos',
+  'how.sub': 'Un equipo de agentes, un juego',
+  'how.lider': 'Líder',
+  'how.lider.d': 'Planea y decide',
+  'how.constructor': 'Constructor',
+  'how.constructor.d': 'Hace el juego',
+  'how.probador': 'Probador',
+  'how.probador.d': 'Lo juega y lo revisa',
+  'how.arte': 'Dirección de arte',
+  'how.arte.d': 'Cuida el papel',
+  'how.animador': 'Animador',
+  'how.animador.d': 'Hace que Moki se mueva',
+  'how.ux': 'UX',
+  'how.ux.d': 'Que se entienda en 3 segundos',
+  'how.diseno': 'Diseño de juego',
+  'how.diseno.d': 'Que sea divertido de verdad',
+  'how.audio': 'Audio',
+  'how.audio.d': 'Música y sonidos',
+  'how.jorge.one': 'Jorge intervino {n} vez',
+  'how.jorge.many': 'Jorge intervino {n} veces',
+  'how.back': 'Volver',
+  'pause.title': 'Pausa',
+  'pause.resume': 'Seguir',
+  'pause.home': 'Inicio',
+};
+
+const EN = {
+  'title.demo.touch': 'Tap to play',
+  'tut.ok': 'Nice!',
+  'fail.go.touch': 'Tap to continue',
+};
+void EN; // reservado: versión en inglés
+
+export function t(key, vars) {
+  let s = ES[key];
+  if (s === undefined) s = key;
+  if (vars) for (const k of Object.keys(vars)) s = s.replace(`{${k}}`, vars[k]);
+  return s;
+}
