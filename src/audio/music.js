@@ -3,6 +3,7 @@
 import { STEP, BAR_STEPS, LOOP_STEPS, SKELETON, CHORD_OF_BAR, MELODY, CHORDS } from './theme.js';
 import { carton, cuadrada, pulso, bajo, tok, shaker, tic, campana } from './voices.js';
 
+const SEND = 0.7; // envío al eco (antes 0.5): con realimentación 0.25 el eco se nota
 const LOOKAHEAD = 0.12;
 const TICK_MS = 25;
 
@@ -54,12 +55,18 @@ export function createMusic(ctx, bus, opts = {}) {
     const m = MELODY[bar];
     for (const [st, midi, len] of m.notes) {
       if (st !== s) continue;
-      const vel = (skel ? 0.85 : 0.6) * (1 + rnd(0.06));
+      // En B (cuadrada) el pulso fuerte cae en 0, 4, 8 y 12: más legible con notas largas
+      const strong = m.voice === 'cuadrada' ? s % 4 === 0 : skel;
+      const vel = (strong ? 0.85 : 0.6) * (1 + rnd(0.06));
       const dur = len * 0.8 * STEP;
-      if (m.voice === 'carton') carton(ctx, mix, t, midi, dur, 0.3 * vel, { echo, send: 0.5 });
-      else cuadrada(ctx, mix, t, midi, dur, 0.14 * vel, { echo, send: 0.5 });
-      if (m.layer2 && live(2)) cuadrada(ctx, bus.layer[2], t, midi, dur, 0.14 * 0.35, { echo, send: 0.5 });
-      if (m.aSection && live(2)) cuadrada(ctx, bus.layer[2], t, midi + 12, dur, 0.14 * 0.3, { echo, send: 0.5 });
+      if (m.voice === 'carton') carton(ctx, mix, t, midi, dur, 0.3 * vel, { echo, send: SEND });
+      else {
+        // cuadrada (pico 0.14) + carton al mismo tono, sin octava, a 0.13*vel: la melodía de B se oye
+        cuadrada(ctx, mix, t, midi, dur, 0.14 * vel, { echo, send: SEND });
+        carton(ctx, mix, t, midi, dur, 0.13 * vel, { echo, send: SEND, noTin: true });
+      }
+      if (m.layer2 && live(2)) cuadrada(ctx, bus.layer[2], t, midi, dur, 0.14 * 0.35, { echo, send: SEND });
+      if (m.aSection && live(2)) cuadrada(ctx, bus.layer[2], t, midi + 12, dur, 0.14 * 0.3, { echo, send: SEND });
     }
 
     // --- base: bajo, tok, shaker ---
@@ -94,7 +101,7 @@ export function createMusic(ctx, bus, opts = {}) {
       const L = bus.layer[3];
       if ([2, 5, 9, 13].includes(s)) {
         const n = chord[2][(s + bar) % 4];
-        campana(ctx, L, t, 84 + (n % 12), 0.1, { echo, send: 0.5 });
+        campana(ctx, L, t, 84 + (n % 12), 0.1, { echo, send: SEND });
       }
       if (s === 6 || s === 14) tic(ctx, L, t, 0.1);
       if (s === 10) chord[2].slice(0, 3).forEach((n, i) => pulso(ctx, L, t + i * 0.014, n, 0.033));

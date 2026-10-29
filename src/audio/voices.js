@@ -91,11 +91,14 @@ export function carton(ctx, dest, t, midi, dur, peak = 0.3, o = {}) {
   const filt = lp(ctx, 3000, 0.5);
   shape(g, t, a, p, end, 0.35, 0.06);
   osc(ctx, 'triangle', f, t, end).connect(g);
-  const g2 = ctx.createGain();
-  shape(g2, t, a, p * 0.12, t + (dur + 0.08) * 0.6, 0.35, 0.04);
-  osc(ctx, 'triangle', f * 2, t, end).connect(g2);
   g.connect(filt);
-  g2.connect(filt);
+  if (!o.noTin) {
+    // el "tin" de juguete: la misma nota una octava arriba al 12%
+    const g2 = ctx.createGain();
+    shape(g2, t, a, p * 0.12, t + (dur + 0.08) * 0.6, 0.35, 0.04);
+    osc(ctx, 'triangle', f * 2, t, end).connect(g2);
+    g2.connect(filt);
+  }
   route(ctx, filt, dest, o);
 }
 

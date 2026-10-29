@@ -73,7 +73,29 @@ export function createBuses(ctx, cfg = C.audio) {
   ehp.connect(wet);
   wet.connect(musicMix);
 
-  return { master, comp, sfxMix, sfxBus, musicMix, musicFilter, duckGain, musicBus, layer, echoIn, fb };
+  // Eco de los stingers: mismo lazo, pero su salida va a sfxMix (el duck de la música no se la come)
+  const stingerEcho = ctx.createGain();
+  const sDelay = ctx.createDelay(1);
+  sDelay.delayTime.value = 3 * STEP;
+  const sLp = ctx.createBiquadFilter();
+  sLp.type = 'lowpass';
+  sLp.frequency.value = 1800;
+  const sHp = ctx.createBiquadFilter();
+  sHp.type = 'highpass';
+  sHp.frequency.value = 180;
+  const sFb = ctx.createGain();
+  sFb.gain.value = cfg.echoFeedback;
+  const sWet = ctx.createGain();
+  sWet.gain.value = cfg.echoWet;
+  stingerEcho.connect(sDelay);
+  sDelay.connect(sLp);
+  sLp.connect(sHp);
+  sHp.connect(sFb);
+  sFb.connect(sDelay);
+  sHp.connect(sWet);
+  sWet.connect(sfxMix);
+
+  return { master, comp, sfxMix, sfxBus, stingerEcho, musicMix, musicFilter, duckGain, musicBus, layer, echoIn, fb };
 }
 
 const prefMuted = () => load('moki.sound', '1') === '0' || Q.get('sound') === '0';
@@ -277,14 +299,14 @@ const A = {
     if (!this.running || this.muted || this.hidden) return;
     const fn = STINGERS[name];
     if (!fn) return;
-    const prio = { final: 4, record: 3, checkpoint: 2, fail: 2 }[name] || 1;
+    const prio = { final: 4, fail: 3, record: 3, checkpoint: 2 }[name] || 1; // el fallo corta al checkpoint
     const dur = { final: 3.0, record: 1.6, checkpoint: 1.2, fail: 1.0 }[name] || 1;
     const now = this.ctx.currentTime;
     if (now < this.busyUntil && prio <= this.busyPrio) return;
     this.busyUntil = now + dur;
     this.busyPrio = prio;
     const when = now + (name === 'fail' ? 0.08 : 0.005);
-    fn(this.ctx, this.bus.sfxMix, when, { reduced: this.reduced, echo: this.bus.echoIn });
+    fn(this.ctx, this.bus.sfxMix, when, { reduced: this.reduced, echo: this.bus.stingerEcho });
     // ducking breve de la música según el stinger
     if (name === 'checkpoint' || name === 'record') {
       const lvl = name === 'checkpoint' ? 0.55 : 0.45;

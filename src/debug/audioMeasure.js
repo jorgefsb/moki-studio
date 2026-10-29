@@ -162,7 +162,7 @@ export async function measureAll(cfg = C.audio) {
   const mus = { base: +peakDb(base).toFixed(1), e1: +peakDb(e1).toFixed(1), e2: +peakDb(e2).toFixed(1), todas80s: +peakDb(full).toFixed(1) };
   const stingers = {};
   for (const [n, fn] of Object.entries(STINGERS)) {
-    const d = await renderWith(4, (ctx, bus) => fn(ctx, bus.sfxMix, 0.05, { echo: bus.echoIn }), cfg);
+    const d = await renderWith(4, (ctx, bus) => fn(ctx, bus.sfxMix, 0.05, { echo: bus.stingerEcho }), cfg);
     stingers[n] = { peakDb: +peakDb(d).toFixed(1), tailMs: tailMs(d) };
   }
   return { cfg, sfx, music: mus, hf: highShare(full), stingers, rmsDbFull: +rmsDb(full).toFixed(1) };
@@ -170,7 +170,7 @@ export async function measureAll(cfg = C.audio) {
 
 // Eco: una nota sola, picos de cada repetición (cada 3 pasos = 0.469 s)
 export async function measureEcho(cfg = C.audio) {
-  const d = await renderWith(3, (ctx, bus) => carton(ctx, bus.musicMix, 0.1, 79, 0.15, 0.3, { echo: bus.echoIn, send: 0.5 }), cfg);
+  const d = await renderWith(3, (ctx, bus) => carton(ctx, bus.musicMix, 0.1, 79, 0.15, 0.3, { echo: bus.echoIn, send: 0.7 }), cfg);
   const rep = [];
   const win = 0.12 * SR;
   for (let i = 0; i < 6; i++) {
