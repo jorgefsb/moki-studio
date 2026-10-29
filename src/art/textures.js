@@ -829,20 +829,27 @@ function ambPlane() {
     g.lineTo(58, 29);
     g.closePath();
   };
-  cut(x, path, { fill: PAL.paper, edgeW: 2, shadow: { alpha: 0.14, blur: 4, dx: 1, dy: 3 }, r, fiberCount: 20 });
-  x.strokeStyle = rgba(PAL.kraft, 0.85);
-  x.lineWidth = 2;
-  x.beginPath();
-  x.moveTo(4, 17);
-  x.lineTo(30, 18);
-  x.stroke();
-  x.fillStyle = rgba(PAL.kraft, 0.35);
+  cut(x, path, { fill: PAL.paper, edgeW: 0, shadow: { alpha: 0.14, blur: 4, dx: 1, dy: 3 }, r, fiberCount: 20 });
+  // pliegue kraft marcado (cara baja sombreada) y trazo de tinta al 45%
+  x.fillStyle = rgba(PAL.kraft, 0.6);
   x.beginPath();
   x.moveTo(30, 18);
   x.lineTo(58, 29);
   x.lineTo(46, 20);
   x.closePath();
   x.fill();
+  x.strokeStyle = PAL.kraft;
+  x.lineWidth = 3;
+  x.beginPath();
+  x.moveTo(4, 17);
+  x.lineTo(30, 18);
+  x.stroke();
+  x.strokeStyle = rgba(PAL.ink, 0.45);
+  x.lineWidth = 1.6;
+  x.lineJoin = 'round';
+  x.beginPath();
+  path(x);
+  x.stroke();
   return c;
 }
 
@@ -866,8 +873,8 @@ function ambBird(pose, seed) {
   };
   cut(x, body, { fill: PAL.paper, edgeW: 1.5, shadow: null, r, fiberCount: 10 });
   cut(x, wings, { fill: mix(PAL.paper, PAL.kraft, 0.55), edgeW: 1.5, shadow: null, r, fiberCount: 10 });
-  x.strokeStyle = rgba(PAL.ink, 0.4);
-  x.lineWidth = 1.2;
+  x.strokeStyle = rgba(PAL.ink, 0.5);
+  x.lineWidth = 1.5;
   x.beginPath();
   body(x);
   x.stroke();
@@ -876,21 +883,101 @@ function ambBird(pose, seed) {
 
 // Lámpara de la noche: disco de papel con canto kraft de 3 px y una mancha de luz recortada 6% más clara (sin degradado)
 function ambLamp() {
-  const [c, x] = mk(110, 110);
-  x.fillStyle = PAL.kraft;
+  const [c, x] = mk(110, 130);
+  const r = rng(191);
+  x.strokeStyle = rgba(PAL.border, 0.95);
+  x.lineWidth = 2;
   x.beginPath();
-  x.arc(55, 56, 44, 0, TAU);
-  x.fill();
-  x.fillStyle = mix(PAL.paper, '#FFFFFF', 0.25);
+  x.moveTo(55, 0);
+  x.lineTo(55, 26);
+  x.stroke();
+  cut(x, (g) => g.arc(55, 74, 40, 0, TAU), { fill: mix(PAL.paper, '#FFFFFF', 0.18), edgeW: 0, shadow: { alpha: 0.22, blur: 7, dx: 2, dy: 5 }, r, fiberCount: 50 });
+  x.strokeStyle = PAL.kraft;
+  x.lineWidth = 3;
   x.beginPath();
-  x.arc(55, 54, 41, 0, TAU);
-  x.fill();
-  x.fillStyle = mix(PAL.paper, '#FFFFFF', 0.45);
+  x.arc(55, 74, 39, 0, TAU);
+  x.stroke();
+  return c;
+}
+
+// Bandas de fibra de papel para el tono de la tarde: capas de bordes rasgados, no un degradado liso
+function ambBands() {
+  const [c, x] = mk(960, 300);
+  const r = rng(201);
+  const rows = [[20, 74], [96, 156], [172, 220], [236, 272]];
+  rows.forEach(([y0, y1], k) => {
+    const path = (g) => {
+      g.moveTo(0, y0 + 4);
+      for (let i = 0; i <= 24; i++) g.lineTo((i * 960) / 24, y0 + r() * 10);
+      g.lineTo(960, y1);
+      for (let i = 24; i >= 0; i--) g.lineTo((i * 960) / 24, y1 - r() * 10);
+      g.closePath();
+    };
+    cut(x, path, { fill: rgba(PAL.kraft, 0.1 + 0.025 * k), edgeW: 0, shadow: null, r, fiberCount: 90 });
+  });
+  return c;
+}
+
+// Globo de papel: gajos kraft claro y papel, cesta de tinta al 40%
+function ambBalloon() {
+  const [c, x] = mk(80, 110);
+  const r = rng(161);
+  const env = (g) => g.ellipse(40, 38, 32, 36, 0, 0, TAU);
+  cut(x, env, { fill: mix(PAL.kraft, PAL.paper, 0.55), edgeW: 2, shadow: { alpha: 0.12, blur: 4, dx: 1, dy: 3 }, r, fiberCount: 40 });
+  x.save();
   x.beginPath();
-  x.moveTo(30, 44);
-  x.arc(52, 52, 26, Math.PI * 0.9, Math.PI * 1.55);
-  x.closePath();
-  x.fill();
+  env(x);
+  x.clip();
+  x.fillStyle = PAL.paper;
+  for (const [a, b] of [[14, 26], [38, 50], [62, 74]]) x.fillRect(a, 0, b - a, 80);
+  x.restore();
+  x.strokeStyle = rgba(PAL.ink, 0.4);
+  x.lineWidth = 1.5;
+  x.beginPath();
+  x.moveTo(24, 70);
+  x.lineTo(32, 90);
+  x.moveTo(56, 70);
+  x.lineTo(48, 90);
+  x.stroke();
+  x.fillStyle = rgba(PAL.ink, 0.4);
+  x.fillRect(31, 90, 18, 12);
+  return c;
+}
+
+// Mariposa de papel (alas abiertas; el aleteo escala el ancho)
+function ambButterfly() {
+  const [c, x] = mk(36, 28);
+  const r = rng(171);
+  cut(x, (g) => { g.ellipse(10, 11, 9, 8, -0.3, 0, TAU); g.ellipse(26, 11, 9, 8, 0.3, 0, TAU); g.ellipse(11, 20, 6, 5, 0.3, 0, TAU); g.ellipse(25, 20, 6, 5, -0.3, 0, TAU); }, { fill: mix(PAL.paper, PAL.kraft, 0.35), edgeW: 1.5, shadow: null, r, fiberCount: 8 });
+  x.fillStyle = PAL.ink;
+  x.fillRect(17, 6, 2, 17);
+  return c;
+}
+
+// Estrella de papel colgada de un hilo (solo en la noche)
+function ambStar() {
+  const [c, x] = mk(36, 56);
+  const r = rng(181);
+  x.strokeStyle = rgba(PAL.border, 0.9);
+  x.lineWidth = 1.5;
+  x.beginPath();
+  x.moveTo(18, 0);
+  x.lineTo(18, 24);
+  x.stroke();
+  const path = (g) => {
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const rad = i % 2 ? 6 : 14;
+      i ? g.lineTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad) : g.moveTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad);
+    }
+    g.closePath();
+  };
+  cut(x, path, { fill: PAL.paper, edgeW: 2.5, shadow: null, r, fiberCount: 14 });
+  x.strokeStyle = PAL.kraft;
+  x.lineWidth = 2;
+  x.beginPath();
+  path(x);
+  x.stroke();
   return c;
 }
 
@@ -961,6 +1048,10 @@ export function buildTextures(scene) {
   defer('ambBird0', () => ambBird(0, 151));
   defer('ambBird1', () => ambBird(1, 152));
   defer('ambLamp', () => ambLamp());
+  defer('ambBalloon', () => ambBalloon());
+  defer('ambButterfly', () => ambButterfly());
+  defer('ambStar', () => ambStar());
+  defer('ambBands', () => ambBands());
   defer('chipOrange', () => chip(PAL.accent, 73));
   defer('chipAmber', () => chip(PAL.warm, 74));
   return {

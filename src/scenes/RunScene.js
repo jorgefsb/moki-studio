@@ -505,7 +505,8 @@ export class RunScene extends Phaser.Scene {
       o.topY = topY;
     } else {
       o.sprite = this.add.image(x, g + 2, e.type).setOrigin(0.5, 1).setDepth(10);
-      o.shadow = this.addShadow(x + 9, size.width * 1.45, 0.4); // sombra corta hacia abajo-derecha
+      const sk = this.ambient ? this.ambient.shadowK : 1; // mañana y tarde: sombras largas y suaves; mediodía: cortas
+      o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }
     o.destroy = () => {
       o.sprite.destroy();
@@ -568,7 +569,7 @@ export class RunScene extends Phaser.Scene {
     const layer = { clouds: this.clouds, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);
-      this.tweens.add({ targets: layer, alpha: 1, duration: 320, ease: 'Sine.easeOut' });
+      this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut' });
     }
   }
 
@@ -616,6 +617,10 @@ export class RunScene extends Phaser.Scene {
       this.highPlayed = true;
       audio.sfx('jumpHigh', { holdMs: this.t - this.jumpStartAt });
     }
+    if (this.jumping && this.holding && !this.highGood && this.t - this.jumpStartAt >= 220) {
+      this.highGood = true;
+      if (!this.demo) this.ambient.good('hold', this.t); // salto mantenido >= 220 ms: pajaritos
+    }
     // La racha se acaba a los 0.9 s sin piezas
     if (this.combo > 0 && this.t - this.lastPickAt > C.combo.windowMs) {
       this.combo = 0;
@@ -653,6 +658,7 @@ export class RunScene extends Phaser.Scene {
       this.takeoffAt = this.t;
       this.pressedAt = -1e9;
       this.highPlayed = false;
+      this.highGood = false;
       audio.sfx('jump');
       // Ya lo soltó antes de que empezara el salto (tap muy corto con buffer).
       if (!this.holding) this.release();
@@ -709,7 +715,7 @@ export class RunScene extends Phaser.Scene {
     const sec = this.t / 1000;
     const quiet = lead >= 1.5 && !tut && this.t > 2000 && this.hudC.alpha < 0.05 && !(this.tramoIdx === 0 && (sec < 4 || sec > 19));
     // Demo: guion fijo (nube 1.5 s, pajaritos 6 s, avioncito 12 s) y Mañana a Tarde entre 31 y 37 s
-    const forced = this.demo ? [{ at: 6, kind: 'birds' }, { at: 12, kind: 'plane' }] : null;
+    const forced = this.demo ? [{ at: 6, kind: 'birds' }, { at: 12, kind: 'plane' }, { at: 19, kind: 'moki' }, { at: 24, kind: 'balloon' }, { at: 34, kind: 'butterflies' }] : null;
     if (this.demo && sec >= 31 && !amb.fired.tarde) {
       amb.fired.tarde = true;
       amb.setDay(2);
@@ -718,7 +724,8 @@ export class RunScene extends Phaser.Scene {
       amb.fired.cloud1 = true;
       amb.cloudNext = 0;
     }
-    amb.update(dtMs, { ms: this.t, sec, quiet, forced, tramo: this.tramoIdx });
+    const tsec = (this.dist - this.level.starts[this.tramoIdx]) / Math.max(1, this.level.tramos[this.tramoIdx].speed); // segundos dentro del tramo
+    amb.update(dtMs, { ms: this.t, sec, tsec, quiet, forced, tramo: this.tramoIdx });
   }
 
   // Primer plano a 1.3x: tiras de cartulina FUERA del carril (nunca entre groundY-130 y groundY+10).
@@ -828,6 +835,7 @@ export class RunScene extends Phaser.Scene {
       this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue };
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
       audio.stinger('checkpoint');
+      if (!this.demo) this.ambient.good('checkpoint', this.t); // globo 0.3-0.8 s después
       audio.setTramo(this.tramoIdx);
       if (!this.demo) this.ambient.setDay(this.tramoIdx); // hora del día: crossfade de 6 s tras el checkpoint (el demo la cambia a los 31 s)
       this.rig.startHop();
@@ -895,9 +903,11 @@ export class RunScene extends Phaser.Scene {
       if (this.arcGot[k.arc] === k.arcN) {
         this.pieceValue += C.arcBonus; // arco completo
         audio.sfx('arc');
+        if (!this.demo) this.ambient.good('arc', this.t);
       }
     }
     this.pieceLabel.set(String(this.pieces));
+    if (this.combo === 5 && !k.arc && !this.demo) this.ambient.good('row', this.t); // fila de 5 piezas: mariposas
     this.particles.burst('collect', k.x, k.y);
     this.tweens.add({
       targets: k.sprite,
