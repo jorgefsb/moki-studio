@@ -100,4 +100,9 @@ Niveles: N = Nada, P = Poquito (default), M = Mucho, H = Hardcore (abre con `mok
 - Movimiento reducido: todo lo nuevo pregunta por `this.reduced` (o la media query en CSS) y se apaga, incluida la háptica. Hardcore apagado.
 - Shake solo en Hardcore, máximo 2 px, nunca en el HUD ni en el DOM.
 
-FEEL: AJUSTAR
+## 5. Estado del sprint (29-oct)
+
+- Entrega 1 (a87cecf, en master 81be8d5): P1 1 a 7 del plan, menos el freeze de 80 ms en Hardcore (no se tocan tiempos, orden del líder) y la onda de anillo (la sustituyen los chips ámbar en racha). Poquito no vibra (director).
+- Entrega 2: doblez de papel al chocar (6° en 120 ms, asentado 180 ms), obstáculo arrugado 2% hasta el reintento y estirón del 3% a los 80 ms del despegue. Con Nada queda la animación aprobada (T3b3).
+
+FEEL: AJUSTAR (falta que el probador lo juegue)

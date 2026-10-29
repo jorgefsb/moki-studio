@@ -1362,6 +1362,8 @@ export class RunScene extends Phaser.Scene {
     this.particles.burst('crash', this.px + 12, this.y - 10);
     this.buzz(25); // golpe suave, nada que regañe
     this.shake(2, 120);
+    // El obstáculo se arruga 2% (papel apachurrado) y se queda así; al reintentar se crea liso de nuevo
+    if (!this.calm && o.sprite) this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
     // La mejor marca se guarda también al fallar (no en el demo)
     const prevBest = num('moki.best', 0);
     const isNew = !this.demo && this.score > prevBest;
