@@ -12,6 +12,35 @@ const DEBUG = Q.get('audiodebug') === '1';
 // Cadena (AUDIO §3):
 //   música -> musicMix -> musicFilter -> duckGain -> musicBus ─┐
 //   efectos -> sfxMix -> sfxBus ───────────────────────────────┴-> master (0.125) -> compresor -> destino
+const REWARD = new Set(['pickup', 'amber', 'arc']);
+
+// Encime de efectos (T3g2). Los picos de sesión no salían de un sonido solo, sino de piezas con racha + arco, o salto + piezas + bip.
+// En vez de bajarlos todos: (1) el ping nuevo hace que el anterior ceda (baja a cfg.yield) y el arco completo reemplaza al último ping;
+// (2) cada recompensa baja el canal de movimiento (cfg.duck) 200 ms. Sirve igual con cualquier AudioContext (el juego y el render offline).
+export function routeSfx(ctx, bus, st, name, play, t, o, cfg = C.audio) {
+  const reward = REWARD.has(name);
+  const vg = ctx.createGain();
+  vg.connect(reward ? bus.rewardCh : bus.motionCh);
+  // el eco de cada voz sale por su propia ganancia, para que ceda junto con la voz (si no, los ecos de los pings se siguen sumando)
+  const eg = ctx.createGain();
+  if (o && o.echo) eg.connect(o.echo);
+  if (reward) {
+    const prev = st.lastReward;
+    if (prev && t - prev.t < 0.35) {
+      for (const g of [prev.vg, prev.eg]) {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setTargetAtTime(name === 'arc' ? 0 : cfg.yield, t, 0.012);
+      }
+    }
+    st.lastReward = { vg, eg, t };
+    const m = bus.motionCh.gain;
+    m.cancelScheduledValues(t);
+    m.setTargetAtTime(cfg.duck, t, 0.01);
+    m.setTargetAtTime(1, t + 0.2, 0.08);
+  }
+  play(ctx, vg, t, o && o.echo ? { ...o, echo: eg } : o);
+}
+
 export function createBuses(ctx, cfg = C.audio) {
   const master = ctx.createGain();
   master.gain.value = cfg.master;
@@ -27,7 +56,26 @@ export function createBuses(ctx, cfg = C.audio) {
   const sfxMix = ctx.createGain();
   const sfxBus = ctx.createGain();
   sfxBus.gain.value = cfg.sfxBus;
-  sfxMix.connect(sfxBus);
+  // Limitador de efectos (T3g2): deja pasar los sonidos sueltos (el salto marca el techo) y solo actúa sobre las pilas
+  // (piezas con racha + arco, salto + piezas + bip). Va antes del bus de efectos, así que no toca la música ni el master.
+  const sfxLim = ctx.createDynamicsCompressor();
+  sfxLim.threshold.value = cfg.limitDb;
+  sfxLim.knee.value = cfg.limitKnee;
+  sfxLim.ratio.value = cfg.limitRatio;
+  sfxLim.attack.value = 0.003;
+  sfxLim.release.value = 0.09;
+  // el compresor de Web Audio sube solo la señal (+3.8 dB con umbral -8, ratio 10): se compensa para que los sonidos sueltos no cambien
+  const limComp = ctx.createGain();
+  limComp.gain.value = cfg.limitMakeup;
+  sfxMix.connect(sfxLim);
+  sfxLim.connect(limComp);
+  limComp.connect(sfxBus);
+  // Dos canales de efectos (T3g2): la recompensa (pieza, ámbar, arco) y el movimiento (salto, bip, aterrizaje, tropiezo, botón).
+  // Cada efecto pasa por su propia ganancia, para poder cederse el paso entre ellos sin bajar el nivel de ninguno por separado.
+  const rewardCh = ctx.createGain();
+  const motionCh = ctx.createGain();
+  rewardCh.connect(sfxMix);
+  motionCh.connect(sfxMix);
   sfxBus.connect(master);
 
   const musicMix = ctx.createGain();
@@ -95,7 +143,7 @@ export function createBuses(ctx, cfg = C.audio) {
   sHp.connect(sWet);
   sWet.connect(sfxMix);
 
-  return { master, comp, sfxMix, sfxBus, stingerEcho, musicMix, musicFilter, duckGain, musicBus, layer, echoIn, fb };
+  return { master, comp, sfxMix, sfxBus, rewardCh, motionCh, stingerEcho, musicMix, musicFilter, duckGain, musicBus, layer, echoIn, fb };
 }
 
 const prefMuted = () => load('moki.sound', '1') === '0' || Q.get('sound') === '0';
@@ -290,7 +338,7 @@ const A = {
     // Solo lo visual depende del juice.
     const extra = {};
     if (name === 'pickup') extra.tier = this.streakN >= 6 ? 2 : this.streakN >= 3 ? 1 : 0;
-    fn(this.ctx, this.bus.sfxMix, this.ctx.currentTime + 0.003, { ...o, ...extra, reduced: this.reduced, echo: this.bus.echoIn });
+    routeSfx(this.ctx, this.bus, this.sfxState || (this.sfxState = {}), name, fn, this.ctx.currentTime + 0.003, { ...o, ...extra, reduced: this.reduced, echo: this.bus.echoIn });
     if (name === 'card') this.cardUp();
   },
 

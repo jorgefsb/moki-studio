@@ -1,6 +1,6 @@
 // Mediciones de audio con OfflineAudioContext (AUDIO.md §11, criterios 3, 8, 9, 23 y 24). Solo con ?debug.
 import { CONFIG as C } from '../config.js';
-import { createBuses } from '../audio/audio.js';
+import { createBuses, routeSfx } from '../audio/audio.js';
 import { createMusic } from '../audio/music.js';
 import { SFX, STINGERS } from '../audio/sfx.js';
 import { STEP, LOOP_STEPS } from '../audio/theme.js';
@@ -273,4 +273,77 @@ export async function measureLoud(cfg = C.audio) {
   const echo = await measureEcho(cfg);
   out.eco = echo.peaksDb.slice(0, 4);
   return out;
+}
+
+
+// ---- T3g2: pilas de efectos con música (los escenarios que dan los picos de sesión), con el encime controlado ----
+// Cada escenario: [segundo, nombre, opciones]. Devuelve el pico (dBFS, salida después del compresor) de música sola y con el escenario.
+const STACKS = {
+  arco_racha_alta: [[0, 'pickup', { index: 5, tier: 2 }], [0.14, 'pickup', { index: 6, tier: 2 }], [0.28, 'pickup', { index: 7, tier: 2 }], [0.42, 'pickup', { index: 8, tier: 2 }], [0.56, 'pickup', { index: 9, tier: 2 }], [0.56, 'arc', {}]],
+  arco_racha_media: [[0, 'pickup', { index: 2, tier: 1 }], [0.14, 'pickup', { index: 3, tier: 1 }], [0.28, 'pickup', { index: 4, tier: 1 }], [0.28, 'arc', {}]],
+  salto_piezas_bip: [[0, 'jump', {}], [0.1, 'pickup', { index: 0, tier: 0 }], [0.17, 'jumpHigh', {}], [0.24, 'pickup', { index: 1, tier: 0 }], [0.38, 'pickup', { index: 2, tier: 1 }]],
+  salto_bip: [[0, 'jump', {}], [0.12, 'jumpHigh', {}]],
+  aterrizaje: [[0, 'land', {}]],
+  pieza_sola: [[0, 'pickup', { index: 0, tier: 0 }]],
+};
+
+export async function measureStacks(cfg = C.audio) {
+  const out = {};
+  const music = await renderWith(
+    6,
+    (ctx, bus) => {
+      for (let k = 1; k <= 3; k++) bus.layer[k].gain.value = k <= 2 ? 1 : 0;
+      const m = createMusic(ctx, bus, { level: 2 });
+      for (let s = 0; s < Math.ceil(6 / STEP); s++) m.scheduleStep(s % LOOP_STEPS, s * STEP);
+    },
+    cfg
+  );
+  out.musica = +peakDb(music).toFixed(1);
+  for (const [name, evs] of Object.entries(STACKS)) {
+    const d = await renderWith(
+      6,
+      (ctx, bus) => {
+        for (let k = 1; k <= 3; k++) bus.layer[k].gain.value = k <= 2 ? 1 : 0;
+        const m = createMusic(ctx, bus, { level: 2 });
+        for (let s = 0; s < Math.ceil(6 / STEP); s++) m.scheduleStep(s % LOOP_STEPS, s * STEP);
+        const st = {};
+        for (const [t, n, o] of evs) routeSfx(ctx, bus, st, n, SFX[n], 3 + t, { ...o, echo: bus.echoIn }, cfg);
+      },
+      cfg
+    );
+    out[name] = +peakDb(d).toFixed(1);
+  }
+  return out;
+}
+
+// WAV de evidencia (T3g2): música E2 + una tanda de saltos, arcos de 5 piezas con racha creciente (x2 y x3), una pieza ámbar y sonido de arco,
+// pasado por routeSfx (encime controlado) y el limitador. 20 s a 22 kHz mono.
+export async function saveSessionWav(name = 't3g2-audio-piezas-20s.wav', seconds = 20, cfg = C.audio) {
+  const d = await renderWith(
+    seconds,
+    (ctx, bus) => {
+      for (let k = 1; k <= 3; k++) bus.layer[k].gain.value = k <= 2 ? 1 : 0;
+      const m = createMusic(ctx, bus, { level: 2 });
+      for (let s = 0; s < Math.ceil(seconds / STEP); s++) m.scheduleStep(s % LOOP_STEPS, s * STEP);
+      const st = {};
+      let n = 0;
+      for (let k = 0; k < 5; k++) {
+        const t0 = 1.4 + k * 3.6;
+        routeSfx(ctx, bus, st, 'jump', SFX.jump, t0 - 0.35, { echo: bus.echoIn }, cfg);
+        if (k % 2) routeSfx(ctx, bus, st, 'jumpHigh', SFX.jumpHigh, t0 - 0.23, { echo: bus.echoIn }, cfg);
+        for (let i = 0; i < 5; i++) {
+          n += 1;
+          const tier = n >= 6 ? 2 : n >= 3 ? 1 : 0;
+          const amber = k === 2 && i === 2;
+          routeSfx(ctx, bus, st, amber ? 'amber' : 'pickup', SFX[amber ? 'amber' : 'pickup'], t0 + i * 0.14, { index: n - 1, tier, echo: bus.echoIn }, cfg);
+        }
+        routeSfx(ctx, bus, st, 'arc', SFX.arc, t0 + 4 * 0.14, { echo: bus.echoIn }, cfg);
+        routeSfx(ctx, bus, st, 'land', SFX.land, t0 + 0.9, { echo: bus.echoIn }, cfg);
+      }
+    },
+    cfg
+  );
+  const body = wavBytes(d, SR);
+  const r = await fetch(`/__save?name=${encodeURIComponent(name)}`, { method: 'POST', body });
+  return { ok: r.ok, bytes: body.byteLength, peakDb: +peakDb(d).toFixed(1) };
 }

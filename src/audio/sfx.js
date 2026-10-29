@@ -5,9 +5,8 @@ import { PICKUP_SCALE } from './theme.js';
 
 const { noise, osc, lp, shape } = voiceTools;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-// T3g: el bus de efectos baja 4.5 dB (5.7 a 3.4) para que los picos de sesión (piezas con racha + arco + salto) queden <= -7 dBFS;
-// el salto y su bip recuperan +3 dB, o sea quedan 1.5 dB bajo el nivel de antes y se siguen oyendo sobre la música
-const JUMP_BOOST = 1.41;
+// T3g2: el bus de efectos volvió a 5.7; los picos se controlan con routeSfx (audio.js), no con volumen
+const JUMP_BOOST = 1; // (T3g subió +3 dB al bajar el bus; con el bus de vuelta en 5.7 vuelve a 1)
 
 // Opciones comunes: reduced baja picos 20%, sube el ataque mínimo a 8 ms y pasa todo por lowpass de 3.5 kHz
 function prep(ctx, dest, o) {
