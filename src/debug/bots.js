@@ -7,8 +7,13 @@ import { CONFIG as C } from '../config.js';
 
 const DT = 16.667;
 
-export function runBot(s, kind, maxSec = 150) {
+// seed (opcional): juega ese nivel generado (NIVELES.md §10), p.ej. '2026-10-29' o '123'
+export function runBot(s, kind, maxSec = 150, seed = null) {
   s.startGame();
+  if (seed) {
+    s.resetRun(s.makeLevel(String(seed)), 0);
+    s.speed = s.level.tramos[0].speed;
+  }
   s.tut = { stage: 4, state: 'off' }; // sin tutorial: el bot no necesita la mano
   s.god = false;
   let releaseAt = -1;
