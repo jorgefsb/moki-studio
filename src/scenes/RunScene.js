@@ -360,6 +360,7 @@ export class RunScene extends Phaser.Scene {
     this.tutSetState('off');
     this.tutArc.setVisible(false);
     if (this.ambient) this.ambient.reset();
+    if (this.ambient) this.ambient.biomas = this.demo ? null : level.biomas || null; // biomas de papel por tramo (NIVELES.md §8)
     if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
   }
 
@@ -371,10 +372,26 @@ export class RunScene extends Phaser.Scene {
     });
   }
 
+  // Línea de la tarjeta final: "Reto del 29 oct" o "Libre"; nada con ?nivel=clasico
+  modoLabel() {
+    const l = this.level;
+    if (!l || !l.modo) return null;
+    if (l.modo === 'libre') return t('modo.libre');
+    const [y, m, d] = l.seed.split('-').map(Number);
+    if (!d) return t('modo.reto');
+    const mes = new Date(y, m - 1, d).toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
+    return t('end.modo.reto', { d: `${d} ${mes}` });
+  }
+
   // Nivel de la partida (NIVELES.md §7): Reto del día = fecha local; Libre = semilla nueva por partida.
   // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
   makeLevel(seed) {
     if (CLASICO) return GAME_LEVEL;
+    // La primera partida de la vida es la clásica (director): el tutorial y la primera impresión, siempre iguales
+    if (!seed && !SEED && load('moki.primera') !== '1') {
+      save('moki.primera', '1');
+      return GAME_LEVEL;
+    }
     const modo = this.modo;
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo);
   }
@@ -1515,7 +1532,7 @@ export class RunScene extends Phaser.Scene {
     const r = wide ? rect : { ...rect, compact: true };
     const d = this.finalData;
     this.ui.showFinal(
-      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best },
+      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
       r
     );

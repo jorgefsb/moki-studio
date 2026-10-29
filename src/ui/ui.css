@@ -62,10 +62,12 @@
 @keyframes ui-demo-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) rotate(-2.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-1deg); } }
 @keyframes ui-demo-sway { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 50% { transform: translateX(-50%) translateY(-2px) rotate(-1deg); } }
 
+/* Abajo al centro, sobre la etiqueta del demo: arriba van el HUD (metros y piezas), el sonido y la pausa */
 .ui-modo {
-  position: absolute; top: 12px; left: 12px; min-height: 48px; padding: 5px 14px; margin: 0; pointer-events: auto; cursor: pointer;
+  position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%); min-height: 48px; max-width: calc(100vw - 32px); box-sizing: border-box;
+  padding: 5px 16px; margin: 0; pointer-events: auto; cursor: pointer; white-space: nowrap;
   background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; color: #22211f; text-align: left;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; color: #22211f; text-align: center;
 }
 .ui-modo b { font: 700 16px/19px Outfit, sans-serif; }
 .ui-modo span { font: 500 12px/15px Inter, sans-serif; color: #5c5148; }
