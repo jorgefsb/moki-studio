@@ -1028,6 +1028,18 @@ export class RunScene extends Phaser.Scene {
       this.tutSetState('rewind');
       return;
     }
+    // Al impacto el mundo se detiene en el punto exacto del contacto: se descuenta lo que el cuadro de choque ya
+    // penetró en esa vuelta (hasta speed*dt), para que el traslape visible sea solo el de la hitbox.
+    if (o.type !== 'viga') {
+      const front = this.px + (C.player.width - 6) / 2;
+      const hit = o.x - o.size.width / 2 + C.hitboxShrink.x;
+      const pen = front - hit;
+      this.impactPenetration = Math.max(0, pen);
+      if (pen > 0) {
+        this.dist -= pen;
+        this.placeEntities();
+      }
+    }
     this.dead = true;
     this.screen = 'dead';
     this.deadFor = 0;
