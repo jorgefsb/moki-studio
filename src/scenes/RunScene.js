@@ -360,6 +360,17 @@ export class RunScene extends Phaser.Scene {
     });
   }
 
+  // Línea de la tarjeta final: "Reto del 29 oct" o "Libre"; nada con ?nivel=clasico
+  modoLabel() {
+    const l = this.level;
+    if (!l || !l.modo) return null;
+    if (l.modo === 'libre') return t('modo.libre');
+    const [y, m, d] = l.seed.split('-').map(Number);
+    if (!d) return t('modo.reto');
+    const mes = new Date(y, m - 1, d).toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
+    return t('end.modo.reto', { d: `${d} ${mes}` });
+  }
+
   // Nivel de la partida (NIVELES.md §7): Reto del día = fecha local; Libre = semilla nueva por partida.
   // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
   makeLevel(seed) {
@@ -1381,7 +1392,7 @@ export class RunScene extends Phaser.Scene {
     const r = wide ? rect : { ...rect, compact: true };
     const d = this.finalData;
     this.ui.showFinal(
-      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best },
+      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
       r
     );

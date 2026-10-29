@@ -36,6 +36,8 @@ const ES = {
   'end.pieces': 'Piezas',
   'end.score': 'Puntaje',
   'end.best': 'Mejor marca',
+  'end.modo': 'Nivel',
+  'end.modo.reto': 'Reto del {d}',
   'end.new': 'Nueva marca',
   'end.again': 'Otra vez',
   'end.how': 'Así lo hicimos',
