@@ -719,8 +719,8 @@ export class RunScene extends Phaser.Scene {
     const sec = this.t / 1000;
     const quiet = lead >= 1.5 && !tut && this.t > 2000 && this.hudC.alpha < 0.05 && !(this.tramoIdx === 0 && (sec < 4 || sec > 19));
     // Demo: guion fijo (nube 1.5 s, pajaritos 6 s, avioncito 12 s) y Mañana a Tarde entre 31 y 37 s
-    // demo: >= 8 s entre inicios (pajaritos 4, avioncito 12, Moki chiquito 20, globo 28); las mariposas son ambiente
-    const forced = this.demo ? [{ at: 4, kind: 'birds' }, { at: 12, kind: 'plane' }, { at: 20, kind: 'moki' }, { at: 28, kind: 'balloon' }] : null;
+    // demo: >= 8 s entre inicios (globo 2, pajaritos 10, avioncito 18, Moki chiquito 26 o en cuanto haya cresta libre); las mariposas son ambiente
+    const forced = this.demo ? [{ at: 2, kind: 'balloon' }, { at: 10, kind: 'birds' }, { at: 18, kind: 'plane' }, { at: 26, kind: 'moki' }] : null;
     if (this.demo && sec >= 31 && !amb.fired.tarde) {
       amb.fired.tarde = true;
       amb.setDay(2);

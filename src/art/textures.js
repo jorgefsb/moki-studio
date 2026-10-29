@@ -355,6 +355,14 @@ function block(x, ox, oy, w, h, { body, tape, seed }) {
   x.strokeStyle = rgba(PAL.paper, 0.7);
   x.stroke();
   x.restore();
+  // perfil exterior de tinta #22211F al 28%, de 1 px, alrededor de la silueta (T3e): separa el cartón del fondo sin tocar la colina
+  x.save();
+  x.beginPath();
+  x.roundRect(ox - 1.5, oy - 1.5, w + 3, h + 3, 7.5);
+  x.lineWidth = 1;
+  x.strokeStyle = rgba(PAL.ink, 0.3);
+  x.stroke();
+  x.restore();
   x.fillStyle = body;
   x.beginPath();
   path(x);

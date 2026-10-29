@@ -191,7 +191,12 @@ export class Ambient {
     if (!c) return null;
     const tp = this.scene.far.tilePositionX;
     let best = null;
+    // obstáculos que aún pasarán por su zona: Moki se queda con la capa lejana (0.3x) y ellos corren a 1x, o sea 0.7x relativo durante 2.5 s
+    const sc = this.scene;
+    const reach = 2.6 * sc.speed * 0.7;
+    const obsX = sc.level.entities.filter((e) => e.kind === 'obs' && e.D - sc.dist > -150 && e.D - sc.dist < 2200).map((e) => sc.px + e.D - sc.dist);
     for (let x = x0; x <= x1; x += 3) {
+      if (obsX.some((ox) => ox > x - 70 && ox < x + reach + 70)) continue;
       const u = (((Math.round(x + tp)) % c.W) + c.W) % c.W;
       let lo = 1e9;
       let hi = -1e9;
@@ -204,14 +209,16 @@ export class Ambient {
       if (hi - lo > 5 || (best && hi - lo >= best.var)) continue;
       // la capa media (árboles, postes) no debe tapar los 36 px de Moki sobre la cresta ni 12 px a cada lado
       const m = this.midAlpha();
+      // 60 px libres de pinos y postes al aparecer (con toda la deriva de la capa media casi nunca hay sitio: 42% contra 3%); si uno pasa
+      // durante sus 2.5 s, Moki (depth 2.5, entre la capa lejana y la media) queda tapado por él: nunca posado entre sus ramas
       if (m) {
         const row = Math.round((lo + hi) / 2);
         const crestWorld = this.scene.far.y + row;
         const um = (((Math.round(x + this.scene.mid.tilePositionX)) % m.W) + m.W) % m.W;
         let blocked = false;
-        for (let yy = Math.round(crestWorld - this.scene.mid.y) - 40; yy <= Math.round(crestWorld - this.scene.mid.y) + 2 && !blocked; yy += 2) {
+        for (let yy = Math.round(crestWorld - this.scene.mid.y) - 46; yy <= Math.round(crestWorld - this.scene.mid.y) + 2 && !blocked; yy += 2) {
           if (yy < 0 || yy >= m.H) continue;
-          for (let k = -18; k <= 18; k += 3) if (m.d[(yy * m.W + ((um + k + m.W) % m.W)) * 4 + 3] > 20) { blocked = true; break; }
+          for (let k = -60; k <= 60; k += 4) if (m.d[(yy * m.W + ((um + k + m.W) % m.W)) * 4 + 3] > 20) { blocked = true; break; }
         }
         if (blocked) continue;
       }
@@ -272,7 +279,7 @@ export class Ambient {
       // cartel en poste (capa 3): solo las 3 lecciones aprobadas, Outfit 700 de 17 px de pantalla
       const z = s.zoom;
       const idx = this.signIdx++ % 3;
-      const txt = s.add.text(0, 0, t(`fail.l${idx + 1}`), { fontFamily: 'Outfit, sans-serif', fontStyle: '700', fontSize: `${Math.ceil(17 / z)}px`, color: PAL.ink, wordWrap: { width: Math.min(240, s.scale.width - 80) / z }, align: 'center' }).setOrigin(0.5);
+      const txt = s.add.text(0, 0, t(`fail.l${idx + 1}`), { fontFamily: 'Outfit, sans-serif', fontStyle: '700', fontSize: `${Math.ceil(17 / z)}px`, color: PAL.ink, wordWrap: { width: Math.min(240, s.scale.width - 32 - 24 - 8) / z }, align: 'center' }).setOrigin(0.5);
       const pad = 12 / z;
       const cw = txt.width + pad * 2;
       const ch = txt.height + pad * 1.6;
@@ -297,7 +304,7 @@ export class Ambient {
       // Asset oficial tal cual a 30 px, nunca espejado, tinte de velo de papel ~12%, 1 vez por partida.
       const cr = this.flatCrest(s.vw * 0.3, s.vw * 0.95);
       if (!cr) return false;
-      const sp = s.add.image(0, 0, 'mokiSaluda').setOrigin(0.5, 1).setScale(30 / 260).setDepth(3.05).setTint(0xe6dfd2).setAlpha(0);
+      const sp = s.add.image(0, 0, 'mokiSaluda').setOrigin(0.5, 1).setScale(30 / 260).setDepth(2.5).setTint(0xe6dfd2).setAlpha(0);
       ev.sprites.push(sp);
       ev.life = 2500;
       ev.u = cr.u;
@@ -390,10 +397,13 @@ export class Ambient {
     if (ctx.forced) {
       for (const f of ctx.forced) {
         if (ctx.sec >= f.at && !this.fired[f.kind + f.at]) {
-          this.fired[f.kind + f.at] = true;
           if (f.kind === 'balloon') {
+            this.fired[f.kind + f.at] = true;
             if (!this.slow) this.begin('balloon', ms, 0);
-          } else if (this.begin(f.kind, ms, f.kind === 'moki' ? 1 : 0)) return;
+          } else if (this.begin(f.kind, ms, f.kind === 'moki' ? 1 : 0)) {
+            this.fired[f.kind + f.at] = true;
+            return;
+          } else if (ctx.sec > f.at + 7) this.fired[f.kind + f.at] = true; // sin sitio durante 7 s: no sale (nunca flotando)
         }
       }
       return;
@@ -403,7 +413,7 @@ export class Ambient {
     const caps = [3, 3, 2, 1][t0];
     if (Object.keys(this.perTramo[t0]).length >= caps) return;
     // mitad de T2: Moki chiquito, una vez por partida
-    if (t0 === 1 && ctx.tsec > 12 && ctx.tsec < 24 && !this.once.moki && this.begin('moki', ms, 1)) {
+    if (t0 === 1 && ctx.tsec > 10 && ctx.tsec < 28 && !this.once.moki && this.begin('moki', ms, 1)) {
       this.perTramo[t0].moki = 1;
       return;
     }
@@ -495,7 +505,7 @@ export class Ambient {
         sp.y = a.y + oy + Math.sin(age / 500 + i) * 4;
         sp.setTexture(`ambBird${Math.floor(age / 140 + i) % 2}`); // aleteo en stop-motion de 2 poses
       } else if (a.kind === 'sign') {
-        sp.x = a.x0 - (s.dist - a.d0) * 0.25; // lento: se lee entero durante sus 3 s
+        sp.x = a.x0 - (s.dist - a.d0) * 0.04; // casi quieto: entero y con 16 px de margen a ambos lados durante sus 3 s
         sp.setAlpha(age > a.life - 400 ? Math.max(0, (a.life - age) / 400) : Math.min(1, age / 240));
         sp.setAngle(age < 240 ? 1 + (1 - age / 240) * 1.5 : 1); // asienta con 1°
       } else if (a.kind === 'moki') {

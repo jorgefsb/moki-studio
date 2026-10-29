@@ -30,6 +30,7 @@ async function boot() {
   const q = new URLSearchParams(window.location.search);
   if (import.meta.env.DEV || q.has('debug') || q.get('anim') === 'debug') {
     game.moki = {
+      contrast: (type) => import('./debug/contrast.js').then((m) => m.measureContrast(game.scene.scenes[0], type)),
       cfg: CONFIG, // perillas vivas, para barrer valores sin recargar
       // Tiempos de apertura (ms desde el inicio de la navegación): primer pintado, scripts listos, escena lista y primer cuadro con Moki
       timing() {
