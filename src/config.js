@@ -126,4 +126,11 @@ export const CONFIG = {
   // Composición (director, opción C): groundAt = altura del suelo en pantalla (0.66 = 66% desde arriba);
   // farScale/midScale agrandan los cerros lejanos y la capa media para llenar el cielo (el paralaje corre igual).
   portrait: { maxAspect: 0.75, visibleWidth: 460, groundAt: 0.66, farScale: 1.8, midScale: 1.3 },
+
+  // Luz de lámpara (director, P1a): textura multiplicada sobre el cuadro, bajo el HUD.
+  // halo: cuánto se acerca a #FFA500 el centro del halo (arriba a la izquierda); vignette: tinta en las esquinas.
+  light: { halo: 0.14, vignette: 0.2 },
+  // Perspectiva atmosférica (P1b): velo del color del cielo de la hora sobre cada capa (tintFill con la misma textura).
+  // Las capas lejana y media ya traen 0.55 y 0.32 de papel en su color: estos velos se suman (de día ~0.64 / ~0.40 / 0.18).
+  atmosphere: { far: 0.2, mid: 0.12, near: 0.18 },
 };

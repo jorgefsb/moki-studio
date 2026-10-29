@@ -1,6 +1,7 @@
 // Texturas procedurales de cartón y papel (ARTE.md secciones 3, 7 y 8).
 // Todo se dibuja en canvas con semilla fija: sin imágenes externas, repetible y local.
 import { PAL, TONE, mix, rgba, rng } from './palette.js';
+import { CONFIG as C } from '../config.js';
 
 const TAU = Math.PI * 2;
 
@@ -123,6 +124,27 @@ function gradient(w, h, stops) {
   stops.forEach(([t, col]) => g.addColorStop(t, col));
   x.fillStyle = g;
   x.fillRect(0, 0, w, h);
+  return c;
+}
+
+// Luz de lámpara (sprint, GDD §9): se dibuja en modo MULTIPLY sobre todo el cuadro. Blanco = sin cambio.
+// Halo cálido arriba a la izquierda (tinte #FFA500 muy rebajado) y viñeta de tinta hacia las orillas. Sin brillos: multiplicar solo oscurece.
+function lightLayer(halo, vignette) {
+  const S = 256;
+  const [c, x] = mk(S, S);
+  x.fillStyle = '#FFFFFF';
+  x.fillRect(0, 0, S, S);
+  const v = x.createRadialGradient(S * 0.5, S * 0.42, S * 0.3, S * 0.5, S * 0.42, S * 0.78);
+  v.addColorStop(0, '#FFFFFF');
+  v.addColorStop(1, mix('#FFFFFF', PAL.ink, vignette));
+  x.fillStyle = v;
+  x.fillRect(0, 0, S, S);
+  x.globalCompositeOperation = 'multiply';
+  const h = x.createRadialGradient(S * 0.1, S * 0.02, 0, S * 0.1, S * 0.02, S * 0.75);
+  h.addColorStop(0, mix('#FFFFFF', PAL.warm, halo));
+  h.addColorStop(1, '#FFFFFF');
+  x.fillStyle = h;
+  x.fillRect(0, 0, S, S);
   return c;
 }
 
@@ -1034,6 +1056,7 @@ export function buildTextures(scene) {
   add('skyGrad', gradient(2, 320, [[0, rgba(PAL.kraft, 0)], [0.55, rgba(PAL.kraft, 0.06)], [1, rgba(PAL.kraft, 0.26)]]));
   add('topFade', gradient(2, 64, [[0, rgba(PAL.paper, 1)], [1, rgba(PAL.paper, 0)]]));
   add('groundShade', gradient(2, 256, [[0, rgba(PAL.ink, 0)], [1, rgba(PAL.ink, 0.34)]]));
+  add('light', lightLayer(C.light.halo, C.light.vignette));
   add('groundSurface', ground.surface());
   add('groundCanto', ground.canto());
   add('groundFold', ground.fold());

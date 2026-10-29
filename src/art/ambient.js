@@ -22,7 +22,7 @@ export const DAY = [
   { name: 'manana', sky: hex('#F8ECD8'), farVeil: 0xffffff, farAlpha: 0.78, bands: 0, shadowK: 1.35, obs: 0xffffff }, // cálido y claro, colinas pálidas, sombras largas
   { name: 'mediodia', sky: hex('#EBDBC5'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), farAlpha: 1, bands: 0, shadowK: 0.85, obs: 0xe0e0e0 },
   { name: 'tarde', sky: hex('#DFC9AF'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.12)), farAlpha: 1, bands: 1, shadowK: 1.5, obs: 0xd0d0d0 }, // bandas de fibra arriba
-  { name: 'noche', sky: hex('#A69682'), farVeil: hex('#B3ADB0'), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0xffffff }, // marrón tinta; el plano lejano más frío
+  { name: 'noche', sky: hex('#A69682'), farVeil: hex(mix(PAL.paper, PAL.ink, 0.3)), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0xffffff }, // marrón tinta; el plano lejano en papel hacia tinta (no gris)
 ];
 
 const NEED = { plane: 'ambPlane', birds: 'ambBird1', butterflies: 'ambButterfly', sign: 'paper', moki: 'mokiSaluda', balloon: 'ambBalloon' };
@@ -110,6 +110,13 @@ export class Ambient {
     s.far.setTint(far);
     if (s.textures.exists('far')) s.far.setAlpha(this.farAlpha());
     s.mid.setTint(0xffffff);
+    // perspectiva atmosférica: los velos de cada capa toman el color del cielo de la hora (de noche, tinta cálida)
+    if (s.farVeil) {
+      s.farVeil.setTintFill(sk);
+      s.midVeil.setTintFill(sk);
+      s.nearVeil.setFillStyle(sk, 1);
+      if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha(C.atmosphere.far * this.farAlpha());
+    }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
     s.obstacles.forEach((o) => o.sprite && o.sprite.setTint(this.obsTint));

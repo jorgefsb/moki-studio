@@ -105,6 +105,13 @@ export class RunScene extends Phaser.Scene {
     this.topFade = this.add.image(0, 0, 'topFade').setOrigin(0, 0).setDepth(1.5);
     this.far = a('paper', 2).setAlpha(0);
     this.mid = a('paper', 3).setAlpha(0);
+    // Perspectiva atmosférica: la misma capa pintada del color del cielo (tintFill) encima, con alfa baja (C.atmosphere).
+    // Solo cubre las siluetas, así el papel del cielo no se aplana. El color lo pone Ambient.applyDay según la hora.
+    this.farVeil = a('paper', 2.05).setAlpha(0).setTintFill(0xf4e8d5);
+    this.midVeil = a('paper', 3.05).setAlpha(0).setTintFill(0xf4e8d5);
+    this.nearVeil = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(4.6).setAlpha(C.atmosphere.near);
+    // Luz de lámpara: halo cálido y viñeta de tinta, multiplicados sobre todo menos el HUD
+    this.light = this.add.image(0, 0, 'light').setOrigin(0, 0).setDepth(30).setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.surface = a('groundSurface', 4);
     this.canto = a('groundCanto', 4);
     this.front = a('kraft', 4);
@@ -287,9 +294,13 @@ export class RunScene extends Phaser.Scene {
     this.base = { far: g + 12 - 300 * this.farS, mid: g + 10 - 360 * this.midS };
     this.far.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
     this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
+    this.farVeil.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
+    this.midVeil.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
+    this.light.setPosition(0, this.top).setDisplaySize(this.vw, this.vh);
     this.surface.setPosition(0, g - 8).setSize(this.vw, 22);
     this.canto.setPosition(0, g + 14).setSize(this.vw, 6);
     const frontH = Math.max(40, this.bottom - (g + 20));
+    this.nearVeil.setPosition(0, g - 8).setSize(this.vw, this.bottom - (g - 8));
     this.front.setPosition(0, g + 20).setSize(this.vw, frontH);
     this.shade.setPosition(0, g + 20).setDisplaySize(this.vw, frontH);
     this.folds.forEach((f) => f.destroy());
@@ -605,6 +616,12 @@ export class RunScene extends Phaser.Scene {
     if (layer) {
       layer.setTexture(key);
       this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut' });
+      const veil = { far: this.farVeil, mid: this.midVeil }[key];
+      if (veil) {
+        veil.setTexture(key);
+        const k = C.atmosphere[key] * (key === 'far' && this.ambient ? this.ambient.farAlpha() : 1);
+        this.tweens.add({ targets: veil, alpha: k, duration: 320, ease: 'Sine.easeOut' });
+      }
     }
   }
 
@@ -729,6 +746,8 @@ export class RunScene extends Phaser.Scene {
     // tilePosition va en px de textura (Phaser lo multiplica por tileScale): se divide para que el paralaje no cambie
     this.far.tilePositionX = this.reduced ? 0 : (this.dist * p.far) / this.farS;
     this.mid.tilePositionX = this.reduced ? 0 : (this.dist * p.mid) / this.midS;
+    this.farVeil.tilePositionX = this.far.tilePositionX;
+    this.midVeil.tilePositionX = this.mid.tilePositionX;
     this.surface.tilePositionX = this.dist;
     this.canto.tilePositionX = this.dist;
     this.front.tilePositionX = this.dist;
@@ -739,6 +758,8 @@ export class RunScene extends Phaser.Scene {
     const lift = this.reduced ? 0 : Math.max(0, C.world.groundY - this.y);
     this.far.y = this.base.far + Math.min(V.maxPx, lift * V.far);
     this.mid.y = this.base.mid + Math.min(V.maxPx, lift * V.mid);
+    this.farVeil.y = this.far.y;
+    this.midVeil.y = this.mid.y;
     this.stepForeground(step);
   }
 
@@ -1309,14 +1330,14 @@ export class RunScene extends Phaser.Scene {
     return { left: 16, top: 76, width: Math.min(W - 32, 440), maxHeight: Math.max(150, Math.round(headY - 76 - 12)) };
   }
 
+  // Tarjeta ligera (director, P2): la pista es el título (una sola línea), debajo dónde sigues; sin lección rotativa
+  // que contradiga "Empiezas de nuevo". Reintentar no exige leer: cualquier toque o tecla tras el bloqueo.
   showFailCard() {
-    const idx = num('moki.lesson', 0) % 3;
-    if (!this.demo) save('moki.lesson', idx + 1); // las 3 lecciones rotan en orden
     const pct = Math.min(99, Math.floor((100 * this.dist) / this.level.end));
     const where = this.cp.idx > 0 ? t('fail.cp') : t('fail.start');
     const meta = pct > 10 ? `${t('fail.pct', { n: pct })} · ${where}` : where; // el % solo si pasa de 10
     this.ui.showFail(
-      { lesson: t(`fail.l${idx + 1}`), hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect() },
+      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect() },
       () => this.respawn()
     );
   }

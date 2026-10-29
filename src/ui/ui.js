@@ -130,16 +130,15 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ lesson, hint, meta, prompt, rect }, onGo) {
+    showFail({ hint, meta, prompt, rect }, onGo) {
       ui.hideFail();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'transparent';
-      const card = el('div', rect.width <= 460 ? 'ui-card compact' : 'ui-card');
+      const card = el('div', 'ui-card compact ui-fail');
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, opacity: '0', transform: 'translateY(18px)', transition: 'opacity 250ms ease-out, transform 250ms ease-out' });
-      card.append(el('h2', '', lesson));
-      if (hint) card.append(el('p', '', hint));
+      card.append(el('h2', '', hint));
       if (meta) card.append(el('p', 'meta', meta));
-      const pill = el('button', 'ui-pill', prompt);
+      const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
       pill.disabled = true;
       card.append(pill);
