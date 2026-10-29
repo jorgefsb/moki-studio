@@ -143,3 +143,11 @@
   - Cada entrega: commit local en su rama + fila a estudio-lider con commit, qué cambió y qué verificar. Yo integro a master y abro fila de QA rápida al probador por cada integración (línea base 8ac54f0).
   - `src/config.js` es compartido: cada quien agrega su bloque, sin reordenar ni reformatear lo ajeno. Antes de entregar, `git merge master` en su rama.
   - Últimas entregas para integrar: 10:30 CDMX. Congelado de master: 10:50 CDMX, QA final del sprint → REPORTE-SPRINT.md del probador. Nada se publica, nada de push.
+- 29-oct 09:30 CDMX · Investigador · INVESTIGACION.md v1 (sin commit, sin tocar código): 15 referentes con fuente y fecha, tendencias web 2025-26 (vara CrazyGames: sesión 10+ min, D1 10-15%), master ccf3654 jugado, 3 ideas (papel del día, cuaderno de Moki, libro pop-up) y 11 mejoras priorizadas. Hueco #1: retención (solo mejor marca; DISENO §6 sin construir). Fila al director (qitem-20261029152936) y 3 medibles al probador (qitem-20261029152937).
+- 29-oct 09:31 CDMX · Productor · Reglas de recursos (orden de Spark; la máquina está al límite: 4 núcleos, 7.5 GB, ~450 MB libres, carga 14, semáforo AMARILLO). Estado en /tmp/moki-recursos.txt; un conserje sin IA limpia cada 2 min.
+  1. Builds, pruebas y capturas pesadas SIEMPRE con `flock /tmp/moki-pesado.lock <comando>`, una a la vez.
+  2. Un solo vite por worktree; si no lo usas, apágalo. El de :5180 es la vista en vivo de Jorge: no se toca.
+  3. Cada quien cierra sus pestañas y navegadores al terminar una prueba.
+  4. Nada de npm install en paralelo (los 3 worktrees ya tienen dependencias; no hace falta reinstalar).
+  5. El investigador trabaja sin navegador; al entregar INVESTIGACION.md se le da de baja (rig seat stop).
+  6. Antes de asignar trabajo pesado se revisa /tmp/moki-recursos.txt; en ROJO se serializa o se pausa al asiento menos prioritario.
