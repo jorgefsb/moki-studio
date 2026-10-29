@@ -1,14 +1,5 @@
-// Azar con semilla (mulberry32): misma semilla, mismo nivel. Nunca Math.random en la generación.
-export function mulberry32(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// Semillas de nivel. El azar es el mulberry32 que ya usa el fondo (art/palette.js): misma semilla, mismo nivel.
+export { rng } from '../art/palette.js';
 
 // Texto -> entero de 32 bits (FNV-1a): "2026-10-29" da la misma semilla en cualquier navegador.
 export function hashSeed(text) {
