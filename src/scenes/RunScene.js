@@ -511,6 +511,7 @@ export class RunScene extends Phaser.Scene {
       const sk = this.ambient ? this.ambient.shadowK : 1; // mañana y tarde: sombras largas y suaves; mediodía: cortas
       o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }
+    if (this.ambient) o.sprite.setTint(this.ambient.obsTint);
     o.destroy = () => {
       o.sprite.destroy();
       o.shadow.destroy();
@@ -718,7 +719,8 @@ export class RunScene extends Phaser.Scene {
     const sec = this.t / 1000;
     const quiet = lead >= 1.5 && !tut && this.t > 2000 && this.hudC.alpha < 0.05 && !(this.tramoIdx === 0 && (sec < 4 || sec > 19));
     // Demo: guion fijo (nube 1.5 s, pajaritos 6 s, avioncito 12 s) y Mañana a Tarde entre 31 y 37 s
-    const forced = this.demo ? [{ at: 6, kind: 'birds' }, { at: 12, kind: 'plane' }, { at: 19, kind: 'moki' }, { at: 24, kind: 'balloon' }, { at: 34, kind: 'butterflies' }] : null;
+    // demo: >= 8 s entre inicios (pajaritos 4, avioncito 12, Moki chiquito 20, globo 28); las mariposas son ambiente
+    const forced = this.demo ? [{ at: 4, kind: 'birds' }, { at: 12, kind: 'plane' }, { at: 20, kind: 'moki' }, { at: 28, kind: 'balloon' }] : null;
     if (this.demo && sec >= 31 && !amb.fired.tarde) {
       amb.fired.tarde = true;
       amb.setDay(2);
@@ -728,7 +730,7 @@ export class RunScene extends Phaser.Scene {
       amb.cloudNext = 0;
     }
     const tsec = (this.dist - this.level.starts[this.tramoIdx]) / Math.max(1, this.level.tramos[this.tramoIdx].speed); // segundos dentro del tramo
-    amb.update(dtMs, { ms: this.t, sec, tsec, quiet, forced, tramo: this.tramoIdx });
+    amb.update(dtMs, { ms: this.t, sec, tsec, quiet, forced, tutorial: tut, tramo: this.tramoIdx });
   }
 
   // Primer plano a 1.3x: tiras de cartulina FUERA del carril (nunca entre groundY-130 y groundY+10).
@@ -910,7 +912,6 @@ export class RunScene extends Phaser.Scene {
       }
     }
     this.pieceLabel.set(String(this.pieces));
-    if (this.combo === 5 && !k.arc && !this.demo) this.ambient.good('row', this.t); // fila de 5 piezas: mariposas
     this.particles.burst('collect', k.x, k.y);
     this.tweens.add({
       targets: k.sprite,

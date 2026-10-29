@@ -19,10 +19,10 @@ const toTint = (target) => {
 // Hora del día por tramo. farVeil tiñe colinas lejanas y nubes; la capa media (detrás de la banda de juego) no se toca:
 // ahí el contraste obstáculo/fondo no baja del de la mañana (2.34). Solo el cielo y el plano lejano cambian.
 export const DAY = [
-  { name: 'manana', sky: hex('#F8ECD8'), farVeil: 0xffffff, farAlpha: 0.78, bands: 0, shadowK: 1.35 }, // cálido y claro, colinas pálidas, sombras largas
-  { name: 'mediodia', sky: hex('#EBDBC5'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), farAlpha: 1, bands: 0, shadowK: 0.85 },
-  { name: 'tarde', sky: hex('#DFC9AF'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.12)), farAlpha: 1, bands: 1, shadowK: 1.5 }, // bandas de fibra arriba
-  { name: 'noche', sky: hex('#A69682'), farVeil: hex('#B3ADB0'), farAlpha: 1, bands: 0.7, shadowK: 1.0 }, // marrón tinta; el plano lejano más frío
+  { name: 'manana', sky: hex('#F8ECD8'), farVeil: 0xffffff, farAlpha: 0.78, bands: 0, shadowK: 1.35, obs: 0xffffff }, // cálido y claro, colinas pálidas, sombras largas
+  { name: 'mediodia', sky: hex('#EBDBC5'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), farAlpha: 1, bands: 0, shadowK: 0.85, obs: 0xe0e0e0 },
+  { name: 'tarde', sky: hex('#DFC9AF'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.12)), farAlpha: 1, bands: 1, shadowK: 1.5, obs: 0xd0d0d0 }, // bandas de fibra arriba
+  { name: 'noche', sky: hex('#A69682'), farVeil: hex('#B3ADB0'), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0x8a8a8a }, // marrón tinta; el plano lejano más frío
 ];
 
 const NEED = { plane: 'ambPlane', birds: 'ambBird1', butterflies: 'ambButterfly', sign: 'paper', moki: 'mokiSaluda', balloon: 'ambBalloon' };
@@ -34,19 +34,23 @@ export class Ambient {
     this.r = rng(seed);
     this.active = null; // un solo protagonista a la vez
     this.slow = null; // globo (capa 2, 22-28 s): vive aparte del protagonista
+    this.flutter = null; // mariposas: ambiente (como las nubes), no ocupan el cupo de protagonista
     this.cloud = null;
     this.chips = [];
     this.stars = [];
+    this.butterNext = 9000;
     this.pending = []; // premios: nacen 0.3-0.8 s después de un momento bueno
     this.lamp = scene.add.image(0, 0, 'paper').setOrigin(0.5, 0).setDepth(1.3).setAlpha(0).setVisible(false);
     this.bands = scene.add.tileSprite(0, 0, 10, 10, 'paper').setOrigin(0, 0).setDepth(1.4).setAlpha(0);
     this.day = { from: 0, to: 0, t: 1, dur: 1 };
+    this.obsTint = 0xffffff;
     this.resetState();
   }
 
   resetState() {
     this.lastStartAt = -1e9;
     this.cloudNext = 1500;
+    this.butterNext = 9000;
     this.nextRoll = 0;
     this.perTramo = [{}, {}, {}, {}];
     this.fired = {};
@@ -57,8 +61,8 @@ export class Ambient {
   }
 
   destroyAll() {
-    [this.active, this.slow, this.cloud].forEach((e) => e && e.sprites.forEach((s) => s.destroy()));
-    this.active = this.slow = this.cloud = null;
+    [this.active, this.slow, this.cloud, this.flutter].forEach((e) => e && e.sprites.forEach((s) => s.destroy()));
+    this.active = this.slow = this.cloud = this.flutter = null;
     this.chips.forEach((c) => c.s.destroy());
     this.stars.forEach((st) => st.s.destroy());
     this.chips = [];
@@ -103,8 +107,11 @@ export class Ambient {
     s.sky.setTint(toTint(sk));
     s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo
     s.far.setTint(far);
-    if (s.far.texture.key === 'far') s.far.setAlpha(this.farAlpha());
+    if (s.textures.exists('far')) s.far.setAlpha(this.farAlpha());
     s.mid.setTint(0xffffff);
+    // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
+    this.obsTint = lerpColor(A.obs, B.obs, d.t);
+    s.obstacles.forEach((o) => o.sprite && o.sprite.setTint(this.obsTint));
     s.clouds.setTint(lerpColor(0xffffff, far, 0.6));
     // bandas de fibra (tarde y, más tenues, noche): capas de papel, no un degradado liso
     const bandA = A.bands + (B.bands - A.bands) * d.t;
@@ -114,7 +121,7 @@ export class Ambient {
     const lampOn = d.to === 3 ? d.t : d.from === 3 ? 1 - d.t : 0;
     if (s.textures.exists('ambLamp') && this.lamp.texture.key !== 'ambLamp') this.lamp.setTexture('ambLamp');
     this.lamp.setVisible(lampOn > 0.01 && this.lamp.texture.key === 'ambLamp').setAlpha(lampOn);
-    this.lamp.setPosition(Math.max(70, s.vw * 0.12), s.top + (s.vw < 700 ? 66 / s.zoom : 4)); // en pantalla angosta cuelga bajo la fila del HUD
+    this.lamp.setPosition(Math.max(70, s.vw * 0.12), s.top + (s.vw < 700 ? 74 / s.zoom : 4)); // en pantalla angosta cuelga bajo la fila del HUD
     // estrellas de papel: solo en la noche, cuando ya cayó del todo
     if (d.to === 3 && d.t >= 1 && !this.stars.length && !this.fired.stars && s.textures.exists('ambStar')) this.spawnStars();
   }
@@ -138,6 +145,79 @@ export class Ambient {
         s.tweens.add({ targets: sp, angle: 0, duration: 600, delay: i * 120 });
       }
     }
+  }
+
+  // Cresta de la colina (capa lejana): fila del primer píxel opaco de cada columna, y las zonas planas (sin casas ni arbustos)
+  crestData() {
+    if (this._crest) return this._crest;
+    const s = this.scene;
+    if (!s.textures.exists('far')) return null;
+    const img = s.textures.get('far').getSourceImage();
+    const W = img.width;
+    const H = img.height;
+    const cv = document.createElement('canvas');
+    cv.width = W;
+    cv.height = H;
+    const cx = cv.getContext('2d');
+    cx.drawImage(img, 0, 0);
+    const d = cx.getImageData(0, 0, W, H).data;
+    const row = new Int16Array(W);
+    for (let x = 0; x < W; x++) {
+      row[x] = -1;
+      for (let y = 0; y < H; y++) if (d[(y * W + x) * 4 + 3] > 140) { row[x] = y; break; }
+    }
+    this._crest = { W, row };
+    return this._crest;
+  }
+
+  // Alfa de la capa media (árboles, postes): para no poner a Moki chiquito detrás de un pino
+  midAlpha() {
+    if (this._mid) return this._mid;
+    const s = this.scene;
+    if (!s.textures.exists('mid')) return null;
+    const img = s.textures.get('mid').getSourceImage();
+    const cv = document.createElement('canvas');
+    cv.width = img.width;
+    cv.height = img.height;
+    const cx = cv.getContext('2d');
+    cx.drawImage(img, 0, 0);
+    this._mid = { W: img.width, H: img.height, d: cx.getImageData(0, 0, img.width, img.height).data };
+    return this._mid;
+  }
+
+  // Busca, entre x0 y x1 de pantalla, la columna de la textura con la cresta más plana (±22 px): ahí se puede parar Moki chiquito
+  flatCrest(x0, x1) {
+    const c = this.crestData();
+    if (!c) return null;
+    const tp = this.scene.far.tilePositionX;
+    let best = null;
+    for (let x = x0; x <= x1; x += 3) {
+      const u = (((Math.round(x + tp)) % c.W) + c.W) % c.W;
+      let lo = 1e9;
+      let hi = -1e9;
+      for (let k = -22; k <= 22; k += 2) {
+        const r = c.row[(u + k + c.W) % c.W];
+        if (r < 0) { lo = -1e9; break; }
+        lo = Math.min(lo, r);
+        hi = Math.max(hi, r);
+      }
+      if (hi - lo > 5 || (best && hi - lo >= best.var)) continue;
+      // la capa media (árboles, postes) no debe tapar los 36 px de Moki sobre la cresta ni 12 px a cada lado
+      const m = this.midAlpha();
+      if (m) {
+        const row = Math.round((lo + hi) / 2);
+        const crestWorld = this.scene.far.y + row;
+        const um = (((Math.round(x + this.scene.mid.tilePositionX)) % m.W) + m.W) % m.W;
+        let blocked = false;
+        for (let yy = Math.round(crestWorld - this.scene.mid.y) - 40; yy <= Math.round(crestWorld - this.scene.mid.y) + 2 && !blocked; yy += 2) {
+          if (yy < 0 || yy >= m.H) continue;
+          for (let k = -18; k <= 18; k += 3) if (m.d[(yy * m.W + ((um + k + m.W) % m.W)) * 4 + 3] > 20) { blocked = true; break; }
+        }
+        if (blocked) continue;
+      }
+      best = { u, row: Math.round((lo + hi) / 2), var: hi - lo };
+    }
+    return best;
   }
 
   // ---------- zonas ----------
@@ -164,7 +244,11 @@ export class Ambient {
     const band = this.flightY();
     if (!band || !this.can(kind, tramo)) return false;
     const r = this.r;
-    const y = band[0] + r() * (band[1] - band[0]);
+    // el avioncito sube hasta 40 px y los pajaritos se abren ±18 px (+4 de vaivén): se reserva ese margen para no pisar el HUD ni la lectura
+    const mg = kind === 'plane' ? [48, 12] : kind === 'birds' ? [26, 26] : [0, 0];
+    const lo = band[0] + mg[0];
+    const hi = Math.max(lo, band[1] - mg[1]);
+    const y = lo + r() * (hi - lo);
     const ev = { kind, born: ms, life: 7000, sprites: [], y, tramo };
     if (kind === 'plane') {
       ev.sprites.push(s.add.image(-60, y, 'ambPlane').setDepth(1.6).setAlpha(0.95).setScale(this.px(55, 64)));
@@ -177,15 +261,18 @@ export class Ambient {
       const n = 1 + Math.floor(r() * 2);
       const top = Math.min(C.world.groundY - 205, band[1]); // y < groundY-200
       const yy = Math.min(top, band[0] + (band[1] - band[0]) * 0.3 + r() * 20);
-      for (let i = 0; i < n; i++) ev.sprites.push(s.add.image(s.vw + 20 + i * 40, yy, 'ambButterfly').setDepth(3.4).setAlpha(0.9).setScale(this.px(26, 36)));
+      for (let i = 0; i < n; i++) ev.sprites.push(s.add.image(s.vw + 20 + i * 40, yy, 'ambButterfly').setDepth(3.4).setAlpha(0.9).setScale(this.px(24, 36)));
       ev.life = 8000;
       ev.vx = -(48 + r() * 24);
       ev.y = yy;
+      this.flutter = ev;
+      this.log.push([Math.round(ms / 100) / 10, kind]);
+      return true;
     } else if (kind === 'sign') {
       // cartel en poste (capa 3): solo las 3 lecciones aprobadas, Outfit 700 de 17 px de pantalla
       const z = s.zoom;
       const idx = this.signIdx++ % 3;
-      const txt = s.add.text(0, 0, t(`fail.l${idx + 1}`), { fontFamily: 'Outfit, sans-serif', fontStyle: '700', fontSize: `${Math.ceil(17 / z)}px`, color: PAL.ink, wordWrap: { width: 240 / z }, align: 'center' }).setOrigin(0.5);
+      const txt = s.add.text(0, 0, t(`fail.l${idx + 1}`), { fontFamily: 'Outfit, sans-serif', fontStyle: '700', fontSize: `${Math.ceil(17 / z)}px`, color: PAL.ink, wordWrap: { width: Math.min(240, s.scale.width - 80) / z }, align: 'center' }).setOrigin(0.5);
       const pad = 12 / z;
       const cw = txt.width + pad * 2;
       const ch = txt.height + pad * 1.6;
@@ -196,23 +283,25 @@ export class Ambient {
       g.fillRoundedRect(-cw / 2, -ch / 2, cw, ch, 12);
       g.lineStyle(3, 0xb99168, 1);
       g.strokeRoundedRect(-cw / 2 + 1.5, -ch / 2 + 1.5, cw - 3, ch - 3, 11);
-      const cy = C.world.groundY - 250;
+      // entero en pantalla (borde derecho a >= 16 px), bajo el HUD y por encima de la zona de lectura (sobre groundY-196)
+      const cyMin = s.top + 66 / z + ch / 2;
+      const cy = Math.max(cyMin, Math.min(C.world.groundY - 250, C.world.groundY - 196 - ch / 2));
       const pole = s.add.rectangle(0, ch / 2, 6, C.world.groundY - (cy + ch / 2), 0x22211f, 0.4).setOrigin(0.5, 0);
-      const box = s.add.container(s.vw + cw / 2 + 20, cy, [pole, g, txt]).setDepth(3.2).setAngle(1);
+      const box = s.add.container(s.vw - cw / 2 - 16 / z, cy, [pole, g, txt]).setDepth(3.2).setAngle(1);
       ev.sprites.push(box);
       ev.x0 = box.x;
       ev.d0 = s.dist;
       ev.life = 3200;
     } else if (kind === 'moki') {
-      // Moki chiquito saludando: asset oficial tal cual a 30 px, nunca espejado, 1 vez por partida
-      const x = s.vw * (0.62 + r() * 0.2);
-      const sp = s.add.image(x, C.world.groundY - 100 + 34, 'mokiSaluda').setOrigin(0.5, 1).setScale(30 / 260).setTint(0xdcd3c6).setAlpha(0);
-      sp.setDepth(3.05); // delante de las colinas medias y detrás de los obstáculos
+      // Moki chiquito: asoma desde la cresta de la colina lejana (flat), con los pies en la línea de la cresta; sube y baja por el mismo sitio.
+      // Asset oficial tal cual a 30 px, nunca espejado, tinte de velo de papel ~12%, 1 vez por partida.
+      const cr = this.flatCrest(s.vw * 0.3, s.vw * 0.95);
+      if (!cr) return false;
+      const sp = s.add.image(0, 0, 'mokiSaluda').setOrigin(0.5, 1).setScale(30 / 260).setDepth(3.05).setTint(0xe6dfd2).setAlpha(0);
       ev.sprites.push(sp);
       ev.life = 2500;
-      ev.x0 = x;
-      ev.d0 = s.dist;
-      ev.baseY = C.world.groundY - 100;
+      ev.u = cr.u;
+      ev.row = cr.row;
       this.once.moki = true;
     } else if (kind === 'balloon') {
       const sp = s.add.image(s.vw * (0.55 + r() * 0.25), C.world.groundY - 20, 'ambBalloon').setDepth(2.5).setAlpha(0.95);
@@ -249,7 +338,7 @@ export class Ambient {
 
   // Un momento bueno (checkpoint, salto mantenido, arco completo, fila de piezas): el premio nace 0.3-0.8 s después
   good(kind, ms) {
-    const map = { checkpoint: 'balloon', hold: 'birds', arc: 'birds', row: 'butterflies' };
+    const map = { checkpoint: 'balloon', hold: 'birds', arc: 'birds' };
     const ev = map[kind];
     if (!ev || this.pending.some((p) => p.ev === ev)) return;
     this.pending.push({ ev, at: ms + 300 + this.r() * 500 });
@@ -274,6 +363,7 @@ export class Ambient {
     }
     this.chips = this.chips.filter((k) => (ms - k.born > 1000 ? (k.s.destroy(), false) : true));
     this.updateSlow(ms);
+    this.updateFlutter(ms, ctx);
     this.updateActive(ms);
 
     // premios: nacen solo si el cupo lo permite y hay respiro; si coinciden con otro evento, se descartan
@@ -348,6 +438,28 @@ export class Ambient {
     }
   }
 
+  // Mariposas (T1-T2): ambiente, cada 18-30 s con semilla, sin esperar respiro; 1-2 mariposas, 8 s
+  updateFlutter(ms, ctx) {
+    const s = this.scene;
+    if (!this.flutter && !ctx.forced && ctx.tramo <= 1 && ms >= this.butterNext && !ctx.tutorial) {
+      this.butterNext = ms + 18000 + this.r() * 12000;
+      this.begin('butterflies', ms, ctx.tramo);
+    }
+    const a = this.flutter;
+    if (!a) return;
+    const age = ms - a.born;
+    a.sprites.forEach((sp, i) => {
+      const dt = age / 1000;
+      sp.x = s.vw + 20 + i * 40 + a.vx * dt;
+      sp.y = a.y + i * 14 + Math.sin(dt * 2.2 + i * 2) * 14;
+      sp.setScale(this.px(24, 36) * (0.4 + 0.6 * Math.abs(Math.sin(dt * 9 + i))), this.px(24, 36)); // aleteo: el ancho va de 100 a 40%
+    });
+    if (age > a.life) {
+      a.sprites.forEach((sp) => sp.destroy());
+      this.flutter = null;
+    }
+  }
+
   updateSlow(ms) {
     const b = this.slow;
     if (!b) return;
@@ -382,21 +494,22 @@ export class Ambient {
         sp.x = -40 + a.vx * (age / 1000) - i * 26;
         sp.y = a.y + oy + Math.sin(age / 500 + i) * 4;
         sp.setTexture(`ambBird${Math.floor(age / 140 + i) % 2}`); // aleteo en stop-motion de 2 poses
-      } else if (a.kind === 'butterflies') {
-        const dt = age / 1000;
-        sp.x = s.vw + 20 + i * 40 + a.vx * dt;
-        sp.y = a.y + i * 14 + Math.sin(dt * 2.2 + i * 2) * 14;
-        sp.setScale(this.px(26, 36) * (0.4 + 0.6 * Math.abs(Math.sin(dt * 9 + i))), this.px(26, 36)); // aleteo: el ancho va de 100 a 40%
       } else if (a.kind === 'sign') {
-        sp.x = a.x0 - (s.dist - a.d0) * 0.6;
+        sp.x = a.x0 - (s.dist - a.d0) * 0.25; // lento: se lee entero durante sus 3 s
         sp.setAlpha(age > a.life - 400 ? Math.max(0, (a.life - age) / 400) : Math.min(1, age / 240));
         sp.setAngle(age < 240 ? 1 + (1 - age / 240) * 1.5 : 1); // asienta con 1°
       } else if (a.kind === 'moki') {
-        sp.x = a.x0 - (s.dist - a.d0) * 0.3;
-        const up = Math.min(1, age / 220); // asoma tras la colina en 220 ms
-        const down = age > a.life - 180 ? (age - (a.life - 180)) / 180 : 0; // baja en 180 ms
-        sp.y = a.baseY + 34 * (1 - up) + 34 * down;
-        sp.setAlpha(0.88 * Math.min(1, up * 3) * (1 - down * 0.5));
+        const c = this.crestData();
+        const W = c ? c.W : 1920;
+        const tp = s.far.tilePositionX;
+        sp.x = ((((a.u - tp) % W) + W) % W);
+        const crestY = s.far.y + a.row;
+        const up = Math.min(1, age / 220); // asoma desde la cresta en 220 ms (solo se ve lo que está sobre la línea)
+        const down = age > a.life - 180 ? (age - (a.life - 180)) / 180 : 0; // baja por el mismo sitio en 180 ms
+        const rise = Math.max(0, up - down);
+        sp.y = crestY + 30 * (1 - rise); // el recorte deja ver solo lo que está sobre la línea de la cresta
+        sp.setCrop(0, 0, sp.width, Math.max(1, sp.height * rise));
+        sp.setAlpha(0.88);
         sp.setAngle(age > 400 && age < a.life - 300 ? Math.sin((age - 400) / 280) * 1.5 : 0); // se mece 2 veces ±1.5°
       }
     });
