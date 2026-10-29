@@ -284,13 +284,14 @@ export class RunScene extends Phaser.Scene {
     this.strip.setPosition(0, this.top).setSize(this.vw, this.vh);
 
     const m = 16 / z;
-    this.hudL.setScale(1 / z).setPosition(m, this.top + m);
-    this.hudR.setScale(1 / z).setPosition(this.vw - m, this.top + m);
+    const hs = W < 420 ? 0.88 : 1; // en 375 las fichas se achican un poco: >= 8 px de aire con el botón de sonido
+    this.hudL.setScale(hs / z).setPosition(m, this.top + m);
+    this.hudR.setScale(hs / z).setPosition(this.vw - m, this.top + m);
     this.hudC.setScale(1 / z).setPosition(this.vw / 2, this.top + m + 52 / z);
     // Mano del tutorial: abajo a la derecha, en la zona del pulgar, fuera del carril de juego.
     // Mano y etiqueta junto a Moki, sobre su cabeza (no en la esquina): ahí está la mirada del jugador.
-    this.tutC.setScale(1 / z).setPosition(this.px - 6, g - 232);
-    this.tutLabelC.setPosition(72, 0);
+    this.tutC.setScale(1 / z).setPosition(this.px - 34 / z, g - 232 - 60 / z); // 60 px de pantalla más arriba y a la izquierda: ni Moki ni el arco quedan tapados
+    this.tutLabelC.setPosition(62, 0);
   }
 
   // ---------- Estado de la partida ----------
@@ -1074,12 +1075,12 @@ export class RunScene extends Phaser.Scene {
     // fondo de papel claro con canto kraft: se lee sobre cielo, colina o suelo
     const halo = this.tutHalo;
     halo.clear();
-    halo.fillStyle(0x22211f, 0.2);
-    halo.fillCircle(2, 30, 62);
-    halo.fillStyle(0xf4e8d5, 0.94);
-    halo.fillCircle(0, 26, 62);
-    halo.lineStyle(4, 0xb99168, 1);
-    halo.strokeCircle(0, 26, 62);
+    halo.fillStyle(0x22211f, 0.16);
+    halo.fillCircle(2, 28, 52);
+    halo.fillStyle(0xf4e8d5, 0.8);
+    halo.fillCircle(0, 24, 52);
+    halo.lineStyle(4, 0xb99168, 0.9);
+    halo.strokeCircle(0, 24, 52);
     const gfx = this.tutRing;
     gfx.clear();
     if (!key) {

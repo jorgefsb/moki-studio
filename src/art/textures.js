@@ -558,20 +558,32 @@ function metaArch() {
   post(8);
   post(198);
   cut(x, (g) => g.roundRect(4, 14, 212, 26, 6), { fill: PAL.kraft, edgeW: 3, shadow: { alpha: 0.3, blur: 6, dx: 0, dy: 4 }, r, fiberCount: 80 });
-  // banderines ámbar colgando del arco
-  const tri = (cx) => {
-    x.fillStyle = PAL.warm;
+  // cuerda que cuelga entre los dos postes con banderines ámbar (se ve el arco completo, no solo las puntas)
+  const sag = (u) => 44 + 26 * Math.sin(Math.PI * u);
+  x.strokeStyle = rgba(PAL.border, 0.95);
+  x.lineWidth = 2;
+  x.beginPath();
+  for (let i = 0; i <= 40; i++) {
+    const u = i / 40;
+    const px = 15 + u * 190;
+    i ? x.lineTo(px, sag(u)) : x.moveTo(px, sag(u));
+  }
+  x.stroke();
+  for (let i = 1; i <= 7; i++) {
+    const u = i / 8;
+    const cx = 15 + u * 190;
+    const cy = sag(u);
+    x.fillStyle = i % 2 ? PAL.warm : mix(PAL.warm, PAL.paper, 0.3);
     x.beginPath();
-    x.moveTo(cx - 14, 40);
-    x.lineTo(cx + 14, 40);
-    x.lineTo(cx, 70);
+    x.moveTo(cx - 11, cy);
+    x.lineTo(cx + 11, cy);
+    x.lineTo(cx, cy + 26);
     x.closePath();
     x.fill();
     x.strokeStyle = rgba(PAL.paper, 0.55);
     x.lineWidth = 1.5;
     x.stroke();
-  };
-  [52, 90, 130, 168].forEach(tri);
+  }
   return c;
 }
 

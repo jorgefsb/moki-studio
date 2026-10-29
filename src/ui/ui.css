@@ -76,7 +76,7 @@
   display: flex; align-items: center; justify-content: center;
 }
 .ui-soundbtn.hud { left: calc(50% - 80px); }
-.ui-soundbtn.title { right: 16px; top: 64px; }
+.ui-soundbtn.title { left: calc(50% - 80px); } /* mismo lugar que en juego: centro, junto a donde va la pausa */
 
 .ui-pause { position: relative; width: min(320px, calc(100vw - 48px)); padding: 18px 20px 20px; }
 .ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
@@ -91,7 +91,8 @@
 .ui-asi .panel { background: #d6bf9f; border: 3px solid #8a7e70; border-radius: 14px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22); padding: 10px 14px; margin: 8px 0; display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
 .ui-asi .panel b { font: 700 18px Outfit, sans-serif; }
 .ui-asi .panel span { font: 400 16px/22px Inter, sans-serif; text-align: right; }
-.ui-asi .jorge { margin: 14px 0 6px; font: 700 20px Outfit, sans-serif; }
+.ui-asi .jorge { flex-basis: 100%; margin: 0; text-align: center; font: 700 18px Outfit, sans-serif; }
+@media (max-height: 760px) { .ui-asi .panel { padding: 6px 12px; margin: 6px 0; } .ui-asi h2 { font-size: 28px; line-height: 32px; } .ui-asi .sub { margin: 2px 0 8px; font-size: 16px; } .ui-asi .wrap { padding-top: 14px; } }
 .ui-asi .foot { box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 3px solid #b99168; background: #f4e8d5; }
 .ui-asi .foot .ui-link { margin: 0; font: 400 16px/22px Inter, sans-serif; }
 .ui-asi .foot .ui-btn { margin: 0; }

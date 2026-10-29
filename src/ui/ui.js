@@ -207,8 +207,8 @@ export function createUI() {
         p.append(el('b', '', t(`how.${k}`)), el('span', '', t(`how.${k}.d`)));
         wrap.append(p);
       }
-      wrap.append(el('p', 'jorge', t(interventions === 1 ? 'how.jorge.one' : 'how.jorge.many', { n: interventions })));
       const foot = el('div', 'foot');
+      foot.append(el('p', 'jorge', t(interventions === 1 ? 'how.jorge.one' : 'how.jorge.many', { n: interventions })));
       const link = el('a', 'ui-link', t('end.link'));
       link.href = 'https://jorgesuarez.com.mx';
       link.rel = 'noopener';
