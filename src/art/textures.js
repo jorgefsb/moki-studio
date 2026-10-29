@@ -1,6 +1,7 @@
 // Texturas procedurales de cartón y papel (ARTE.md secciones 3, 7 y 8).
 // Todo se dibuja en canvas con semilla fija: sin imágenes externas, repetible y local.
 import { PAL, TONE, mix, rgba, rng } from './palette.js';
+import { CONFIG as C } from '../config.js';
 
 const TAU = Math.PI * 2;
 
@@ -123,6 +124,42 @@ function gradient(w, h, stops) {
   stops.forEach(([t, col]) => g.addColorStop(t, col));
   x.fillStyle = g;
   x.fillRect(0, 0, w, h);
+  return c;
+}
+
+// Luz de lámpara (sprint, GDD §9): se dibuja en modo MULTIPLY sobre todo el cuadro. Blanco = sin cambio.
+// Halo cálido arriba a la izquierda (tinte #FFA500 muy rebajado) y viñeta de tinta hacia las orillas. Sin brillos: multiplicar solo oscurece.
+function lightLayer(halo, vignette) {
+  const S = 256;
+  const [c, x] = mk(S, S);
+  x.fillStyle = '#FFFFFF';
+  x.fillRect(0, 0, S, S);
+  const v = x.createRadialGradient(S * 0.5, S * 0.42, S * 0.3, S * 0.5, S * 0.42, S * 0.78);
+  v.addColorStop(0, '#FFFFFF');
+  v.addColorStop(1, mix('#FFFFFF', PAL.ink, vignette));
+  x.fillStyle = v;
+  x.fillRect(0, 0, S, S);
+  x.globalCompositeOperation = 'multiply';
+  const h = x.createRadialGradient(S * 0.1, S * 0.02, 0, S * 0.1, S * 0.02, S * 0.75);
+  h.addColorStop(0, mix('#FFFFFF', PAL.warm, halo));
+  h.addColorStop(1, '#FFFFFF');
+  x.fillStyle = h;
+  x.fillRect(0, 0, S, S);
+  return c;
+}
+
+// Sol de papel (gauntlet R0): disco recortado cálido y dos anillos de halo más pálidos, sin degradados brillantes.
+function paperSun(R) {
+  const S = Math.ceil(R * 2 * 1.9 + 8);
+  const [c, x] = mk(S, S);
+  const o = S / 2;
+  const r = rng(91);
+  [[1.9, 0.22], [1.45, 0.38]].forEach(([k, a]) => {
+    x.globalAlpha = a;
+    cut(x, (g) => g.arc(o, o, R * k, 0, Math.PI * 2), { fill: mix(PAL.paper, PAL.warm, 0.18), edgeW: 0, shadow: null, r, fiberCount: 20 });
+  });
+  x.globalAlpha = 1;
+  cut(x, (g) => g.arc(o, o, R, 0, Math.PI * 2), { fill: mix(PAL.paper, PAL.warm, 0.42), edgeW: 2, shadow: { alpha: 0.1, blur: 6, dx: 2, dy: 3 }, r, fiberCount: 40 });
   return c;
 }
 
@@ -273,6 +310,24 @@ function farLayer() {
   [400, 880, 1340, 1790].forEach((bx, i) => {
     const path = hillPath(bx, bx + 96 + i * 8, H + 4, 30 + i * 3, r);
     each(() => cut(x, path, edge));
+  });
+  return c;
+}
+
+// Cordillera extra (gauntlet R0): solo cerros, sin casitas ni canto; el color lo pone el tintFill de la escena.
+function ridgeLayer() {
+  const H = 300;
+  const [c, x] = mk(WRAP, H);
+  const r = rng(34);
+  const edge = { fill: '#FFFFFF', edgeW: 0, shadow: null, r, fiberCount: 0 };
+  [[-200, 760, 175], [560, 1300, 140], [1150, 1980, 185], [1760, 2300, 150]].forEach(([a, b, p]) => {
+    const path = hillPath(a, b, H + 4, p, r);
+    [-WRAP, 0, WRAP].forEach((off) => {
+      x.save();
+      x.translate(off, 0);
+      cut(x, path, edge);
+      x.restore();
+    });
   });
   return c;
 }
@@ -1034,6 +1089,8 @@ export function buildTextures(scene) {
   add('skyGrad', gradient(2, 320, [[0, rgba(PAL.kraft, 0)], [0.55, rgba(PAL.kraft, 0.06)], [1, rgba(PAL.kraft, 0.26)]]));
   add('topFade', gradient(2, 64, [[0, rgba(PAL.paper, 1)], [1, rgba(PAL.paper, 0)]]));
   add('groundShade', gradient(2, 256, [[0, rgba(PAL.ink, 0)], [1, rgba(PAL.ink, 0.34)]]));
+  add('light', lightLayer(C.light.halo, C.light.vignette));
+  add('sun', paperSun(C.sun.r));
   add('groundSurface', ground.surface());
   add('groundCanto', ground.canto());
   add('groundFold', ground.fold());
@@ -1045,6 +1102,7 @@ export function buildTextures(scene) {
   add('chipPaper', chip(PAL.paper, 72));
   // capas de fondo: entran con fundido apenas están listas
   defer('clouds', () => cloudsLayer());
+  defer('ridge', () => ridgeLayer());
   defer('far', () => farLayer());
   defer('mid', () => midLayer());
   defer('viga', () => viga());

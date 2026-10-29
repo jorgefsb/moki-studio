@@ -126,4 +126,19 @@ export const CONFIG = {
   // Composición (director, opción C): groundAt = altura del suelo en pantalla (0.66 = 66% desde arriba);
   // farScale/midScale agrandan los cerros lejanos y la capa media para llenar el cielo (el paralaje corre igual).
   portrait: { maxAspect: 0.75, visibleWidth: 460, groundAt: 0.66, farScale: 1.8, midScale: 1.3 },
+
+  // Luz de lámpara (director, P1a): textura multiplicada sobre el cuadro, bajo el HUD.
+  // halo: cuánto se acerca a #FFA500 el centro del halo (arriba a la izquierda); vignette: tinta en las esquinas.
+  light: { on: true, halo: 0.14, vignette: 0.2 },
+  // Perspectiva atmosférica (P1b): velo del color del cielo de la hora sobre cada capa (tintFill con la misma textura).
+  // Las capas lejana y media ya traen 0.55 y 0.32 de papel en su color: estos velos se suman (de día ~0.64 / ~0.40).
+  // near: el frente y el suelo van al revés, hacia tinta (gauntlet R0: frente oscuro), con alfa near.
+  // on: false apaga velos, cordillera y sol de una vez (el fondo queda como en master).
+  atmosphere: { on: true, far: 0.2, mid: 0.12, near: 0.16 },
+  // Gauntlet R0: cordillera extra detrás de los cerros (silueta de la capa lejana, más grande y casi color cielo)
+  // y sol de papel bajo detrás de las colinas (de noche se apaga y queda la lámpara).
+  // ridge.mix: cuánto del tono de los cerros lejanos conserva (0 = color del cielo). sun.x: fracción del ancho;
+  // sun.y: px sobre el suelo (en vertical se multiplica por portrait.farScale, como los cerros).
+  ridge: { scale: 1.45, mix: 0.3, parallax: 0.15, lift: 34 },
+  sun: { x: 0.68, y: 270, r: 44 },
 };

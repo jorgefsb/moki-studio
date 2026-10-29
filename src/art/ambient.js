@@ -1,7 +1,7 @@
 // Fondo vivo (T3d/T3d2, PROPUESTAS-FONDO-DEMO §1B y §2): eventos de papel en las capas 1 a 3 y hora del día.
 // PRNG propio con semilla, separado del guion: nada de aquí toca la física, los obstáculos ni las piezas.
 import { CONFIG as C } from '../config.js';
-import { PAL, mix, rng } from './palette.js';
+import { PAL, TONE, mix, rng } from './palette.js';
 import { t } from '../i18n.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
@@ -31,7 +31,7 @@ export const DAY = [
   { name: 'manana', sky: hex('#F8ECD8'), farVeil: 0xffffff, farAlpha: 0.78, bands: 0, shadowK: 1.35, obs: 0xffffff }, // cálido y claro, colinas pálidas, sombras largas
   { name: 'mediodia', sky: hex('#EBDBC5'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), farAlpha: 1, bands: 0, shadowK: 0.85, obs: 0xe0e0e0 },
   { name: 'tarde', sky: hex('#DFC9AF'), farVeil: hex(mix('#FFFFFF', PAL.kraft, 0.12)), farAlpha: 1, bands: 1, shadowK: 1.5, obs: 0xd0d0d0 }, // bandas de fibra arriba
-  { name: 'noche', sky: hex('#A69682'), farVeil: hex('#B3ADB0'), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0xffffff }, // marrón tinta; el plano lejano más frío
+  { name: 'noche', sky: hex('#A69682'), farVeil: hex(mix(PAL.paper, PAL.ink, 0.3)), farAlpha: 1, bands: 0.7, shadowK: 1.0, obs: 0xffffff }, // marrón tinta; el plano lejano en papel hacia tinta (no gris)
 ];
 
 const NEED = { plane: 'ambPlane', birds: 'ambBird1', butterflies: 'ambButterfly', sign: 'paper', moki: 'mokiSaluda', balloon: 'ambBalloon' };
@@ -126,6 +126,14 @@ export class Ambient {
     s.far.setTint(far);
     if (s.textures.exists('far')) s.far.setAlpha(this.farAlpha());
     s.mid.setTint(0xffffff);
+    // perspectiva atmosférica: los velos de cada capa toman el color del cielo de la hora (de noche, tinta cálida)
+    if (s.farVeil) {
+      s.farVeil.setTintFill(sk);
+      s.midVeil.setTintFill(sk);
+      if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha(C.atmosphere.far * this.farAlpha());
+      // cordillera extra: el plano más lejano, casi del color del cielo (cada plano más claro hacia atrás)
+      s.ridge.setTintFill(lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix));
+    }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
     s.obstacles.forEach((o) => o.sprite && o.sprite.setTint(this.obsTint));
@@ -139,6 +147,7 @@ export class Ambient {
     const lampOn = d.to === 3 ? d.t : d.from === 3 ? 1 - d.t : 0;
     if (s.textures.exists('ambLamp') && this.lamp.texture.key !== 'ambLamp') this.lamp.setTexture('ambLamp');
     this.lamp.setVisible(lampOn > 0.01 && this.lamp.texture.key === 'ambLamp').setAlpha(lampOn);
+    if (s.sun) s.sun.setAlpha(1 - lampOn); // de noche el sol de papel se va y queda la lámpara
     this.lamp.setPosition(Math.max(70, s.vw * 0.12), s.top + (s.vw < 700 ? 74 / s.zoom : 4)); // en pantalla angosta cuelga bajo la fila del HUD
     // estrellas de papel: solo en la noche, cuando ya cayó del todo
     if (d.to === 3 && d.t >= 1 && !this.stars.length && !this.fired.stars && s.textures.exists('ambStar')) this.spawnStars();

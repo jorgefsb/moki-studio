@@ -152,5 +152,9 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-head .ui-tag { margin: 0; flex: none; }
 .ui-head h2 { margin-bottom: 4px; }
 
+/* Tarjeta de fallo ligera: la pista en una línea, la tarjeta angosta y sin tapar el HUD */
+.ui-card.ui-fail { width: auto !important; max-width: min(440px, calc(100% - 32px)); }
+.ui-card.ui-fail h2 { font-size: 21px; line-height: 27px; margin-bottom: 4px; }
+
 /* Embed (?embed=1): los paneles con scroll no lo pasan a la página padre al llegar al borde. */
 .embed .ui-asi .wrap, .embed .ui-card { overscroll-behavior: contain; }

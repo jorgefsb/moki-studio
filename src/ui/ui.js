@@ -138,21 +138,20 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ lesson, hint, meta, prompt, rect, isNew }, onGo) {
+    showFail({ hint, meta, prompt, rect, isNew }, onGo) {
       ui.hideFail();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'transparent';
-      const card = el('div', rect.width <= 460 ? 'ui-card compact' : 'ui-card');
+      const card = el('div', 'ui-card compact ui-fail');
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, opacity: '0', transform: 'translateY(18px)', transition: 'opacity 250ms ease-out, transform 250ms ease-out' });
       if (isNew) {
         // Nueva mejor marca también al fallar: la etiqueta brinca con el stinger (popRecord)
         const head = el('div', 'ui-head');
-        head.append(el('h2', '', lesson), el('span', 'ui-tag', t('end.new')));
+        head.append(el('h2', '', hint), el('span', 'ui-tag', t('end.new')));
         card.append(head);
-      } else card.append(el('h2', '', lesson));
-      if (hint) card.append(el('p', '', hint));
+      } else card.append(el('h2', '', hint));
       if (meta) card.append(el('p', 'meta', meta));
-      const pill = el('button', 'ui-pill', prompt);
+      const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
       pill.disabled = true;
       card.append(pill);
