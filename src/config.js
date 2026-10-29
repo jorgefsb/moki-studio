@@ -42,6 +42,9 @@ export const CONFIG = {
   checkpointEverySec: 30,
   levelLengthSec: 120,
 
+  // Fondo vivo (T3d): semilla propia, separada del guion; 1 protagonista a la vez, 6 s entre inicios (8 s en el demo)
+  ambient: { seed: 20261029, minGapMs: 6000, demoGapMs: 8000 },
+
   // Tutorial (UX.md §4)
   tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
   // leadTap/leadHold: px extra respecto de la mitad del recorrido aéreo al despegar (se calibra contra la física real, sin god)

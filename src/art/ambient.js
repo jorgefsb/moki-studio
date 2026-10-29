@@ -22,7 +22,8 @@ export const DAY = [
   { name: 'manana', sky: hex('#F4E8D5'), veil: 0xffffff, ink: 0.12 },
   { name: 'mediodia', sky: hex('#EBDBC5'), veil: hex(mix('#FFFFFF', PAL.kraft, 0.08)), ink: 0.14 },
   { name: 'tarde', sky: hex('#DFC9AF'), veil: hex(mix('#FFFFFF', PAL.kraft, 0.12)), ink: 0.18 },
-  { name: 'noche', sky: hex('#BEAF9B'), veil: hex(mix('#FFFFFF', PAL.ink, 0.1)), ink: 0.24 },
+  // noche: el velo de las capas 2-3 queda en 0 (ARTE pedía ink 10%) para que el contraste obstáculo/fondo no baje del de la mañana
+  { name: 'noche', sky: hex('#BEAF9B'), veil: 0xffffff, ink: 0.24 },
 ];
 
 export class Ambient {
@@ -53,6 +54,7 @@ export class Ambient {
     this.chips = [];
     this.lastStartAt = -1e9;
     this.cloudNext = 1500;
+    this.nextRoll = 0;
     this.perTramo = [0, 0, 0, 0];
     this.fired = {};
     this.log = [];
@@ -78,6 +80,7 @@ export class Ambient {
     const veil = lerpColor(A.veil, B.veil, d.t);
     const s = this.scene;
     s.sky.setTint(toTint(sk));
+    s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo: sin banda clara en la noche
     s.far.setTint(veil);
     s.mid.setTint(veil);
     s.clouds.setTint(lerpColor(0xffffff, veil, 0.6));
@@ -104,7 +107,8 @@ export class Ambient {
   begin(kind, ms, extra = {}) {
     const s = this.scene;
     const band = this.flightY();
-    if (!band && kind !== 'cloud') return false;
+    if (!band) return false;
+    if (!s.textures.exists(kind === 'plane' ? 'ambPlane' : 'ambBird1')) return false; // la textura aún se genera
     const r = this.r;
     const ev = { kind, born: ms, life: 0, sprites: [], ...extra };
     const y = band ? band[0] + r() * (band[1] - band[0]) : 0;
@@ -129,7 +133,7 @@ export class Ambient {
   beginCloud(ms) {
     const s = this.scene;
     const band = this.flightY();
-    if (!band) return;
+    if (!band || !s.textures.exists('ambCloud2')) return;
     const y = band[0] + this.r() * Math.max(10, (band[1] - band[0]) * 0.6);
     const sp = s.add.image(s.vw * (0.4 + this.r() * 0.5), y, 'ambCloud0').setDepth(1.2).setAlpha(0);
     this.cloud = { born: ms, life: 14000 + this.r() * 6000, sprites: [sp], stage: 0, x0: sp.x, d0: s.dist, cuts: [800 + this.r() * 400, 2200 + this.r() * 600] };

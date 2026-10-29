@@ -4,6 +4,7 @@ import { PAL, TONE } from '../art/palette.js';
 import { buildTextures } from '../art/textures.js';
 import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
+import { Ambient } from '../art/ambient.js';
 import { createUI } from '../ui/ui.js';
 import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
@@ -112,6 +113,7 @@ export class RunScene extends Phaser.Scene {
     this.rig = createMokiRig(this);
     this.rig.debugOn = ANIM_DEBUG;
     this.particles = new Particles(this);
+    this.ambient = new Ambient(this, Number(Q.get('amb')) || C.ambient.seed); // ?amb=N cambia la semilla del fondo (prueba de determinismo)
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
       // Lectura de medición en el DOM (la cámara con zoom deformaría un texto del lienzo).
@@ -341,6 +343,8 @@ export class RunScene extends Phaser.Scene {
     this.particles.clear();
     this.tutSetState('off');
     this.tutArc.setVisible(false);
+    if (this.ambient) this.ambient.reset();
+    if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
   }
 
   startGame() {
@@ -622,6 +626,7 @@ export class RunScene extends Phaser.Scene {
     this.particles.update(dtMs, step);
     this.stepMoki(dtMs);
     this.stepHud();
+    this.stepAmbient(dtMs);
 
     if (this.demo && !this.demoStripping && this.dist >= this.level.end) this.demoRestart();
     else if (!this.demo && this.dist >= this.level.end && !this.dead) this.finish();
@@ -693,6 +698,27 @@ export class RunScene extends Phaser.Scene {
     this.far.y = this.base.far + Math.min(V.maxPx, lift * V.far);
     this.mid.y = this.base.mid + Math.min(V.maxPx, lift * V.mid);
     this.stepForeground(step);
+  }
+
+  // Fondo vivo: solo en respiros (el siguiente obstáculo a >= 1.5 s), nunca en tutorial, tarjeta, banner ni los 2 s tras reaparecer
+  stepAmbient(dtMs) {
+    const amb = this.ambient;
+    const next = this.obstacles.find((o) => o.x > this.px - 50);
+    const lead = next ? (next.x - this.px) / Math.max(this.speed, 1) : 9;
+    const tut = this.tut && !this.demo && this.tut.stage < 4;
+    const sec = this.t / 1000;
+    const quiet = lead >= 1.5 && !tut && this.t > 2000 && this.hudC.alpha < 0.05 && !(this.tramoIdx === 0 && (sec < 4 || sec > 19));
+    // Demo: guion fijo (nube 1.5 s, pajaritos 6 s, avioncito 12 s) y Mañana a Tarde entre 31 y 37 s
+    const forced = this.demo ? [{ at: 6, kind: 'birds' }, { at: 12, kind: 'plane' }] : null;
+    if (this.demo && sec >= 31 && !amb.fired.tarde) {
+      amb.fired.tarde = true;
+      amb.setDay(2);
+    }
+    if (this.demo && sec >= 1.5 && !amb.cloud && !amb.fired.cloud1) {
+      amb.fired.cloud1 = true;
+      amb.cloudNext = 0;
+    }
+    amb.update(dtMs, { ms: this.t, sec, quiet, forced, tramo: this.tramoIdx });
   }
 
   // Primer plano a 1.3x: tiras de cartulina FUERA del carril (nunca entre groundY-130 y groundY+10).
@@ -803,6 +829,7 @@ export class RunScene extends Phaser.Scene {
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
       audio.stinger('checkpoint');
       audio.setTramo(this.tramoIdx);
+      if (!this.demo) this.ambient.setDay(this.tramoIdx); // hora del día: crossfade de 6 s tras el checkpoint (el demo la cambia a los 31 s)
       this.rig.startHop();
       this.particles.burst('confetti', this.px + 20, g - 20 - 112);
     }
