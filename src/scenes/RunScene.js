@@ -387,6 +387,11 @@ export class RunScene extends Phaser.Scene {
   // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
   makeLevel(seed) {
     if (CLASICO) return GAME_LEVEL;
+    // La primera partida de la vida es la clásica (director): el tutorial y la primera impresión, siempre iguales
+    if (!seed && !SEED && load('moki.primera') !== '1') {
+      save('moki.primera', '1');
+      return GAME_LEVEL;
+    }
     const modo = this.modo;
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo);
   }
