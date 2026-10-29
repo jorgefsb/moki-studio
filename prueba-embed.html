@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prueba embed</title>
+  <!-- Solo desarrollo: simula la página que incrusta el juego. ?w=390&h=844&src=/?embed=1 -->
+  <style>
+    body { margin: 0; background: #2b2b2b; color: #eee; font: 14px system-ui; }
+    p { margin: 8px; }
+    iframe { display: block; border: 0; background: #fff; }
+    .relleno { height: 1200px; }
+  </style>
+</head>
+<body>
+  <p>Página padre. Arriba y abajo hay texto para ver si el juego hace scroll del padre.</p>
+  <iframe id="f" allow="autoplay; fullscreen"></iframe>
+  <p class="relleno">Fin de la página padre.</p>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const f = document.getElementById('f');
+    f.style.width = (q.get('w') || 390) + 'px';
+    f.style.height = (q.get('h') || 844) + 'px';
+    f.src = q.get('src') || '/?embed=1';
+    // ?z=0.6 encoge el iframe en pantalla para verlo completo (por dentro sigue midiendo w x h).
+    if (q.get('z')) {
+      f.style.transform = 'scale(' + q.get('z') + ')';
+      f.style.transformOrigin = '0 0';
+    }
+  </script>
+</body>
+</html>
