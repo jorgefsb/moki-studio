@@ -440,8 +440,7 @@ export class RunScene extends Phaser.Scene {
     this.tut = { stage: load('moki.tutorial') === '1' ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
     this.ui.showSoundButton('hud');
-    feel.gestured = true;
-    this.buzz(10); // "Jugar" se siente en la mano
+    this.buzz(10); // "Jugar" se siente en la mano (feel.gestured lo pone el primer gesto real, ver feel.js)
     audio.unlock(); // el gesto que arranca la partida habilita el sonido
     audio.setTramo(0);
     audio.setStreak(0);
