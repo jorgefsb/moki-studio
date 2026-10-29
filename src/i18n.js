@@ -41,6 +41,9 @@ const ES = {
   'end.pieces': 'Piezas',
   'end.score': 'Puntaje',
   'end.best': 'Mejor marca',
+  'end.best.clasico': 'Clásico', // la marca es por modo: "Mejor marca · Libre"
+  'end.best.dia': 'Reto',
+  'end.best.libre': 'Libre',
   'end.modo': 'Nivel',
   'end.modo.reto': 'Reto del {d}',
   'end.new': 'Nueva marca',
