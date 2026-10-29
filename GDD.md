@@ -94,7 +94,7 @@ Base: AUDIO.md y el tema "Un saltito más" (96 BPM, Web Audio). Pico de sesión 
 | Director | — | Gauntlet a ciegas por pieza; luz y atmósfera (si sobra tiempo, a la rama base) |
 
 ### Siguientes 2 semanas
-Cuaderno de 3 notas y sellos; racha con perdón; tarjeta para compartir; modo Paseo; Vuelta rápida; obstáculos pop-up; luz de lámpara, perspectiva atmosférica, hito gigante y clima; 40+ bloques; hueco en el suelo; papeles temáticos con arte nuevo; **pruebas con 3-5 personas reales en celular** (ms de toque, duración real, mezcla oída).
+Pendientes que dejó la QA del sprint: el fondo no pone postes ni pinos detrás de un obstáculo (a 1280 un poste se leía como parte de la torre); mejor marca por modo si no entró hoy. Densidad del generado: hoy trae ~20% menos obstáculos y el doble de filas de piezas que el clásico (decisión A, amable); revisar con personas. Cuaderno de 3 notas y sellos; racha con perdón; tarjeta para compartir; modo Paseo; Vuelta rápida; obstáculos pop-up; luz de lámpara, perspectiva atmosférica, hito gigante y clima; 40+ bloques; hueco en el suelo; papeles temáticos con arte nuevo; **pruebas con 3-5 personas reales en celular** (ms de toque, duración real, mezcla oída).
 
 ### v1 pública
 Libro de 4 páginas + papel del día + cuaderno + racha; poses nuevas de Moki dibujadas por la marca; carga <3 s en gama media; métricas de portal (sesión 10+ min, D1 10-15%, 80% juega 1+ min) medidas en moki-prueba antes de cualquier portal. Spark publica; nada se publica desde el estudio.
