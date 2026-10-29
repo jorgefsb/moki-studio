@@ -404,6 +404,17 @@ export class RunScene extends Phaser.Scene {
     return t('end.modo.reto', { d: `${d} ${mes}` });
   }
 
+  // Mejor marca por modo (director): clásico, reto del día y libre no se comparan entre sí.
+  // La marca vieja (moki.best, de antes de separar por modo) se copia a moki.best.clasico la primera vez (decisión del director).
+  bestMode() {
+    const m = this.level && this.level.modo;
+    return !m ? 'clasico' : m === 'libre' ? 'libre' : 'dia';
+  }
+  bestKey() {
+    if (load('moki.best.clasico') === null && load('moki.best') !== null) save('moki.best.clasico', load('moki.best'));
+    return `moki.best.${this.bestMode()}`;
+  }
+
   // Nivel de la partida (NIVELES.md §7): Reto del día = fecha local; Libre = semilla nueva por partida.
   // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
   makeLevel(seed) {
@@ -1413,9 +1424,9 @@ export class RunScene extends Phaser.Scene {
     // El obstáculo se arruga 2% (papel apachurrado) y se queda así; al reintentar se crea liso de nuevo
     if (!this.calm && o.sprite) this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
     // La mejor marca se guarda también al fallar (no en el demo)
-    const prevBest = num('moki.best', 0);
+    const prevBest = num(this.bestKey(), 0);
     const isNew = !this.demo && this.score > prevBest;
-    if (isNew) save('moki.best', this.score);
+    if (isNew) save(this.bestKey(), this.score);
     this.failRecord = isNew && prevBest > 0;
     // Sonido: tropiezo amable, la música baja (ducking), stinger de fallo a los 80 ms y, si hay récord, el de récord después
     audio.sfx('stumble');
@@ -1516,12 +1527,12 @@ export class RunScene extends Phaser.Scene {
     this.rig.startHop();
     save('moki.done', '1'); // abre Hardcore (decisión del líder)
     // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
-    const best = num('moki.best', 0);
+    const best = num(this.bestKey(), 0);
     const score = this.score;
     this.finalData = { isNew: score > best, hadBest: best > 0, score, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: Math.max(best, score) };
     audio.setState('finished'); // la música baja a 0 y suena el stinger del final
     audio.stinger('final');
-    if (score > best) save('moki.best', score);
+    if (score > best) save(this.bestKey(), score);
     this.ui.showPauseButton(false);
     // Meta: confeti de papel (Mucho o más) y vibración de festejo
     this.particles.burst('confetti', this.px + 40, C.world.groundY - 150);
@@ -1563,7 +1574,7 @@ export class RunScene extends Phaser.Scene {
     const r = wide ? rect : { ...rect, compact: true };
     const d = this.finalData;
     this.ui.showFinal(
-      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, modo: this.modoLabel() },
+      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
       r
     );

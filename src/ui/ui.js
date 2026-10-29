@@ -227,7 +227,7 @@ export function createUI() {
       row(t('end.dist'), `${d.meters} m`);
       row(t('end.pieces'), `${d.pieces} / ${d.piecesTotal}`);
       row(t('end.score'), String(d.score));
-      row(t('end.best'), String(d.best));
+      row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
       if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
       card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));
