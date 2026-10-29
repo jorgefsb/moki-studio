@@ -148,6 +148,21 @@ function lightLayer(halo, vignette) {
   return c;
 }
 
+// Sol de papel (gauntlet R0): disco recortado cálido y dos anillos de halo más pálidos, sin degradados brillantes.
+function paperSun(R) {
+  const S = Math.ceil(R * 2 * 1.9 + 8);
+  const [c, x] = mk(S, S);
+  const o = S / 2;
+  const r = rng(91);
+  [[1.9, 0.22], [1.45, 0.38]].forEach(([k, a]) => {
+    x.globalAlpha = a;
+    cut(x, (g) => g.arc(o, o, R * k, 0, Math.PI * 2), { fill: mix(PAL.paper, PAL.warm, 0.18), edgeW: 0, shadow: null, r, fiberCount: 20 });
+  });
+  x.globalAlpha = 1;
+  cut(x, (g) => g.arc(o, o, R, 0, Math.PI * 2), { fill: mix(PAL.paper, PAL.warm, 0.42), edgeW: 2, shadow: { alpha: 0.1, blur: 6, dx: 2, dy: 3 }, r, fiberCount: 40 });
+  return c;
+}
+
 const ground = {
   // Carril por donde corre Moki, visto un poco desde arriba: papel kraft claro con borde de recorte.
   surface() {
@@ -1057,6 +1072,7 @@ export function buildTextures(scene) {
   add('topFade', gradient(2, 64, [[0, rgba(PAL.paper, 1)], [1, rgba(PAL.paper, 0)]]));
   add('groundShade', gradient(2, 256, [[0, rgba(PAL.ink, 0)], [1, rgba(PAL.ink, 0.34)]]));
   add('light', lightLayer(C.light.halo, C.light.vignette));
+  add('sun', paperSun(C.sun.r));
   add('groundSurface', ground.surface());
   add('groundCanto', ground.canto());
   add('groundFold', ground.fold());

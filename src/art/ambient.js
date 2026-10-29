@@ -1,7 +1,7 @@
 // Fondo vivo (T3d/T3d2, PROPUESTAS-FONDO-DEMO §1B y §2): eventos de papel en las capas 1 a 3 y hora del día.
 // PRNG propio con semilla, separado del guion: nada de aquí toca la física, los obstáculos ni las piezas.
 import { CONFIG as C } from '../config.js';
-import { PAL, mix, rng } from './palette.js';
+import { PAL, TONE, mix, rng } from './palette.js';
 import { t } from '../i18n.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
@@ -114,8 +114,9 @@ export class Ambient {
     if (s.farVeil) {
       s.farVeil.setTintFill(sk);
       s.midVeil.setTintFill(sk);
-      s.nearVeil.setFillStyle(sk, 1);
       if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha(C.atmosphere.far * this.farAlpha());
+      // cordillera extra: el plano más lejano, casi del color del cielo (cada plano más claro hacia atrás)
+      s.ridge.setTintFill(lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix));
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
@@ -130,6 +131,7 @@ export class Ambient {
     const lampOn = d.to === 3 ? d.t : d.from === 3 ? 1 - d.t : 0;
     if (s.textures.exists('ambLamp') && this.lamp.texture.key !== 'ambLamp') this.lamp.setTexture('ambLamp');
     this.lamp.setVisible(lampOn > 0.01 && this.lamp.texture.key === 'ambLamp').setAlpha(lampOn);
+    if (s.sun) s.sun.setAlpha(1 - lampOn); // de noche el sol de papel se va y queda la lámpara
     this.lamp.setPosition(Math.max(70, s.vw * 0.12), s.top + (s.vw < 700 ? 74 / s.zoom : 4)); // en pantalla angosta cuelga bajo la fila del HUD
     // estrellas de papel: solo en la noche, cuando ya cayó del todo
     if (d.to === 3 && d.t >= 1 && !this.stars.length && !this.fired.stars && s.textures.exists('ambStar')) this.spawnStars();

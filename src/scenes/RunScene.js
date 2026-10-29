@@ -104,15 +104,20 @@ export class RunScene extends Phaser.Scene {
     this.clouds = a('paper', 1).setAlpha(0);
     // Velo de papel en el borde superior: las nubes se desvanecen en vez de cortarse en seco.
     this.topFade = this.add.image(0, 0, 'topFade').setOrigin(0, 0).setDepth(1.5);
+    // Gauntlet R0: sol de papel bajo y cordillera extra (silueta de la capa lejana casi color cielo), detrás de los cerros
+    const atm = C.atmosphere.on;
+    this.sun = this.add.image(0, 0, 'sun').setDepth(1.8).setVisible(atm);
+    this.ridge = a('paper', 1.9).setAlpha(0).setTintFill(0xf4e8d5).setVisible(atm);
     this.far = a('paper', 2).setAlpha(0);
     this.mid = a('paper', 3).setAlpha(0);
     // Perspectiva atmosférica: la misma capa pintada del color del cielo (tintFill) encima, con alfa baja (C.atmosphere).
     // Solo cubre las siluetas, así el papel del cielo no se aplana. El color lo pone Ambient.applyDay según la hora.
-    this.farVeil = a('paper', 2.05).setAlpha(0).setTintFill(0xf4e8d5);
-    this.midVeil = a('paper', 3.05).setAlpha(0).setTintFill(0xf4e8d5);
-    this.nearVeil = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(4.6).setAlpha(C.atmosphere.near);
+    this.farVeil = a('paper', 2.05).setAlpha(0).setTintFill(0xf4e8d5).setVisible(atm);
+    this.midVeil = a('paper', 3.05).setAlpha(0).setTintFill(0xf4e8d5).setVisible(atm);
+    // El frente y el suelo van hacia tinta (no hacia el cielo): el plano cercano es el más oscuro
+    this.nearVeil = this.add.rectangle(0, 0, 10, 10, Phaser.Display.Color.HexStringToColor(PAL.ink).color, 1).setOrigin(0, 0).setDepth(4.6).setAlpha(C.atmosphere.near).setVisible(atm);
     // Luz de lámpara: halo cálido y viñeta de tinta, multiplicados sobre todo menos el HUD
-    this.light = this.add.image(0, 0, 'light').setOrigin(0, 0).setDepth(30).setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.light = this.add.image(0, 0, 'light').setOrigin(0, 0).setDepth(30).setBlendMode(Phaser.BlendModes.MULTIPLY).setVisible(C.light.on);
     this.surface = a('groundSurface', 4);
     this.canto = a('groundCanto', 4);
     this.front = a('kraft', 4);
@@ -295,6 +300,11 @@ export class RunScene extends Phaser.Scene {
     this.base = { far: g + 12 - 300 * this.farS, mid: g + 10 - 360 * this.midS };
     this.far.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
     this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
+    const R = C.ridge;
+    this.ridgeS = this.farS * R.scale;
+    this.base.ridge = g + 12 - R.lift - 300 * this.ridgeS;
+    this.ridge.setPosition(0, this.base.ridge).setSize(this.vw, 300 * this.ridgeS).setTileScale(this.ridgeS);
+    this.sun.setPosition(this.vw * C.sun.x, g - C.sun.y * this.farS);
     this.farVeil.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
     this.midVeil.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
     this.light.setPosition(0, this.top).setDisplaySize(this.vw, this.vh);
@@ -700,6 +710,10 @@ export class RunScene extends Phaser.Scene {
     if (layer) {
       layer.setTexture(key);
       this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut' });
+      if (key === 'far') {
+        this.ridge.setTexture('far');
+        this.tweens.add({ targets: this.ridge, alpha: 1, duration: 320, ease: 'Sine.easeOut' });
+      }
       const veil = { far: this.farVeil, mid: this.midVeil }[key];
       if (veil) {
         veil.setTexture(key);
@@ -839,6 +853,7 @@ export class RunScene extends Phaser.Scene {
     // tilePosition va en px de textura (Phaser lo multiplica por tileScale): se divide para que el paralaje no cambie
     this.far.tilePositionX = this.reduced ? 0 : (this.dist * p.far) / this.farS;
     this.mid.tilePositionX = this.reduced ? 0 : (this.dist * p.mid) / this.midS;
+    this.ridge.tilePositionX = 517 + (this.reduced ? 0 : (this.dist * C.ridge.parallax) / this.ridgeS); // 517: otra parte de la tira, no los mismos cerros
     this.farVeil.tilePositionX = this.far.tilePositionX;
     this.midVeil.tilePositionX = this.mid.tilePositionX;
     this.surface.tilePositionX = this.dist;
