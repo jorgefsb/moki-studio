@@ -223,3 +223,54 @@ export async function saveWav(name, level = 2, seconds = 40, cfg = C.audio) {
   const r = await fetch(`/__save?name=${encodeURIComponent(name)}`, { method: 'POST', body });
   return { ok: r.ok, bytes: body.byteLength, peakDb: +peakDb(d).toFixed(1) };
 }
+
+// ---- T3c3: música con y sin bajo (pasa-altos de 300 Hz), con todas las capas y con la base sola ----
+function highpass300(d, sr = SR) {
+  const w0 = (2 * Math.PI * 300) / sr;
+  const alpha = Math.sin(w0) / (2 * 0.7071);
+  const cs = Math.cos(w0);
+  const b0 = (1 + cs) / 2;
+  const b1 = -(1 + cs);
+  const b2 = b0;
+  const a0 = 1 + alpha;
+  const a1 = -2 * cs;
+  const a2 = 1 - alpha;
+  const out = new Float32Array(d.length);
+  let x1 = 0;
+  let x2 = 0;
+  let y1 = 0;
+  let y2 = 0;
+  for (let i = 0; i < d.length; i++) {
+    const y = (b0 * d[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2) / a0;
+    out[i] = y;
+    x2 = x1;
+    x1 = d[i];
+    y2 = y1;
+    y1 = y;
+  }
+  return out;
+}
+
+export async function measureMusic(cfg = C.audio, seconds = 40) {
+  const out = {};
+  for (const [name, level] of [['base', 0], ['todas', 3]]) {
+    const d = await renderTheme(level, seconds, cfg);
+    out[name] = { mezcla: +peakDb(d).toFixed(1), pasaAltos300: +peakDb(highpass300(d)).toFixed(1) };
+  }
+  return out;
+}
+
+export async function measureLoud(cfg = C.audio) {
+  const out = {};
+  const amber = await renderWith(1, (ctx, bus) => SFX.amber(ctx, bus.sfxMix, 0.05, { echo: bus.stingerEcho }), cfg);
+  out.ambar = +peakDb(amber).toFixed(1);
+  for (const tier of [0, 1, 2]) {
+    const d = await renderWith(0.6, (ctx, bus) => SFX.pickup(ctx, bus.sfxMix, 0.05, { index: 4, tier }), cfg);
+    out[`pieza_racha${tier}`] = +peakDb(d).toFixed(1);
+  }
+  const hi = await renderWith(0.6, (ctx, bus) => SFX.jumpHigh(ctx, bus.sfxMix, 0.05, {}), cfg);
+  out.bipAlto = +peakDb(hi).toFixed(1);
+  const echo = await measureEcho(cfg);
+  out.eco = echo.peaksDb.slice(0, 4);
+  return out;
+}

@@ -60,11 +60,16 @@ export function jump(ctx, dest, t, o = {}) {
 }
 
 // segundo "bip" ascendente a los 140 ms de mantener: sube con el tiempo mantenido (tope 780 Hz)
+// Segundo "bip" que enseña a mantener: nace al inicio de la rampa (120 ms de mantener) y sube de ~540 a 780 Hz
+// mientras se mantiene (hasta los 170 ms).
 export function jumpHigh(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
-  const hold = o.holdMs || 140;
-  const top = Math.min(780, 520 + (260 * (hold - 140)) / 80);
-  gl(ctx, P.out, t, 'triangle', 520 * P.d, Math.max(top, 560) * P.d, 80, 0.4 * P.pk * P.v, Math.max(0.003, P.atkMin), 0.1);
+  const g = ctx.createGain();
+  shape(g, t, Math.max(0.003, P.atkMin), 0.4 * P.pk * P.v, t + 0.17);
+  const os = osc(ctx, 'triangle', 540 * P.d, t, t + 0.17);
+  os.frequency.exponentialRampToValueAtTime(780 * P.d, t + 0.05);
+  os.connect(g);
+  g.connect(P.out);
 }
 
 export function land(ctx, dest, t, o = {}) {
@@ -90,20 +95,20 @@ export function pickup(ctx, dest, t, o = {}) {
   const lpf = lp(ctx, 3500, 0.5);
   lpf.connect(P.out);
   const opt = { atkMin: P.atkMin, vol: P.v * P.pk, detune: P.d };
-  carton(ctx, lpf, t, midi, 0.04, 0.27, opt);
-  cuadrada(ctx, lpf, t, midi, 0.04, 0.27 * 0.25, opt);
+  carton(ctx, lpf, t, midi, 0.04, 0.22, opt);
+  cuadrada(ctx, lpf, t, midi, 0.04, 0.22 * 0.25, opt);
   // racha x2 / x3: la quinta y la octava, solo en Mucho o más
-  if (o.tier >= 1) carton(ctx, lpf, t, midi + 7, 0.04, 0.15, opt);
-  if (o.tier >= 2) carton(ctx, lpf, t, midi + 12, 0.04, 0.15, opt);
+  if (o.tier >= 1) carton(ctx, lpf, t, midi + 7, 0.04, 0.05, opt);
+  if (o.tier >= 2) carton(ctx, lpf, t, midi + 12, 0.04, 0.04, opt);
 }
 
 // Pieza ámbar (especial): campana Sol5 y 80 ms después Do6 + Mi6, con eco
 export function amber(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
   const e = { echo: o.echo, send: 0.3, atkMin: P.atkMin, vol: P.pk, tail: 0.3 };
-  campana(ctx, P.out, t, 79, 0.35, e);
-  campana(ctx, P.out, t + 0.08, 84, 0.3, e);
-  campana(ctx, P.out, t + 0.08, 88, 0.3, e);
+  campana(ctx, P.out, t, 79, 0.16, e);
+  campana(ctx, P.out, t + 0.08, 84, 0.14, e);
+  campana(ctx, P.out, t + 0.08, 88, 0.14, e);
 }
 
 // Tropiezo amable: "tum" de cartón, sin agudos

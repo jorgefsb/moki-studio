@@ -616,7 +616,7 @@ export class RunScene extends Phaser.Scene {
 
     this.stepJump(dt);
     // Salto alto: al mantener 140 ms suena el segundo "bip" que sube (AUDIO §5)
-    if (this.jumping && this.holding && !this.highPlayed && this.t - this.jumpStartAt >= 140) {
+    if (this.jumping && this.holding && !this.highPlayed && this.t - this.jumpStartAt >= C.jumpHoldRamp.fromMs + 10) {
       this.highPlayed = true;
       audio.sfx('jumpHigh', { holdMs: this.t - this.jumpStartAt });
     }

@@ -3,6 +3,8 @@
 import { STEP, BAR_STEPS, LOOP_STEPS, SKELETON, CHORD_OF_BAR, MELODY, CHORDS } from './theme.js';
 import { carton, cuadrada, pulso, bajo, tok, shaker, tic, campana } from './voices.js';
 
+const MID = 2.6; // melodía y voces medias +7 dB (T3c3): en celular la música debe oírse sin el bajo
+const BASS = 0.13; // el bajo baja ~9 dB: era él quien ponía el pico (0.38 -> ~0.14)
 const SEND = 0.7; // envío al eco (antes 0.5): con realimentación 0.25 el eco se nota
 const LOOKAHEAD = 0.12;
 const TICK_MS = 25;
@@ -59,19 +61,19 @@ export function createMusic(ctx, bus, opts = {}) {
       const strong = m.voice === 'cuadrada' ? s % 4 === 0 : skel;
       const vel = (strong ? 0.85 : 0.6) * (1 + rnd(0.06));
       const dur = len * 0.8 * STEP;
-      if (m.voice === 'carton') carton(ctx, mix, t, midi, dur, 0.3 * vel, { echo, send: SEND });
+      if (m.voice === 'carton') carton(ctx, mix, t, midi, dur, 0.3 * MID * vel, { echo, send: SEND });
       else {
         // cuadrada (pico 0.14) + carton al mismo tono, sin octava, a 0.13*vel: la melodía de B se oye
-        cuadrada(ctx, mix, t, midi, dur, 0.14 * vel, { echo, send: SEND });
-        carton(ctx, mix, t, midi, dur, 0.13 * vel, { echo, send: SEND, noTin: true });
+        cuadrada(ctx, mix, t, midi, dur, 0.14 * MID * vel, { echo, send: SEND });
+        carton(ctx, mix, t, midi, dur, 0.13 * MID * vel, { echo, send: SEND, noTin: true });
       }
-      if (m.layer2 && live(2)) cuadrada(ctx, bus.layer[2], t, midi, dur, 0.14 * 0.35, { echo, send: SEND });
-      if (m.aSection && live(2)) cuadrada(ctx, bus.layer[2], t, midi + 12, dur, 0.14 * 0.3, { echo, send: SEND });
+      if (m.layer2 && live(2)) cuadrada(ctx, bus.layer[2], t, midi, dur, 0.14 * 0.35 * MID, { echo, send: SEND });
+      if (m.aSection && live(2)) cuadrada(ctx, bus.layer[2], t, midi + 12, dur, 0.14 * 0.3 * MID, { echo, send: SEND });
     }
 
     // --- base: bajo, tok, shaker ---
-    if (s === 0) bajo(ctx, mix, t, chord[0], 6 * STEP, 0.38);
-    if (s === 10) bajo(ctx, mix, t, chord[0], 2 * STEP, 0.3);
+    if (s === 0) bajo(ctx, mix, t, chord[0], 6 * STEP, BASS * 1.1);
+    if (s === 10) bajo(ctx, mix, t, chord[0], 2 * STEP, BASS * 0.85);
     if (s === 0) tok(ctx, mix, t, 0.3);
     if (s === 8) tok(ctx, mix, t, 0.22);
     if (s === 2 || s === 6 || s === 10 || s === 14) shaker(ctx, mix, t, 0.08);
@@ -80,19 +82,19 @@ export function createMusic(ctx, bus, opts = {}) {
     if (live(1)) {
       const L = bus.layer[1];
       if (s === 4 || s === 12) {
-        chord[2].slice(0, 3).forEach((n, i) => pulso(ctx, L, t + i * 0.014, n, 0.047));
+        chord[2].slice(0, 3).forEach((n, i) => pulso(ctx, L, t + i * 0.014, n, 0.047 * MID));
         tic(ctx, L, t, 0.1);
       }
       if (s % 2 === 0) {
         const i = (s / 2) % 4;
-        pulso(ctx, L, t, chord[2][i] + (s % 4 === 2 ? 12 : 0), 0.1);
+        pulso(ctx, L, t, chord[2][i] + (s % 4 === 2 ? 12 : 0), 0.1 * MID);
       }
     }
     // --- E2: bajo en el esqueleto, shaker a semicorcheas, tok extra ---
     if (live(2)) {
       const L = bus.layer[2];
-      if ([3, 8, 11].includes(s)) bajo(ctx, L, t, chord[0], 2 * STEP, 0.3);
-      if (s === 6 || s === 14) bajo(ctx, L, t, chord[1], 2 * STEP, 0.3);
+      if ([3, 8, 11].includes(s)) bajo(ctx, L, t, chord[0], 2 * STEP, BASS * 0.85);
+      if (s === 6 || s === 14) bajo(ctx, L, t, chord[1], 2 * STEP, BASS * 0.85);
       if (s === 4 || s === 12) tok(ctx, L, t, 0.18);
       if (![2, 6, 10, 14].includes(s)) shaker(ctx, L, t, s % 2 ? 0.05 : 0.08);
     }
@@ -101,10 +103,10 @@ export function createMusic(ctx, bus, opts = {}) {
       const L = bus.layer[3];
       if ([2, 5, 9, 13].includes(s)) {
         const n = chord[2][(s + bar) % 4];
-        campana(ctx, L, t, 84 + (n % 12), 0.1, { echo, send: SEND });
+        campana(ctx, L, t, 84 + (n % 12), 0.1 * MID, { echo, send: SEND });
       }
       if (s === 6 || s === 14) tic(ctx, L, t, 0.1);
-      if (s === 10) chord[2].slice(0, 3).forEach((n, i) => pulso(ctx, L, t + i * 0.014, n, 0.033));
+      if (s === 10) chord[2].slice(0, 3).forEach((n, i) => pulso(ctx, L, t + i * 0.014, n, 0.033 * MID));
     }
   }
 
