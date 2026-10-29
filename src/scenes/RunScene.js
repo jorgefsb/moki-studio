@@ -244,7 +244,7 @@ export class RunScene extends Phaser.Scene {
     this.hudR.setScale(1 / z).setPosition(this.vw - m, this.top + m);
     this.hudC.setScale(1 / z).setPosition(this.vw / 2, this.top + m + 52 / z);
     // Mano del tutorial: abajo a la derecha, en la zona del pulgar, fuera del carril de juego.
-    this.tutC.setScale(1 / z).setPosition(this.vw - 46 / z, this.bottom - 22 / z);
+    this.tutC.setScale(1 / z).setPosition(this.vw - 50 / z, this.bottom - 96 / z);
     this.tutLabelC.setPosition(-64, -58);
   }
 
@@ -796,6 +796,7 @@ export class RunScene extends Phaser.Scene {
         takeoffAt: this.takeoffAt,
         landAt: this.landAt,
         dead: this.dead,
+        deadMs: this.deadFor,
         reduced: this.reduced,
         dist: this.dist,
       },
@@ -1031,6 +1032,7 @@ export class RunScene extends Phaser.Scene {
     this.screen = 'dead';
     this.deadFor = 0;
     this.deadSpeed = this.speed;
+    this.recoilDone = 0;
     this.holding = false;
     this.cause = o.type;
     this.cardShown = false;
@@ -1045,15 +1047,20 @@ export class RunScene extends Phaser.Scene {
     // Tropiezo (ANIMACION 3.4): hit-stop de 60 ms, luego el mundo frena en 220 ms y todo se asienta.
     if (this.deadFor >= C.art.hitStopMs || this.reduced) {
       this.t += dtMs;
+      // Tras el hit-stop el mundo se queda quieto y Moki retrocede unos px con Cubic.out (220 ms): a los 280 ms ya
+      // está despegado de la caja y no parece que la atraviesa. Con movimiento reducido: sin retroceso.
       const u = Math.min(1, (this.deadFor - C.art.hitStopMs) / 220);
-      this.speed = this.deadSpeed * (1 - easeOutCubic(this.reduced ? 1 : u));
-      const step = this.speed * dt;
-      this.dist += step;
-      this.stepWorld(step);
+      const e = this.reduced ? 0 : easeOutCubic(u);
+      const back = C.art.recoilPx * (e - this.recoilDone);
+      this.recoilDone = e;
+      this.speed = 0;
+      this.dist -= back;
+      this.stepWorld(-back);
       this.placeEntities();
-      this.particles.update(dtMs, step);
+      this.particles.update(dtMs, -back);
       this.stepMoki(dtMs);
     }
+    void dt;
     if (!this.cardShown && this.deadFor >= (this.reduced ? 150 : 250)) {
       this.cardShown = true;
       this.showFailCard();

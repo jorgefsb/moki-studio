@@ -99,6 +99,7 @@ export const CONFIG = {
     squashPx: 3.3, // hundimiento máximo (3% de 110)
     hopPx: 14,
     hitStopMs: 60,
+    recoilPx: 28, // Moki retrocede esto tras el choque (Cubic.out, 220 ms): la hitbox es 18 px más chica que el dibujo, con 12 se veía atravesar la caja
     packLagHz: 11,
     reducedTheta0: 20,
     parallax: { clouds: 0.1, far: 0.3, mid: 0.6 },

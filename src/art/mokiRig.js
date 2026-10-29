@@ -204,11 +204,16 @@ function armAir(vy, tMs) {
   return { nA: lerp(28, 10, f), fA: lerp(28, -10, f) };
 }
 
-function deadTarget(tMs) {
-  const a = clamp((tMs - C.art.hitStopMs) / 220, 0, 1);
-  const e = easeOutCubic(a);
-  // Botas separadas (cercana adelante, lejana atrás) para leer "se atoró"
-  return { nT: lerp(30, 46, e), nR: 0, nB: -8 * e, fT: lerp(-20, -33, e), fR: 4 * e, fB: 10 * e, dy: 9.5 * e, tilt: lerp(3, C.art.tiltMaxDeg, e) };
+// Tropiezo en dos tiempos (T3b3), medido desde el choque: hasta ~140 ms "se atora" (bota cercana casi plana al frente,
+// brazo a 20°, hundimiento ~3, tilt 3.5); de 140 a 280 ms "se asienta" con Cubic.out (hundimiento 9.5, tilt 6,
+// botas 46 / -33). Sin el suavizado del aire: las dos poses se distinguen a 120 y a 280 ms.
+function deadTarget(dm) {
+  const A = { nT: 30, nR: 0, nB: 0, fT: -12, fR: 3, fB: 0, dy: 3, tilt: 3.5 };
+  const B = { nT: 46, nR: 0, nB: -8, fT: -33, fR: 4, fB: 10, dy: 9.5, tilt: C.art.tiltMaxDeg };
+  const e = easeOutCubic(clamp((dm - 140) / 140, 0, 1));
+  const out = {};
+  for (const key of Object.keys(A)) out[key] = lerp(A[key], B[key], e);
+  return out;
 }
 
 // ---------- El rig ----------
@@ -368,7 +373,7 @@ export function createMokiRig(scene) {
 
       // Pose de aire / caída / celebración, suavizada
       let tgt;
-      if (s.dead) tgt = deadTarget(st.deadT);
+      if (s.dead) tgt = deadTarget(s.deadMs !== undefined ? s.deadMs : st.deadT + C.art.hitStopMs);
       else if (hopping) tgt = airTarget(clamp(-248 + C.gravity * (st.hopT - 80) / 1000, -248, 248), st.hopT);
       else tgt = airTarget(s.vy, s.t - s.takeoffAt);
       if (reduced) tgt = { ...tgt, dy: s.dead ? 8 : 0, tilt: 0, nR: 0, fR: 0, nB: 0, fB: 0 };
@@ -378,7 +383,7 @@ export function createMokiRig(scene) {
         tgt.nA *= 0.5;
         tgt.fA *= 0.5;
       }
-      const a = 1 - Math.exp(-dtMs / 55);
+      const a = s.dead ? 1 : 1 - Math.exp(-dtMs / 55); // el tropiezo va directo a su curva (sin suavizar)
       for (const key of Object.keys(tgt)) st.air[key] += (tgt[key] - st.air[key]) * a;
       const air = st.air;
 
@@ -395,6 +400,9 @@ export function createMokiRig(scene) {
       const airHip = G.hipRestY + air.dy / k;
       const hipY = lerp(airHip, runHip, w);
       const tilt = lerp(air.tilt, runTilt, w);
+      // En el tropiezo el cuerpo gira sobre el pie cercano (no sobre la cadera): la cabeza se adelanta ~10 px.
+      const pivotFoot = s.dead && !reduced;
+      const tiltBody = pivotFoot ? 0 : tilt;
 
       // Brazos: cada uno en oposición a la pierna de su lado (el cercano va con la pierna lejana),
       // ±18° y un retraso suave de 1 a 2 cuadros. Nunca pasan de la horizontal.
@@ -439,26 +447,38 @@ export function createMokiRig(scene) {
       bootNear.setPosition(n.ax, hipY + n.ay).setAngle(nBw);
       shLeg.setPosition(n.lx + so.x, hipY + n.ly + so.y).setAngle(n.legDeg);
       shBoot.setPosition(n.ax + so.x, hipY + n.ay + so.y).setAngle(nBw);
-      body.setPosition(0, hipY).setAngle(tilt);
-      shBody.setPosition(so.x, hipY + so.y).setAngle(tilt);
-      const [pox, poy] = rot(tilt * D2R, R.pack.pivot.x - R.hip.x, R.pack.pivot.y - R.hip.y);
+      body.setPosition(0, hipY).setAngle(tiltBody);
+      shBody.setPosition(so.x, hipY + so.y).setAngle(tiltBody);
+      const [pox, poy] = rot(tiltBody * D2R, R.pack.pivot.x - R.hip.x, R.pack.pivot.y - R.hip.y);
       const packY = hipY + poy + st.packDy / k;
-      pack.setPosition(pox, packY).setAngle(tilt + st.packAng);
-      shPack.setPosition(pox + so.x, packY + so.y).setAngle(tilt + st.packAng);
+      pack.setPosition(pox, packY).setAngle(tiltBody + st.packAng);
+      shPack.setPosition(pox + so.x, packY + so.y).setAngle(tiltBody + st.packAng);
 
       if (hasArm) {
         // Hombro: el disco del pecho de moki-lado. El brazo cuelga y gira sobre él; rotación = inclinación del cuerpo - ángulo.
-        const [sox, soy] = rot(tilt * D2R, R.arm.shoulder.x - R.hip.x, R.arm.shoulder.y - R.hip.y);
+        const [sox, soy] = rot(tiltBody * D2R, R.arm.shoulder.x - R.hip.x, R.arm.shoulder.y - R.hip.y);
         const sy2 = hipY + soy;
-        armNear.setPosition(sox, sy2).setAngle(tilt - armN);
-        shArm.setPosition(sox + so.x, sy2 + so.y).setAngle(tilt - armN);
-        armFar.setPosition(sox + 1.5 / k, sy2).setAngle(tilt - armF); // hombro lejano 1.5 px adelante para que asome
+        armNear.setPosition(sox, sy2).setAngle(tiltBody - armN);
+        shArm.setPosition(sox + so.x, sy2 + so.y).setAngle(tiltBody - armN);
+        armFar.setPosition(sox + 1.5 / k, sy2).setAngle(tiltBody - armF); // hombro lejano 1.5 px adelante para que asome
       }
       debug.angles = { nearLeg: nTh, farLeg: fTh, nearArm: armN, farArm: armF, tilt };
 
       // Escala SIEMPRE positiva y uniforme (nunca espejado)
       root.setScale(k);
-      root.setPosition(s.x, s.y + 2 - 2 * k - hopY);
+      const baseX = s.x;
+      const baseY = s.y + 2 - 2 * k - hopY;
+      if (pivotFoot) {
+        // gira todo el títere sobre la suela de la bota cercana: ese punto no se mueve, la cabeza se adelanta
+        const fx = n.cx * k;
+        const fy = (hipY + n.cy) * k;
+        const [rx, ry] = rot(tilt * D2R, fx, fy);
+        root.setAngle(tilt);
+        root.setPosition(baseX + fx - rx, baseY + fy - ry);
+      } else {
+        root.setAngle(0);
+        root.setPosition(baseX, baseY);
+      }
 
       if (saluda) {
         const sal = st.sal;
