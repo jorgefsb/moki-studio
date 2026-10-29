@@ -85,11 +85,20 @@ export class Particles {
       if (L < 2) return;
       this.emit('kraft', x - 10, g - 2, { vx: -60, vy: -50, g: 520, life: 240, spin: 180 });
     } else if (type === 'collect') {
-      const n = L === 1 ? 3 : L === 2 ? 6 : 10;
+      // En racha (Mucho o más) la pieza suelta más papel y se cuela el ámbar: lo chico responde chico, la racha crece
+      const streak = L >= 2 ? Math.min(3, Math.floor(((opt.combo || 1) - 1) / 2)) : 0;
+      const n = (L === 1 ? 3 : L === 2 ? 6 : 10) + streak * 2;
       for (let i = 0; i < n; i++) {
         const a = rand(0, Math.PI * 2);
-        const sp = rand(60, 120);
-        this.emit(i % 2 ? 'kraft' : 'paper', x, y, { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 400, life: 280, spin: 180 });
+        const sp = rand(60, 120) * (1 + streak * 0.12);
+        const col = streak && i % 4 === 0 ? 'amber' : i % 2 ? 'kraft' : 'paper';
+        this.emit(col, x, y, { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 400, life: 280, spin: 180 });
+      }
+    } else if (type === 'arc') {
+      // Arco completo: abanico de papel naranja, ámbar y crema hacia arriba (ARTE §11, colores --jz-c1..c3)
+      const n = L === 1 ? 4 : L === 2 ? 10 : 16;
+      for (let i = 0; i < n; i++) {
+        this.emit(['orange', 'amber', 'paper'][i % 3], x, y, { vx: rand(-80, 80), vy: -rand(140, 240), g: 420, life: 600, spin: 300, osc: 8, fadeFrom: 0.6 });
       }
     } else if (type === 'confetti') {
       if (L < 2) return;
@@ -103,6 +112,5 @@ export class Particles {
         this.emit(mixColor(i), x, y, { vx: rand(-40, 140), vy: -rand(80, 200), g: 520, life: 420, spin: 270 });
       }
     }
-    void opt;
   }
 }

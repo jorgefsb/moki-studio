@@ -4,9 +4,11 @@ import Phaser from 'phaser';
 import { RunScene } from './scenes/RunScene.js';
 import { CONFIG } from './config.js';
 import { audio as audioFacade } from './audio/audio.js';
+import { setupEmbed } from './embed.js';
 
 // Las fuentes se piden en paralelo con el arranque de Phaser (no lo frenan): al llegar, el HUD vuelve a medirse (ver RunScene).
 async function boot() {
+  setupEmbed();
   try {
     document.fonts.load('700 22px Outfit');
     document.fonts.load('400 16px Inter');

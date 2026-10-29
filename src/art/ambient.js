@@ -220,6 +220,9 @@ export class Ambient {
     const c = this.crestData();
     if (!c) return null;
     const tp = this.scene.far.tilePositionX;
+    // En vertical las capas van escaladas (RunScene.layout): pantalla x -> textura x / s + tilePosition, fila de textura -> fila * s
+    const fs = this.scene.farS || 1;
+    const ms = this.scene.midS || 1;
     let best = null;
     // obstáculos que aún pasarán por su zona: Moki se queda con la capa lejana (0.3x) y ellos corren a 1x, o sea 0.7x relativo durante 2.5 s
     const sc = this.scene;
@@ -227,7 +230,7 @@ export class Ambient {
     const obsX = sc.level.entities.filter((e) => e.kind === 'obs' && e.D - sc.dist > -150 && e.D - sc.dist < 2200).map((e) => sc.px + e.D - sc.dist);
     for (let x = x0; x <= x1; x += 3) {
       if (obsX.some((ox) => ox > x - 70 && ox < x + reach + 70)) continue;
-      const u = (((Math.round(x + tp)) % c.W) + c.W) % c.W;
+      const u = (((Math.round(x / fs + tp)) % c.W) + c.W) % c.W;
       let lo = 1e9;
       let hi = -1e9;
       for (let k = -22; k <= 22; k += 2) {
@@ -243,12 +246,13 @@ export class Ambient {
       // durante sus 2.5 s, Moki (depth 2.5, entre la capa lejana y la media) queda tapado por él: nunca posado entre sus ramas
       if (m) {
         const row = Math.round((lo + hi) / 2);
-        const crestWorld = this.scene.far.y + row;
-        const um = (((Math.round(x + this.scene.mid.tilePositionX)) % m.W) + m.W) % m.W;
+        const crestWorld = this.scene.far.y + row * fs;
+        const um = (((Math.round(x / ms + this.scene.mid.tilePositionX)) % m.W) + m.W) % m.W;
+        const yc = (crestWorld - this.scene.mid.y) / ms; // fila de la capa media a la altura de la cresta
         let blocked = false;
-        for (let yy = Math.round(crestWorld - this.scene.mid.y) - 46; yy <= Math.round(crestWorld - this.scene.mid.y) + 2 && !blocked; yy += 2) {
+        for (let yy = Math.round(yc - 46 / ms); yy <= Math.round(yc + 2 / ms) && !blocked; yy += 2) {
           if (yy < 0 || yy >= m.H) continue;
-          for (let k = -60; k <= 60; k += 4) if (m.d[(yy * m.W + ((um + k + m.W) % m.W)) * 4 + 3] > 20) { blocked = true; break; }
+          for (let k = -Math.round(60 / ms); k <= 60 / ms; k += 4) if (m.d[(yy * m.W + ((um + k + m.W) % m.W)) * 4 + 3] > 20) { blocked = true; break; }
         }
         if (blocked) continue;
       }
@@ -544,8 +548,9 @@ export class Ambient {
         const c = this.crestData();
         const W = c ? c.W : 1920;
         const tp = s.far.tilePositionX;
-        sp.x = ((((a.u - tp) % W) + W) % W);
-        const crestY = s.far.y + a.row;
+        const fs = s.farS || 1;
+        sp.x = ((((a.u - tp) % W) + W) % W) * fs;
+        const crestY = s.far.y + a.row * fs;
         const up = Math.min(1, age / 220); // asoma desde la cresta en 220 ms (solo se ve lo que está sobre la línea)
         const down = age > a.life - 180 ? (age - (a.life - 180)) / 180 : 0; // baja por el mismo sitio en 180 ms
         const rise = Math.max(0, up - down);

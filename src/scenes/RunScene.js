@@ -8,6 +8,7 @@ import { Ambient } from '../art/ambient.js';
 import { createUI } from '../ui/ui.js';
 import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
+import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { GAME_LEVEL, buildDemo } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
@@ -257,12 +258,21 @@ export class RunScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
     const g = C.world.groundY;
-    const z = Math.min(H / C.world.height, W / C.world.minVisibleWidth);
+    const P = C.portrait;
+    const portrait = W / H <= P.maxAspect;
+    const minW = C.world.minVisibleWidth;
+    const z = Math.min(H / C.world.height, W / (portrait ? P.visibleWidth : minW));
     this.zoom = z;
     this.vw = W / z;
     this.vh = H / z;
-    this.px = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio));
-    this.top = -Math.max(0, this.vh - C.world.height) * 0.6;
+    // Lo que se ve delante de Moki nunca baja de lo que se ve con minVisibleWidth (misma reacción).
+    const ahead = minW - Math.min(C.player.xMax, minW * C.player.xRatio);
+    this.px = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio, this.vw - ahead));
+    const spare = Math.max(0, this.vh - C.world.height);
+    // En vertical el suelo queda a groundAt del alto, sin sacar de cuadro ninguna parte de la banda jugable
+    this.top = portrait ? Math.min(0, Math.max(-spare, g - P.groundAt * this.vh)) : -spare * 0.6;
+    this.farS = portrait ? P.farScale : 1;
+    this.midS = portrait ? P.midScale : 1;
     this.bottom = this.top + this.vh;
 
     const cam = this.cameras.main;
@@ -274,9 +284,10 @@ export class RunScene extends Phaser.Scene {
     this.skyGrad.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
     this.clouds.setPosition(0, g - 900).setSize(this.vw, 900);
     this.topFade.setPosition(0, this.top).setDisplaySize(this.vw, 56);
-    this.base = { far: g + 12 - 300, mid: g + 10 - 360 };
-    this.far.setPosition(0, this.base.far).setSize(this.vw, 300);
-    this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360);
+    // Las capas escaladas conservan su pie sobre el suelo; crecen hacia arriba
+    this.base = { far: g + 12 - 300 * this.farS, mid: g + 10 - 360 * this.midS };
+    this.far.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
+    this.mid.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
     this.surface.setPosition(0, g - 8).setSize(this.vw, 22);
     this.canto.setPosition(0, g + 14).setSize(this.vw, 6);
     const frontH = Math.max(40, this.bottom - (g + 20));
@@ -291,6 +302,7 @@ export class RunScene extends Phaser.Scene {
 
     const m = 16 / z;
     const hs = W < 420 ? 0.88 : 1; // en 375 las fichas se achican un poco: >= 8 px de aire con el botón de sonido
+    this.hudScale = hs / z;
     this.hudL.setScale(hs / z).setPosition(m, this.top + m);
     this.hudR.setScale(hs / z).setPosition(this.vw - m, this.top + m);
     this.hudC.setScale(1 / z).setPosition(this.vw / 2, this.top + m + 52 / z);
@@ -402,6 +414,8 @@ export class RunScene extends Phaser.Scene {
     this.tut = { stage: load('moki.tutorial') === '1' ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
     this.ui.showSoundButton('hud');
+    feel.gestured = true;
+    this.buzz(10); // "Jugar" se siente en la mano
     audio.unlock(); // el gesto que arranca la partida habilita el sonido
     audio.setTramo(0);
     audio.setStreak(0);
@@ -474,6 +488,10 @@ export class RunScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.hudC);
     this.banner.set(text);
     this.tweens.add({ targets: this.hudC, alpha: 1, duration: 180, ease: 'Cubic.easeOut' });
+    // Entra como papel que se asienta (0.9 -> 1, Back.out); con Nada o movimiento reducido, solo fundido
+    const s = 1 / this.zoom;
+    this.hudC.setScale(this.calm ? s : s * 0.9);
+    if (!this.calm) this.tweens.add({ targets: this.hudC, scale: s, duration: 180, ease: 'Back.easeOut' });
     if (ms) this.time.delayedCall(ms, () => this.hideBanner());
   }
 
@@ -481,6 +499,82 @@ export class RunScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.hudC);
     if (instant) this.hudC.setAlpha(0);
     else this.tweens.add({ targets: this.hudC, alpha: 0, duration: 160, ease: 'Cubic.easeIn' });
+  }
+
+  // ---------- Feel (FEEL.md): solo visual y háptico, nunca toca física, hitboxes ni tiempos ----------
+
+  get calm() {
+    return this.reduced || C.juice <= 0;
+  }
+
+  // Vibración corta en móvil (feel.js decide si se puede). Nunca en el demo: ahí no juega nadie.
+  buzz(pattern, minLevel = 2) {
+    if (this.demo || this.reduced) return;
+    feel.buzz(pattern, minLevel);
+  }
+
+  // Sacudida solo en Hardcore, máx. 2 px. Mueve la cámara y compensa el HUD para que las fichas no tiemblen.
+  shake(px, ms) {
+    if (this.demo || this.reduced || C.juice < 3) return;
+    this.shakeAmp = Math.min(2, px);
+    this.shakeMs = ms;
+    this.shakeLeft = ms;
+  }
+
+  stepShake(dtMs) {
+    if (!this.shakeLeft) return;
+    this.shakeLeft = Math.max(0, this.shakeLeft - dtMs);
+    const k = this.shakeLeft / this.shakeMs;
+    const ox = this.shakeLeft ? (Math.random() * 2 - 1) * this.shakeAmp * k : 0;
+    const oy = this.shakeLeft ? (Math.random() * 2 - 1) * this.shakeAmp * k : 0;
+    const cam = this.cameras.main;
+    cam.centerOn(this.vw / 2 + ox, this.top + this.vh / 2 + oy);
+    const m = 16 / this.zoom;
+    this.hudL.setPosition(m + ox, this.top + m + oy);
+    this.hudR.setPosition(this.vw - m + ox, this.top + m + oy);
+    this.hudC.setPosition(this.vw / 2 + ox, this.top + m + 52 / this.zoom + oy);
+  }
+
+  // Brinco de una ficha del HUD (escala base -> base*s -> base). Nunca se aplica a Moki.
+  pop(target, s, ms) {
+    if (this.calm) return;
+    const base = this.hudScale || target.scaleX;
+    this.tweens.killTweensOf(target);
+    target.setScale(base);
+    this.tweens.add({ targets: target, scale: base * s, duration: ms / 2, ease: 'Sine.easeOut', yoyo: true, onComplete: () => target.setScale(this.hudScale || base) });
+  }
+
+  // Ficha de piezas con la racha visible (DISENO §64: x2 / x3 solo en Mucho o más)
+  setPieceLabel(mult = 1) {
+    this.pieceLabel.set(mult > 1 && C.juice >= 2 && !this.reduced ? `${this.pieces}  x${mult}` : String(this.pieces));
+  }
+
+  // Pasto de papel cerca de Moki que se dobla al aterrizar fuerte (Mucho o más)
+  bendGrass() {
+    if (this.calm || C.juice < 2) return;
+    for (const f of this.fg) {
+      const key = f.sprite.texture.key;
+      if (key.startsWith('gp-grass') && Math.abs(f.x - this.px) < 160) {
+        this.tweens.killTweensOf(f.sprite);
+        f.sprite.setAngle(-(4 + Math.random() * 3));
+        this.tweens.add({ targets: f.sprite, angle: 0, duration: 520, ease: 'Back.easeOut' });
+      }
+    }
+  }
+
+  // Nueva mejor marca: la etiqueta de la tarjeta brinca y destella al mismo tiempo que el stinger, confeti en Mucho o más
+  celebrateRecord() {
+    this.ui.popRecord();
+    this.particles.burst('confetti', this.px, C.world.groundY - 120);
+    this.buzz([15, 60, 15, 60, 30]);
+  }
+
+  // Nubes de papel que tiemblan un pelo (Mucho o más): checkpoint y arco completo
+  shiver() {
+    if (this.calm || C.juice < 2 || this.demo || this.shivering) return;
+    const y0 = C.world.groundY - 900;
+    this.shivering = true; // no se mata el tween de la nube: puede estar entrando con fundido
+    this.tweens.add({ targets: this.clouds, y: y0 - 2, duration: 60, ease: 'Sine.easeInOut', yoyo: true, repeat: 1, onComplete: () => ((this.clouds.y = y0), (this.shivering = false)) });
   }
 
   // ---------- Pausa ----------
@@ -619,6 +713,7 @@ export class RunScene extends Phaser.Scene {
     }
     const dtMs = Math.min(deltaMs, 50);
     if (this.screen === 'pause') return;
+    this.stepShake(dtMs);
     this.idleCheck();
 
     if (this.screen === 'dead') return this.updateDead(dtMs);
@@ -662,6 +757,7 @@ export class RunScene extends Phaser.Scene {
     if (this.combo > 0 && this.t - this.lastPickAt > C.combo.windowMs) {
       this.combo = 0;
       audio.setStreak(0);
+      this.setPieceLabel(1);
     }
     this.stepWorld(step);
     this.stepEntities(step, dtMs);
@@ -697,6 +793,7 @@ export class RunScene extends Phaser.Scene {
       this.highPlayed = false;
       this.highGood = false;
       audio.sfx('jump');
+      this.particles.burst('kick', this.px, C.world.groundY); // chip de cartón al despegar (Mucho o más)
       // Ya lo soltó antes de que empezara el salto (tap muy corto con buffer).
       if (!this.holding) this.release();
     }
@@ -713,6 +810,12 @@ export class RunScene extends Phaser.Scene {
         if (impact > 260) {
           this.particles.burst('land', this.px, C.world.groundY);
           audio.sfx('land', { fall: impact / C.jumpVelocity });
+          // Aterrizaje fuerte (salto mantenido): el pasto cercano se dobla, vibra un pelo y, en Hardcore, tiembla la cámara
+          if (impact > 600) {
+            this.bendGrass();
+            this.buzz(8, 2);
+            this.shake(1.5, 90);
+          }
         }
       }
       this.grounded = true;
@@ -728,8 +831,9 @@ export class RunScene extends Phaser.Scene {
     const p = C.art.parallax;
     // Con movimiento reducido el fondo se queda quieto; el plano de juego sí corre (es la mecánica).
     this.clouds.tilePositionX = this.reduced ? 0 : this.dist * p.clouds;
-    this.far.tilePositionX = this.reduced ? 0 : this.dist * p.far;
-    this.mid.tilePositionX = this.reduced ? 0 : this.dist * p.mid;
+    // tilePosition va en px de textura (Phaser lo multiplica por tileScale): se divide para que el paralaje no cambie
+    this.far.tilePositionX = this.reduced ? 0 : (this.dist * p.far) / this.farS;
+    this.mid.tilePositionX = this.reduced ? 0 : (this.dist * p.mid) / this.midS;
     this.surface.tilePositionX = this.dist;
     this.canto.tilePositionX = this.dist;
     this.front.tilePositionX = this.dist;
@@ -878,6 +982,9 @@ export class RunScene extends Phaser.Scene {
       if (!this.demo) this.ambient.setDay(this.tramoIdx); // hora del día: crossfade de 6 s tras el checkpoint (el demo la cambia a los 31 s)
       this.rig.startHop();
       this.particles.burst('confetti', this.px + 20, g - 20 - 112);
+      this.shiver();
+      this.buzz([15, 40, 15]);
+      this.shake(2, 120);
     }
 
     // Limpieza
@@ -932,6 +1039,7 @@ export class RunScene extends Phaser.Scene {
     this.combo += 1;
     this.lastPickAt = this.t;
     let mult = 1;
+    let arcFull = false;
     for (const [from, v] of R.steps) if (this.combo >= from) mult = v;
     this.pieces += 1;
     this.pieceValue += (k.amber ? C.amberValue : 1) * mult;
@@ -943,10 +1051,19 @@ export class RunScene extends Phaser.Scene {
         this.pieceValue += C.arcBonus; // arco completo
         audio.sfx('arc');
         if (!this.demo) this.ambient.good('arc', this.t);
+        // Arco completo: abanico de papel, brinco grande de la ficha, nubes que tiemblan
+        arcFull = true;
+        this.particles.burst('arc', k.x, k.y);
+        this.pop(this.hudR, 1.22, 160);
+        this.shiver();
+        this.buzz(12);
+        this.shake(1, 80);
       }
     }
-    this.pieceLabel.set(String(this.pieces));
-    this.particles.burst('collect', k.x, k.y);
+    this.setPieceLabel(mult);
+    if (!arcFull) this.pop(this.hudR, 1.08 + 0.02 * Math.min(mult, 3), 120); // la ficha brinca más con la racha
+    this.particles.burst('collect', k.x, k.y, { combo: this.combo });
+    if (C.juice >= 3) this.buzz(5, 3);
     this.tweens.add({
       targets: k.sprite,
       y: k.y - 12,
@@ -1255,16 +1372,26 @@ export class RunScene extends Phaser.Scene {
     this.cause = o.type;
     this.cardShown = false;
     this.particles.burst('crash', this.px + 12, this.y - 10);
+    this.buzz(25); // golpe suave, nada que regañe
+    this.shake(2, 120);
+    // El obstáculo se arruga 2% (papel apachurrado) y se queda así; al reintentar se crea liso de nuevo
+    if (!this.calm && o.sprite) this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
     // La mejor marca se guarda también al fallar (no en el demo)
     const prevBest = num('moki.best', 0);
     const isNew = !this.demo && this.score > prevBest;
     if (isNew) save('moki.best', this.score);
+    this.failRecord = isNew && prevBest > 0;
     // Sonido: tropiezo amable, la música baja (ducking), stinger de fallo a los 80 ms y, si hay récord, el de récord después
     audio.sfx('stumble');
     audio.setState('dead');
     audio.setStreak(0);
     audio.stinger('fail');
-    if (isNew && prevBest > 0) setTimeout(() => this.screen === 'dead' && audio.stinger('record'), 1700);
+    if (isNew && prevBest > 0)
+      setTimeout(() => {
+        if (this.screen !== 'dead') return;
+        audio.stinger('record');
+        this.celebrateRecord();
+      }, 1700);
   }
 
   updateDead(dtMs) {
@@ -1317,7 +1444,7 @@ export class RunScene extends Phaser.Scene {
     const where = this.cp.idx > 0 ? t('fail.cp') : t('fail.start');
     const meta = pct > 10 ? `${t('fail.pct', { n: pct })} · ${where}` : where; // el % solo si pasa de 10
     this.ui.showFail(
-      { lesson: t(`fail.l${idx + 1}`), hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect() },
+      { lesson: t(`fail.l${idx + 1}`), hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord },
       () => this.respawn()
     );
   }
@@ -1360,6 +1487,9 @@ export class RunScene extends Phaser.Scene {
     audio.stinger('final');
     if (score > best) save('moki.best', score);
     this.ui.showPauseButton(false);
+    // Meta: confeti de papel (Mucho o más) y vibración de festejo
+    this.particles.burst('confetti', this.px + 40, C.world.groundY - 150);
+    this.buzz([20, 40, 40]);
   }
 
   updateFinal(dtMs) {
@@ -1385,7 +1515,12 @@ export class RunScene extends Phaser.Scene {
 
   showFinalCard() {
     audio.finalCard(); // música a 35%, solo la base, con lowpass 2.5 kHz
-    if (this.finalData.isNew && this.finalData.hadBest) setTimeout(() => this.screen === 'final' && audio.stinger('record'), 2600);
+    if (this.finalData.isNew && this.finalData.hadBest)
+      setTimeout(() => {
+        if (this.screen !== 'final') return;
+        audio.stinger('record');
+        this.celebrateRecord();
+      }, 2600);
     // En vertical la tarjeta va entre el HUD y la cabeza de Moki (compacta): no lo tapa
     const rect = this.failRect();
     const wide = this.scale.width >= 700 && this.scale.width > this.scale.height * 0.9;
