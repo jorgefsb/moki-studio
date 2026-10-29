@@ -38,8 +38,11 @@ export class RunScene extends Phaser.Scene {
   }
 
   create() {
-    buildTextures(this);
+    performance.mark('c0');
+    this.texQueue = buildTextures(this); // lo esencial ya; el resto se genera después, una textura por cuadro
+    performance.mark('c1');
     buildMokiPieces(this);
+    performance.mark('c2');
 
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     this.reduced = mq.matches;
@@ -53,19 +56,36 @@ export class RunScene extends Phaser.Scene {
     this.ui.sfx = (n) => audio.sfx(n);
     this.ui.soundOn = !audio.muted;
     audio.onChange((muted) => this.ui.setSound(!muted));
+    performance.mark('c3');
     this.buildWorld();
+    performance.mark('c4');
     this.buildHud();
     this.buildTutorialUI();
     this.bindInput();
 
+    performance.mark('c5');
     this.scale.on('resize', () => this.layout());
     this.layout();
+    performance.mark('c6');
     this.demoVariant = 0;
     this.lastInputAt = 0;
     this.screen = 'demo';
     this.god = false;
     if (START_SCREEN === 'play') this.startGame();
     else this.startDemo();
+    // La portada HTML se retira cuando la escena ya está lista (Moki corriendo en el siguiente cuadro)
+    // Las fuentes pueden llegar después del primer cuadro: el HUD se vuelve a medir cuando están listas
+    document.fonts.ready.then(() => {
+      this.lastM = -1;
+      this.pieceLabel.set(String(this.pieces || 0));
+      this.distLabel.set(`${Math.floor((this.dist || 0) / 100)} ${t('hud.m')}`);
+    });
+    performance.mark('moki-ready');
+    const boot = document.getElementById('boot');
+    if (boot) {
+      boot.classList.add('gone');
+      setTimeout(() => boot.remove(), 320);
+    }
   }
 
   // ---------- Construcción ----------
@@ -74,11 +94,12 @@ export class RunScene extends Phaser.Scene {
     const a = (key, depth) => this.add.tileSprite(0, 0, 10, 10, key).setOrigin(0, 0).setDepth(depth);
     this.sky = a('paper', 0);
     this.skyGrad = this.add.image(0, 0, 'skyGrad').setOrigin(0, 0).setDepth(0.5);
-    this.clouds = a('clouds', 1);
+    // capas de fondo: nacen invisibles con un papel de relleno y entran con fundido cuando su textura está lista
+    this.clouds = a('paper', 1).setAlpha(0);
     // Velo de papel en el borde superior: las nubes se desvanecen en vez de cortarse en seco.
     this.topFade = this.add.image(0, 0, 'topFade').setOrigin(0, 0).setDepth(1.5);
-    this.far = a('far', 2);
-    this.mid = a('mid', 3);
+    this.far = a('paper', 2).setAlpha(0);
+    this.mid = a('paper', 3).setAlpha(0);
     this.surface = a('groundSurface', 4);
     this.canto = a('groundCanto', 4);
     this.front = a('kraft', 4);
@@ -149,11 +170,12 @@ export class RunScene extends Phaser.Scene {
   // Mano de papel, etiqueta, anillo y arco fantasma del tutorial (UX §4). Todo procedural.
   buildTutorialUI() {
     this.tutC = this.add.container(0, 0).setDepth(150).setVisible(false);
+    this.tutHalo = this.add.graphics(); // fondo de papel claro: la mano se lee sobre cielo, colina o suelo
     this.tutRing = this.add.graphics();
-    this.tutHand = this.add.image(0, 0, 'hand').setOrigin(0.5, 0.1);
+    this.tutHand = this.add.image(0, 0, 'token').setOrigin(0.5, 0.1); // la mano y la tecla se generan después; stepTutHand cambia la textura
     this.tutLabelC = this.add.container(0, 0);
-    this.tutLabel = this.makeLabel(this.tutLabelC, 'right');
-    this.tutC.add([this.tutRing, this.tutHand, this.tutLabelC]);
+    this.tutLabel = this.makeLabel(this.tutLabelC, 'left');
+    this.tutC.add([this.tutHalo, this.tutRing, this.tutHand, this.tutLabelC]);
     this.tutArc = this.add.graphics().setDepth(14).setVisible(false);
   }
 
@@ -167,12 +189,17 @@ export class RunScene extends Phaser.Scene {
       }
       const onButton = e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'A');
       if (this.ui.modalOpen) {
+        // Esc, p y P reanudan la pausa aunque el foco esté en un botón (se revisan antes que el botón enfocado)
+        if (this.screen === 'pause' && (e.key === 'Escape' || e.key === 'p' || e.key === 'P')) {
+          e.preventDefault();
+          this.resumeGame();
+          return;
+        }
         if (onButton) return; // el botón enfocado se activa solo con Espacio/Enter
         if (KEY_JUMP.includes(e.key) || e.key === 'Enter') {
           e.preventDefault();
           this.ui.primary();
         }
-        if (this.screen === 'pause' && (e.key === 'Escape' || e.key === 'p' || e.key === 'P')) this.resumeGame();
         return;
       }
       if (this.screen === 'demo') {
@@ -261,8 +288,9 @@ export class RunScene extends Phaser.Scene {
     this.hudR.setScale(1 / z).setPosition(this.vw - m, this.top + m);
     this.hudC.setScale(1 / z).setPosition(this.vw / 2, this.top + m + 52 / z);
     // Mano del tutorial: abajo a la derecha, en la zona del pulgar, fuera del carril de juego.
-    this.tutC.setScale(1 / z).setPosition(this.vw - 50 / z, this.bottom - 96 / z);
-    this.tutLabelC.setPosition(-64, -58);
+    // Mano y etiqueta junto a Moki, sobre su cabeza (no en la esquina): ahí está la mirada del jugador.
+    this.tutC.setScale(1 / z).setPosition(this.px - 6, g - 232);
+    this.tutLabelC.setPosition(72, 0);
   }
 
   // ---------- Estado de la partida ----------
@@ -361,7 +389,7 @@ export class RunScene extends Phaser.Scene {
     this.pieces = 0;
     this.pieceValue = 0;
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
-    this.resetRun(buildDemo(variant), 0);
+    this.resetRun(buildDemo(variant, this.reduced), 0);
     this.speed = FIXED_SPEED || 320;
     this.accel = 0;
     this.tut = { stage: 4, state: 'off' };
@@ -467,8 +495,8 @@ export class RunScene extends Phaser.Scene {
     if (e.type === 'viga') {
       const topY = g - size.hangBottom - size.height;
       o.sprite = this.add.image(x, topY - 2, 'viga').setOrigin(0.5, 0).setDepth(10);
-      o.threads = [-28, 28].map((dx) => this.add.tileSprite(x + dx, this.top - 10, 6, 10, 'hilo').setOrigin(0.5, 0).setDepth(9.5));
-      o.shadow = this.addShadow(x + 6, size.width * 1.2, 0.16);
+      o.threads = [-34, 34].map((dx) => this.add.tileSprite(x + dx, this.top - 10, 6, 10, 'hilo').setOrigin(0.5, 0).setDepth(9.5));
+      o.shadow = this.addShadow(x + 6, size.width * 1.15, 0.3);
       o.topY = topY;
     } else {
       o.sprite = this.add.image(x, g + 2, e.type).setOrigin(0.5, 1).setDepth(10);
@@ -524,7 +552,28 @@ export class RunScene extends Phaser.Scene {
 
   // ---------- Bucle ----------
 
+  // Genera la siguiente textura pendiente (una por cuadro) y hace entrar con fundido las capas de fondo
+  stepTextures() {
+    if (!this.texQueue || this.frames < 3) return;
+    const key = this.texQueue.next();
+    if (!key) {
+      this.texQueue = null;
+      return;
+    }
+    const layer = { clouds: this.clouds, far: this.far, mid: this.mid }[key];
+    if (layer) {
+      layer.setTexture(key);
+      this.tweens.add({ targets: layer, alpha: 1, duration: 320, ease: 'Sine.easeOut' });
+    }
+  }
+
   update(_time, deltaMs) {
+    this.frames = (this.frames || 0) + 1;
+    this.stepTextures();
+    if (!this.firstRun) {
+      this.firstRun = true;
+      performance.mark('moki-run');
+    }
     const dtMs = Math.min(deltaMs, 50);
     if (this.screen === 'pause') return;
     this.idleCheck();
@@ -660,6 +709,7 @@ export class RunScene extends Phaser.Scene {
     if (this.reduced || this.dead) return;
     const kinds = ['grass', 'stone', 'torn', 'grass', 'stone'];
     const pick = () => `gp-${kinds[this.fgPick % kinds.length]}${(this.fgPick++ >> 1) % 3}`;
+    if (!this.textures.exists('gp-grass0') || !this.textures.exists('gp-torn2')) return; // aún se están generando
     const x = this.vw + 90;
     if (this.t >= this.fgNext) {
       this.fgNext = this.t + F.minGapSec * 70 + Math.random() * 360; // 3 a 4 piezas repartidas a la vista en 1280
@@ -690,7 +740,7 @@ export class RunScene extends Phaser.Scene {
       o.shadow.x = o.x + (o.type === 'viga' ? 6 : 9);
       if (o.threads) {
         o.threads.forEach((h, i) => {
-          h.x = o.x + (i ? 28 : -28);
+          h.x = o.x + (i ? 34 : -34);
           h.y = this.top - 10;
           h.setSize(6, Math.max(2, o.topY + 6 - (this.top - 10)));
         });
@@ -1015,17 +1065,39 @@ export class RunScene extends Phaser.Scene {
       down = hold ? clamp(u * 3, 0, 1) : u < 0.28 ? Math.sin((u / 0.28) * Math.PI * 0.5) : Math.max(0, 1 - (u - 0.28) * 4);
     }
     ring = hold ? clamp(((inPulses ? ph % T.handPulseMs : 400) / 400), 0, 1) * (down > 0.9 ? 1 : 0) : down > 0.5 ? 1 : 0;
-    this.tutHand.setPosition(0, down * 14);
-    this.tutHand.setScale(1 - down * 0.06);
+    const key = !this.coarse; // con teclado: una tecla "Espacio" de papel en vez del dedo
+    const tex = key ? 'keycap' : 'hand';
+    if (this.tutHand.texture.key !== tex) this.tutHand.setTexture(tex).setOrigin(0.5, key ? 0.5 : 0.1);
+    const base = key ? 1.15 : 1.35;
+    this.tutHand.setPosition(0, key ? 22 + down * 6 : down * 16);
+    this.tutHand.setScale(base * (1 - down * 0.05));
+    // fondo de papel claro con canto kraft: se lee sobre cielo, colina o suelo
+    const halo = this.tutHalo;
+    halo.clear();
+    halo.fillStyle(0x22211f, 0.2);
+    halo.fillCircle(2, 30, 62);
+    halo.fillStyle(0xf4e8d5, 0.94);
+    halo.fillCircle(0, 26, 62);
+    halo.lineStyle(4, 0xb99168, 1);
+    halo.strokeCircle(0, 26, 62);
     const gfx = this.tutRing;
     gfx.clear();
-    gfx.lineStyle(4, 0x22211f, 0.2);
-    gfx.strokeCircle(0, -4, 22);
-    if (ring > 0) {
-      gfx.lineStyle(4, 0x22211f, 0.45);
-      gfx.beginPath();
-      gfx.arc(0, -4, 22, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (hold ? ring : 1), false);
-      gfx.strokePath();
+    if (!key) {
+      // aro más grueso alrededor de la yema
+      gfx.lineStyle(7, 0x22211f, 0.28);
+      gfx.strokeCircle(0, -2, 30);
+      if (ring > 0) {
+        gfx.lineStyle(7, 0x22211f, 0.7);
+        gfx.beginPath();
+        gfx.arc(0, -2, 30, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (hold ? ring : 1), false);
+        gfx.strokePath();
+      }
+    } else if (ring > 0) {
+      // en mantener, una barra se llena bajo la tecla en ~400 ms
+      gfx.fillStyle(0x22211f, 0.55);
+      gfx.fillRoundedRect(-44, 52, 88 * (hold ? ring : 1), 8, 4);
+      gfx.lineStyle(3, 0x22211f, 0.3);
+      gfx.strokeRoundedRect(-44, 52, 88, 8, 4);
     }
   }
 
@@ -1166,7 +1238,8 @@ export class RunScene extends Phaser.Scene {
     const idx = num('moki.lesson', 0) % 3;
     if (!this.demo) save('moki.lesson', idx + 1); // las 3 lecciones rotan en orden
     const pct = Math.min(99, Math.floor((100 * this.dist) / this.level.end));
-    const meta = `${t('fail.pct', { n: pct })} · ${this.cp.idx > 0 ? t('fail.cp') : t('fail.start')}`;
+    const where = this.cp.idx > 0 ? t('fail.cp') : t('fail.start');
+    const meta = pct > 10 ? `${t('fail.pct', { n: pct })} · ${where}` : where; // el % solo si pasa de 10
     this.ui.showFail(
       { lesson: t(`fail.l${idx + 1}`), hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect() },
       () => this.respawn()
@@ -1203,11 +1276,13 @@ export class RunScene extends Phaser.Scene {
     this.release();
     this.rig.startHop();
     save('moki.done', '1'); // abre Hardcore (decisión del líder)
+    // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
     const best = num('moki.best', 0);
-    this.finalData = { isNew: this.score > best, hadBest: best > 0 };
+    const score = this.score;
+    this.finalData = { isNew: score > best, hadBest: best > 0, score, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: Math.max(best, score) };
     audio.setState('finished'); // la música baja a 0 y suena el stinger del final
     audio.stinger('final');
-    if (this.score > best) save('moki.best', this.score);
+    if (score > best) save('moki.best', score);
     this.ui.showPauseButton(false);
   }
 
@@ -1235,18 +1310,13 @@ export class RunScene extends Phaser.Scene {
   showFinalCard() {
     audio.finalCard(); // música a 35%, solo la base, con lowpass 2.5 kHz
     if (this.finalData.isNew && this.finalData.hadBest) setTimeout(() => this.screen === 'final' && audio.stinger('record'), 2600);
+    // En vertical la tarjeta va entre el HUD y la cabeza de Moki (compacta): no lo tapa
     const rect = this.failRect();
     const wide = this.scale.width >= 700 && this.scale.width > this.scale.height * 0.9;
-    const r = wide ? rect : { ...rect, maxHeight: this.scale.height - rect.top - 16 };
+    const r = wide ? rect : { ...rect, compact: true };
+    const d = this.finalData;
     this.ui.showFinal(
-      {
-        isNew: this.finalData.isNew,
-        meters: Math.floor(this.dist / 100),
-        pieces: this.pieces,
-        piecesTotal: this.level.pieceTotal,
-        score: this.score,
-        best: num('moki.best', 0),
-      },
+      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
       r
     );

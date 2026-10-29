@@ -420,45 +420,40 @@ function caja() {
 
 // Torre de 100 px: dos cajas de 50, la de arriba ladeada medio grado como pila de cartón.
 function torre() {
-  const [c, x] = mk(64, 104);
-  block(x, 2, 52, 60, 50, { body: TONE.kraftDanger, tape: true, seed: 42 });
+  const [c, x] = mk(64, 100);
+  block(x, 2, 50, 60, 48, { body: TONE.kraftDanger, tape: true, seed: 42 });
   x.save();
-  x.translate(32, 52);
+  x.translate(32, 50);
   x.rotate(-0.026);
-  x.translate(-32, -52);
-  block(x, 3, 2, 58, 50, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
+  x.translate(-32, -50);
+  block(x, 3, 2, 58, 48, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43 });
   x.restore();
   return c;
 }
 
 // Viga colgante: tablón de cartón con franja naranja, colgado de dos hilos (títere). 76x32 de juego.
 function viga() {
-  const [c, x] = mk(80, 36);
-  block(x, 2, 2, 76, 32, { body: TONE.kraftDanger, tape: false, seed: 91 });
+  const [c, x] = mk(95, 36);
+  block(x, 2, 2, 91, 32, { body: TONE.kraftDanger, tape: false, seed: 91 });
   x.save();
   x.beginPath();
-  x.roundRect(2, 2, 76, 32, 6);
+  x.roundRect(2, 2, 91, 32, 6);
   x.clip();
   // franja naranja diagonal, en la forma de la cinta de las cajas
   x.fillStyle = PAL.accent;
-  x.beginPath();
-  x.moveTo(22, 9);
-  x.lineTo(36, 9);
-  x.lineTo(30, 34);
-  x.lineTo(16, 34);
-  x.closePath();
-  x.fill();
-  x.beginPath();
-  x.moveTo(46, 9);
-  x.lineTo(60, 9);
-  x.lineTo(54, 34);
-  x.lineTo(40, 34);
-  x.closePath();
-  x.fill();
+  for (const ox of [0, 22, 44]) {
+    x.beginPath();
+    x.moveTo(20 + ox, 9);
+    x.lineTo(34 + ox, 9);
+    x.lineTo(28 + ox, 34);
+    x.lineTo(14 + ox, 34);
+    x.closePath();
+    x.fill();
+  }
   x.restore();
   // ojales donde se atan los hilos
   x.fillStyle = PAL.ink;
-  for (const ox of [12, 68]) {
+  for (const ox of [12, 81]) {
     x.beginPath();
     x.arc(ox, 8, 2.2, 0, TAU);
     x.fill();
@@ -501,6 +496,25 @@ function hand() {
     x.lineTo(ox, 52);
     x.stroke();
   }
+  return c;
+}
+
+// Tecla "Espacio" de papel (tutorial con teclado): reemplaza al dedo
+function keycap() {
+  const [c, x] = mk(120, 60);
+  const r = rng(96);
+  cut(x, (g) => g.roundRect(6, 6, 108, 40, 10), { fill: PAL.paper, edgeW: 0, shadow: { alpha: 0.3, blur: 5, dx: 1, dy: 4 }, r, fiberCount: 50 });
+  x.strokeStyle = PAL.kraft;
+  x.lineWidth = 3;
+  x.beginPath();
+  x.roundRect(6, 6, 108, 40, 10);
+  x.stroke();
+  x.strokeStyle = rgba(PAL.border, 0.7);
+  x.lineWidth = 2;
+  x.beginPath();
+  x.moveTo(30, 34);
+  x.lineTo(90, 34);
+  x.stroke();
   return c;
 }
 
@@ -766,6 +780,108 @@ function groundPiece(kind, seed) {
   return c;
 }
 
+// ---------- Fondo vivo (T3d, PROPUESTAS-FONDO-DEMO §2): eventos de papel de las capas 1 a 3 ----------
+// Sin naranja, ámbar ni círculos kraft; menos contraste que los obstáculos y las piezas.
+
+// Nube de papel que se recorta: tres etapas, de grande a chica (sin trazo interno entre lóbulos)
+function ambCloud(stage, seed) {
+  const sets = [
+    [[34, 40, 22], [62, 30, 28], [96, 36, 24], [120, 44, 17]],
+    [[34, 40, 20], [62, 32, 24], [94, 40, 18]],
+    [[40, 40, 18], [66, 36, 20]],
+  ];
+  const lobes = sets[stage];
+  const [c, x] = mk(150, 74);
+  const r = rng(seed);
+  const path = (g) => {
+    lobes.forEach(([cx, cy, rad]) => {
+      g.moveTo(cx + rad, cy);
+      g.arc(cx, cy, rad, 0, TAU);
+    });
+    const x0 = lobes[0][0] - lobes[0][2] * 0.7;
+    const x1 = lobes[lobes.length - 1][0] + lobes[lobes.length - 1][2] * 0.7;
+    g.rect(x0, 44, x1 - x0, 14);
+  };
+  cut(x, path, { fill: TONE.cloud, edgeW: 0, shadow: { alpha: 0.12, blur: 5, dx: 0, dy: 3 }, r, fiberCount: 40 });
+  return c;
+}
+
+// Avioncito de papel: dardo con pliegue kraft
+function ambPlane() {
+  const [c, x] = mk(64, 36);
+  const r = rng(131);
+  const path = (g) => {
+    g.moveTo(4, 17);
+    g.lineTo(58, 5);
+    g.lineTo(30, 18);
+    g.lineTo(58, 29);
+    g.closePath();
+  };
+  cut(x, path, { fill: PAL.paper, edgeW: 2, shadow: { alpha: 0.14, blur: 4, dx: 1, dy: 3 }, r, fiberCount: 20 });
+  x.strokeStyle = rgba(PAL.kraft, 0.85);
+  x.lineWidth = 2;
+  x.beginPath();
+  x.moveTo(4, 17);
+  x.lineTo(30, 18);
+  x.stroke();
+  x.fillStyle = rgba(PAL.kraft, 0.35);
+  x.beginPath();
+  x.moveTo(30, 18);
+  x.lineTo(58, 29);
+  x.lineTo(46, 20);
+  x.closePath();
+  x.fill();
+  return c;
+}
+
+// Pajarito de origami en dos poses (alas arriba y abajo) para el aleteo en stop-motion
+function ambBird(pose, seed) {
+  const [c, x] = mk(34, 26);
+  const r = rng(seed);
+  const wing = pose === 0 ? -9 : 9;
+  const body = (g) => {
+    g.moveTo(3, 15);
+    g.lineTo(16, 12);
+    g.lineTo(30, 14);
+    g.lineTo(16, 19);
+    g.closePath();
+  };
+  const wings = (g) => {
+    g.moveTo(11, 14);
+    g.lineTo(19, 14);
+    g.lineTo(21, 14 + wing);
+    g.closePath();
+  };
+  cut(x, body, { fill: PAL.paper, edgeW: 1.5, shadow: null, r, fiberCount: 10 });
+  cut(x, wings, { fill: mix(PAL.paper, PAL.kraft, 0.55), edgeW: 1.5, shadow: null, r, fiberCount: 10 });
+  x.strokeStyle = rgba(PAL.ink, 0.4);
+  x.lineWidth = 1.2;
+  x.beginPath();
+  body(x);
+  x.stroke();
+  return c;
+}
+
+// Lámpara de la noche: disco de papel con canto kraft de 3 px y una mancha de luz recortada 6% más clara (sin degradado)
+function ambLamp() {
+  const [c, x] = mk(110, 110);
+  x.fillStyle = PAL.kraft;
+  x.beginPath();
+  x.arc(55, 56, 44, 0, TAU);
+  x.fill();
+  x.fillStyle = mix(PAL.paper, '#FFFFFF', 0.25);
+  x.beginPath();
+  x.arc(55, 54, 41, 0, TAU);
+  x.fill();
+  x.fillStyle = mix(PAL.paper, '#FFFFFF', 0.45);
+  x.beginPath();
+  x.moveTo(30, 44);
+  x.arc(52, 52, 26, Math.PI * 0.9, Math.PI * 1.55);
+  x.closePath();
+  x.fill();
+  return c;
+}
+
 function chip(color, seed) {
   const [c, x] = mk(10, 8);
   const r = rng(seed);
@@ -784,10 +900,20 @@ function chip(color, seed) {
 }
 
 export function buildTextures(scene) {
+  // Tiempos por textura (ms), solo con ?debug: sirve para ver qué retrasa la apertura
+  const times = [];
+  let last = performance.now();
   const add = (key, canvas) => {
     if (scene.textures.exists(key)) scene.textures.remove(key);
     scene.textures.addCanvas(key, canvas);
+    const now = performance.now();
+    times.push([key, Math.round(now - last)]);
+    last = now;
   };
+  if (/[?&]debug/.test(window.location.search)) window.__texTimes = times;
+  // Lo que hace falta para el primer cuadro del demo se genera ya; el resto se genera después, un trozo por cuadro
+  const lazy = [];
+  const defer = (key, fn) => lazy.push([key, fn]);
   add('paper', paperTile());
   add('kraft', kraftTile());
   add('skyGrad', gradient(2, 320, [[0, rgba(PAL.kraft, 0)], [0.55, rgba(PAL.kraft, 0.06)], [1, rgba(PAL.kraft, 0.26)]]));
@@ -797,31 +923,42 @@ export function buildTextures(scene) {
   add('groundCanto', ground.canto());
   add('groundFold', ground.fold());
   add('shadow', shadowTex());
-  add('clouds', cloudsLayer());
-  add('far', farLayer());
-  add('mid', midLayer());
   add('caja', caja());
   add('torre', torre());
-  add('viga', viga());
-  add('hilo', hilo());
-  add('hand', hand());
-  add('tokenAmber', tokenAmber());
-  add('metaArch', metaArch());
   add('token', token());
-  add('cpBase', checkpointBase());
-  add('cpPole', checkpointPole());
-  add('cpFlag', checkpointFlag());
   add('chipKraft', chip(PAL.kraft, 71));
   add('chipPaper', chip(PAL.paper, 72));
+  // capas de fondo: entran con fundido apenas están listas
+  defer('clouds', () => cloudsLayer());
+  defer('far', () => farLayer());
+  defer('mid', () => midLayer());
+  defer('viga', () => viga());
+  defer('hilo', () => hilo());
+  defer('hand', () => hand());
+  defer('keycap', () => keycap());
+  defer('tokenAmber', () => tokenAmber());
+  defer('metaArch', () => metaArch());
+  defer('cpBase', () => checkpointBase());
+  defer('cpPole', () => checkpointPole());
+  defer('cpFlag', () => checkpointFlag());
   ['grass', 'stone', 'torn'].forEach((kind, i) => {
-    for (let v = 0; v < 3; v++) add(`gp-${kind}${v}`, groundPiece(kind, 120 + i * 10 + v));
+    for (let v = 0; v < 3; v++) defer(`gp-${kind}${v}`, () => groundPiece(kind, 120 + i * 10 + v));
   });
-  add('fgUpA', fgStrip(150, 58, 81, PAL.kraft, 'top'));
-  add('fgUpB', fgStrip(110, 48, 82, PAL.paper, 'top'));
-  add('fgUpC', fgStrip(190, 44, 83, TONE.kraftDark, 'top'));
-  add('fgDownA', fgStrip(150, 52, 84, PAL.kraft, 'bottom'));
-  add('fgDownB', fgStrip(120, 44, 85, PAL.paper, 'bottom'));
-  add('fgDownC', fgStrip(180, 40, 86, TONE.kraftDark, 'bottom'));
-  add('chipOrange', chip(PAL.accent, 73));
-  add('chipAmber', chip(PAL.warm, 74));
+  [0, 1, 2].forEach((st) => defer(`ambCloud${st}`, () => ambCloud(st, 141 + st)));
+  defer('ambPlane', () => ambPlane());
+  defer('ambBird0', () => ambBird(0, 151));
+  defer('ambBird1', () => ambBird(1, 152));
+  defer('ambLamp', () => ambLamp());
+  defer('chipOrange', () => chip(PAL.accent, 73));
+  defer('chipAmber', () => chip(PAL.warm, 74));
+  return {
+    lazy,
+    // genera la siguiente textura pendiente; devuelve su clave o null cuando no queda ninguna
+    next() {
+      const item = lazy.shift();
+      if (!item) return null;
+      add(item[0], item[1]());
+      return item[0];
+    },
+  };
 }

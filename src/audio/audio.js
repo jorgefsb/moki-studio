@@ -264,12 +264,10 @@ const A = {
     if (!this.running || this.muted || this.hidden) return;
     const fn = SFX[name];
     if (!fn) return;
+    // El sonido va fuera del juice (decisión del líder): racha x2/x3, arco completo, ámbar y tarjeta suenan siempre.
+    // Solo lo visual depende del juice.
     const extra = {};
-    if (name === 'pickup') extra.tier = this.juice >= 2 ? (this.streakN >= 6 ? 2 : this.streakN >= 3 ? 1 : 0) : -1;
-    if ((name === 'amber' || name === 'arc' || name === 'card') && this.juice < 2) {
-      // extras solo en Mucho o más; el ámbar sí suena siempre porque vale 5 puntos
-      if (name !== 'amber') return;
-    }
+    if (name === 'pickup') extra.tier = this.streakN >= 6 ? 2 : this.streakN >= 3 ? 1 : 0;
     fn(this.ctx, this.bus.sfxMix, this.ctx.currentTime + 0.003, { ...o, ...extra, reduced: this.reduced, echo: this.bus.echoIn });
     if (name === 'card') this.cardUp();
   },

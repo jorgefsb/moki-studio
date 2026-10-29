@@ -5,7 +5,7 @@ export const CONFIG = {
   jumpVelocity: 720, // px/s
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
   jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
-  jumpMinPx: 66, // altura mínima de un toque. La torre efectiva (100-16) exige 82: el toque queda ≥15 px abajo (DISENO pedía 70; no sale ese margen)
+  jumpMinPx: 62, // altura mínima de un toque: libra la caja (exige 38) y queda >= 15 px por debajo de la torre de 96 (exige 78)
   coyoteMs: 90,
   jumpBufferMs: 110,
 
@@ -17,7 +17,7 @@ export const CONFIG = {
   respawnEaseSec: 1,
   respawnSpeedMult: 0.85,
   respawnCalmSec: 2,
-  retryLockoutMs: 700, // la tarjeta de fallo no acepta toque antes (guarda contra el toque de pánico)
+  retryLockoutMs: 550, // la tarjeta de fallo no acepta toque antes (guarda contra el toque de pánico)
 
   // Guion (DISENO.md §3 y §8)
   cajaPegadaGapPx: 84,
@@ -59,8 +59,8 @@ export const CONFIG = {
   player: { xMax: 190, xRatio: 0.28, width: 38, height: 92, spriteHeight: 110 },
   obstacleSizes: {
     caja: { width: 60, height: 56 },
-    torre: { width: 60, height: 100 }, // más alta: el toque ya no la libra
-    viga: { width: 76, height: 32, hangBottom: 180 }, // colgante: castiga saltar de más (pico > 94 px)
+    torre: { width: 60, height: 96 }, // más alta que la caja: el toque ya no la libra (efectiva 80, exige 78 de salto)
+    viga: { width: 91, height: 32, hangBottom: 180 }, // colgante: 20% más ancha que antes; castiga saltar de más (pico > 94 px)
   },
   hitboxShrink: { x: 18, top: 16 }, // las cajas castigan menos de lo que se ven
   pickupSize: 30,

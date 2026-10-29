@@ -29,7 +29,7 @@
 .ui-card h2 { margin: 0 0 8px; font: 700 28px/34px Outfit, sans-serif; letter-spacing: 0; }
 .ui-card p { margin: 0 0 6px; font: 400 18px/24px Inter, sans-serif; }
 .ui-card .meta { font-size: 16px; line-height: 22px; color: #22211f; opacity: 0.78; }
-@media (min-width: 900px) { .ui-card h2 { font-size: 40px; line-height: 46px; } }
+@media (min-width: 900px) { .ui-card:not(.compact) h2 { font-size: 40px; line-height: 46px; } }
 
 .ui-pill, .ui-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -51,15 +51,16 @@
 .ui-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; margin-top: 8px; font: 400 16px Inter, sans-serif; text-decoration: underline; color: #22211f; }
 
 .ui-demo {
-  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%) rotate(-1.5deg);
-  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 8px 16px;
-  background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px;
-  box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
-  font: 400 16px/22px Inter, sans-serif; white-space: nowrap; pointer-events: none;
-  animation: ui-demo-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) rotate(-1deg);
+  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 9px 18px;
+  background: #f4e8d5; border: 3px solid #8a7e70; border-radius: 12px; color: #22211f;
+  box-shadow: 0 4px 0 rgba(34, 33, 31, 0.38), 0 0 0 2px #f4e8d5;
+  font: 700 17px/22px Outfit, sans-serif; white-space: nowrap; pointer-events: none;
+  animation: ui-demo-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both, ui-demo-sway 1.6s ease-in-out 6s 3;
 }
-.ui-demo b { font: 700 16px Outfit, sans-serif; }
-@keyframes ui-demo-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) rotate(-1.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-1.5deg); } }
+.ui-demo b { font: 700 17px Outfit, sans-serif; }
+@keyframes ui-demo-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) rotate(-2.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-1deg); } }
+@keyframes ui-demo-sway { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 50% { transform: translateX(-50%) translateY(-2px) rotate(-1deg); } }
 
 .ui-pausebtn {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
@@ -81,16 +82,25 @@
 .ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
 .ui-pause .ui-btn { margin: 0; width: 100%; }
 
-.ui-asi { position: absolute; inset: 0; pointer-events: auto; background: #0a0a0a; color: #fff; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-.ui-asi .wrap { box-sizing: border-box; width: min(720px, 100%); margin: 0 auto; padding: 24px 16px 32px; }
+/* "Así lo hicimos": papel crema, tarjetas de cartón, texto en tinta; sin barra de scroll; fila fija abajo */
+.ui-asi { position: absolute; inset: 0; pointer-events: auto; background: #f4e8d5; color: #22211f; display: flex; flex-direction: column; }
+.ui-asi .wrap { box-sizing: border-box; flex: 1; width: min(720px, 100%); margin: 0 auto; padding: 20px 16px 8px; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.ui-asi .wrap::-webkit-scrollbar { display: none; }
 .ui-asi h2 { margin: 0; font: 700 32px/38px Outfit, sans-serif; }
-.ui-asi .sub { margin: 4px 0 18px; font: 400 18px/24px Inter, sans-serif; color: #b7b3ad; }
-.ui-asi .panel { background: #161616; border-radius: 14px; padding: 12px 16px; margin: 8px 0; display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
+.ui-asi .sub { margin: 4px 0 14px; font: 400 18px/24px Inter, sans-serif; opacity: 0.78; }
+.ui-asi .panel { background: #d6bf9f; border: 3px solid #8a7e70; border-radius: 14px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22); padding: 10px 14px; margin: 8px 0; display: flex; gap: 8px; justify-content: space-between; align-items: baseline; }
 .ui-asi .panel b { font: 700 18px Outfit, sans-serif; }
-.ui-asi .panel span { font: 400 16px/22px Inter, sans-serif; color: #b7b3ad; text-align: right; }
+.ui-asi .panel span { font: 400 16px/22px Inter, sans-serif; text-align: right; }
 .ui-asi .jorge { margin: 14px 0 6px; font: 700 20px Outfit, sans-serif; }
-.ui-asi .ui-btn.light { background: #fff; color: #0a0a0a; border-color: #fff; }
-.ui-asi .ui-btn.ghost { background: transparent; color: #fff; border-color: #8a7e70; }
-.ui-asi a.ui-btn { text-decoration: none; }
+.ui-asi .foot { box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 3px solid #b99168; background: #f4e8d5; }
+.ui-asi .foot .ui-link { margin: 0; font: 400 16px/22px Inter, sans-serif; }
+.ui-asi .foot .ui-btn { margin: 0; }
+
+.ui-card.compact h2 { font-size: 28px; line-height: 32px; margin-bottom: 6px; }
+.ui-card.compact p { font-size: 16px; line-height: 22px; }
+.ui-card.compact .ui-rows { font-size: 16px; line-height: 22px; margin: 6px 0 2px; }
+.ui-card.compact .ui-rows dd { font-size: 20px; line-height: 22px; }
+.ui-card.compact { padding: 14px 16px 16px; }
+.ui-card.compact .ui-pill, .ui-card.compact .ui-btn { margin-top: 8px; }
 
 @media (prefers-reduced-motion: reduce) { .ui-demo { animation: none; } }

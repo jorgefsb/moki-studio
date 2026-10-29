@@ -5,14 +5,16 @@ import { RunScene } from './scenes/RunScene.js';
 import { CONFIG } from './config.js';
 import { audio as audioFacade } from './audio/audio.js';
 
-// Las fuentes se piden antes de crear el juego para que el HUD mida bien desde el primer cuadro.
+// Las fuentes se piden en paralelo con el arranque de Phaser (no lo frenan): al llegar, el HUD vuelve a medirse (ver RunScene).
 async function boot() {
   try {
-    await Promise.all([document.fonts.load('700 22px Outfit'), document.fonts.load('400 16px Inter')]);
+    document.fonts.load('700 22px Outfit');
+    document.fonts.load('400 16px Inter');
   } catch (e) {
     // sin fuentes sigue jugable con la de respaldo
   }
 
+  performance.mark('moki-boot');
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',
@@ -29,6 +31,17 @@ async function boot() {
   if (import.meta.env.DEV || q.has('debug') || q.get('anim') === 'debug') {
     game.moki = {
       cfg: CONFIG, // perillas vivas, para barrer valores sin recargar
+      // Tiempos de apertura (ms desde el inicio de la navegación): primer pintado, scripts listos, escena lista y primer cuadro con Moki
+      timing() {
+        const at = (n) => {
+          const e = performance.getEntriesByName(n);
+          return e.length ? Math.round(e[0].startTime) : null;
+        };
+        const fcp = performance.getEntriesByName('first-contentful-paint')[0];
+        const cm = {};
+        ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6'].forEach((k) => (cm[k] = at(k)));
+        return { stages: cm, firstPaint: fcp ? Math.round(fcp.startTime) : null, boot: at('moki-boot'), ready: at('moki-ready'), run: at('moki-run') };
+      },
       // Estado del audio (contexto, estado, silenciado, grado de energía, paso) para las pruebas del probador
       audioState: () =>
         Promise.resolve(audioFacade).then((a) => ({

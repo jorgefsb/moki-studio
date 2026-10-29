@@ -110,7 +110,7 @@ export function createUI() {
       ui.hideFail();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'transparent';
-      const card = el('div', 'ui-card');
+      const card = el('div', rect.width <= 460 ? 'ui-card compact' : 'ui-card');
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, opacity: '0', transform: 'translateY(18px)', transition: 'opacity 250ms ease-out, transform 250ms ease-out' });
       card.append(el('h2', '', lesson));
       if (hint) card.append(el('p', '', hint));
@@ -159,7 +159,7 @@ export function createUI() {
       ui.hideFinal();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
-      const card = el('div', 'ui-card');
+      const card = el('div', rect.compact ? 'ui-card compact' : 'ui-card');
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto' });
       card.append(el('h2', '', t('end.title')));
       if (d.isNew) card.append(el('span', 'ui-tag', t('end.new')));
@@ -198,7 +198,8 @@ export function createUI() {
     // "Así lo hicimos" (UX §8): fondo #0A0A0A, paneles #161616.
     showAsi(interventions, onBack) {
       ui.hideAsi();
-      const asi = el('div', 'ui-asi dark');
+      // Papel crema con tarjetas de cartón; el enlace y "Volver" quedan en una fila fija abajo (siempre visibles, sin scroll)
+      const asi = el('div', 'ui-asi');
       const wrap = el('div', 'wrap');
       wrap.append(el('h2', '', t('how.title')), el('p', 'sub', t('how.sub')));
       for (const k of ['lider', 'constructor', 'probador', 'arte', 'animador', 'ux', 'diseno', 'audio']) {
@@ -207,14 +208,15 @@ export function createUI() {
         wrap.append(p);
       }
       wrap.append(el('p', 'jorge', t(interventions === 1 ? 'how.jorge.one' : 'how.jorge.many', { n: interventions })));
-      const link = el('a', 'ui-btn light', t('end.link'));
+      const foot = el('div', 'foot');
+      const link = el('a', 'ui-link', t('end.link'));
       link.href = 'https://jorgesuarez.com.mx';
       link.rel = 'noopener';
-      const back = el('button', 'ui-btn ghost', t('how.back'));
+      const back = el('button', 'ui-btn primary', t('how.back'));
       back.type = 'button';
       back.addEventListener('click', onBack);
-      wrap.append(link, back);
-      asi.append(wrap);
+      foot.append(link, back);
+      asi.append(wrap, foot);
       root.appendChild(asi);
       primary = onBack;
       state.asi = asi;
