@@ -57,7 +57,7 @@ export function runBot(s, kind, maxSec = 150) {
 // Margen del toque contra la torre con las ecuaciones del motor (jumpmodel = mismo cálculo que stepJump/release).
 export function jumpTable() {
   const need = C.obstacleSizes.torre.height - C.hitboxShrink.top - 2; // altura mínima que libra la torre
-  const caja = C.obstacleSizes.caja.height - C.hitboxShrink.top - 2;
+  const caja = C.obstacleSizes.caja.height - C.hitboxShrinkCaja.top - 2;
   const rows = [];
   for (const h of [16, 33, 50, 66, 80, 100, 120, 140, 160, 200, 260]) {
     const p = simulateJump(h).peak;

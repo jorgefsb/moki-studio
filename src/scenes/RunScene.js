@@ -870,15 +870,16 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       if (o.x < this.px - 60) o.passed = true;
       if (this.rewinding || this.god) continue;
-      const ol = o.x - o.size.width / 2 + C.hitboxShrink.x;
-      const or = o.x + o.size.width / 2 - C.hitboxShrink.x;
+      const hs = o.type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink;
+      const ol = o.x - o.size.width / 2 + hs.x;
+      const or = o.x + o.size.width / 2 - hs.x;
       let ot;
       let ob;
       if (o.type === 'viga') {
         ob = g - o.size.hangBottom;
         ot = ob - o.size.height;
       } else {
-        ot = g - o.size.height + C.hitboxShrink.top;
+        ot = g - o.size.height + hs.top;
         ob = g;
       }
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
@@ -1204,7 +1205,7 @@ export class RunScene extends Phaser.Scene {
     // penetró en esa vuelta (hasta speed*dt), para que el traslape visible sea solo el de la hitbox.
     if (o.type !== 'viga') {
       const front = this.px + (C.player.width - 6) / 2;
-      const hit = o.x - o.size.width / 2 + C.hitboxShrink.x;
+      const hit = o.x - o.size.width / 2 + (o.type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink).x;
       const pen = front - hit;
       this.impactPenetration = Math.max(0, pen);
       if (pen > 0) {

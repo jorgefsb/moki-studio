@@ -66,7 +66,8 @@ export const CONFIG = {
     torre: { width: 60, height: 92 }, // exige 76 de salto: se libra manteniendo desde ~130 ms; el toque (apex 62-72) no la libra
     viga: { width: 91, height: 32, hangBottom: 190 }, // colgante: 20% más ancha que antes; castiga saltar de más (pico > 94 px)
   },
-  hitboxShrink: { x: 18, top: 16 }, // las cajas castigan menos de lo que se ven
+  hitboxShrink: { x: 18, top: 16 }, // torre y viga (la lección de Mantén no se toca)
+  hitboxShrinkCaja: { x: 22, top: 20 }, // la caja perdona más (T3f): ventana de despegue de 109 a 156 ms y de dos cajas de 94 a ~134 ms a 320 px/s
   pickupSize: 30,
 
   // Títere recortado de moki-lado.webp (ANIMACION.md §1). Cajas en píxeles de la fuente (134x260),

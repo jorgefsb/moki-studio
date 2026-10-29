@@ -302,7 +302,7 @@ export class Ambient {
     } else if (kind === 'moki') {
       // Moki chiquito: asoma desde la cresta de la colina lejana (flat), con los pies en la línea de la cresta; sube y baja por el mismo sitio.
       // Asset oficial tal cual a 30 px, nunca espejado, tinte de velo de papel ~12%, 1 vez por partida.
-      const cr = this.flatCrest(s.vw * 0.3, s.vw * 0.95);
+      const cr = this.flatCrest(Math.max(s.vw * 0.3, s.px + 130), s.vw * 0.95);
       if (!cr) return false;
       const sp = s.add.image(0, 0, 'mokiSaluda').setOrigin(0.5, 1).setScale(30 / 260).setDepth(2.5).setTint(0xe6dfd2).setAlpha(0);
       ev.sprites.push(sp);
@@ -311,7 +311,8 @@ export class Ambient {
       ev.row = cr.row;
       this.once.moki = true;
     } else if (kind === 'balloon') {
-      const sp = s.add.image(s.vw * (0.55 + r() * 0.25), C.world.groundY - 20, 'ambBalloon').setDepth(2.5).setAlpha(0.95);
+      // nace ya sobre la zona de lectura (su base queda sobre groundY-185, más arriba de las piezas más altas) y entra con un fundido: nunca cruza la banda de juego
+      const sp = s.add.image(s.vw * (0.55 + r() * 0.25), C.world.groundY - 245, 'ambBalloon').setDepth(2.5).setAlpha(0);
       ev.sprites.push(sp);
       ev.life = 22000 + r() * 6000;
       ev.x0 = sp.x;
@@ -480,7 +481,7 @@ export class Ambient {
     sp.x = b.x0 - (s.dist - b.d0) * 0.08; // capa 2, mucho más lenta que a 0.3x para que dure sus ~24 s a la vista
     sp.y = b.y0 + (b.y1 - b.y0) * (1 - Math.pow(1 - Math.min(1, age / 9000), 2)) + Math.sin(age / 900) * 3; // sube tras las colinas
     sp.setAngle(Math.sin(age / 1400) * 1.5);
-    sp.setAlpha(u > 0.92 ? 0.95 * (1 - (u - 0.92) / 0.08) : 0.95);
+    sp.setAlpha(0.95 * Math.min(1, age / 1200) * (u > 0.92 ? 1 - (u - 0.92) / 0.08 : 1));
     if (age > b.life || sp.x < -120) {
       sp.destroy();
       this.slow = null;

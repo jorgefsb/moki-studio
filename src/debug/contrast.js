@@ -43,20 +43,21 @@ export async function measureContrast(s, type = 'torre') {
       const sy = (wy) => (wy - cam.worldView.y) * z;
       const o = s.obstacles[0];
       const h = o.size.height;
+      const hang = type === 'viga' ? o.size.hangBottom : 0; // la viga cuelga: sus alturas se miden desde el suelo
       const body = [];
-      for (const dy of [h * 0.3, h * 0.55, h * 0.8]) for (const dx of [-20, 20]) body.push(await px(sx(o.x + dx), sy(440 - dy)));
+      for (const dy of [hang + h * 0.3, hang + h * 0.55, hang + h * 0.8]) for (const dx of [-20, 20]) body.push(await px(sx(o.x + dx), sy(440 - dy)));
       const Lb = body.map(lum).sort((a, b) => a - b)[3];
       const bb = o.sprite.getBounds();
       const L = bb.left + 2;
       const R = bb.right - 2;
-      for (const dy of [h * 0.3, h * 0.55, h * 0.8]) {
+      for (const dy of [hang + h * 0.3, hang + h * 0.55, hang + h * 0.8]) {
         for (const [edge, sg] of [[L, -1], [R, 1]]) {
           let dark = 9;
           for (let k = -3.5; k <= 0.5; k += 0.5) dark = Math.min(dark, lum(await px(sx(edge + sg * k), sy(440 - dy))));
           es.push(ratio(lum(await px(sx(edge + sg * 9), sy(440 - dy))), dark));
         }
       }
-      for (const dy of [20, 45, 70, 95]) for (const dx of [-62, 62]) rs.push(ratio(lum(await px(sx(o.x + dx), sy(440 - dy))), Lb));
+      for (const dy of type === 'viga' ? [hang + h * 0.5 - 24, hang + h * 0.5, hang + h * 0.5 + 24, hang + h * 0.5 + 48] : [20, 45, 70, 95]) for (const dx of [-62, 62]) rs.push(ratio(lum(await px(sx(o.x + dx), sy(440 - dy))), Lb));
     }
     out[['manana', 'mediodia', 'tarde', 'noche'][day]] = { min: +Math.min(...rs).toFixed(2), mean: +(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2), borde: +(es.reduce((a, b) => a + b, 0) / es.length).toFixed(2) };
   }

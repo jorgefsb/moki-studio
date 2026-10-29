@@ -31,6 +31,8 @@ async function boot() {
   if (import.meta.env.DEV || q.has('debug') || q.get('anim') === 'debug') {
     game.moki = {
       contrast: (type) => import('./debug/contrast.js').then((m) => m.measureContrast(game.scene.scenes[0], type)),
+      windows: (v) => import('./debug/windows.js').then((m) => m.measureWindows(game.scene.scenes[0], v)),
+      overlaps: (v) => import('./debug/overlaps.js').then((m) => m.measureOverlaps(game.scene.scenes[0], v)),
       cfg: CONFIG, // perillas vivas, para barrer valores sin recargar
       // Tiempos de apertura (ms desde el inicio de la navegación): primer pintado, scripts listos, escena lista y primer cuadro con Moki
       timing() {

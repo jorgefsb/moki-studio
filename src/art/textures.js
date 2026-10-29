@@ -355,12 +355,12 @@ function block(x, ox, oy, w, h, { body, tape, seed }) {
   x.strokeStyle = rgba(PAL.paper, 0.7);
   x.stroke();
   x.restore();
-  // perfil exterior de tinta #22211F al 28%, de 1 px, alrededor de la silueta (T3e): separa el cartón del fondo sin tocar la colina
+  // perfil exterior de tinta #22211F (40%, 2 px), alrededor de la silueta (T3e): separa el cartón del fondo sin tocar la colina
   x.save();
   x.beginPath();
-  x.roundRect(ox - 1.5, oy - 1.5, w + 3, h + 3, 7.5);
-  x.lineWidth = 1;
-  x.strokeStyle = rgba(PAL.ink, 0.3);
+  x.roundRect(ox - 1, oy - 1, w + 2, h + 2, 7);
+  x.lineWidth = 2; // T3f: a 375 px (zoom 0.69) el perfil de 1 px se diluía: 2 px y 40%
+  x.strokeStyle = rgba(PAL.ink, 0.4);
   x.stroke();
   x.restore();
   x.fillStyle = body;
@@ -416,6 +416,12 @@ function block(x, ox, oy, w, h, { body, tape, seed }) {
     x.fillRect(tx, oy, 2, th);
     x.fillRect(tx + tw - 2, oy, 2, th);
   }
+  // canto interior de tinta (T3f): oscurece el borde del cartón para que a 375 px la silueta se separe del fondo
+  x.strokeStyle = rgba(PAL.ink, 0.5);
+  x.lineWidth = 3;
+  x.beginPath();
+  path(x);
+  x.stroke();
   x.restore();
 }
 
