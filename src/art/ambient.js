@@ -127,9 +127,15 @@ export class Ambient {
     const far = lerpColor(this.tone(d.from, 'far'), this.tone(d.to, 'far'), d.t);
     s.sky.setTint(toTint(sk));
     s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo
-    s.far.setTint(far);
+    // de noche los planos cercanos más oscuros que los lejanos: casitas (lejano) y pino (medio) un paso bajo el cielo
+    const P = NI.planes;
+    const dark = (c, k) => lerpColor(c, 0, P.on ? k * nt : 0);
+    s.far.setTint(dark(far, P.far));
     if (s.textures.exists('far')) s.far.setAlpha(this.farAlpha());
-    s.mid.setTint(0xffffff);
+    s.mid.setTint(dark(0xffffff, P.mid));
+    // horizonte de noche un poco más claro y frío: el degradado kraft del cielo vira a papel frío
+    if (NI.horizon.on && nt > 0) s.skyGrad.setTintFill(lerpColor(hex(PAL.kraft), NI.horizon.color, nt));
+    else s.skyGrad.clearTint();
     // perspectiva atmosférica: los velos de cada capa toman el color del cielo de la hora (de noche, tinta cálida)
     if (s.farVeil) {
       s.farVeil.setTintFill(sk);
@@ -137,7 +143,10 @@ export class Ambient {
       const A2 = C.atmosphere;
       if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha((A2.far + (NI.far - A2.far) * nt) * this.farAlpha());
       if (s.midVeil.texture.key === 'mid') s.midVeil.setAlpha(A2.mid + (NI.mid - A2.mid) * nt);
-      s.nearVeil.setAlpha(A2.near + (NI.near - A2.near) * nt);
+      // suelo de noche: el velo cercano toma el tono de la cordillera (menos luz y menos saturado) en vez de tinta sola
+      const G = NI.ground;
+      s.nearVeil.setFillStyle(G.on ? lerpColor(hex(PAL.ink), G.color, nt) : hex(PAL.ink), 1);
+      s.nearVeil.setAlpha(A2.near + ((G.on ? G.alpha : NI.near) - A2.near) * nt);
       // cordillera extra: de día casi del color del cielo; de noche rellena hacia tinta (#3a342d) para no verse niebla
       const ridgeDay = lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix);
       s.ridge.setTintFill(lerpColor(ridgeDay, NI.ridgeLight.on ? NI.ridgeLight.color : NI.ridge, nt));

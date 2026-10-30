@@ -21,7 +21,8 @@ const lum = (c) => {
 };
 const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
-export async function measureContrast(s, type = 'torre', days = [0, 1, 2, 3]) {
+// probe 'esquinas' repite la sonda de borde de 80fd671 en la viga (tres alturas), para comparar con la de los lados
+export async function measureContrast(s, type = 'torre', days = [0, 1, 2, 3], probe = 'lados') {
   const px = (x, y) => new Promise((res) => s.game.renderer.snapshotPixel(Math.round(x), Math.round(y), (c) => res([c.r, c.g, c.b])));
   const out = {};
   let used;
@@ -73,11 +74,22 @@ export async function measureContrast(s, type = 'torre', days = [0, 1, 2, 3]) {
         continue;
       }
       const e0 = es.length;
-      for (const dy of [hang + h * 0.3, hang + h * 0.55, hang + h * 0.8]) {
+      // viga (director, 30-oct): solo el punto medio de los lados rectos, lejos (>= 8 px) de las esquinas redondeadas,
+      // donde el contorno de papel empata con la cordillera. Torre y caja siguen igual que en 80fd671.
+      const oneEdge = type === 'viga' && probe === 'lados';
+      const edgeDy = oneEdge ? [hang + h * 0.5] : [hang + h * 0.3, hang + h * 0.55, hang + h * 0.8];
+      for (const dy of edgeDy) {
         for (const [edge, sg] of [[L, -1], [R, 1]]) {
           let dark = 9;
-          for (let k = -3.5; k <= 0.5; k += 0.5) dark = Math.min(dark, lum(await px(sx(edge + sg * k), sy(440 - dy))));
-          es.push(ratio(lum(await px(sx(edge + sg * 9), sy(440 - dy))), dark));
+          let light = 0;
+          for (let k = -3.5; k <= 0.5; k += 0.5) {
+            const l = lum(await px(sx(edge + sg * k), sy(440 - dy)));
+            dark = Math.min(dark, l);
+            light = Math.max(light, l);
+          }
+          const bg = lum(await px(sx(edge + sg * 9), sy(440 - dy)));
+          // viga con contorno de papel: el canto que se ve es el más contrastado, el cuerpo oscuro o el contorno claro
+          es.push(oneEdge ? Math.max(ratio(bg, dark), ratio(bg, light)) : ratio(bg, dark));
         }
       }
       porD.push(+(es.slice(e0).reduce((a, b) => a + b, 0) / (es.length - e0)).toFixed(2));

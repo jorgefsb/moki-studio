@@ -32,7 +32,7 @@ async function boot() {
   const q = new URLSearchParams(window.location.search);
   if (import.meta.env.DEV || q.has('debug') || q.get('anim') === 'debug') {
     game.moki = {
-      contrast: (type, days) => import('./debug/contrast.js').then((m) => m.measureContrast(game.scene.scenes[0], type, days)),
+      contrast: (type, days, probe) => import('./debug/contrast.js').then((m) => m.measureContrast(game.scene.scenes[0], type, days, probe)),
       windows: (v) => import('./debug/windows.js').then((m) => m.measureWindows(game.scene.scenes[0], v)),
       overlaps: (v) => import('./debug/overlaps.js').then((m) => m.measureOverlaps(game.scene.scenes[0], v)),
       meter: (cmd) => import('./debug/meter.js').then((m) => (cmd === 'start' ? m.startMeter(audioFacade) : cmd === 'stop' ? m.stopMeter() : m.readMeter())),
