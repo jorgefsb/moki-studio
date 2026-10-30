@@ -140,22 +140,27 @@ export const CONFIG = {
   // ridgeLight: cordillera nocturna más clara, kraft apagado (on false regresa a ridge #3a342d). Con #4a4036 la viga
   // quedaba en 1.26 a D=317 (la viñeta oscurece la orilla derecha); #625545 es lo mínimo que pasó en las 5 posiciones.
   // vigaDim: cuánto se oscurece la viga de noche hacia tinta (caja y torre siguen en 0.7).
-  // vigaOutline: contorno de papel solo en la viga de noche (ARTE.md: todo peligro con contorno claro). 2 px al 88%:
-  // a 68% no se veía en celular. moki.contrast mide la viga solo a media altura de los lados (lejos de las esquinas).
+  // vigaOutline: contorno de papel solo en la viga de noche (ARTE.md: todo peligro con contorno claro). 3 px al 100%
+  // (director, 30-oct): a 375 el de 2 px al 88% se veía como línea fina. moki.contrast mide el píxel más claro del
+  // contorno contra el fondo 9 px afuera, en el punto medio de los lados (lejos de las esquinas).
   atmosphere: {
     on: true, far: 0.2, mid: 0.12, near: 0.16,
     night: {
       far: 0.08, mid: 0.05, near: 0.26, sky: 0.22, ridge: 0x3a342d,
       ridgeLight: { on: true, color: 0x625545 },
-      vigaOutline: { on: true, alpha: 0.88, width: 2 },
+      vigaOutline: { on: true, alpha: 1, width: 3 },
       vigaDim: 0.95,
       // v2 (30-oct, director): de noche los planos cercanos más oscuros que los lejanos y el horizonte más claro y frío.
-      // ground: el velo del suelo y el frente toma el tono de la cordillera (color) con alfa alpha en vez de tinta a near.
+      // ground: el velo del suelo y el frente toma el tono de la cordillera (color) con alfa alpha en vez de tinta a near;
+      // dim baja ese tono hacia negro (0.08 = -8% de luminosidad, director 30-oct: el primer plano es lo más oscuro).
       // planes: cuánto se oscurecen (multiplicado) las casitas del plano lejano y el pino del medio; el medio más.
-      // far en 0: el plano lejano trae también los cerros detrás de la torre; con far 0.12 la torre bajaba de 3.27 a 2.66.
+      // far 0.06 (director): casitas un paso más oscuras; el plano lejano trae los cerros detrás de la torre (far 0.12
+      // la bajaba de 3.27 a 2.66).
+      // fibers: fibras de papel encima del velo del suelo de noche (el velo al 70% las borraba), alfa a noche plena.
       // horizon: el degradado del cielo junto al horizonte (skyGrad, hasta 26%) pasa de kraft a papel frío (#B7B3AD).
-      ground: { on: true, color: 0x625545, alpha: 0.7 },
-      planes: { on: true, far: 0, mid: 0.24 },
+      ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.08 },
+      planes: { on: true, far: 0.06, mid: 0.24 },
+      fibers: { on: true, alpha: 0.09 },
       horizon: { on: true, color: 0xb7b3ad },
     },
   },

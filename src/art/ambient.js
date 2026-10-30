@@ -145,8 +145,9 @@ export class Ambient {
       if (s.midVeil.texture.key === 'mid') s.midVeil.setAlpha(A2.mid + (NI.mid - A2.mid) * nt);
       // suelo de noche: el velo cercano toma el tono de la cordillera (menos luz y menos saturado) en vez de tinta sola
       const G = NI.ground;
-      s.nearVeil.setFillStyle(G.on ? lerpColor(hex(PAL.ink), G.color, nt) : hex(PAL.ink), 1);
+      s.nearVeil.setFillStyle(G.on ? lerpColor(hex(PAL.ink), lerpColor(G.color, 0, G.dim), nt) : hex(PAL.ink), 1);
       s.nearVeil.setAlpha(A2.near + ((G.on ? G.alpha : NI.near) - A2.near) * nt);
+      if (s.groundFibers) s.groundFibers.setAlpha(NI.fibers.on ? NI.fibers.alpha * nt : 0);
       // cordillera extra: de día casi del color del cielo; de noche rellena hacia tinta (#3a342d) para no verse niebla
       const ridgeDay = lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix);
       s.ridge.setTintFill(lerpColor(ridgeDay, NI.ridgeLight.on ? NI.ridgeLight.color : NI.ridge, nt));

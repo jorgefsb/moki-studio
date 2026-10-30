@@ -116,6 +116,8 @@ export class RunScene extends Phaser.Scene {
     this.midVeil = a('paper', 3.05).setAlpha(0).setTintFill(0xf4e8d5).setVisible(atm);
     // El frente y el suelo van hacia tinta (no hacia el cielo): el plano cercano es el más oscuro
     this.nearVeil = this.add.rectangle(0, 0, 10, 10, Phaser.Display.Color.HexStringToColor(PAL.ink).color, 1).setOrigin(0, 0).setDepth(4.6).setAlpha(C.atmosphere.near).setVisible(atm);
+    // Fibras del suelo de noche, encima del velo cercano (alfa 0 de día, lo sube Ambient)
+    this.groundFibers = this.add.tileSprite(0, 0, 10, 10, 'groundFibers').setOrigin(0, 0).setDepth(4.65).setAlpha(0).setVisible(atm);
     // Luz de lámpara: halo cálido y viñeta de tinta, multiplicados sobre todo menos el HUD
     this.light = this.add.image(0, 0, 'light').setOrigin(0, 0).setDepth(30).setBlendMode(Phaser.BlendModes.MULTIPLY).setVisible(C.light.on);
     this.surface = a('groundSurface', 4);
@@ -312,6 +314,7 @@ export class RunScene extends Phaser.Scene {
     this.canto.setPosition(0, g + 14).setSize(this.vw, 6);
     const frontH = Math.max(40, this.bottom - (g + 20));
     this.nearVeil.setPosition(0, g - 8).setSize(this.vw, this.bottom - (g - 8));
+    this.groundFibers.setPosition(0, g - 8).setSize(this.vw, this.bottom - (g - 8));
     this.front.setPosition(0, g + 20).setSize(this.vw, frontH);
     this.shade.setPosition(0, g + 20).setDisplaySize(this.vw, frontH);
     this.folds.forEach((f) => f.destroy());
@@ -882,6 +885,7 @@ export class RunScene extends Phaser.Scene {
     this.surface.tilePositionX = this.dist;
     this.canto.tilePositionX = this.dist;
     this.front.tilePositionX = this.dist;
+    this.groundFibers.tilePositionX = this.dist;
     this.folds.forEach((f) => (f.tilePositionX = this.dist));
 
     // Profundidad con el salto: las capas lejanas bajan unos px cuando Moki sube (sin zoom de cámara).

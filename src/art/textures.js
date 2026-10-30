@@ -196,6 +196,13 @@ const ground = {
     x.fillRect(0, 5, 256, 1);
     return c;
   },
+  // Fibras de papel sueltas para encima del velo del suelo de noche (el alfa lo pone Ambient: C.atmosphere.night.fibers).
+  fibrasNoche() {
+    const [c, x] = mk(256, 256);
+    const r = rng(23);
+    fibers(x, 256, 256, r, { count: 260, color: PAL.paper, alpha: 1, len: [6, 22] });
+    return c;
+  },
   fold() {
     const [c, x] = mk(256, 6);
     x.fillStyle = rgba(PAL.ink, 0.22);
@@ -1099,6 +1106,7 @@ export function buildTextures(scene) {
   add('groundSurface', ground.surface());
   add('groundCanto', ground.canto());
   add('groundFold', ground.fold());
+  add('groundFibers', ground.fibrasNoche());
   add('shadow', shadowTex());
   add('caja', caja());
   add('torre', torre());

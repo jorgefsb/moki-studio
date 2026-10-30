@@ -74,8 +74,8 @@ export async function measureContrast(s, type = 'torre', days = [0, 1, 2, 3], pr
         continue;
       }
       const e0 = es.length;
-      // viga (director, 30-oct): solo el punto medio de los lados rectos, lejos (>= 8 px) de las esquinas redondeadas,
-      // donde el contorno de papel empata con la cordillera. Torre y caja siguen igual que en 80fd671.
+      // viga (sonda aceptada por arte, 30-oct): el píxel más claro del contorno de papel contra el fondo 9 px afuera, en
+      // el punto medio de los lados rectos (>= 10 px de las esquinas redondeadas). Torre y caja siguen igual que en 80fd671.
       const oneEdge = type === 'viga' && probe === 'lados';
       const edgeDy = oneEdge ? [hang + h * 0.5] : [hang + h * 0.3, hang + h * 0.55, hang + h * 0.8];
       for (const dy of edgeDy) {
@@ -88,8 +88,7 @@ export async function measureContrast(s, type = 'torre', days = [0, 1, 2, 3], pr
             light = Math.max(light, l);
           }
           const bg = lum(await px(sx(edge + sg * 9), sy(440 - dy)));
-          // viga con contorno de papel: el canto que se ve es el más contrastado, el cuerpo oscuro o el contorno claro
-          es.push(oneEdge ? Math.max(ratio(bg, dark), ratio(bg, light)) : ratio(bg, dark));
+          es.push(oneEdge ? ratio(bg, light) : ratio(bg, dark));
         }
       }
       porD.push(+(es.slice(e0).reduce((a, b) => a + b, 0) / (es.length - e0)).toFixed(2));
