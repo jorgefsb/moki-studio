@@ -143,6 +143,9 @@ export const CONFIG = {
   // vigaOutline: contorno de papel solo en la viga de noche (ARTE.md: todo peligro con contorno claro). 3 px al 100%
   // (director, 30-oct): a 375 el de 2 px al 88% se veía como línea fina. moki.contrast mide el píxel más claro del
   // contorno contra el fondo 9 px afuera, en el punto medio de los lados (lejos de las esquinas).
+  // NO APAGAR vigaOutline de noche (director, 30-oct): sin contorno el cuerpo de la viga queda flojo contra el fondo
+  // (sonda 'esquinas' 1.56-2.83 en 3 de 5 posiciones); la viga se lee gracias al contorno. Torre a 1280 de noche
+  // pasa por 0.02 (2.02): no oscurecer nada de la noche antes del congelado.
   atmosphere: {
     on: true, far: 0.2, mid: 0.12, near: 0.16,
     night: {
