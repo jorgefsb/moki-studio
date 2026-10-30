@@ -138,6 +138,8 @@ export class Ambient {
     // horizonte de noche un poco más claro y frío: el degradado kraft del cielo vira a papel frío
     if (NI.horizon.on && nt > 0) s.skyGrad.setTintFill(lerpColor(hex(PAL.kraft), NI.horizon.color, nt));
     else s.skyGrad.clearTint();
+    // banda del horizonte más clara detrás de la cordillera (setTint, no setTintFill: con fill el alfa no rebaja el color)
+    s.skyGlow.setTint(NI.horizon.color).setAlpha(NI.horizon.on ? (NI.horizon.glow || 0) * nt : 0);
     // perspectiva atmosférica: los velos de cada capa toman el color del cielo de la hora (de noche, tinta cálida)
     if (s.farVeil) {
       s.farVeil.setTintFill(sk);

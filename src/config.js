@@ -152,6 +152,9 @@ export const CONFIG = {
       far: 0.08, mid: 0.05, near: 0.26, sky: 0.22, ridge: 0x3a342d,
       // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
       // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
+      // ajuste de arte (30-oct): a 375 la cordillera #87755F se fundía con el cielo de atrás (brecha medida 3.0 puntos de L).
+      // Se queda #87755F y se aclara la banda del horizonte (horizon.glow). Oscurecerla a #77654F también daba 8.9 puntos,
+      // pero bajaba la torre a 1280 D=540 a 2.18. Medidas en evidencia/v2-cordillera.md.
       ridgeLight: { on: true, color: 0x87755f },
       vigaOutline: { on: true, alpha: 1, width: 3 },
       vigaDim: 0.95,
@@ -168,11 +171,14 @@ export const CONFIG = {
       ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.18 },
       planes: { on: true, far: 0.06, mid: 0.24 },
       fibers: { on: true, alpha: 0.09 },
-      horizon: { on: true, color: 0xb7b3ad },
+      // glow: banda clara del horizonte (degradado blanco con tinte color, alfa a noche plena) detrás de la cordillera. 0.85 deja
+      // la brecha cordillera-cielo a 375 en 8-10 puntos de L; 0.5 (cielo ~#9C8E7E, lo que arte estimó) solo daba 6.1.
+      horizon: { on: true, color: 0xb7b3ad, glow: 0.85 },
       // moonRim: borde de luna de papel en el lado izquierdo (la lámpara está arriba a la izquierda): silueta de Moki
       // (cuerpo y mochila) corrida px a la izquierda detrás del títere, y línea de px por fuera del canto izquierdo de la
       // viga. alpha sigue al fundido de la noche. shadow: la sombra de contacto de Moki sube de 0.28 a 0.28 + shadow de noche.
-      moonRim: { on: true, px: 1.5, alpha: 0.85, shadow: 0.1 },
+      // viga: false (veredicto de arte, 30-oct): la viga ya tiene su contorno de 3 px; el filo de luna extra se apaga.
+      moonRim: { on: true, px: 1.5, alpha: 0.85, shadow: 0.1, viga: false },
     },
   },
   // Gauntlet R0: cordillera extra detrás de los cerros (silueta de la capa lejana, más grande y casi color cielo)

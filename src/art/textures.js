@@ -543,7 +543,7 @@ function viga(dim = 0) {
   }
   // borde de luna: filo de papel por fuera del canto izquierdo (del lado de la lámpara), lejos de las esquinas redondeadas
   const M = C.atmosphere.night.moonRim;
-  if (dim && M.on) {
+  if (dim && M.on && M.viga) {
     x.fillStyle = rgba(PAL.paper, M.alpha);
     x.fillRect(2 - M.px, 8, M.px, 20);
   }
@@ -1105,6 +1105,8 @@ export function buildTextures(scene) {
   add('paper', paperTile());
   add('kraft', kraftTile());
   add('skyGrad', gradient(2, 320, [[0, rgba(PAL.kraft, 0)], [0.55, rgba(PAL.kraft, 0.06)], [1, rgba(PAL.kraft, 0.26)]]));
+  // noche (horizon.glow): banda clara del horizonte detrás de la cordillera; blanco con setTint para que el alfa la rebaje
+  add('skyGlow', gradient(2, 320, [[0, rgba('#FFFFFF', 0)], [0.25, rgba('#FFFFFF', 0.6)], [1, rgba('#FFFFFF', 1)]]));
   add('topFade', gradient(2, 64, [[0, rgba(PAL.paper, 1)], [1, rgba(PAL.paper, 0)]]));
   add('groundShade', gradient(2, 256, [[0, rgba(PAL.ink, 0)], [1, rgba(PAL.ink, 0.34)]]));
   add('light', lightLayer(C.light.halo, C.light.vignette));

@@ -100,6 +100,7 @@ export class RunScene extends Phaser.Scene {
     const a = (key, depth) => this.add.tileSprite(0, 0, 10, 10, key).setOrigin(0, 0).setDepth(depth);
     this.sky = a('paper', 0);
     this.skyGrad = this.add.image(0, 0, 'skyGrad').setOrigin(0, 0).setDepth(0.5);
+    this.skyGlow = this.add.image(0, 0, 'skyGlow').setOrigin(0, 0).setDepth(0.5).setAlpha(0);
     // capas de fondo: nacen invisibles con un papel de relleno y entran con fundido cuando su textura está lista
     this.clouds = a('paper', 1).setAlpha(0);
     // Velo de papel en el borde superior: las nubes se desvanecen en vez de cortarse en seco.
@@ -296,6 +297,7 @@ export class RunScene extends Phaser.Scene {
 
     this.sky.setPosition(0, this.top).setSize(this.vw, this.vh);
     this.skyGrad.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
+    this.skyGlow.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
     this.clouds.setPosition(0, g - 900).setSize(this.vw, 900);
     this.topFade.setPosition(0, this.top).setDisplaySize(this.vw, 56);
     // Las capas escaladas conservan su pie sobre el suelo; crecen hacia arriba
