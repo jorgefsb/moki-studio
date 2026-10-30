@@ -125,7 +125,7 @@ export class Ambient {
     const NI = C.atmosphere.night;
     this.nt = nt; // RunScene lo usa para la sombra de contacto de Moki de noche
     if (s.rig) s.rig.setRim(NI.moonRim.on ? NI.moonRim.alpha * nt : 0); // borde de luna de Moki, sigue al fundido
-    const sk =lerpColor(lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t), hex(PAL.ink), NI.sky * nt);
+    const sk = lerpColor(lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t), hex(PAL.ink), NI.sky * nt);
     const far = lerpColor(this.tone(d.from, 'far'), this.tone(d.to, 'far'), d.t);
     s.sky.setTint(toTint(sk));
     s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo
@@ -157,7 +157,7 @@ export class Ambient {
       const ridgeTint = lerpColor(ridgeDay, NI.ridgeLight.on ? NI.ridgeLight.color : NI.ridge, nt);
       s.ridge.setTintFill(ridgeTint);
       // de noche el faldón sigue el color y el fundido de la cordillera; de día no se dibuja (la mañana no cambia)
-      if (s.ridgeSkirt) s.ridgeSkirt.setFillStyle(ridgeTint, 1).setAlpha(NI.horizon.on ? s.ridge.alpha * nt : 0);
+      if (s.ridgeSkirt) s.ridgeSkirt.setFillStyle(ridgeTint, 1).setAlpha(NI.ridgeSkirt.on ? s.ridge.alpha * nt : 0);
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
@@ -188,7 +188,7 @@ export class Ambient {
     const box = s.bandBox;
     if (!g || !box) return;
     const B = H.band;
-    const on = H.on && B && nt > 0;
+    const on = H.on && B && B.on !== false && nt > 0;
     const key = on ? [nt.toFixed(3), box.foot, box.w, box.s, H.color, JSON.stringify(B)].join('|') : 'off';
     if (key === s.bandKey) return;
     s.bandKey = key;
