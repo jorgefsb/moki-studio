@@ -525,6 +525,15 @@ function viga(dim = 0) {
     x.arc(ox, 8, 2.2, 0, TAU);
     x.fill();
   }
+  // de noche, contorno de papel por dentro del canto para que no se funda con la cordillera
+  const O = C.atmosphere.night.vigaOutline;
+  if (dim && O.on) {
+    x.strokeStyle = rgba(PAL.paper, O.alpha);
+    x.lineWidth = O.width;
+    x.beginPath();
+    x.roundRect(2 + O.width / 2, 2 + O.width / 2, 91 - O.width, 32 - O.width, 6 - O.width / 2);
+    x.stroke();
+  }
   return c;
 }
 
@@ -1104,7 +1113,7 @@ export function buildTextures(scene) {
   defer('viga', () => viga());
   defer('caja_n', () => caja(0.7));
   defer('torre_n', () => torre(0.7));
-  defer('viga_n', () => viga(0.7));
+  defer('viga_n', () => viga(C.atmosphere.night.vigaDim));
   defer('hilo', () => hilo());
   defer('hand', () => hand());
   defer('keycap', () => keycap());

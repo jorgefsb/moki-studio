@@ -140,7 +140,7 @@ export class Ambient {
       s.nearVeil.setAlpha(A2.near + (NI.near - A2.near) * nt);
       // cordillera extra: de día casi del color del cielo; de noche rellena hacia tinta (#3a342d) para no verse niebla
       const ridgeDay = lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix);
-      s.ridge.setTintFill(lerpColor(ridgeDay, NI.ridge, nt));
+      s.ridge.setTintFill(lerpColor(ridgeDay, NI.ridgeLight.on ? NI.ridgeLight.color : NI.ridge, nt));
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
