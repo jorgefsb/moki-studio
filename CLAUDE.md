@@ -379,4 +379,47 @@ Referencia: ~/Work/_referencias/ccgs (Donchitos, MIT). Antes de cada vuelta, y s
 - Arte y fondo: art-director.md, technical-artist.md, world-builder.md
 - Niveles y feel: level-designer.md, gameplay-programmer.md, ux-designer.md
 - Audio: audio-director.md, sound-designer.md
+- Marketing y build in public: ~/Work/_referencias/marketingskills/skills (coreyhaines31, MIT), con el contexto .agents/product-marketing.md
 Anota en DECISIONES.md cuando una idea venga de esa calibración.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

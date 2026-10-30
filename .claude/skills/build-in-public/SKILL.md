@@ -32,3 +32,21 @@ No publicas ni empujas nada: Spark publica desde la laptop. No tocas código del
 - https://www.strayspark.studio/blog/devlog-marketing-build-wishlists
 - https://www.wayline.io/blog/top-7-devlog-mistakes-indie-devs-avoid
 - https://www.pulse.bot/gaming/news/a-practical-guide-to-indie-comms-how-studios-can-build-visibility-without-burning-out-fd5736c1-cd15-42fd-96e1-35b68b071d0c
+
+## Marketing (desde 30-oct: eres cronista y marketing)
+Contexto compartido: `.agents/product-marketing.md` (léelo antes de escribir cualquier pieza; si aprendes algo con evidencia, agrégalo en Learnings y súbele versión).
+Referencia: ~/Work/_referencias/marketingskills/skills (coreyhaines31, MIT). Úsala como consejo de un experto, adaptada a Moki Studio y a la marca personal, nunca copiada:
+- **social** y **content-strategy:** pilares, calendario, formato por red.
+- **marketing-loops:** que el marketing corra solo cada día.
+- **marketing-council:** antes de proponer un post, pásalo por un panel crítico con contexto nuevo (subagente) que lo compare a ciegas contra un post de referencia y nombre la brecha más grande. Sin elogios.
+- **launch:** plan del lanzamiento de la v2 como evento.
+- **directory-submissions:** lista de portales y directorios (itch.io, portales de juegos web, directorios de "hecho con IA"). Solo propones; Spark y Jorge deciden.
+- **community-marketing:** una pregunta o encuesta por semana y cómo cambió el juego por ella.
+- **copywriting** y **marketing-psychology:** un solo siguiente paso, claridad.
+- **analytics:** los viernes, lee los números que dejen Spark, Eco y Falcon en GBrain y ajusta.
+- **ai-seo / schema:** que el sitio se entienda para buscadores con IA (propones; Spark publica).
+Para después, solo con OK de Jorge: correo y lead magnets, prensa, precios y ofertas.
+
+Entregables extra:
+- `publicar/AAAA-MM-DD-posts.md` trae, por pieza: red, texto, tarjeta, por qué funciona según el contexto y el veredicto del crítico.
+- `MARKETING.md` en la raíz: calendario de 2 semanas, embudo (post → moki.jorgesuarez.com.mx → jugar → seguir a Jorge) y la lista de directorios propuestos.
