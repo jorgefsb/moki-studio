@@ -540,6 +540,14 @@ function viga(dim = 0) {
     x.beginPath();
     x.roundRect(2 + O.width / 2, 2 + O.width / 2, 91 - O.width, 32 - O.width, 6 - O.width / 2);
     x.stroke();
+    // línea de tinta por fuera del contorno: separa el papel claro de una nube clara detrás (veredicto de arte, 30-oct)
+    if (O.ink) {
+      x.strokeStyle = O.ink.color;
+      x.lineWidth = O.ink.px;
+      x.beginPath();
+      x.roundRect(2 - O.ink.px / 2, 2 - O.ink.px / 2, 91 + O.ink.px, 32 + O.ink.px, 6 + O.ink.px / 2);
+      x.stroke();
+    }
   }
   // borde de luna: filo de papel por fuera del canto izquierdo (del lado de la lámpara), lejos de las esquinas redondeadas
   const M = C.atmosphere.night.moonRim;
@@ -1105,8 +1113,6 @@ export function buildTextures(scene) {
   add('paper', paperTile());
   add('kraft', kraftTile());
   add('skyGrad', gradient(2, 320, [[0, rgba(PAL.kraft, 0)], [0.55, rgba(PAL.kraft, 0.06)], [1, rgba(PAL.kraft, 0.26)]]));
-  // noche (horizon.glow): banda clara del horizonte detrás de la cordillera; blanco con setTint para que el alfa la rebaje
-  add('skyGlow', gradient(2, 320, [[0, rgba('#FFFFFF', 0)], [0.25, rgba('#FFFFFF', 0.6)], [1, rgba('#FFFFFF', 1)]]));
   add('topFade', gradient(2, 64, [[0, rgba(PAL.paper, 1)], [1, rgba(PAL.paper, 0)]]));
   add('groundShade', gradient(2, 256, [[0, rgba(PAL.ink, 0)], [1, rgba(PAL.ink, 0.34)]]));
   add('light', lightLayer(C.light.halo, C.light.vignette));

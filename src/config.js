@@ -153,10 +153,12 @@ export const CONFIG = {
       // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
       // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
       // ajuste de arte (30-oct): a 375 la cordillera #87755F se fundía con el cielo de atrás (brecha medida 3.0 puntos de L).
-      // Se queda #87755F y se aclara la banda del horizonte (horizon.glow). Oscurecerla a #77654F también daba 8.9 puntos,
+      // Se queda #87755F y se aclara la banda del horizonte (horizon.band; antes glow). Oscurecerla a #77654F también daba 8.9 puntos,
       // pero bajaba la torre a 1280 D=540 a 2.18. Medidas en evidencia/v2-cordillera.md.
       ridgeLight: { on: true, color: 0x87755f },
-      vigaOutline: { on: true, alpha: 1, width: 3 },
+      // ajuste 2 de arte (30-oct): a 1280 el contorno de 3 px se fundía con una nube clara detrás (viga 2.19-2.21).
+      // 4 px (ARTE §3: canto de 4 a 6 px) y una línea de tinta de 1 px por fuera, solo en la viga.
+      vigaOutline: { on: true, alpha: 1, width: 4, ink: { color: '#22211F', px: 1 } },
       vigaDim: 0.95,
       // v2 (30-oct, director): de noche los planos cercanos más oscuros que los lejanos y el horizonte más claro y frío.
       // ground: el velo del suelo y el frente toma el tono de la cordillera (color) con alfa alpha en vez de tinta a near;
@@ -171,9 +173,14 @@ export const CONFIG = {
       ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.18 },
       planes: { on: true, far: 0.06, mid: 0.24 },
       fibers: { on: true, alpha: 0.09 },
-      // glow: banda clara del horizonte (degradado blanco con tinte color, alfa a noche plena) detrás de la cordillera. 0.85 deja
-      // la brecha cordillera-cielo a 375 en 8-10 puntos de L; 0.5 (cielo ~#9C8E7E, lo que arte estimó) solo daba 6.1.
-      horizon: { on: true, color: 0xb7b3ad, glow: 0.85 },
+      // band: banda clara del horizonte detrás de la cordillera en tiras planas de papel (ajuste 2 de arte, 30-oct: el
+      // degradado glow 0.85 se leía como niebla). strips = [alto sobre el pie de la cordillera en px de mundo (× farS), alfa
+      // a noche plena], de abajo (la más clara) hacia arriba. canto: filo claro arriba de cada tira; shadow: sombra de contacto
+      // tenue sobre la tira de atrás. Medidas en evidencia/v2-banda.md.
+      horizon: {
+        on: true, color: 0xb7b3ad,
+        band: { strips: [[235, 0.27], [275, 0.2], [315, 0.14]], canto: { px: 2, alpha: 0.12 }, shadow: { px: 3, alpha: 0.1 } },
+      },
       // moonRim: borde de luna de papel en el lado izquierdo (la lámpara está arriba a la izquierda): silueta de Moki
       // (cuerpo y mochila) corrida px a la izquierda detrás del títere, y línea de px por fuera del canto izquierdo de la
       // viga. alpha sigue al fundido de la noche. shadow: la sombra de contacto de Moki sube de 0.28 a 0.28 + shadow de noche.

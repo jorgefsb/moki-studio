@@ -100,7 +100,8 @@ export class RunScene extends Phaser.Scene {
     const a = (key, depth) => this.add.tileSprite(0, 0, 10, 10, key).setOrigin(0, 0).setDepth(depth);
     this.sky = a('paper', 0);
     this.skyGrad = this.add.image(0, 0, 'skyGrad').setOrigin(0, 0).setDepth(0.5);
-    this.skyGlow = this.add.image(0, 0, 'skyGlow').setOrigin(0, 0).setDepth(0.5).setAlpha(0);
+    // noche: banda del horizonte en tiras planas de papel (la dibuja Ambient.drawBand detrás de la cordillera)
+    this.skyBand = this.add.graphics().setDepth(0.5).setVisible(false);
     // capas de fondo: nacen invisibles con un papel de relleno y entran con fundido cuando su textura está lista
     this.clouds = a('paper', 1).setAlpha(0);
     // Velo de papel en el borde superior: las nubes se desvanecen en vez de cortarse en seco.
@@ -110,6 +111,8 @@ export class RunScene extends Phaser.Scene {
     this.sun = this.add.image(0, 0, 'sun').setDepth(1.8).setVisible(atm);
     this.ridge = a('paper', 1.9).setAlpha(0).setTintFill(0xf4e8d5).setVisible(atm);
     this.far = a('paper', 2).setAlpha(0);
+    // noche: faldón de la cordillera (de su pie al suelo) para que no asome por el hueco una franja clara de cielo con borde duro
+    this.ridgeSkirt = this.add.rectangle(0, 0, 10, 10, 0, 1).setOrigin(0, 0).setDepth(1.9).setAlpha(0).setVisible(atm);
     this.mid = a('paper', 3).setAlpha(0);
     // Perspectiva atmosférica: la misma capa pintada del color del cielo (tintFill) encima, con alfa baja (C.atmosphere).
     // Solo cubre las siluetas, así el papel del cielo no se aplana. El color lo pone Ambient.applyDay según la hora.
@@ -297,7 +300,6 @@ export class RunScene extends Phaser.Scene {
 
     this.sky.setPosition(0, this.top).setSize(this.vw, this.vh);
     this.skyGrad.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
-    this.skyGlow.setPosition(0, g - 320).setDisplaySize(this.vw, 320);
     this.clouds.setPosition(0, g - 900).setSize(this.vw, 900);
     this.topFade.setPosition(0, this.top).setDisplaySize(this.vw, 56);
     // Las capas escaladas conservan su pie sobre el suelo; crecen hacia arriba
@@ -308,6 +310,11 @@ export class RunScene extends Phaser.Scene {
     this.ridgeS = this.farS * R.scale;
     this.base.ridge = g + 12 - R.lift - 300 * this.ridgeS;
     this.ridge.setPosition(0, this.base.ridge).setSize(this.vw, 300 * this.ridgeS).setTileScale(this.ridgeS);
+    // la banda del horizonte termina en el pie de la cordillera: debajo no asoma su borde (corte duro a 1280)
+    this.bandBox = { foot: g + 12 - R.lift, w: this.vw, s: this.farS };
+    this.ridgeSkirt.setPosition(0, g + 12 - R.lift).setSize(this.vw, R.lift);
+    this.bandKey = null;
+    if (this.ambient) this.ambient.drawBand(C.atmosphere.night.horizon, this.ambient.nt || 0); // al cambiar de tamaño de noche
     this.sun.setPosition(this.vw * C.sun.x, g - C.sun.y * this.farS);
     this.farVeil.setPosition(0, this.base.far).setSize(this.vw, 300 * this.farS).setTileScale(this.farS);
     this.midVeil.setPosition(0, this.base.mid).setSize(this.vw, 360 * this.midS).setTileScale(this.midS);
