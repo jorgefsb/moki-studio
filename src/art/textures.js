@@ -541,6 +541,12 @@ function viga(dim = 0) {
     x.roundRect(2 + O.width / 2, 2 + O.width / 2, 91 - O.width, 32 - O.width, 6 - O.width / 2);
     x.stroke();
   }
+  // borde de luna: filo de papel por fuera del canto izquierdo (del lado de la lámpara), lejos de las esquinas redondeadas
+  const M = C.atmosphere.night.moonRim;
+  if (dim && M.on) {
+    x.fillStyle = rgba(PAL.paper, M.alpha);
+    x.fillRect(2 - M.px, 8, M.px, 20);
+  }
   return c;
 }
 

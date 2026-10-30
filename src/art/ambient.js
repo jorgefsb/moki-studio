@@ -123,7 +123,9 @@ export class Ambient {
     // de noche el cielo baja hacia tinta, los velos casi se van y la cordillera se rellena hacia tinta.
     const nt = d.to === 3 ? d.t : d.from === 3 ? 1 - d.t : 0;
     const NI = C.atmosphere.night;
-    const sk = lerpColor(lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t), hex(PAL.ink), NI.sky * nt);
+    this.nt = nt; // RunScene lo usa para la sombra de contacto de Moki de noche
+    if (s.rig) s.rig.setRim(NI.moonRim.on ? NI.moonRim.alpha * nt : 0); // borde de luna de Moki, sigue al fundido
+    const sk =lerpColor(lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t), hex(PAL.ink), NI.sky * nt);
     const far = lerpColor(this.tone(d.from, 'far'), this.tone(d.to, 'far'), d.t);
     s.sky.setTint(toTint(sk));
     s.topFade.setTint(toTint(sk)); // el velo de arriba toma el color del cielo

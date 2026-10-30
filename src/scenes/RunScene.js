@@ -1157,7 +1157,9 @@ export class RunScene extends Phaser.Scene {
     const f = 1 / (1 + air / 150);
     this.mokiShadow.setPosition(this.px + 8, g + 1);
     this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.12), 22 * (0.6 + 0.4 * f));
-    this.mokiShadow.setAlpha(0.28 * (0.4 + 0.6 * f));
+    const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
+    const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
+    this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f));
 
     if (this.debugEl) {
       const d = this.rig.debug;

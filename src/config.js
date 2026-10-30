@@ -150,7 +150,9 @@ export const CONFIG = {
     on: true, far: 0.2, mid: 0.12, near: 0.16,
     night: {
       far: 0.08, mid: 0.05, near: 0.26, sky: 0.22, ridge: 0x3a342d,
-      ridgeLight: { on: true, color: 0x625545 },
+      // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
+      // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
+      ridgeLight: { on: true, color: 0x87755f },
       vigaOutline: { on: true, alpha: 1, width: 3 },
       vigaDim: 0.95,
       // v2 (30-oct, director): de noche los planos cercanos más oscuros que los lejanos y el horizonte más claro y frío.
@@ -161,10 +163,16 @@ export const CONFIG = {
       // la bajaba de 3.27 a 2.66).
       // fibers: fibras de papel encima del velo del suelo de noche (el velo al 70% las borraba), alfa a noche plena.
       // horizon: el degradado del cielo junto al horizonte (skyGrad, hasta 26%) pasa de kraft a papel frío (#B7B3AD).
-      ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.08 },
+      // ground.color se queda en el tono viejo de la cordillera (#625545) y dim 0.18 (escalera de valores): el suelo y el
+      // canto de juego quedan más oscuros que cualquier plano de atrás.
+      ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.18 },
       planes: { on: true, far: 0.06, mid: 0.24 },
       fibers: { on: true, alpha: 0.09 },
       horizon: { on: true, color: 0xb7b3ad },
+      // moonRim: borde de luna de papel en el lado izquierdo (la lámpara está arriba a la izquierda): silueta de Moki
+      // (cuerpo y mochila) corrida px a la izquierda detrás del títere, y línea de px por fuera del canto izquierdo de la
+      // viga. alpha sigue al fundido de la noche. shadow: la sombra de contacto de Moki sube de 0.28 a 0.28 + shadow de noche.
+      moonRim: { on: true, px: 1.5, alpha: 0.85, shadow: 0.1 },
     },
   },
   // Gauntlet R0: cordillera extra detrás de los cerros (silueta de la capa lejana, más grande y casi color cielo)
