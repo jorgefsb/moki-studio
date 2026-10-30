@@ -30,6 +30,18 @@ Hacemos juegos web chiquitos y divertidos de Moki. Hecho gana a perfecto, pero n
 - Una mecánica que se sienta bien vale más que cinco a medias.
 - Moki nunca se espeja. Marca personal de Jorge, nada de otras empresas.
 - No se publica nada desde aquí. Cero llaves, cero dinero.
+- Comandos simples, uno por llamada, sin variables de shell ni cadenas largas con pipes: así no se traba nadie esperando permiso.
+
+## Recursos de la máquina
+
+Omarchy es vieja (4 núcleos, 7.5 GB). El conserje (~/.local/bin/moki-conserje, timer de systemd cada 2 min) limpia navegadores olvidados y pestañas dormidas y publica el semáforo en /tmp/moki-recursos.txt.
+
+- Builds, pruebas y capturas pesadas: flock /tmp/moki-pesado.lock <comando>, uno a la vez.
+- Un solo vite por worktree; el de :5180 es la vista en vivo de Jorge y no se toca.
+- Cierra tus pestañas y navegadores al terminar.
+- Nada de npm install en paralelo.
+- En ROJO no arranques nada pesado; el productor serializa o pausa al asiento menos prioritario.
+- Asiento que termina su entrega se da de baja.
 
 <!-- END OpenRig MANAGED BLOCK: CULTURE.md -->
 
@@ -279,3 +291,92 @@ OpenRig seat skills: if `OPENRIG_SESSION_NAME` is set, run `rig skill loadout --
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Calibración con Claude-Code-Game-Studios (pedido de Jorge, 30-oct)
+Referencia: ~/Work/_referencias/ccgs (Donchitos, MIT). Antes de cada vuelta, y siempre que dudes, lee la ficha del rol equivalente en .claude/agents/ y las skills útiles en .claude/skills/ de esa carpeta. Tómala como consejo directo de un experto en ese rol: adáptala a nuestra arquitectura (OpenRig, Phaser, web, cartón, marca personal), nunca la copies literal ni metas su estructura completa.
+- Director de juego: creative-director.md, game-designer.md, systems-designer.md
+- Productor: producer.md, release-manager.md
+- Probador: qa-lead.md, qa-tester.md, performance-analyst.md
+- Cronista: community-manager.md, writer.md, analytics-engineer.md
+- Arte y fondo: art-director.md, technical-artist.md, world-builder.md
+- Niveles y feel: level-designer.md, gameplay-programmer.md, ux-designer.md
+- Audio: audio-director.md, sound-designer.md
+Anota en DECISIONES.md cuando una idea venga de esa calibración.
