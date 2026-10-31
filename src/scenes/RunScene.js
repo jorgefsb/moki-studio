@@ -5,6 +5,7 @@ import { buildTextures } from '../art/textures.js';
 import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
 import { Ambient } from '../art/ambient.js';
+import { MID_PROPS, MID_WRAP, MID_H } from '../art/textures.js';
 import { createUI } from '../ui/ui.js';
 import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
@@ -815,6 +816,7 @@ export class RunScene extends Phaser.Scene {
     }
     this.stepWorld(step);
     this.stepEntities(step, dtMs);
+    this.stepMidProps();
     this.particles.update(dtMs, step);
     this.stepMoki(dtMs);
     this.stepHud();
@@ -1070,18 +1072,7 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       if (o.x < this.px - 60) o.passed = true;
       if (this.rewinding || this.god) continue;
-      const hs = o.type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink;
-      const ol = o.x - o.size.width / 2 + hs.x;
-      const or = o.x + o.size.width / 2 - hs.x;
-      let ot;
-      let ob;
-      if (o.type === 'viga') {
-        ob = g - o.size.hangBottom;
-        ot = ob - o.size.height;
-      } else {
-        ot = g - o.size.height + hs.top;
-        ob = g;
-      }
+      const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
         this.crash(o);
         break;
@@ -1089,6 +1080,86 @@ export class RunScene extends Phaser.Scene {
     }
     void step;
     void dtMs;
+  }
+
+  // Caja de colisión de un obstáculo en coordenadas de mundo (la misma que usa el choque)
+  obsBox(type, x) {
+    const g = C.world.groundY;
+    const size = C.obstacleSizes[type];
+    const hs = type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink;
+    const l = x - size.width / 2 + hs.x;
+    const r = x + size.width / 2 - hs.x;
+    if (type === 'viga') {
+      const b = g - size.hangBottom;
+      return { l, r, t: b - size.height, b };
+    }
+    return { l, r, t: g - size.height + hs.top, b: g };
+  }
+
+  // Pinos y postes de la capa media (recortes sueltos en vez de pintados en el mosaico): corren con la capa media y se
+  // desvanecen cuando la caja de colisión de un obstáculo, con C.art.midClear.marginPx de pantalla, se les acerca.
+  // Así el fondo nunca pone un poste o un pino detrás de un obstáculo (no se confunde con la torre). Solo visual.
+  stepMidProps() {
+    if (!this.textures.exists(MID_PROPS[0].key)) return;
+    const M = C.art.midClear;
+    const ms = this.midS;
+    const tp = this.mid.tilePositionX;
+    const y0 = this.mid.y;
+    const foot = y0 + (MID_H - 6) * ms;
+    const u0 = tp - 100;
+    const u1 = tp + this.vw / ms + 100;
+    const boxes = [];
+    if (M.on && this.level) {
+      const mg = M.marginPx / this.zoom;
+      const lo = this.dist - this.px - 300;
+      const hi = this.dist - this.px + this.vw + 300;
+      for (const e of this.level.entities) {
+        if (e.kind !== 'obs' || e.D < lo || e.D > hi) continue;
+        const b = this.obsBox(e.type, this.px + e.D - this.dist);
+        boxes.push({ l: b.l - mg, r: b.r + mg, t: b.t - mg, b: b.b + mg });
+      }
+    }
+    const fade = Math.max(1, M.fadePx / this.zoom);
+    const pool = (this.midPool = this.midPool || []);
+    const bodyTint = this.mid.tintTopLeft;
+    const veilTint = this.midVeil.tintTopLeft;
+    let n = 0;
+    for (let k = Math.floor(u0 / MID_WRAP); k * MID_WRAP <= u1; k++) {
+      for (const p of MID_PROPS) {
+        const u = k * MID_WRAP + p.u;
+        if (u + p.half < u0 || u - p.half > u1) continue;
+        const l = (u - p.half - tp) * ms;
+        const r = (u + p.half - tp) * ms;
+        const t = foot - p.h * ms;
+        let a = 1;
+        for (const b of boxes) {
+          if (t >= b.b || foot <= b.t) continue;
+          a = Math.min(a, Phaser.Math.Clamp(Math.max(b.l - r, l - b.r) / fade, 0, 1));
+        }
+        if (!pool[n]) {
+          pool[n] = {
+            body: this.add.image(0, 0, p.key).setOrigin(0, 0).setDepth(2.99),
+            veil: this.add.image(0, 0, p.key).setOrigin(0, 0).setDepth(2.995),
+          };
+        }
+        const q = pool[n++];
+        q.prop = p;
+        q.inst = `${k}:${p.key}`;
+        q.box = { left: l, right: r, top: t, bottom: foot };
+        q.a = a;
+        const x = (k * MID_WRAP + p.ox - tp) * ms;
+        const y = y0 + p.oy * ms;
+        q.body.setTexture(p.key).setPosition(x, y).setScale(ms).setTint(bodyTint).setAlpha(this.mid.alpha * a).setVisible(a > 0);
+        q.veil.setTexture(p.key).setPosition(x, y).setScale(ms).setTintFill(veilTint).setAlpha(this.midVeil.alpha * a)
+          .setVisible(a > 0 && this.midVeil.visible);
+      }
+    }
+    for (let i = n; i < pool.length; i++) {
+      pool[i].body.setVisible(false);
+      pool[i].veil.setVisible(false);
+      pool[i].a = 0;
+    }
+    this.midPoolN = n;
   }
 
   collect(k) {
@@ -1566,6 +1637,7 @@ export class RunScene extends Phaser.Scene {
     this.stepJump(dt);
     this.stepWorld(step);
     this.placeEntities();
+    this.stepMidProps();
     this.particles.update(dtMs, step);
     this.stepMoki(dtMs);
     if (!this.finalShown && this.finalT >= 1200) {

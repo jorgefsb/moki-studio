@@ -335,25 +335,55 @@ function ridgeLayer() {
   return c;
 }
 
+// Pinos y postes de la capa media (en px de textura, pie en base = H - 6). Ya no van pintados en el mosaico:
+// cada uno es su propio recorte para que RunScene lo esconda cuando un obstáculo le pasa delante (BITACORA 29-oct 10:16).
+export const MID_H = 360;
+export const MID_WRAP = WRAP;
+const MID_PAD = 24; // la sombra de contacto (blur 10, dx 4, dy 6) no se corta
+// ox, oy: esquina del recorte en la textura del mosaico (incluye la sombra); half y h: la silueta, sin sombra
+const midProp = (p) => ({ ...p, ox: Math.floor(p.u - p.half - MID_PAD), oy: Math.floor(MID_H - 6 - p.h - MID_PAD) });
+export const MID_PROPS = [
+  ...[90, 520, 960, 1400, 1760].map((tx, i) => {
+    const s = 0.9 + (i % 3) * 0.12;
+    return midProp({ kind: 'pino', key: `midPino${i}`, u: tx, half: 58 * s, h: 194 * s, s });
+  }),
+  ...[300, 1180].map((px, i) => midProp({ kind: 'poste', key: `midPoste${i}`, u: px, half: 26, h: 168 })),
+];
+
+// Mismo dibujo y misma secuencia de la semilla 33 que el mosaico de antes: cada pino o poste se dibuja en un lienzo del
+// ancho del mosaico (las fibras se reparten sobre todo el lienzo) y luego se recorta a su caja con la sombra.
 function midLayer() {
-  const H = 360;
+  const H = MID_H;
   const [c, x] = mk(WRAP, H);
+  const [pc, px0] = mk(WRAP, H);
   const r = rng(33);
   const fill = TONE.kraftMid;
   const base = H - 6;
   const edge = (f) => ({ fill: f, edgeW: 3, shadow: { alpha: 0.2, blur: 10, dx: 4, dy: 6 }, r, fiberCount: 110 });
-  const each = (fn) => {
+  const each = (ctx, fn) => {
     for (const off of [-WRAP, 0, WRAP]) {
-      x.save();
-      x.translate(off, 0);
-      fn();
-      x.restore();
+      ctx.save();
+      ctx.translate(off, 0);
+      fn(ctx);
+      ctx.restore();
     }
   };
+  const props = [];
+  const crop = (p) => {
+    const x0 = p.ox;
+    const y0 = p.oy;
+    const w = Math.ceil(p.half * 2 + MID_PAD * 2);
+    const h = H - y0;
+    const [oc, ox] = mk(w, h);
+    ox.drawImage(pc, -x0, -y0);
+    props.push([p.key, oc]);
+    px0.clearRect(0, 0, WRAP, H);
+  };
   // árboles de cartón: tronco + tres triángulos doblados
-  [90, 520, 960, 1400, 1760].forEach((tx, i) => {
-    const s = 0.9 + (i % 3) * 0.12;
-    each(() => {
+  MID_PROPS.filter((p) => p.kind === 'pino').forEach((p) => {
+    const tx = p.u;
+    const s = p.s;
+    each(px0, (x) => {
       cut(x, (g) => g.roundRect(tx - 7, base - 70 * s, 14, 70 * s, 2), edge(TONE.kraftDark));
       const leaf = mix(PAL.kraft, PAL.ink, 0.1);
       [0, 1, 2].forEach((k) => {
@@ -382,20 +412,22 @@ function midLayer() {
         x.restore();
       });
     });
+    crop(p);
   });
   // postes
-  [300, 1180].forEach((px) => {
-    each(() => {
-      cut(x, (g) => g.roundRect(px - 4, base - 168, 8, 168, 2), edge(TONE.kraftDark));
-      cut(x, (g) => g.roundRect(px - 26, base - 160, 52, 7, 2), edge(TONE.kraftDark));
+  MID_PROPS.filter((p) => p.kind === 'poste').forEach((p) => {
+    each(px0, (x) => {
+      cut(x, (g) => g.roundRect(p.u - 4, base - 168, 8, 168, 2), edge(TONE.kraftDark));
+      cut(x, (g) => g.roundRect(p.u - 26, base - 160, 52, 7, 2), edge(TONE.kraftDark));
     });
+    crop(p);
   });
-  // arbustos de cartón (redondeados, claros): sin pilas de cajas/libros pegadas al suelo
+  // arbustos de cartón (redondeados, claros): sin pilas de cajas/libros pegadas al suelo; se quedan en el mosaico
   [740, 1580].forEach((bx, i) => {
     const path = hillPath(bx, bx + 120 + i * 20, base + 4, 40 + i * 6, r);
-    each(() => cut(x, path, edge(mix(TONE.kraftMid, PAL.ink, 0.06))));
+    each(x, (ctx) => cut(ctx, path, edge(mix(TONE.kraftMid, PAL.ink, 0.06))));
   });
-  return c;
+  return { base: c, props };
 }
 
 // ---------- Piezas del plano de juego ----------
@@ -1131,7 +1163,11 @@ export function buildTextures(scene) {
   defer('clouds', () => cloudsLayer());
   defer('ridge', () => ridgeLayer());
   defer('far', () => farLayer());
-  defer('mid', () => midLayer());
+  defer('mid', () => {
+    const m = midLayer();
+    m.props.forEach(([k, cv]) => add(k, cv));
+    return m.base;
+  });
   defer('viga', () => viga());
   defer('caja_n', () => caja(0.7));
   defer('torre_n', () => torre(0.7));
