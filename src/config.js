@@ -47,7 +47,7 @@ export const CONFIG = {
   ambient: { seed: 20261029, minGapMs: 6000, demoGapMs: 8000 },
 
   // Tutorial (UX.md §4)
-  paseo: { obstacleAlpha: 0.5 }, // Modo Paseo: alfa de los obstáculos (cruzarlos se lee a propósito, no como fallo)
+  paseo: { obstacleAlpha: 0.5, edgeSoft: 0.5 }, // Modo Paseo: alfa de los obstáculos (cruzarlos se lee a propósito, no como fallo); edgeSoft: contorno, perfil y cinta bajan con el cartón para que no parezca vidrio
   tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
   // leadTap/leadHold: px extra respecto de la mitad del recorrido aéreo al despegar (se calibra contra la física real, sin god)
   demo: { idleReturnMs: 20000, stripMs: 400, leadTap: 0, leadHold: 0 },

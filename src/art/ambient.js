@@ -218,7 +218,8 @@ export class Ambient {
     s.obstacles.forEach((o) => o.sprite && o.sprite.setTexture(this.obsKey(o.type)));
   }
   obsKey(type) {
-    return this.night && this.scene.textures.exists(`${type}_n`) ? `${type}_n` : type;
+    const k = this.night && this.scene.textures.exists(`${type}_n`) ? `${type}_n` : type;
+    return this.scene.paseoRun && this.scene.textures.exists(`${k}_p`) ? `${k}_p` : k; // Paseo: cartón atenuado sin contorno de vidrio
   }
 
   spawnStars() {

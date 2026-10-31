@@ -196,6 +196,10 @@ export class RunScene extends Phaser.Scene {
     this.banner = this.makeLabel(this.hudC, 'center');
     this.distLabel.set(`0 ${t('hud.m')}`);
     this.pieceLabel.set('0');
+    // Paseo activo: etiqueta de papel bajo los metros (tinta #22211F, sin naranja chico; ARTE §5). La pide el líder tras QA de la pieza 4
+    this.paseoTagC = this.add.container(0, 48).setVisible(false);
+    this.hudL.add(this.paseoTagC);
+    this.makeLabel(this.paseoTagC, 'left').set(t('paseo.name'));
   }
 
   // Mano de papel, etiqueta, anillo y arco fantasma del tutorial (UX §4). Todo procedural.
@@ -473,8 +477,9 @@ export class RunScene extends Phaser.Scene {
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
     // Paseo: sin choques y sin mérito (no avanza el Cuaderno ni escribe mejor marca); la decisión es del director, pieza 4
     this.paseoRun = this.paseo;
+    this.paseoTagC.setVisible(this.paseoRun);
     this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
-    if (!this.paseoRun) registrarDia(); // Racha con perdón: jugar una partida real cuenta el día local (el demo y el paseo no cuentan)
+    registrarDia(); // Racha con perdón: jugar cuenta el día local, también en Paseo (brief del director, pieza 4, decisión b); el demo no cuenta
     this.resetRun(this.makeLevel(), 0);
     this.speed = FIXED_SPEED || this.level.tramos[0].speed;
     this.accel = 0;
@@ -504,6 +509,7 @@ export class RunScene extends Phaser.Scene {
     this.screen = 'demo';
     this.partida = null; // el demo no cuenta para el cuaderno
     this.paseoRun = false;
+    this.paseoTagC.setVisible(false);
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
     const variant = ['A', 'B', 'C'][this.demoVariant % 3];
     this.pieces = 0;
@@ -693,6 +699,11 @@ export class RunScene extends Phaser.Scene {
     this.tweens.add({ targets: sprite, angle: 0, duration: 520, ease: 'Sine.easeOut' });
   }
 
+  obsTex(type) {
+    if (this.ambient) return this.ambient.obsKey(type);
+    return this.paseoRun && this.textures.exists(`${type}_p`) ? `${type}_p` : type;
+  }
+
   spawnObstacle(e) {
     const g = C.world.groundY;
     const size = C.obstacleSizes[e.type];
@@ -700,12 +711,12 @@ export class RunScene extends Phaser.Scene {
     const o = { D: e.D, type: e.type, plan: e.plan, size, x, entered: false, passed: false, handled: false };
     if (e.type === 'viga') {
       const topY = g - size.hangBottom - size.height;
-      o.sprite = this.add.image(x, topY - 2, this.ambient ? this.ambient.obsKey('viga') : 'viga').setOrigin(0.5, 0).setDepth(10);
+      o.sprite = this.add.image(x, topY - 2, this.obsTex('viga')).setOrigin(0.5, 0).setDepth(10);
       o.threads = [-34, 34].map((dx) => this.add.tileSprite(x + dx, this.top - 10, 6, 10, 'hilo').setOrigin(0.5, 0).setDepth(9.5));
       o.shadow = this.addShadow(x + 6, size.width * 1.15, 0.3);
       o.topY = topY;
     } else {
-      o.sprite = this.add.image(x, g + 2, this.ambient ? this.ambient.obsKey(e.type) : e.type).setOrigin(0.5, 1).setDepth(10);
+      o.sprite = this.add.image(x, g + 2, this.obsTex(e.type)).setOrigin(0.5, 1).setDepth(10);
       const sk = this.ambient ? this.ambient.shadowK : 1; // mañana y tarde: sombras largas y suaves; mediodía: cortas
       o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }
@@ -770,6 +781,8 @@ export class RunScene extends Phaser.Scene {
       this.texQueue = null;
       return;
     }
+    // Paseo empezado antes de que llegara su cartón suave: las cajas ya en pantalla lo toman en cuanto existe
+    if (this.paseoRun && key.endsWith('_p')) this.obstacles.forEach((o) => o.sprite.setTexture(this.obsTex(o.type)));
     const layer = { clouds: this.clouds, ridge: this.ridge, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);
@@ -1746,6 +1759,7 @@ export class RunScene extends Phaser.Scene {
       sellos: c.notas.length + c.sellos.length,
       de: TOTAL_SELLOS,
       racha: leerRacha().racha,
+      paseo: !!(this.finalData && this.finalData.paseo),
     });
   }
 
