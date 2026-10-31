@@ -13,7 +13,7 @@ export function runBot(s, kind, maxSec = 150, seed = null) {
   s.startGame();
   if (seed) {
     s.resetRun(s.makeLevel(String(seed)), 0);
-    s.speed = s.level.tramos[0].speed;
+    s.speed = s.tramoSpeed(0); // con Vuelta rápida, el tramo ya sale x1.12
   }
   s.tut = { stage: 4, state: 'off' }; // sin tutorial: el bot no necesita la mano
   s.god = false;

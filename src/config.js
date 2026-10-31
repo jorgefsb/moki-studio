@@ -47,6 +47,7 @@ export const CONFIG = {
   ambient: { seed: 20261029, minGapMs: 6000, demoGapMs: 8000 },
 
   // Tutorial (UX.md §4)
+  vuelta: { speedMult: 1.12, scoreMult: 1.25 }, // Vuelta rápida (GDD §3, DISENO §81): tramos x1.12 con tope runSpeedMax y puntaje x1.25; solo Reto y Libre, se abre con el sello Coleccionista
   paseo: { obstacleAlpha: 0.5, edgeSoft: 0.5 }, // Modo Paseo: alfa de los obstáculos (cruzarlos se lee a propósito, no como fallo); edgeSoft: contorno, perfil y cinta bajan con el cartón para que no parezca vidrio
   tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
   // leadTap/leadHold: px extra respecto de la mitad del recorrido aéreo al despegar (se calibra contra la física real, sin god)

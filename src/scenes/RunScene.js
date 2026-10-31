@@ -27,6 +27,8 @@ const START_TUT = Q.get('tut') === '2' ? 2 : 0; // ?tut=2 salta a la lección 2
 const START_SCREEN = Q.get('screen'); // ?screen=play salta el demo (pruebas)
 const SEED = Q.get('seed'); // ?seed=2026-10-29 | 123 fija el nivel; ?nivel=clasico usa los 4 tramos escritos a mano
 const CLASICO = Q.get('nivel') === 'clasico';
+// Vuelta rápida se abre con el sello Coleccionista (>=80% de las piezas al terminar; cuaderno.js)
+const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
 const GOD = Q.has('god') && (import.meta.env.DEV || Q.has('debug')); // sin choques, solo para pruebas
 const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -50,6 +52,8 @@ export class RunScene extends Phaser.Scene {
     this.modo = load('moki.modo') === 'libre' ? 'libre' : 'reto'; // Reto del día por defecto (NIVELES.md §7)
     this.paseo = load('moki.paseo') === '1'; // Modo Paseo (GDD §3): opción del jugador, no la bandera ?god de pruebas
     this.paseoRun = false; // Paseo activo en la partida en curso (el demo nunca lo usa)
+    this.vuelta = load('moki.vuelta') === '1'; // Vuelta rápida (GDD §3): opción del jugador; solo cuenta con el sello Coleccionista
+    this.vueltaOn = false; // pedida para la partida en curso; vueltaRun además exige Reto o Libre
     performance.mark('c0');
     this.texQueue = buildTextures(this); // lo esencial ya; el resto se genera después, una textura por cuadro
     performance.mark('c1');
@@ -200,6 +204,10 @@ export class RunScene extends Phaser.Scene {
     this.paseoTagC = this.add.container(0, 48).setVisible(false);
     this.hudL.add(this.paseoTagC);
     this.makeLabel(this.paseoTagC, 'left').set(t('paseo.name'));
+    // Vuelta rápida activa: misma etiqueta de papel en el mismo lugar (nunca coinciden con Paseo)
+    this.vueltaTagC = this.add.container(0, 48).setVisible(false);
+    this.hudL.add(this.vueltaTagC);
+    this.makeLabel(this.vueltaTagC, 'left').set(t('vuelta.name'));
   }
 
   // Mano de papel, etiqueta, anillo y arco fantasma del tutorial (UX §4). Todo procedural.
@@ -417,10 +425,37 @@ export class RunScene extends Phaser.Scene {
     }, this.paseo, () => {
       this.paseo = !this.paseo;
       save('moki.paseo', this.paseo ? '1' : '0');
+      // Paseo y Vuelta rápida no se combinan (director, pieza 5): prender uno apaga el otro
+      if (this.paseo && this.vuelta) {
+        this.vuelta = false;
+        save('moki.vuelta', '0');
+      }
+      this.showModo();
+      const hola = saludo();
+      this.ui.showSaludo(t(hola.key, { n: hola.n }));
+    }, { on: this.vuelta && vueltaAbierta(), locked: !vueltaAbierta() }, () => {
+      if (!vueltaAbierta()) return; // bloqueada: el candado ya explica cómo se abre, el toque no hace nada
+      this.vuelta = !this.vuelta;
+      save('moki.vuelta', this.vuelta ? '1' : '0');
+      if (this.vuelta && this.paseo) {
+        this.paseo = false;
+        save('moki.paseo', '0');
+      }
       this.showModo();
       const hola = saludo();
       this.ui.showSaludo(t(hola.key, { n: hola.n }));
     });
+  }
+
+  // Vuelta rápida en la partida en curso: pedida al empezar y solo en Reto del día o Libre (el clásico no cambia)
+  get vueltaRun() {
+    return this.vueltaOn && !this.demo && !!(this.level && this.level.modo);
+  }
+
+  // Velocidad objetivo del tramo: x1.12 con tope de 470 px/s en Vuelta rápida
+  tramoSpeed(i) {
+    const v = this.level.tramos[i].speed;
+    return this.vueltaRun ? Math.min(C.runSpeedMax, v * C.vuelta.speedMult) : v;
   }
 
   // Línea de la tarjeta final: "Reto del 29 oct" o "Libre"; nada con ?nivel=clasico
@@ -438,7 +473,8 @@ export class RunScene extends Phaser.Scene {
   // La marca vieja (moki.best, de antes de separar por modo) se copia a moki.best.clasico la primera vez (decisión del director).
   bestMode() {
     const m = this.level && this.level.modo;
-    return !m ? 'clasico' : m === 'libre' ? 'libre' : 'dia';
+    const base = !m ? 'clasico' : m === 'libre' ? 'libre' : 'dia';
+    return this.vueltaRun ? `${base}.rapida` : base; // Vuelta rápida: marca aparte (moki.best.dia.rapida / libre.rapida)
   }
   bestKey() {
     if (load('moki.best.clasico') === null && load('moki.best') !== null) save('moki.best.clasico', load('moki.best'));
@@ -480,8 +516,10 @@ export class RunScene extends Phaser.Scene {
     this.paseoTagC.setVisible(this.paseoRun);
     this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
     registrarDia(); // Racha con perdón: jugar cuenta el día local, también en Paseo (brief del director, pieza 4, decisión b); el demo no cuenta
+    this.vueltaOn = this.vuelta && !this.paseoRun && vueltaAbierta(); // sin el sello (cuaderno borrado) no aplica aunque esté guardada
     this.resetRun(this.makeLevel(), 0);
-    this.speed = FIXED_SPEED || this.level.tramos[0].speed;
+    this.vueltaTagC.setVisible(this.vueltaRun);
+    this.speed = FIXED_SPEED || this.tramoSpeed(0);
     this.accel = 0;
     // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
     this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun ? 4 : START_TUT, state: 'off' };
@@ -510,6 +548,8 @@ export class RunScene extends Phaser.Scene {
     this.partida = null; // el demo no cuenta para el cuaderno
     this.paseoRun = false;
     this.paseoTagC.setVisible(false);
+    this.vueltaOn = false;
+    this.vueltaTagC.setVisible(false);
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
     const variant = ['A', 'B', 'C'][this.demoVariant % 3];
     this.pieces = 0;
@@ -534,7 +574,8 @@ export class RunScene extends Phaser.Scene {
 
   // Momento del puntaje (UX/DISENO): metros + piezas x 10
   get score() {
-    return Math.floor(this.dist / 100) * C.scorePerMeter + C.scorePerPiece * this.pieceValue;
+    const s = Math.floor(this.dist / 100) * C.scorePerMeter + C.scorePerPiece * this.pieceValue;
+    return this.vueltaRun ? Math.floor(s * C.vuelta.scoreMult) : s;
   }
 
   press() {
@@ -866,7 +907,7 @@ export class RunScene extends Phaser.Scene {
   // Velocidad del tramo con rampa de 2 s al cambiar (sin rampa continua).
   controlSpeed(dt) {
     if (FIXED_SPEED) return;
-    const target = this.level.tramos[this.tramoIdx].speed;
+    const target = this.tramoSpeed(this.tramoIdx);
     if (this.accel === 0 && this.speed !== target) this.accel = Math.abs(target - this.speed) / C.tramoEaseSec;
     if (this.speed < target) this.speed = Math.min(target, this.speed + this.accel * dt);
     else if (this.speed > target) this.speed = Math.max(target, this.speed - this.accel * dt);
@@ -965,7 +1006,7 @@ export class RunScene extends Phaser.Scene {
       amb.fired.cloud1 = true;
       amb.cloudNext = 0;
     }
-    const tsec = (this.dist - this.level.starts[this.tramoIdx]) / Math.max(1, this.level.tramos[this.tramoIdx].speed); // segundos dentro del tramo
+    const tsec = (this.dist - this.level.starts[this.tramoIdx]) / Math.max(1, this.tramoSpeed(this.tramoIdx)); // segundos dentro del tramo
     amb.update(dtMs, { ms: this.t, sec, tsec, quiet, forced, tutorial: tut, tramo: this.tramoIdx });
   }
 
@@ -1653,7 +1694,7 @@ export class RunScene extends Phaser.Scene {
     this.screen = 'play';
     audio.setStreak(0);
     audio.setState('playing'); // reintento: la música vuelve a 100% en 600 ms
-    const target = this.level.tramos[this.tramoIdx].speed;
+    const target = this.tramoSpeed(this.tramoIdx);
     this.speed = FIXED_SPEED || target * C.respawnSpeedMult;
     this.accel = FIXED_SPEED ? 0 : (target - this.speed) / C.respawnEaseSec;
     this.pieceLabel.set(String(this.pieces));
