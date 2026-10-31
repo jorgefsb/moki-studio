@@ -11,6 +11,7 @@ import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
+import { nuevaPartida, revisar } from '../cuaderno.js';
 import { GAME_LEVEL, buildDemo } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump } from '../jumpmodel.js';
@@ -458,6 +459,7 @@ export class RunScene extends Phaser.Scene {
     this.pieces = 0;
     this.pieceValue = 0;
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
+    this.partida = nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
     this.resetRun(this.makeLevel(), 0);
     this.speed = FIXED_SPEED || this.level.tramos[0].speed;
     this.accel = 0;
@@ -484,6 +486,7 @@ export class RunScene extends Phaser.Scene {
     audio.setState('title'); // si ya hubo gesto, el demo suena en modo título; antes del gesto no suena nada
     this.demo = true;
     this.screen = 'demo';
+    this.partida = null; // el demo no cuenta para el cuaderno
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
     const variant = ['A', 'B', 'C'][this.demoVariant % 3];
     this.pieces = 0;
@@ -1037,6 +1040,7 @@ export class RunScene extends Phaser.Scene {
       this.speedFrom = this.speed;
       this.accel = 0; // se recalcula hacia la velocidad del tramo con rampa de 2 s
       this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue };
+      if (this.partida && !this.demo) this.partida.maxTramo = Math.max(this.partida.maxTramo, this.tramoIdx);
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
       audio.stinger('checkpoint');
       if (!this.demo) this.ambient.good('checkpoint', this.t); // globo 0.3-0.8 s después
@@ -1070,7 +1074,15 @@ export class RunScene extends Phaser.Scene {
     const pt = this.y - ph;
     const pb = this.y - 2;
     for (const o of this.obstacles) {
-      if (o.x < this.px - 60) o.passed = true;
+      if (!o.passed && o.x < this.px - 60) {
+        o.passed = true;
+        // Cuaderno: cada obstáculo cuenta una vez por partida aunque se repita el tramo tras un reintento
+        const P = this.partida;
+        if (P && !this.demo && P.passed[o.type] !== undefined && !(P.seen = P.seen || new Set()).has(o.D)) {
+          P.seen.add(o.D);
+          P.passed[o.type] += 1;
+        }
+      }
       if (this.rewinding || this.god) continue;
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
@@ -1174,12 +1186,22 @@ export class RunScene extends Phaser.Scene {
     for (const [from, v] of R.steps) if (this.combo >= from) mult = v;
     this.pieces += 1;
     this.pieceValue += (k.amber ? C.amberValue : 1) * mult;
+    const P = !this.demo && this.partida;
+    if (P) {
+      P.maxCombo = Math.max(P.maxCombo, this.combo);
+      P.maxPieces = Math.max(P.maxPieces, this.pieces);
+      if (k.amber) P.amber += 1;
+    }
     audio.setStreak(this.combo);
     audio.sfx(k.amber ? 'amber' : 'pickup', { index: this.combo - 1 });
     if (k.arc) {
       this.arcGot[k.arc] = (this.arcGot[k.arc] || 0) + 1;
       if (this.arcGot[k.arc] === k.arcN) {
         this.pieceValue += C.arcBonus; // arco completo
+        if (P) {
+          P.arcs += 1;
+          P.arcsByTramo[this.tramoIdx] = (P.arcsByTramo[this.tramoIdx] || 0) + 1;
+        }
         audio.sfx('arc');
         if (!this.demo) this.ambient.good('arc', this.t);
         // Arco completo: abanico de papel, brinco grande de la ficha, nubes que tiemblan
@@ -1504,6 +1526,7 @@ export class RunScene extends Phaser.Scene {
     this.holding = false;
     this.cause = o.type;
     this.cardShown = false;
+    if (this.partida && !this.demo) this.partida.crashes += 1;
     this.particles.burst('crash', this.px + 12, this.y - 10);
     this.buzz(25); // golpe suave, nada que regañe
     this.shake(2, 120);
@@ -1580,6 +1603,7 @@ export class RunScene extends Phaser.Scene {
       { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord },
       () => this.respawn()
     );
+    this.showCuaderno();
   }
 
   // Reintento con un toque: Moki sale del inicio del tramo con lo guardado y 85% de velocidad que sube en 1 s.
@@ -1612,6 +1636,7 @@ export class RunScene extends Phaser.Scene {
     this.release();
     this.rig.startHop();
     save('moki.done', '1'); // abre Hardcore (decisión del líder)
+    if (this.partida) Object.assign(this.partida, { finished: true, pieceTotal: this.level.pieceTotal });
     // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
     const best = num(this.bestKey(), 0);
     const score = this.score;
@@ -1665,6 +1690,22 @@ export class RunScene extends Phaser.Scene {
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
       r
     );
+    this.showCuaderno();
+  }
+
+  // Tira del cuaderno bajo la tarjeta de fallo o de fin: notas activas con avance y el sello nuevo (GDD §3).
+  showCuaderno() {
+    if (!this.partida || this.demo) return;
+    const z = this.zoom;
+    const W = this.scale.width;
+    const H = this.scale.height;
+    // Zonas en px de pantalla: la tira no tapa a Moki (cabeza) y en vertical baja al suelo de papel
+    const zonas = {
+      wide: W >= 700 && W > H * 0.9,
+      headY: (C.world.groundY - C.player.spriteHeight - this.top) * z,
+      floorY: (C.world.groundY - this.top) * z,
+    };
+    this.ui.showCuaderno(revisar(this.partida), zonas);
   }
 
   showAsi() {

@@ -20,7 +20,7 @@ export function createUI() {
   document.body.appendChild(root);
 
   let primary = null; // acción del botón/gesto principal de la tarjeta abierta
-  const state = { demo: null, fail: null, final: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null };
+  const state = { demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null };
 
   // Todo botón suena (AUDIO §5): se engancha en la fase de captura, antes de que el botón actúe
   root.addEventListener(
@@ -194,6 +194,7 @@ export function createUI() {
       state.fail.pill.focus({ preventScroll: true });
     },
     hideFail() {
+      ui.hideCuaderno();
       if (!state.fail) return;
       const { scrim, card } = state.fail;
       state.fail = null;
@@ -201,6 +202,64 @@ export function createUI() {
       card.style.opacity = '0';
       card.style.transition = 'opacity 160ms ease-in';
       setTimeout(() => scrim.remove(), 170);
+    },
+
+    // Tira del Cuaderno de Moki (GDD §3) bajo la tarjeta abierta: 3 notas activas con su avance y el sello nuevo.
+    // Se coloca con la caja real de la tarjeta (sin el translateY de entrada), nunca encima de ella.
+    showCuaderno(tira, zonas) {
+      ui.hideCuaderno();
+      const host = (state.fail || state.final);
+      if (!host) return;
+      const { card, scrim } = host;
+      const strip = el('div', 'ui-cuaderno');
+      strip.setAttribute('role', 'status');
+      const head = el('div', 'cu-head');
+      head.append(el('b', '', t('cu.title')), el('span', '', t('cu.count', { n: tira.total, de: tira.de })));
+      strip.append(head);
+      const list = el('ul');
+      const row = (id, done, txt, isNew) => {
+        const li = el('li', done ? 'done' : '');
+        const stamp = el('span', isNew ? 'cu-stamp new' : 'cu-stamp');
+        stamp.setAttribute('aria-hidden', 'true');
+        li.append(stamp, el('span', 'cu-txt', t(`cu.nota.${id}`)), el('span', 'cu-val', txt));
+        list.append(li);
+      };
+      // Primero lo recién cumplido (sellado), luego las activas; máximo 3 renglones para que la tira siga chica
+      const nuevas = tira.nuevasNotas;
+      const extra = nuevas.length > 3 ? nuevas.length - 2 : 0; // muchas de golpe: 2 sellos y "+N notas más"
+      nuevas.slice(0, extra ? 2 : 3).forEach((id) => row(id, true, t('cu.hecho'), true));
+      if (extra) list.append(el('li', 'done cu-mas', t('cu.mas', { n: extra })));
+      tira.activas.slice(0, Math.max(0, 3 - list.children.length)).forEach((n) => row(n.id, false, n.goal > 1 ? `${n.val}/${n.goal}` : '', false));
+      if (!list.children.length) list.append(el('li', 'done', t('cu.todo')));
+      strip.append(list);
+      if (tira.nuevosSellos.length) strip.append(el('p', 'cu-sellos', t('cu.sellos', { s: tira.nuevosSellos.map((id) => t(`cu.sello.${id}`)).join(' · ') })));
+      strip.style.visibility = 'hidden';
+      scrim.append(strip);
+      // Caja de la tarjeta en px de pantalla (offset* ignora el transform de la animación de entrada)
+      const W = scrim.clientWidth;
+      const H = scrim.clientHeight;
+      const c = { l: card.offsetLeft, t: card.offsetTop, w: card.offsetWidth, h: card.offsetHeight };
+      const w = Math.min(W - 32, Math.max(c.w, 300));
+      strip.style.width = `${w}px`;
+      const sh = strip.offsetHeight;
+      const left = Math.max(16, Math.min(c.l, W - 16 - w));
+      // Debajo de la tarjeta si no tapa a Moki (en horizontal la tarjeta ya va a su derecha); si no, abajo sobre el
+      // suelo de papel. Si no hay lugar sin traslape con la tarjeta ni con Moki, no se enseña: la tarjeta manda.
+      let top = c.t + c.h + 10;
+      if (!(top + sh <= H - 12 && (zonas.wide || top + sh <= zonas.headY - 6))) {
+        top = H - 12 - sh;
+        if (top < zonas.floorY + 4 || top < c.t + c.h + 6) {
+          strip.remove();
+          return;
+        }
+      }
+      Object.assign(strip.style, { left: `${left}px`, top: `${top}px`, visibility: '' });
+      state.cuaderno = strip;
+    },
+    hideCuaderno() {
+      if (!state.cuaderno) return;
+      state.cuaderno.remove();
+      state.cuaderno = null;
     },
 
     // Pantalla final (UX §8)
@@ -251,6 +310,7 @@ export function createUI() {
       again.focus({ preventScroll: true });
     },
     hideFinal() {
+      ui.hideCuaderno();
       if (!state.final) return;
       state.final.scrim.remove();
       state.final = null;

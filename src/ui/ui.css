@@ -158,3 +158,43 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 
 /* Embed (?embed=1): los paneles con scroll no lo pasan a la página padre al llegar al borde. */
 .embed .ui-asi .wrap, .embed .ui-card { overscroll-behavior: contain; }
+
+/* Cuaderno de Moki (GDD §3): tira chica de papel bajo la tarjeta; sellos de cartón kraft con tinta naranja */
+.ui-cuaderno {
+  position: absolute;
+  box-sizing: border-box;
+  background: #f4e8d5;
+  border: 2px solid #8a7e70;
+  border-radius: 12px;
+  box-shadow: 0 4px 0 rgba(34, 33, 31, 0.2);
+  padding: 8px 12px 10px;
+  pointer-events: none;
+  font: 400 15px/20px Inter, sans-serif;
+}
+.ui-cuaderno .cu-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 13px; line-height: 18px; }
+.ui-cuaderno .cu-head b { font: 700 15px/18px Outfit, sans-serif; }
+.ui-cuaderno ul { list-style: none; margin: 0; padding: 0; }
+.ui-cuaderno li { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.ui-cuaderno .cu-txt { flex: 1; min-width: 0; }
+.ui-cuaderno .cu-val { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ui-cuaderno li.done .cu-val { color: #b4451a; }
+/* Sello: círculo de cartón; pendiente = punteado; cumplido = kraft relleno con palomita de tinta, un pelo girado */
+.ui-cuaderno .cu-stamp {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px dashed #8a7e70;
+  box-sizing: border-box;
+}
+.ui-cuaderno li.done .cu-stamp {
+  border: 2px solid #22211f;
+  background: #d9b98c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4.5 9.5l3 3 6-7' fill='none' stroke='%23ff6b35' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  transform: rotate(-8deg);
+}
+.ui-cuaderno .cu-sellos { margin: 4px 0 0; font-size: 13px; line-height: 18px; font-weight: 600; }
+/* El sello nuevo se estampa: se acerca girado (anticipación), cae con Back.out y se asienta */
+.ui-cuaderno .cu-stamp.new { animation: cu-stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both; }
+@keyframes cu-stamp { 0% { transform: scale(1.9) rotate(-28deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ui-cuaderno .cu-stamp.new { animation: none; } }
+.ui-cuaderno li.cu-mas { font-weight: 600; color: #b4451a; padding-left: 26px; }
