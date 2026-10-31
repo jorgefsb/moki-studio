@@ -11,7 +11,9 @@ import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
-import { nuevaPartida, revisar } from '../cuaderno.js';
+import { nuevaPartida, revisar, leerCuaderno, TOTAL_SELLOS } from '../cuaderno.js';
+import { registrarDia, saludo, leerRacha } from '../racha.js';
+import { textoTarjeta, copiar } from '../tarjeta.js';
 import { GAME_LEVEL, buildDemo } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump } from '../jumpmodel.js';
@@ -406,10 +408,14 @@ export class RunScene extends Phaser.Scene {
       this.modo = this.modo === 'libre' ? 'reto' : 'libre';
       save('moki.modo', this.modo);
       this.showModo();
+      const hola = saludo();
+      this.ui.showSaludo(t(hola.key, { n: hola.n }));
     }, this.paseo, () => {
       this.paseo = !this.paseo;
       save('moki.paseo', this.paseo ? '1' : '0');
       this.showModo();
+      const hola = saludo();
+      this.ui.showSaludo(t(hola.key, { n: hola.n }));
     });
   }
 
@@ -468,6 +474,7 @@ export class RunScene extends Phaser.Scene {
     // Paseo: sin choques y sin mérito (no avanza el Cuaderno ni escribe mejor marca); la decisión es del director, pieza 4
     this.paseoRun = this.paseo;
     this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
+    if (!this.paseoRun) registrarDia(); // Racha con perdón: jugar una partida real cuenta el día local (el demo y el paseo no cuentan)
     this.resetRun(this.makeLevel(), 0);
     this.speed = FIXED_SPEED || this.level.tramos[0].speed;
     this.accel = 0;
@@ -514,6 +521,8 @@ export class RunScene extends Phaser.Scene {
     this.lastM = 0;
     this.ui.showDemo(this.coarse);
     this.showModo();
+    const hola = saludo();
+    this.ui.showSaludo(t(hola.key, { n: hola.n })); // Moki saluda según la racha
     this.demoStripping = false;
   }
 
@@ -1538,7 +1547,10 @@ export class RunScene extends Phaser.Scene {
     this.holding = false;
     this.cause = o.type;
     this.cardShown = false;
-    if (this.partida && !this.demo) this.partida.crashes += 1;
+    if (this.partida && !this.demo) {
+      this.partida.crashes += 1;
+      this.partida.crashesByTramo[this.tramoIdx] = (this.partida.crashesByTramo[this.tramoIdx] || 0) + 1; // fila de la tarjeta para compartir
+    }
     this.particles.burst('crash', this.px + 12, this.y - 10);
     this.buzz(25); // golpe suave, nada que regañe
     this.shake(2, 120);
@@ -1700,7 +1712,7 @@ export class RunScene extends Phaser.Scene {
     const d = this.finalData;
     this.ui.showFinal(
       { isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
-      { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
+      { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => copiar(this.textoCompartir()) },
       r
     );
     this.showCuaderno();
@@ -1719,6 +1731,22 @@ export class RunScene extends Phaser.Scene {
       floorY: (C.world.groundY - this.top) * z,
     };
     this.ui.showCuaderno(revisar(this.partida), zonas);
+  }
+
+  // Tarjeta para compartir (GDD §3): modo, fecha local, una fila por página (sin caer / con tropiezo), sellos y racha
+  textoCompartir() {
+    const l = this.level;
+    const P = this.partida || { crashesByTramo: {} };
+    const c = leerCuaderno();
+    const fecha = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '');
+    return textoTarjeta({
+      modo: this.modoLabel() || t('share.clasico'),
+      fecha,
+      paginas: l.tramos.map((_, i) => ({ caidas: P.crashesByTramo[i] || 0 })),
+      sellos: c.notas.length + c.sellos.length,
+      de: TOTAL_SELLOS,
+      racha: leerRacha().racha,
+    });
   }
 
   showAsi() {

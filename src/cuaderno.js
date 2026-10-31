@@ -50,7 +50,7 @@ function guardar(c) {
 export const activas = (c) => NOTAS.filter((n) => !c.notas.includes(n.id)).slice(0, 3);
 
 export function nuevaPartida() {
-  return { passed: { caja: 0, torre: 0, viga: 0 }, maxTramo: 0, maxCombo: 0, maxPieces: 0, arcs: 0, arcsByTramo: {}, amber: 0, crashes: 0, finished: false, pieceTotal: 0 };
+  return { passed: { caja: 0, torre: 0, viga: 0 }, maxTramo: 0, maxCombo: 0, maxPieces: 0, arcs: 0, arcsByTramo: {}, amber: 0, crashes: 0, crashesByTramo: {}, finished: false, pieceTotal: 0 };
 }
 
 // Revisa la partida contra las notas activas (en orden: al cumplir una entra la siguiente y también se revisa)

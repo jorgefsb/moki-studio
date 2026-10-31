@@ -40,6 +40,14 @@ export function createUI() {
         : '<path d="M19 10l7 8M26 10l-7 8" fill="none" stroke="#22211F" stroke-width="2.4" stroke-linecap="round"/>'
     }</svg>`;
 
+  // Copiar: dos hojas de papel encimadas en tinta; copiado = palomita de tinta (el estado no depende del color)
+  const copyIcon = (done) =>
+    `<svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true" focusable="false">${
+      done
+        ? '<path d="M6 14.5l5 5 11-12" fill="none" stroke="#22211F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+        : '<rect x="9" y="4" width="14" height="17" rx="3" fill="#F4E8D5" stroke="#22211F" stroke-width="2.4"/><rect x="5" y="8" width="14" height="17" rx="3" fill="#F4E8D5" stroke="#22211F" stroke-width="2.4"/>'
+    }</svg>`;
+
   const ui = {
     root,
     sfx: null, // enganchado por la escena: sonido de botón
@@ -110,6 +118,20 @@ export function createUI() {
     hideModo() {
       if (state.modo) state.modo.remove();
       state.modo = null;
+      ui.hideSaludo();
+    },
+
+    // Saludo de Moki según la racha (GDD §3): una etiqueta de papel en el título, solo texto, sin cuenta regresiva
+    showSaludo(text) {
+      ui.hideSaludo();
+      if (!text) return;
+      const s = el('div', 'ui-saludo', text);
+      root.appendChild(s);
+      state.saludo = s;
+    },
+    hideSaludo() {
+      if (state.saludo) state.saludo.remove();
+      state.saludo = null;
     },
 
     showPauseButton(on) {
@@ -280,7 +302,7 @@ export function createUI() {
     },
 
     // Pantalla final (UX §8)
-    showFinal(d, { onAgain, onHow }, rect) {
+    showFinal(d, { onAgain, onHow, onCopy }, rect) {
       ui.hideFinal();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
@@ -314,6 +336,27 @@ export function createUI() {
       const how = el('button', 'ui-btn secondary', t('end.how'));
       how.type = 'button';
       card.append(again, how);
+      if (onCopy) {
+        // Tarjeta para compartir (GDD §3): copia texto al portapapeles; el aviso es tinta sobre papel, sin naranja chico
+        // En la tarjeta compacta (vertical) no cabe una segunda fila: el botón es un cuadro de 48 px con dos hojas
+        // de papel (y palomita al copiar), en la misma fila que "Otra vez" y "Así lo hicimos".
+        const icon = !!rect.compact;
+        const copy = el('button', icon ? 'ui-btn secondary ui-copy icon' : 'ui-btn secondary ui-copy', icon ? undefined : t('share.btn'));
+        copy.type = 'button';
+        copy.setAttribute('aria-label', t('share.aria'));
+        copy.title = t('share.btn');
+        if (icon) copy.innerHTML = copyIcon(false);
+        const live = el('span', 'ui-copied');
+        live.setAttribute('role', 'status');
+        copy.addEventListener('click', () => {
+          Promise.resolve(onCopy()).then((ok) => {
+            live.textContent = t(ok ? 'share.ok' : 'share.no');
+            if (icon) copy.innerHTML = copyIcon(ok);
+            else copy.textContent = live.textContent;
+          });
+        });
+        card.append(copy, live);
+      }
       if (!EMBED) {
         // En embed la página padre ya trae la liga de regreso
         const link = el('a', 'ui-link', t('end.link'));
