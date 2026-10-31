@@ -46,6 +46,8 @@ export class RunScene extends Phaser.Scene {
 
   create() {
     this.modo = load('moki.modo') === 'libre' ? 'libre' : 'reto'; // Reto del día por defecto (NIVELES.md §7)
+    this.paseo = load('moki.paseo') === '1'; // Modo Paseo (GDD §3): opción del jugador, no la bandera ?god de pruebas
+    this.paseoRun = false; // Paseo activo en la partida en curso (el demo nunca lo usa)
     performance.mark('c0');
     this.texQueue = buildTextures(this); // lo esencial ya; el resto se genera después, una textura por cuadro
     performance.mark('c1');
@@ -404,6 +406,10 @@ export class RunScene extends Phaser.Scene {
       this.modo = this.modo === 'libre' ? 'reto' : 'libre';
       save('moki.modo', this.modo);
       this.showModo();
+    }, this.paseo, () => {
+      this.paseo = !this.paseo;
+      save('moki.paseo', this.paseo ? '1' : '0');
+      this.showModo();
     });
   }
 
@@ -459,11 +465,14 @@ export class RunScene extends Phaser.Scene {
     this.pieces = 0;
     this.pieceValue = 0;
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
-    this.partida = nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
+    // Paseo: sin choques y sin mérito (no avanza el Cuaderno ni escribe mejor marca); la decisión es del director, pieza 4
+    this.paseoRun = this.paseo;
+    this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
     this.resetRun(this.makeLevel(), 0);
     this.speed = FIXED_SPEED || this.level.tramos[0].speed;
     this.accel = 0;
-    this.tut = { stage: load('moki.tutorial') === '1' ? 4 : START_TUT, state: 'off' };
+    // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
+    this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
     this.ui.showSoundButton('hud');
     this.buzz(10); // "Jugar" se siente en la mano (feel.gestured lo pone el primer gesto real, ver feel.js)
@@ -487,6 +496,7 @@ export class RunScene extends Phaser.Scene {
     this.demo = true;
     this.screen = 'demo';
     this.partida = null; // el demo no cuenta para el cuaderno
+    this.paseoRun = false;
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
     const variant = ['A', 'B', 'C'][this.demoVariant % 3];
     this.pieces = 0;
@@ -691,6 +701,8 @@ export class RunScene extends Phaser.Scene {
       o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }
     if (this.ambient) o.sprite.setTint(this.ambient.obsTint);
+    // Paseo: el obstáculo se dibuja atenuado para que cruzarlo se lea a propósito y no como un error de colisión
+    if (this.paseoRun) [o.sprite, o.shadow, ...(o.threads || [])].forEach((g) => g.setAlpha(g.alpha * C.paseo.obstacleAlpha));
     o.destroy = () => {
       o.sprite.destroy();
       o.shadow.destroy();
@@ -1083,7 +1095,7 @@ export class RunScene extends Phaser.Scene {
           P.passed[o.type] += 1;
         }
       }
-      if (this.rewinding || this.god) continue;
+      if (this.rewinding || this.god || this.paseoRun) continue;
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
         this.crash(o);
@@ -1534,7 +1546,7 @@ export class RunScene extends Phaser.Scene {
     if (!this.calm && o.sprite) this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
     // La mejor marca se guarda también al fallar (no en el demo)
     const prevBest = num(this.bestKey(), 0);
-    const isNew = !this.demo && this.score > prevBest;
+    const isNew = !this.demo && !this.paseoRun && this.score > prevBest;
     if (isNew) save(this.bestKey(), this.score);
     this.failRecord = isNew && prevBest > 0;
     // Sonido: tropiezo amable, la música baja (ducking), stinger de fallo a los 80 ms y, si hay récord, el de récord después
@@ -1635,15 +1647,16 @@ export class RunScene extends Phaser.Scene {
     this.metaDone = true;
     this.release();
     this.rig.startHop();
-    save('moki.done', '1'); // abre Hardcore (decisión del líder)
+    if (!this.paseoRun) save('moki.done', '1'); // abre Hardcore (decisión del líder); un paseo no lo abre
     if (this.partida) Object.assign(this.partida, { finished: true, pieceTotal: this.level.pieceTotal });
     // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
     const best = num(this.bestKey(), 0);
     const score = this.score;
-    this.finalData = { isNew: score > best, hadBest: best > 0, score, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: Math.max(best, score) };
+    const isNew = !this.paseoRun && score > best;
+    this.finalData = { isNew, hadBest: best > 0, score, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: this.paseoRun ? best : Math.max(best, score), paseo: this.paseoRun };
     audio.setState('finished'); // la música baja a 0 y suena el stinger del final
     audio.stinger('final');
-    if (score > best) save(this.bestKey(), score);
+    if (isNew) save(this.bestKey(), score);
     this.ui.showPauseButton(false);
     // Meta: confeti de papel (Mucho o más) y vibración de festejo
     this.particles.burst('confetti', this.px + 40, C.world.groundY - 150);
@@ -1686,7 +1699,7 @@ export class RunScene extends Phaser.Scene {
     const r = wide ? rect : { ...rect, compact: true };
     const d = this.finalData;
     this.ui.showFinal(
-      { isNew: d.isNew, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi() },
       r
     );

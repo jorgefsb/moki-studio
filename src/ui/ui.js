@@ -74,21 +74,38 @@ export function createUI() {
     },
 
     // Modo de la partida en el título (NIVELES.md §7): un toque al chip alterna Reto del día / Libre; el resto de la pantalla sigue arrancando.
-    showModo(modo, onToggle) {
+    // Al lado, el interruptor de Paseo (GDD §3): se combina con cualquiera de los dos modos.
+    showModo(modo, onToggle, paseo, onPaseo) {
       ui.hideModo();
+      const row = el('div', 'ui-modos');
+      const tap = (b, fn) => {
+        b.addEventListener('pointerdown', (e) => e.stopPropagation());
+        b.addEventListener('keydown', (e) => e.stopPropagation());
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (ui.sfx) ui.sfx();
+          fn();
+        });
+      };
       const b = el('button', 'ui-modo');
       b.type = 'button';
       b.setAttribute('aria-label', t('modo.aria'));
       b.append(el('b', '', t(modo === 'libre' ? 'modo.libre' : 'modo.reto')), el('span', '', t(modo === 'libre' ? 'modo.libre.d' : 'modo.reto.d')));
-      b.addEventListener('pointerdown', (e) => e.stopPropagation());
-      b.addEventListener('keydown', (e) => e.stopPropagation());
-      b.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (ui.sfx) ui.sfx();
-        onToggle();
-      });
-      root.appendChild(b);
-      state.modo = b;
+      tap(b, onToggle);
+      row.append(b);
+      if (onPaseo) {
+        const p = el('button', 'ui-modo ui-paseo');
+        p.type = 'button';
+        p.setAttribute('aria-label', t('paseo.aria'));
+        p.setAttribute('aria-pressed', String(!!paseo));
+        const tx = el('div', 'tx');
+        tx.append(el('b', '', t('paseo.name')), el('span', '', t('paseo.d')));
+        p.append(el('i'), tx);
+        tap(p, onPaseo);
+        row.append(p);
+      }
+      root.appendChild(row);
+      state.modo = row;
     },
     hideModo() {
       if (state.modo) state.modo.remove();
@@ -276,8 +293,8 @@ export function createUI() {
         card.style.transform = 'translateY(0)';
       });
       const head = el('div', 'ui-head');
-      head.append(el('h2', '', t('end.title')));
-      if (d.isNew) head.append(el('span', 'ui-tag', t('end.new')));
+      head.append(el('h2', '', t(d.paseo ? 'end.paseo' : 'end.title')));
+      if (d.isNew && !d.paseo) head.append(el('span', 'ui-tag', t('end.new')));
       card.append(head);
       const rows = el('dl', 'ui-rows');
       const row = (k, v) => {
@@ -285,8 +302,11 @@ export function createUI() {
       };
       row(t('end.dist'), `${d.meters} m`);
       row(t('end.pieces'), `${d.pieces} / ${d.piecesTotal}`);
-      row(t('end.score'), String(d.score));
-      row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
+      if (!d.paseo) {
+        // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
+        row(t('end.score'), String(d.score));
+        row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
+      }
       if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
       card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));

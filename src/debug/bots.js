@@ -1,6 +1,7 @@
 // Bots de prueba (DISENO.md §11): solo se cargan con ?debug o en dev. Juegan con la misma física, en pasos fijos de 16.7 ms.
 //   tap    solo toca (salta todo con toque): debe morir en la primera torre (~21 s)
 //   hold   siempre mantiene (salta todo, también la viga): debe morir en T3 (viga), antes de ~70 s
+//   pasivo nunca salta: con Paseo debe llegar a la meta sin un choque (pieza 4)
 //   adjust ajusta la altura por obstáculo según el guion (toque, mantener o nada): debe terminar los 120 s
 import { airTravel, simulateJump } from '../jumpmodel.js';
 import { CONFIG as C } from '../config.js';
@@ -25,7 +26,7 @@ export function runBot(s, kind, maxSec = 150, seed = null) {
       releaseAt = -1;
       s.release();
     }
-    if (releaseAt < 0 && s.grounded) {
+    if (releaseAt < 0 && s.grounded && kind !== 'pasivo') {
       const o = s.obstacles.find((q) => !q.handled && q.x > s.px - 4 && q.plan !== 'skip' && (kind !== 'adjust' || q.plan === 'tap' || q.plan === 'hold'));
       if (o) {
         const mode = kind === 'tap' ? 'tap' : kind === 'hold' ? 'hold' : o.plan;
