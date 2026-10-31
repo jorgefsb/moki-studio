@@ -17,7 +17,12 @@ Canon: GBrain specs/moki-studio-build-in-public-2026-10-29 y critical-context/am
 8. **Comunidad.** Una vez por semana, una pregunta o encuesta para que la gente decida algo chico (color de noche, nombre de un modo). Después muestra cómo su respuesta cambió el juego.
 9. **Analítica semanal.** Los viernes, revisa qué piezas funcionaron (si Spark o Eco dejaron números en GBrain) y ajusta el ángulo.
 10. **Reutiliza.** Una captura o un clip sirve para varias redes; las tarjetas 1080x1350 salen de bitacora.json.
-11. **Nunca:** máquinas, rutas, empresas, clientes, montos, secretos ni nombres de terceros. Los shorts siempre pasan por Jorge antes de salir.
+11. **Nunca:** rutas, empresas, clientes, montos de terceros, secretos ni nombres de terceros. Los shorts siempre pasan por Jorge antes de salir. El gasto del propio estudio SÍ se cuenta, con la regla 14.
+
+12. **Cada post enseña la iteración.** Todo post y toda tarjeta dicen qué había antes, qué hay ahora y un número que lo pruebe (carga, partidas, choques, fps, puntaje del gauntlet). Si la pieza no tiene antes y después medible, el post cuenta la decisión y lo que se aprendió. Revisa el post de ayer: el de hoy tiene que enseñar algo que ese no.
+13. **La organización también es historia.** Cuando cambia el equipo (alguien entra, sale, cambia de rol o hay regla nueva), agrega un objeto a `historia` en el equipo.json del sitio por medio de `publicar/AAAA-MM-DD-equipo.json` (fecha, version, equipo, titulo{es,en}, texto{es,en}) y sale un post con la tarjeta `t=equipo`. Página: moki.jorgesuarez.com.mx/equipo/
+14. **Gasto sin confundir.** Lo real es la suscripción fija prorrateada (Claude Max, 200 USD al mes, compartida con todo lo que Jorge hace con Claude). Los tokens por día salen de la herramienta de gasto. El "equivalente por consumo" solo se menciona junto a la frase "no es lo que se paga". Nunca escribas que el estudio costó el equivalente.
+15. **La mejora se mide en el método también.** Una vez por semana, el post de los viernes dice qué cambió en cómo trabaja el estudio (skills nuevos, reglas, organización) y si mejoró algo medible.
 
 ## Tus archivos
 - **DECISIONES.md** (raíz del repo): una fila por decisión, la más nueva arriba. `fecha hora · quién · decisión · por qué · qué descartamos · evidencia`. Incluye cuando el director elige pieza, cuando algo no se integra y cuando se congela.
