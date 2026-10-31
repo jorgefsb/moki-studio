@@ -5,7 +5,13 @@ import { t } from './i18n.js';
 export const TOPE = 280;
 
 // paginas: [{ caidas }] por página del nivel; 🟧 = página sin caer, 🟫 = la pasaste con tropiezo.
-export function textoTarjeta({ modo, fecha, paginas, sellos, de, racha }) {
+// paseo: sin choques no hay fila de páginas ni sellos que presumir; solo modo, fecha y racha (no pasa por partida limpia)
+export function textoTarjeta({ modo, fecha, paginas, sellos, de, racha, paseo = false }) {
+  if (paseo) {
+    const lineas = [t('share.title'), `${t('paseo.name')} · ${fecha}`];
+    if (racha > 1) lineas.push(t('share.racha', { n: racha }));
+    return lineas.join('\n');
+  }
   const fila = paginas.map((p) => (p.caidas ? '🟫' : '🟧')).join('');
   const lineas = [t('share.title'), `${modo} · ${fecha}`, fila, t('share.sellos', { n: sellos, de })];
   if (racha > 1) lineas.push(t('share.racha', { n: racha }));
