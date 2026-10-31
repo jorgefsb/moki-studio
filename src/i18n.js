@@ -91,6 +91,21 @@ const ES = {
   'cu.sello.sinCaerme': 'Sin caerme',
   'cu.sello.coleccionista': 'Coleccionista',
   'cu.sello.arcos3': 'Arco completo',
+  // Racha con perdón (GDD §3): Moki saluda; sin culpa ni cuenta regresiva
+  'racha.hola.nuevo': '¡Hola! Soy Moki',
+  'racha.hola.uno': '¡Hola! ¿Un salto más?',
+  'racha.hola.pocos': '¡Volviste! Día {n} seguido',
+  'racha.hola.muchos': '{n} días seguidos. ¡Qué ritmo!',
+  'racha.hola.vuelve': '¡Qué gusto verte otra vez!',
+  // Tarjeta para compartir: el jugador la copia; no lleva datos personales
+  'share.btn': 'Copiar',
+  'share.ok': '¡Copiado!',
+  'share.no': 'No se pudo copiar',
+  'share.aria': 'Copiar tu partida como texto',
+  'share.title': 'Moki: Un salto más',
+  'share.sellos': 'Sellos {n}/{de}',
+  'share.racha': 'Racha: {n} días',
+  'share.clasico': 'Clásico',
   'pause.resume': 'Seguir',
   'pause.home': 'Inicio',
 };
