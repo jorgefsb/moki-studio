@@ -69,6 +69,13 @@ async function boot() {
       bot: (kind, maxSec, seed) => import('./debug/bots.js').then((m) => m.runBot(game.scene.scenes[0], kind, maxSec, seed)),
       // Nivel actual: semilla, modo, biomas y respaldo (NIVELES.md)
       nivel: () => { const l = game.scene.scenes[0].level; return l && { seed: l.seed, modo: l.modo, biomas: l.biomas, fallbacks: l.fallbacks, piezas: l.pieceTotal }; },
+      // Cuaderno de Moki: avance de la partida, revisión (igual que al enseñar la tarjeta) y lo guardado
+      cuaderno: () =>
+        import('./cuaderno.js').then((m) => {
+          const s = game.scene.scenes[0];
+          const p = s.partida ? { ...s.partida, seen: undefined } : null;
+          return { partida: p, tira: s.partida ? m.revisar(s.partida) : null, guardado: m.leerCuaderno() };
+        }),
       jumpTable: () => import('./debug/bots.js').then((m) => m.jumpTable()),
       // Mediciones de audio con OfflineAudioContext (niveles, eco, costura del loop, wav de evidencia)
       audio: () => import('./debug/audioMeasure.js'),
