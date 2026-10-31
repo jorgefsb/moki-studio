@@ -39,6 +39,7 @@ Omarchy es vieja (4 núcleos, 7.5 GB). El conserje (~/.local/bin/moki-conserje, 
 - Builds, pruebas y capturas pesadas: flock /tmp/moki-pesado.lock <comando>, uno a la vez.
 - Un solo vite por worktree; el de :5180 es la vista en vivo de Jorge y no se toca.
 - Cierra tus pestañas y navegadores al terminar.
+- Navegador de pruebas (regla de Jorge, 31-oct): todo lo automático va headless. Solo UNA ventana visible a la vez, y solo para la prueba del juego que esté corriendo ahora, para que Jorge la vea en el monitor junto al tablero en vivo. Al terminar esa prueba la cierras (browser.close()); nunca dejes ventanas ni pestañas de pruebas abiertas. El conserje cierra las ventanas de pruebas con más de 15 min y cuenta los cierres que truenan.
 - Nada de npm install en paralelo.
 - En ROJO no arranques nada pesado; el productor serializa o pausa al asiento menos prioritario.
 - Asiento que termina su entrega se da de baja.
@@ -381,6 +382,78 @@ Referencia: ~/Work/_referencias/ccgs (Donchitos, MIT). Antes de cada vuelta, y s
 - Audio: audio-director.md, sound-designer.md
 - Marketing y build in public: ~/Work/_referencias/marketingskills/skills (coreyhaines31, MIT), con el contexto .agents/product-marketing.md
 Anota en DECISIONES.md cuando una idea venga de esa calibración.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
