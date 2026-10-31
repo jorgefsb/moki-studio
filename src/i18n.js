@@ -13,6 +13,11 @@ const ES = {
   'paseo.d': 'Sin choques',
   'paseo.aria': 'Modo Paseo: sin choques',
   'end.paseo': 'Paseo completo',
+  'vuelta.name': 'Vuelta rápida',
+  'vuelta.d': 'Más veloz · x1.25',
+  'vuelta.lock': 'Junta 80% de las piezas',
+  'vuelta.aria': 'Vuelta rápida: más velocidad y puntaje x1.25',
+  'vuelta.aria.lock': 'Vuelta rápida bloqueada: junta 80% de las piezas en una partida',
   'tut.tap.touch': 'Toca',
   'tut.tap.kbd': 'Espacio',
   'tut.hold.touch': 'Mantén',
@@ -48,6 +53,8 @@ const ES = {
   'end.best.clasico': 'Clásico', // la marca es por modo: "Mejor marca · Libre"
   'end.best.dia': 'Reto',
   'end.best.libre': 'Libre',
+  'end.best.dia.rapida': 'Reto rápido', // Vuelta rápida tiene su propia marca: no se mezcla con la normal
+  'end.best.libre.rapida': 'Libre rápido',
   'end.modo': 'Nivel',
   'end.modo.reto': 'Reto del {d}',
   'end.new': 'Nueva marca',

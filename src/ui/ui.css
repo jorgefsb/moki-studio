@@ -84,6 +84,13 @@
 .ui-paseo[aria-pressed='true'] { border-color: #22211f; }
 .ui-paseo .tx { display: flex; flex-direction: column; align-items: flex-start; }
 .ui-paseo span { color: #22211f; }
+/* Vuelta rápida (pieza 5): misma casilla de tinta que Paseo; bloqueada = candado de tinta y borde fino, sin regaño */
+.ui-modos.tres { flex-wrap: wrap; justify-content: center; width: max-content; } /* max-content: con left 50% el absoluto solo tendría medio ancho y partiría en tres renglones */
+.ui-vuelta.locked { cursor: default; border-color: #8a7e70; }
+.ui-vuelta.locked i { position: relative; width: 16px; height: 13px; margin: 7px 3px 0; border: none; border-radius: 3px; background: #22211f; }
+.ui-vuelta.locked i::before { content: ''; position: absolute; left: 3px; top: -8px; width: 10px; height: 10px; box-sizing: border-box; border: 2.5px solid #22211f; border-bottom: none; border-radius: 6px 6px 0 0; }
+/* Con tres chips la fila se parte en dos en pantallas angostas: el saludo sube para no encimarse */
+@media (max-width: 560px) { .ui-modos.tres ~ .ui-saludo { bottom: 198px; } }
 
 .ui-pausebtn {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%);

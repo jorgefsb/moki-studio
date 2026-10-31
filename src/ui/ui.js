@@ -83,9 +83,10 @@ export function createUI() {
 
     // Modo de la partida en el título (NIVELES.md §7): un toque al chip alterna Reto del día / Libre; el resto de la pantalla sigue arrancando.
     // Al lado, el interruptor de Paseo (GDD §3): se combina con cualquiera de los dos modos.
-    showModo(modo, onToggle, paseo, onPaseo) {
+    // Y Vuelta rápida (pieza 5): con candado y 'Junta 80% de las piezas' hasta tener el sello Coleccionista.
+    showModo(modo, onToggle, paseo, onPaseo, vuelta, onVuelta) {
       ui.hideModo();
-      const row = el('div', 'ui-modos');
+      const row = el('div', onVuelta ? 'ui-modos tres' : 'ui-modos');
       const tap = (b, fn) => {
         b.addEventListener('pointerdown', (e) => e.stopPropagation());
         b.addEventListener('keydown', (e) => e.stopPropagation());
@@ -111,6 +112,19 @@ export function createUI() {
         p.append(el('i'), tx);
         tap(p, onPaseo);
         row.append(p);
+      }
+      if (onVuelta) {
+        const locked = !!(vuelta && vuelta.locked);
+        const v = el('button', locked ? 'ui-modo ui-paseo ui-vuelta locked' : 'ui-modo ui-paseo ui-vuelta');
+        v.type = 'button';
+        v.setAttribute('aria-label', t(locked ? 'vuelta.aria.lock' : 'vuelta.aria'));
+        if (locked) v.setAttribute('aria-disabled', 'true');
+        else v.setAttribute('aria-pressed', String(!!(vuelta && vuelta.on)));
+        const tx = el('div', 'tx');
+        tx.append(el('b', '', t('vuelta.name')), el('span', '', t(locked ? 'vuelta.lock' : 'vuelta.d')));
+        v.append(el('i'), tx);
+        tap(v, onVuelta);
+        row.append(v);
       }
       root.appendChild(row);
       state.modo = row;
