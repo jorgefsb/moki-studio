@@ -13,6 +13,7 @@ import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, TOTAL_SELLOS } from '../cuaderno.js';
 import { registrarDia, saludo, leerRacha } from '../racha.js';
+import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { GAME_LEVEL, buildDemo } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
@@ -83,7 +84,8 @@ export class RunScene extends Phaser.Scene {
     this.lastInputAt = 0;
     this.screen = 'demo';
     this.god = false;
-    if (START_SCREEN === 'play') this.startGame();
+    if (ESCAPARATE) this.esc = new Escaparate(this); // ?escaparate: el guion arranca su propio título
+    else if (START_SCREEN === 'play') this.startGame();
     else this.startDemo();
     // La portada HTML se retira cuando la escena ya está lista (Moki corriendo en el siguiente cuadro)
     // Las fuentes pueden llegar después del primer cuadro: el HUD se vuelve a medir cuando están listas
@@ -217,6 +219,7 @@ export class RunScene extends Phaser.Scene {
   bindInput() {
     const kb = this.input.keyboard;
     kb.on('keydown', (e) => {
+      if (this.esc) return; // el escaparate se mira, no se juega
       this.lastInputAt = this.time.now;
       if (e.key === 'm' || e.key === 'M') {
         audio.toggle();
@@ -254,6 +257,7 @@ export class RunScene extends Phaser.Scene {
       if (KEY_JUMP.includes(e.key)) this.release();
     });
     this.input.on('pointerdown', () => {
+      if (this.esc) return;
       this.lastInputAt = this.time.now;
       if (this.ui.modalOpen) return;
       this.coarse = true;
@@ -806,7 +810,8 @@ export class RunScene extends Phaser.Scene {
     const dtMs = Math.min(deltaMs, 50);
     if (this.screen === 'pause') return;
     this.stepShake(dtMs);
-    this.idleCheck();
+    if (this.esc) this.esc.tick(dtMs); // el guion del escaparate maneja pantallas y bot
+    else this.idleCheck();
 
     if (this.screen === 'dead') return this.updateDead(dtMs);
     if (this.screen === 'final') return this.updateFinal(dtMs);
