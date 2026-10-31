@@ -76,6 +76,9 @@ async function boot() {
           const p = s.partida ? { ...s.partida, seen: undefined } : null;
           return { partida: p, tira: s.partida ? m.revisar(s.partida) : null, guardado: m.leerCuaderno() };
         }),
+      // Racha con perdón (lógica pura para el reloj simulado) y el texto de la tarjeta para compartir
+      racha: () => import('./racha.js'),
+      compartir: () => game.scene.scenes[0].textoCompartir(),
       jumpTable: () => import('./debug/bots.js').then((m) => m.jumpTable()),
       // Mediciones de audio con OfflineAudioContext (niveles, eco, costura del loop, wav de evidencia)
       audio: () => import('./debug/audioMeasure.js'),

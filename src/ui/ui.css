@@ -199,3 +199,20 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 @keyframes cu-stamp { 0% { transform: scale(1.9) rotate(-28deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ui-cuaderno .cu-stamp.new { animation: none; } }
 .ui-cuaderno li.cu-mas { font-weight: 600; color: #22211f; padding-left: 26px; }
+
+/* Racha (GDD §3): saludo de Moki en el título, etiqueta de papel sobre el chip de modo; tinta, nada de naranja chico */
+.ui-saludo {
+  position: absolute; left: 50%; bottom: 134px; transform: translateX(-50%) rotate(1deg);
+  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 6px 14px; pointer-events: none; white-space: nowrap;
+  background: #f4e8d5; border: 2px solid #8a7e70; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
+  color: #22211f; font: 700 16px/22px Outfit, sans-serif;
+  animation: ui-saludo-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) 200ms both;
+}
+@keyframes ui-saludo-in { from { opacity: 0; transform: translateX(-50%) translateY(10px) rotate(-1.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(1deg); } }
+@media (prefers-reduced-motion: reduce) { .ui-saludo { animation: none; } }
+/* Tarjeta para compartir: el aviso de "¡Copiado!" vive en el propio botón; esta región solo es para lectores de pantalla */
+.ui-copied { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Tarjeta compacta (vertical): las tres acciones en una fila; Copiar es un cuadro de 48 px con ícono */
+.ui-card.compact .ui-btn { padding: 0 14px; }
+.ui-card.compact .ui-btn + .ui-btn { margin-left: 6px; }
+.ui-btn.ui-copy.icon { width: 48px; padding: 0; vertical-align: top; }
