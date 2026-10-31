@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 // "Así lo hicimos" cuenta las intervenciones de Jorge desde BITACORA.md al compilar.
@@ -37,9 +38,28 @@ const saveEvidence = () => ({
   },
 });
 
-export default defineConfig({
-  base: './',
-  define: { __JORGE_INTERVENTIONS__: JSON.stringify(jorgeInterventions()) },
-  plugins: [saveEvidence()],
-  build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
+// Phaser a medida (src/phaser-moki.js) solo al compilar: el paquete lleva únicamente las piezas del motor que usamos, con las
+// banderas del build oficial sin sonido de Phaser. En `vite` (desarrollo) sigue el Phaser completo: su pre-empaquetado no
+// aplica las banderas `typeof`. Si el juego empieza a usar otra pieza de Phaser, impórtala en src/phaser-moki.js y prueba el build.
+const PHASER_A_MEDIDA = {
+  resolve: { alias: [{ find: /^phaser$/, replacement: fileURLToPath(new URL('./src/phaser-moki.js', import.meta.url)) }] },
+  define: {
+    'typeof WEBGL_RENDERER': 'true',
+    'typeof CANVAS_RENDERER': 'true',
+    'typeof WEBGL_DEBUG': 'false',
+    'typeof FEATURE_SOUND': 'false',
+    'typeof PLUGIN_CAMERA3D': 'false',
+    'typeof PLUGIN_FBINSTANT': 'false',
+  },
+};
+
+export default defineConfig(({ command }) => {
+  const custom = command === 'build' ? PHASER_A_MEDIDA : { resolve: {}, define: {} };
+  return {
+    base: './',
+    resolve: custom.resolve,
+    define: { __JORGE_INTERVENTIONS__: JSON.stringify(jorgeInterventions()), ...custom.define },
+    plugins: [saveEvidence()],
+    build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
+  };
 });
