@@ -3,6 +3,7 @@
 import { CONFIG as C } from '../config.js';
 import { PAL, TONE, mix, rng } from './palette.js';
 import { t } from '../i18n.js';
+import { MID_PROPS } from './textures.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
 const lerpColor = (a, b, k) => {
@@ -275,6 +276,12 @@ export class Ambient {
     cv.height = img.height;
     const cx = cv.getContext('2d');
     cx.drawImage(img, 0, 0);
+    // los pinos y postes ya no van pintados en el mosaico: se suman en su sitio (también los que cruzan la costura)
+    for (const p of MID_PROPS) {
+      if (!s.textures.exists(p.key)) return null;
+      const pi = s.textures.get(p.key).getSourceImage();
+      for (const off of [-img.width, 0, img.width]) cx.drawImage(pi, p.ox + off, p.oy);
+    }
     this._mid = { W: img.width, H: img.height, d: cx.getImageData(0, 0, img.width, img.height).data };
     return this._mid;
   }

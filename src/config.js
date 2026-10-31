@@ -113,6 +113,9 @@ export const CONFIG = {
     packLagHz: 11,
     reducedTheta0: 20,
     parallax: { clouds: 0.1, far: 0.3, mid: 0.6 },
+    // Pinos y postes de la capa media nunca detrás de un obstáculo (BITACORA 29-oct 10:16): se desvanecen cuando la caja de
+    // colisión de una caja, torre o viga (más marginPx de pantalla) se les acerca a fadePx; dentro del margen no se dibujan.
+    midClear: { on: true, marginPx: 12, fadePx: 48 },
     foreground: { speed: 1.3, minGapSec: 2.6 },
     vertical: { far: 0.02, mid: 0.04, ground: 0.06, maxPx: 4 },
     checkpointLabelMs: 1600,

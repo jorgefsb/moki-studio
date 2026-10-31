@@ -35,6 +35,8 @@ async function boot() {
       contrast: (type, days, probe) => import('./debug/contrast.js').then((m) => m.measureContrast(game.scene.scenes[0], type, days, probe)),
       windows: (v) => import('./debug/windows.js').then((m) => m.measureWindows(game.scene.scenes[0], v)),
       overlaps: (v) => import('./debug/overlaps.js').then((m) => m.measureOverlaps(game.scene.scenes[0], v)),
+      // Pinos y postes del fondo contra cajas de colisión (+12 px de pantalla); opts: { seeds, modo, clear, marginPx }
+      fondo: (opts) => import('./debug/fondo.js').then((m) => m.measureFondo(game.scene.scenes[0], opts)),
       meter: (cmd) => import('./debug/meter.js').then((m) => (cmd === 'start' ? m.startMeter(audioFacade) : cmd === 'stop' ? m.stopMeter() : m.readMeter())),
       cfg: CONFIG, // perillas vivas, para barrer valores sin recargar
       // Tiempos de apertura (ms desde el inicio de la navegación): primer pintado, scripts listos, escena lista y primer cuadro con Moki
