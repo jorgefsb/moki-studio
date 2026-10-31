@@ -432,8 +432,9 @@ function midLayer() {
 
 // ---------- Piezas del plano de juego ----------
 
-function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
+function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0, soft = 1 }) {
   // dim: variante de noche (T3g): el cartón se oscurece hacia la tinta y la cinta/franjas conservan #FF6B35
+  // soft: variante de Paseo: contorno, perfil de tinta y cinta bajan con el cartón para que la caja atenuada no parezca vidrio
   const body = dim ? mix(body0, PAL.ink, dim) : body0;
   const r = rng(seed);
   const W = x.canvas.width;
@@ -444,7 +445,7 @@ function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
   x.beginPath();
   path(x);
   x.lineWidth = 4;
-  x.strokeStyle = rgba(PAL.paper, 0.7);
+  x.strokeStyle = rgba(PAL.paper, 0.7 * soft);
   x.stroke();
   x.restore();
   // perfil exterior de tinta #22211F (40%, 2 px), alrededor de la silueta (T3e): separa el cartón del fondo sin tocar la colina
@@ -452,7 +453,7 @@ function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
   x.beginPath();
   x.roundRect(ox - 1, oy - 1, w + 2, h + 2, 7);
   x.lineWidth = 2; // T3f: a 375 px (zoom 0.69) el perfil de 1 px se diluía: 2 px y 40%
-  x.strokeStyle = rgba(PAL.ink, 0.4);
+  x.strokeStyle = rgba(PAL.ink, 0.4 * soft);
   x.stroke();
   x.restore();
   x.fillStyle = body;
@@ -486,6 +487,8 @@ function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
   x.fillRect(ox, oy + h - 4, w, 4);
   // cinta naranja
   if (tape) {
+    x.save();
+    x.globalAlpha = soft;
     const tx = ox + w * 0.16;
     const tw = Math.round(w * 0.26);
     const th = h * 0.7;
@@ -507,9 +510,10 @@ function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
     x.fillStyle = rgba(PAL.paper, 0.45);
     x.fillRect(tx, oy, 2, th);
     x.fillRect(tx + tw - 2, oy, 2, th);
+    x.restore();
   }
   // canto interior de tinta (T3f): oscurece el borde del cartón para que a 375 px la silueta se separe del fondo
-  x.strokeStyle = rgba(PAL.ink, 0.5);
+  x.strokeStyle = rgba(PAL.ink, 0.5 * soft);
   x.lineWidth = 3;
   x.beginPath();
   path(x);
@@ -518,34 +522,35 @@ function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0 }) {
 }
 
 // Los dibujos miden 4 px más que la caja de juego (contorno claro de 2 px por lado).
-function caja(dim = 0) {
+function caja(dim = 0, soft = 1) {
   const [c, x] = mk(64, 60);
-  block(x, 2, 2, 60, 56, { body: TONE.kraftDanger, tape: true, seed: 41, dim });
+  block(x, 2, 2, 60, 56, { body: TONE.kraftDanger, tape: true, seed: 41, dim, soft });
   return c;
 }
 
 // Torre de 100 px: dos cajas de 50, la de arriba ladeada medio grado como pila de cartón.
-function torre(dim = 0) {
+function torre(dim = 0, soft = 1) {
   const [c, x] = mk(64, 96);
-  block(x, 2, 48, 60, 44, { body: TONE.kraftDanger, tape: true, seed: 42, dim });
+  block(x, 2, 48, 60, 44, { body: TONE.kraftDanger, tape: true, seed: 42, dim, soft });
   x.save();
   x.translate(32, 48);
   x.rotate(-0.026);
   x.translate(-32, -48);
-  block(x, 3, 2, 58, 44, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43, dim });
+  block(x, 3, 2, 58, 44, { body: mix(TONE.kraftDanger, PAL.ink, 0.06), tape: true, seed: 43, dim, soft });
   x.restore();
   return c;
 }
 
 // Viga colgante: tablón de cartón con franja naranja, colgado de dos hilos (títere). 76x32 de juego.
-function viga(dim = 0) {
+function viga(dim = 0, soft = 1) {
   const [c, x] = mk(95, 36);
-  block(x, 2, 2, 91, 32, { body: TONE.kraftDanger, tape: false, seed: 91, dim });
+  block(x, 2, 2, 91, 32, { body: TONE.kraftDanger, tape: false, seed: 91, dim, soft });
   x.save();
   x.beginPath();
   x.roundRect(2, 2, 91, 32, 6);
   x.clip();
   // franja naranja diagonal, en la forma de la cinta de las cajas
+  x.globalAlpha = soft;
   x.fillStyle = PAL.accent;
   for (const ox of [0, 22, 44]) {
     x.beginPath();
@@ -1194,6 +1199,14 @@ export function buildTextures(scene) {
   defer('ambBands', () => ambBands());
   defer('chipOrange', () => chip(PAL.accent, 73));
   defer('chipAmber', () => chip(PAL.warm, 74));
+  // Paseo: cartón atenuado con contorno y cinta igual de suaves (se usan solo si el jugador prendió Paseo)
+  const soft = C.paseo.edgeSoft;
+  defer('caja_p', () => caja(0, soft));
+  defer('torre_p', () => torre(0, soft));
+  defer('viga_p', () => viga(0, soft));
+  defer('caja_n_p', () => caja(0.7, soft));
+  defer('torre_n_p', () => torre(0.7, soft));
+  defer('viga_n_p', () => viga(C.atmosphere.night.vigaDim, soft));
   return {
     lazy,
     // genera la siguiente textura pendiente; devuelve su clave o null cuando no queda ninguna
