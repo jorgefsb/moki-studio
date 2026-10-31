@@ -1722,6 +1722,7 @@ export class RunScene extends Phaser.Scene {
     const rect = this.failRect();
     const wide = this.scale.width >= 700 && this.scale.width > this.scale.height * 0.9;
     const r = wide ? rect : { ...rect, compact: true };
+    if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
       { isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },

@@ -175,6 +175,7 @@ export class Ambient {
     this.lamp.setVisible(lampOn > 0.01 && this.lamp.texture.key === 'ambLamp').setAlpha(lampOn);
     if (s.sun) s.sun.setAlpha(1 - lampOn); // de noche el sol de papel se va y queda la lámpara
     this.lamp.setPosition(Math.max(70, s.vw * 0.12), s.top + (s.vw < 700 ? 74 / s.zoom : 4)); // en pantalla angosta cuelga bajo la fila del HUD
+    if (s.paseoRun) this.lamp.x += C.paseo.lampDx / s.zoom; // Paseo: la etiqueta bajo los metros ocupa esa esquina; la lámpara se corre a la derecha
     // estrellas de papel: solo en la noche, cuando ya cayó del todo
     if (d.to === 3 && d.t >= 1 && !this.stars.length && !this.fired.stars && s.textures.exists('ambStar')) this.spawnStars();
   }
