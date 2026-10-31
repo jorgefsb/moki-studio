@@ -123,6 +123,8 @@ export class Ambient {
     // de noche el cielo baja hacia tinta, los velos casi se van y la cordillera se rellena hacia tinta.
     const nt = d.to === 3 ? d.t : d.from === 3 ? 1 - d.t : 0;
     const NI = C.atmosphere.night;
+    this.nt = nt; // RunScene lo usa para la sombra de contacto de Moki de noche
+    if (s.rig) s.rig.setRim(NI.moonRim.on ? NI.moonRim.alpha * nt : 0); // borde de luna de Moki, sigue al fundido
     const sk = lerpColor(lerpColor(this.tone(d.from, 'sky'), this.tone(d.to, 'sky'), d.t), hex(PAL.ink), NI.sky * nt);
     const far = lerpColor(this.tone(d.from, 'far'), this.tone(d.to, 'far'), d.t);
     s.sky.setTint(toTint(sk));
@@ -136,6 +138,8 @@ export class Ambient {
     // horizonte de noche un poco más claro y frío: el degradado kraft del cielo vira a papel frío
     if (NI.horizon.on && nt > 0) s.skyGrad.setTintFill(lerpColor(hex(PAL.kraft), NI.horizon.color, nt));
     else s.skyGrad.clearTint();
+    // banda del horizonte más clara detrás de la cordillera: tiras planas de papel, no degradado (ARTE §7)
+    this.drawBand(NI.horizon, nt);
     // perspectiva atmosférica: los velos de cada capa toman el color del cielo de la hora (de noche, tinta cálida)
     if (s.farVeil) {
       s.farVeil.setTintFill(sk);
@@ -150,7 +154,10 @@ export class Ambient {
       if (s.groundFibers) s.groundFibers.setAlpha(NI.fibers.on ? NI.fibers.alpha * nt : 0);
       // cordillera extra: de día casi del color del cielo; de noche rellena hacia tinta (#3a342d) para no verse niebla
       const ridgeDay = lerpColor(sk, hex(TONE.kraftFar), C.ridge.mix);
-      s.ridge.setTintFill(lerpColor(ridgeDay, NI.ridgeLight.on ? NI.ridgeLight.color : NI.ridge, nt));
+      const ridgeTint = lerpColor(ridgeDay, NI.ridgeLight.on ? NI.ridgeLight.color : NI.ridge, nt);
+      s.ridge.setTintFill(ridgeTint);
+      // de noche el faldón sigue el color y el fundido de la cordillera; de día no se dibuja (la mañana no cambia)
+      if (s.ridgeSkirt) s.ridgeSkirt.setFillStyle(ridgeTint, 1).setAlpha(NI.ridgeSkirt.on ? s.ridge.alpha * nt : 0);
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
@@ -172,6 +179,36 @@ export class Ambient {
   }
 
   // Cartón oscuro de noche conservando la cinta: se cambia la textura a mitad del fundido (a mano, como un cambio de escena de papel)
+  // Banda del horizonte de noche: tiras planas de papel (color horizon.color) apiladas sobre el pie de la cordillera,
+  // la de abajo la más clara. Cada tira lleva canto claro de canto.px arriba y sombra de contacto tenue sobre la de atrás.
+  // Alturas en px de mundo sobre el pie, por farS (en vertical la cordillera es más alta). Solo se redibuja si algo cambia.
+  drawBand(H, nt) {
+    const s = this.scene;
+    const g = s.skyBand;
+    const box = s.bandBox;
+    if (!g || !box) return;
+    const B = H.band;
+    const on = H.on && B && B.on !== false && nt > 0;
+    const key = on ? [nt.toFixed(3), box.foot, box.w, box.s, H.color, JSON.stringify(B)].join('|') : 'off';
+    if (key === s.bandKey) return;
+    s.bandKey = key;
+    g.clear().setVisible(on);
+    if (!on) return;
+    let prev = box.foot;
+    const ys = B.strips.map(([h, a]) => {
+      const y = Math.round(box.foot - h * box.s);
+      g.fillStyle(H.color, a * nt).fillRect(0, y, box.w, prev - y);
+      prev = y;
+      return [y, a];
+    });
+    // canto y sombra después de todas las tiras, para que la tira de atrás no tape la sombra de la de adelante
+    ys.forEach(([y, a]) => {
+      g.fillStyle(H.color, Math.min(1, a + B.canto.alpha) * nt).fillRect(0, y, box.w, B.canto.px);
+      // sombra de contacto sobre la tira de atrás: shadow.px filas de tinta que se desvanecen hacia arriba
+      for (let i = 1; i <= B.shadow.px; i++) g.fillStyle(0x22211f, B.shadow.alpha * (1 - (i - 1) / B.shadow.px) * nt).fillRect(0, y - i, box.w, 1);
+    });
+  }
+
   setNight(on) {
     const s = this.scene;
     if (on === this.night) return;

@@ -264,7 +264,13 @@ export function createMokiRig(scene) {
   const shArm = hasArm ? shadow('moki-arm', ...armPivot) : null;
   const armNear = hasArm ? piece('moki-arm', ...armPivot) : null;
 
-  const layers = [legFar, bootFar, armFar, shLeg, shBoot, legNear, bootNear, shBody, body, shPack, pack, shArm, armNear].filter(Boolean);
+  // Borde de luna (solo de noche, C.atmosphere.night.moonRim): cuerpo y mochila en papel, corridos a la izquierda,
+  // detrás de todo el títere; asoman como un filo claro del lado de la lámpara. El alfa lo pone Ambient con setRim.
+  const rimTint = (p) => p.setTintFill(0xf4e8d5).setAlpha(0); // papel #F4E8D5
+  const rimBody = rimTint(piece('moki-body', ...bodyPivot));
+  const rimPack = rimTint(piece('moki-pack', ...packPivot));
+
+  const layers = [rimBody, rimPack, legFar,bootFar, armFar, shLeg, shBoot, legNear, bootNear, shBody, body, shPack, pack, shArm, armNear].filter(Boolean);
   const root = scene.add.container(0, 0, layers).setDepth(12).setScale(k);
 
   // Celebración: saluda (arte oficial, brazo arriba) en fundido sobre el títere.
@@ -301,6 +307,10 @@ export function createMokiRig(scene) {
     // Ángulos actuales en grados (adelante positivo) para medir sin adivinar.
     getAngles() {
       return { ...debug.angles };
+    },
+    setRim(a) {
+      rimBody.setAlpha(a);
+      rimPack.setAlpha(a);
     },
     get hopping() {
       return st.hopT >= 0;
@@ -456,11 +466,14 @@ export function createMokiRig(scene) {
       shLeg.setPosition(n.lx + so.x, hipY + n.ly + so.y).setAngle(n.legDeg);
       shBoot.setPosition(n.ax + so.x, hipY + n.ay + so.y).setAngle(nBw);
       body.setPosition(0, hipY).setAngle(tiltBody);
+      const rx = -C.atmosphere.night.moonRim.px / k;
+      rimBody.setPosition(rx, hipY).setAngle(tiltBody);
       shBody.setPosition(so.x, hipY + so.y).setAngle(tiltBody);
       const [pox, poy] = rot(tiltBody * D2R, R.pack.pivot.x - R.hip.x, R.pack.pivot.y - R.hip.y);
       const packY = hipY + poy + st.packDy / k;
       pack.setPosition(pox, packY).setAngle(tiltBody + st.packAng);
       shPack.setPosition(pox + so.x, packY + so.y).setAngle(tiltBody + st.packAng);
+      rimPack.setPosition(pox + rx, packY).setAngle(tiltBody + st.packAng);
 
       if (hasArm) {
         // Hombro: el disco del pecho de moki-lado. El brazo cuelga y gira sobre él; rotación = inclinación del cuerpo - ángulo.
