@@ -143,7 +143,7 @@ export function createBuses(ctx, cfg = C.audio) {
   sHp.connect(sWet);
   sWet.connect(sfxMix);
 
-  return { master, comp, sfxMix, sfxBus, rewardCh, motionCh, stingerEcho, musicMix, musicFilter, duckGain, musicBus, layer, echoIn, fb };
+  return { master, comp, sfxMix, sfxBus, rewardCh, motionCh, stingerEcho, musicMix, musicFilter, duckGain, musicBus, layer, echoIn, fb, echoWet: wet };
 }
 
 const prefMuted = () => load('moki.sound', '1') === '0' || Q.get('sound') === '0';
@@ -193,6 +193,7 @@ const A = {
       this.bus = createBuses(this.ctx);
       this.music = createMusic(this.ctx, this.bus, { reduced: this.reduced });
       this.bus.duckGain.gain.value = 0;
+      if (this.papelName) this.setPapel(this.papelName); // papel elegido antes del gesto
       window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
         this.reduced = e.matches;
         if (this.music) this.music.setReduced(e.matches);
@@ -369,6 +370,52 @@ const A = {
       g.linearRampToValueAtTime(cur, t + hold + (name === 'checkpoint' ? 0.4 : 0.5));
     }
     this.log('stinger', name);
+  },
+
+  // Timbre por papel (pieza 6 v2): papel.js se descarga solo cuando hay papel y ya hubo gesto.
+  // Sin papel (clásico, demo) no se carga nada y la mezcla queda igual.
+  papel: null,
+  papelName: null,
+  papelLoading: null,
+  loadPapel() {
+    if (!this.papelLoading)
+      this.papelLoading = import('./papel.js').then((m) => {
+        this.papelMod = m;
+        this.papel = m.createPapel(this.ctx, this.bus, C.audio);
+        this.music.setPapel(this.papel);
+        return m;
+      });
+    return this.papelLoading;
+  },
+  setPapel(name) {
+    this.papelName = name || null;
+    if (!this.ctx) return; // antes del gesto solo se recuerda
+    if (this.papel) return this.papel.set(this.papelName);
+    if (this.papelName) this.loadPapel().then(() => this.papel.set(this.papelName));
+  },
+  // Pasar página (cruce de tramo con papel): sustituye al stinger de checkpoint, misma prioridad y ducking más corto
+  pagina(name) {
+    this.setPapel(name);
+    if (!this.running || this.muted || this.hidden) return;
+    const now = this.ctx.currentTime;
+    if (now < this.busyUntil && 2 <= this.busyPrio) return;
+    this.busyUntil = now + 0.6;
+    this.busyPrio = 2;
+    const play = (m) => {
+      const t = Math.max(this.ctx.currentTime, now) + 0.005;
+      m.stingerPagina(this.ctx, this.bus.sfxMix, t, { reduced: this.reduced, papel: this.papelName });
+      this.paginas = (this.paginas || 0) + 1;
+      const g = this.bus.duckGain.gain;
+      const cur = g.value;
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(cur, t);
+      g.linearRampToValueAtTime(Math.min(cur, 0.55), t + 0.08);
+      g.setValueAtTime(Math.min(cur, 0.55), t + 0.6);
+      g.linearRampToValueAtTime(cur, t + 1.0);
+    };
+    if (this.papelMod) play(this.papelMod);
+    else this.loadPapel().then(play);
+    this.log('stinger', 'pagina', name);
   },
 
   // Botón de sonido (AUDIO §8): se confirma antes de silenciar

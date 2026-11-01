@@ -347,3 +347,128 @@ export async function saveSessionWav(name = 't3g2-audio-piezas-20s.wav', seconds
   const r = await fetch(`/__save?name=${encodeURIComponent(name)}`, { method: 'POST', body });
   return { ok: r.ok, bytes: body.byteLength, peakDb: +peakDb(d).toFixed(1) };
 }
+
+// ---- Pieza 6 v2: timbre por papel y stinger de pasar página ----
+// Centroide espectral medio (Hz), ponderado por potencia, en ventanas de 4096 con Hann
+export function centroidHz(d, sr = SR) {
+  const N = 4096;
+  let num = 0;
+  let den = 0;
+  for (let off = 0; off + N < d.length; off += N) {
+    const re = new Float64Array(N);
+    const im = new Float64Array(N);
+    for (let i = 0; i < N; i++) re[i] = d[off + i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N));
+    fft(re, im);
+    for (let k = 1; k < N / 2; k++) {
+      const p = re[k] * re[k] + im[k] * im[k];
+      num += p * ((k * sr) / N);
+      den += p;
+    }
+  }
+  return Math.round(num / Math.max(den, 1e-12));
+}
+
+const b64 = (buf) => {
+  const u = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+
+async function renderPapelTheme(papel, level, seconds, cfg) {
+  const { createPapel } = await import('../audio/papel.js');
+  return renderWith(
+    seconds,
+    (ctx, bus) => {
+      for (let k = 1; k <= 3; k++) bus.layer[k].gain.value = level >= k ? 1 : 0;
+      const p = createPapel(ctx, bus, cfg);
+      if (papel) p.set(papel, 0, 0.001);
+      const music = createMusic(ctx, bus, { level, papel: p });
+      const steps = Math.ceil(seconds / STEP);
+      for (let s = 0; s < steps; s++) music.scheduleStep(s % LOOP_STEPS, s * STEP);
+    },
+    cfg
+  );
+}
+
+// Sesión con papel: música E2, saltos y piezas con racha, y una página nueva cada 6 s (stinger + cambio de papel).
+async function renderPapelSession(order, seconds, cfg) {
+  const { createPapel, stingerPagina } = await import('../audio/papel.js');
+  return renderWith(
+    seconds,
+    (ctx, bus) => {
+      for (let k = 1; k <= 3; k++) bus.layer[k].gain.value = k <= 2 ? 1 : 0;
+      const p = createPapel(ctx, bus, cfg);
+      p.set(order[0], 0, 0.001);
+      const m = createMusic(ctx, bus, { level: 2, papel: p });
+      // cada página se programa en su momento (suspend del render): el papel de cada nota es el de su página
+      const page = (i) => {
+        const a = i * 6;
+        if (i) {
+          p.set(order[i], a, 0.4);
+          stingerPagina(ctx, bus.sfxMix, a + 0.005, { papel: order[i] });
+        }
+        for (let s = Math.ceil(a / STEP); s * STEP < Math.min(seconds, a + 6); s++) m.scheduleStep(s % LOOP_STEPS, s * STEP);
+      };
+      page(0);
+      order.forEach((_, i) => i && ctx.suspend(i * 6 - 0.1).then(() => (page(i), ctx.resume())));
+      const st = {};
+      let n = 0;
+      for (let k = 0; k < Math.floor(seconds / 3) - 1; k++) {
+        const t0 = 1.4 + k * 3;
+        routeSfx(ctx, bus, st, 'jump', SFX.jump, t0 - 0.35, { echo: bus.echoIn }, cfg);
+        if (k % 2) routeSfx(ctx, bus, st, 'jumpHigh', SFX.jumpHigh, t0 - 0.23, { echo: bus.echoIn }, cfg);
+        for (let i = 0; i < 5; i++) {
+          n += 1;
+          routeSfx(ctx, bus, st, 'pickup', SFX.pickup, t0 + i * 0.14, { index: n - 1, tier: n >= 6 ? 2 : n >= 3 ? 1 : 0, echo: bus.echoIn }, cfg);
+        }
+        routeSfx(ctx, bus, st, 'arc', SFX.arc, t0 + 4 * 0.14, { echo: bus.echoIn }, cfg);
+        routeSfx(ctx, bus, st, 'land', SFX.land, t0 + 0.9, { echo: bus.echoIn }, cfg);
+      }
+    },
+    cfg
+  );
+}
+
+// Eco con el papel puesto: una nota sola de melodía y el pico de sus 3 primeras repeticiones (dB contra la nota)
+async function echoPapel(papel, cfg) {
+  const { createPapel } = await import('../audio/papel.js');
+  const d = await renderWith(2, (ctx, bus) => {
+    const p = createPapel(ctx, bus, cfg);
+    if (papel) p.set(papel, 0, 0.001);
+    carton(ctx, bus.musicMix, 0.1, 79, 0.15, 0.3, { echo: bus.echoIn, send: 0.7 });
+  }, cfg);
+  const pk = (a) => {
+    let m = 0;
+    for (let j = Math.floor(a * SR); j < Math.min(d.length, Math.floor((a + 0.12) * SR)); j++) m = Math.max(m, Math.abs(d[j]));
+    return m;
+  };
+  const n0 = pk(0.08);
+  return [1, 2, 3].map((i) => +(db(pk(0.08 + i * 3 * STEP)) - db(n0)).toFixed(1));
+}
+
+// Devuelve números por papel y, con wav: true, los wav en base64 (el script los escribe en evidencia/).
+export async function measurePapel({ wav = false, cfg = C.audio } = {}) {
+  const { stingerPagina, PAPELES } = await import('../audio/papel.js');
+  const out = { papeles: {}, stinger: {}, wavs: {} };
+  const names = [null, ...Object.keys(PAPELES)];
+  for (const name of names) {
+    const d = await renderPapelTheme(name, 1, 20, cfg);
+    const key = name || 'sin_papel';
+    out.papeles[key] = { centroideHz: centroidHz(d), centroideSobre300Hz: centroidHz(highpass300(d)), picoDb: +peakDb(d).toFixed(1), rmsDb: +rmsDb(d).toFixed(1), eco: await echoPapel(name, cfg) };
+    if (wav) out.wavs[`v2-audio-papel-${key}-20s.wav`] = b64(wavBytes(d, SR));
+  }
+  // la misma partitura sin la capa (createMusic sin papel) para confirmar que "sin papel" es el tema de siempre
+  const plain = await renderTheme(1, 20, cfg);
+  out.papeles.sin_papel.picoTemaDeSiempreDb = +peakDb(plain).toFixed(1);
+  for (const name of Object.keys(PAPELES)) {
+    const d = await renderWith(1.5, (ctx, bus) => stingerPagina(ctx, bus.sfxMix, 0.05, { papel: name }), cfg);
+    out.stinger[name] = { picoDb: +peakDb(d).toFixed(1), duracionMs: tailMs(d) };
+    if (wav && name === 'cartulina') out.wavs['v2-audio-pagina-stinger.wav'] = b64(wavBytes(d, SR));
+  }
+  const order = ['kraft', 'cuaderno', 'periodico', 'cartulina'];
+  const ses = await renderPapelSession(order, 24, cfg);
+  out.sesion = { orden: order, segundos: 24, picoDb: +peakDb(ses).toFixed(1) };
+  if (wav) out.wavs['v2-audio-sesion-papeles-24s.wav'] = b64(wavBytes(ses, SR));
+  return out;
+}
