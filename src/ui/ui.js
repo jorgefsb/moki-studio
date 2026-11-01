@@ -20,7 +20,26 @@ export function createUI() {
   document.body.appendChild(root);
 
   let primary = null; // acción del botón/gesto principal de la tarjeta abierta
-  const state = { demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null };
+  const siguienteTachado = () => {
+    const text = state.tachados.shift();
+    if (text === undefined) return (state.tachado = null);
+    const n = el('div', 'ui-tachado');
+    n.setAttribute('role', 'status');
+    const stamp = el('span', 'cu-stamp');
+    stamp.setAttribute('aria-hidden', 'true');
+    n.append(stamp, el('s', '', text));
+    root.appendChild(n);
+    const still = reducedMQ.matches || feel.level === 0;
+    const timer = setTimeout(() => {
+      n.classList.add('out');
+      state.tachado.timer = setTimeout(() => {
+        n.remove();
+        siguienteTachado();
+      }, still ? 0 : 220);
+    }, C.tachadoMs);
+    state.tachado = { node: n, timer };
+  };
+  const state = { demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null, tachado: null, tachados: [] };
 
   // Todo botón suena (AUDIO §5): se engancha en la fase de captura, antes de que el botón actúe
   root.addEventListener(
@@ -216,6 +235,7 @@ export function createUI() {
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
     showFail({ hint, meta, prompt, rect, isNew }, onGo) {
       ui.hideFail();
+      ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'transparent';
       const card = el('div', 'ui-card compact ui-fail');
@@ -311,7 +331,9 @@ export function createUI() {
       if (!list.children.length) list.append(el('li', 'done', t('cu.todo')));
       strip.append(list);
       if (tira.subio) strip.append(el('p', 'cu-sellos cu-subio', t(tira.completo ? 'cu.completo' : 'cu.subio', { n: tira.nivel })));
-      if (tira.nuevosSellos.length) strip.append(el('p', 'cu-sellos', t('cu.sellos', { s: tira.nuevosSellos.map((id) => t(`cu.sello.${id}`)).join(' · ') })));
+      // Día 2: el sello del nivel recién completo va primero en la línea de sellos nuevos
+      const sellosNuevos = [...(tira.selloNivel ? [t('cu.sello.nivel', { n: tira.selloNivel })] : []), ...tira.nuevosSellos.map((id) => t(`cu.sello.${id}`))];
+      if (sellosNuevos.length) strip.append(el('p', 'cu-sellos', t('cu.sellos', { s: sellosNuevos.join(' · ') })));
       strip.style.visibility = 'hidden';
       scrim.append(strip);
       // Caja de la tarjeta en px de pantalla (offset* ignora el transform de la animación de entrada)
@@ -346,6 +368,21 @@ export function createUI() {
       Object.assign(strip.style, { left: `${left}px`, top: `${top}px`, visibility: '' });
       state.cuaderno = strip;
     },
+    // Tachado a media partida (Día 2): etiqueta de papel bajo el HUD con el encargo tachado y su sello. Sale, se
+    // queda C.tachadoMs y se va; varios de golpe van en fila. Sin toque ni bloqueo: el juego nunca espera al aviso.
+    showTachado(text) {
+      state.tachados.push(text);
+      if (!state.tachado) siguienteTachado();
+    },
+    hideTachado() {
+      state.tachados.length = 0;
+      if (state.tachado) {
+        clearTimeout(state.tachado.timer);
+        state.tachado.node.remove();
+      }
+      state.tachado = null;
+    },
+
     hideCuaderno() {
       if (!state.cuaderno) return;
       state.cuaderno.remove();
@@ -355,6 +392,7 @@ export function createUI() {
     // Pantalla final (UX §8)
     showFinal(d, { onAgain, onHow, onCopy }, rect) {
       ui.hideFinal();
+      ui.hideTachado();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
       const card = el('div', rect.compact ? 'ui-card compact' : 'ui-card');

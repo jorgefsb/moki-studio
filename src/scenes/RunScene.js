@@ -11,7 +11,7 @@ import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
-import { nuevaPartida, revisar, leerCuaderno, nivelDe, TOTAL_SELLOS } from '../cuaderno.js';
+import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
 import { registrarDia, saludo, leerRacha } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
@@ -532,6 +532,7 @@ export class RunScene extends Phaser.Scene {
     this.paseoRun = this.paseo;
     this.paseoTagC.setVisible(this.paseoRun);
     this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
+    this.porTachar = this.partida ? porTachar(this.partida) : []; // Día 2: encargos que se tachan a media partida
     registrarDia(); // Racha con perdón: jugar cuenta el día local, también en Paseo (brief del director, pieza 4, decisión b); el demo no cuenta
     this.vueltaOn = this.vuelta && !this.paseoRun && vueltaAbierta(); // sin el sello (cuaderno borrado) no aplica aunque esté guardada
     this.resetRun(this.makeLevel(), 0);
@@ -563,6 +564,7 @@ export class RunScene extends Phaser.Scene {
     this.demo = true;
     this.screen = 'demo';
     this.partida = null; // el demo no cuenta para el cuaderno
+    this.porTachar = [];
     this.paseoRun = false;
     this.paseoTagC.setVisible(false);
     this.vueltaOn = false;
@@ -916,9 +918,20 @@ export class RunScene extends Phaser.Scene {
     this.stepMoki(dtMs);
     this.stepHud();
     this.stepAmbient(dtMs);
+    this.stepTachado();
 
     if (this.demo && !this.demoStripping && this.dist >= this.level.end) this.demoRestart();
     else if (!this.demo && this.dist >= this.level.end && !this.dead) this.finish();
+  }
+
+  // Tachado a media partida (Día 2): al llegar un encargo a su meta sale un aviso breve de papel. Solo avisa: no
+  // pausa, no cuenta hacia atrás y no guarda (revisar() lo sella al caer o llegar, con la misma condición).
+  stepTachado() {
+    if (!this.partida || this.demo || !this.porTachar.length) return;
+    const hechas = this.porTachar.filter((n) => n.val(this.partida) >= n.goal);
+    if (!hechas.length) return;
+    this.porTachar = this.porTachar.filter((n) => !hechas.includes(n));
+    hechas.forEach((n) => this.ui.showTachado(t(`cu.nota.${n.id}`)));
   }
 
   // Velocidad del tramo con rampa de 2 s al cambiar (sin rampa continua).
@@ -1817,7 +1830,7 @@ export class RunScene extends Phaser.Scene {
       modo: this.modoLabel() || t('share.clasico'),
       fecha,
       paginas: l.tramos.map((_, i) => ({ caidas: P.crashesByTramo[i] || 0 })),
-      sellos: c.notas.length + c.sellos.length,
+      sellos: contarSellos(c),
       de: TOTAL_SELLOS,
       racha: leerRacha().racha,
       paseo: !!(this.finalData && this.finalData.paseo),

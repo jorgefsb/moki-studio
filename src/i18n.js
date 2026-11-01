@@ -123,6 +123,7 @@ const ES = {
   'cu.nota.sinCaerP4': 'Página 4 sin caerte',
   'cu.nota.cajas20': 'Salta 20 cajas',
   'cu.nota.metaRacha7': 'Racha de 7 y llega a la meta',
+  'cu.sello.nivel': 'Nivel {n}',
   'cu.sello.llegue': 'Llegué',
   'cu.sello.sinCaerme': 'Sin caerme',
   'cu.sello.coleccionista': 'Coleccionista',
