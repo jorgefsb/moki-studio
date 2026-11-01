@@ -20,6 +20,7 @@ export function createMusic(ctx, bus, opts = {}) {
     layerOffUntil: [0, 0, 0, 0],
     reduced: !!opts.reduced,
     fixed: opts.level !== undefined, // render offline: grados fijos desde el primer paso
+    papel: opts.papel || null, // capa de papel (papel.js, carga diferida); null en el clásico
   };
   if (S.fixed) for (let k = 1; k <= 3; k++) S.layerOn[k] = S.target >= k;
   const rnd = (a) => (Math.random() * 2 - 1) * a;
@@ -67,6 +68,7 @@ export function createMusic(ctx, bus, opts = {}) {
         cuadrada(ctx, mix, t, midi, dur, 0.14 * MID * vel, { echo, send: SEND });
         carton(ctx, mix, t, midi, dur, 0.13 * MID * vel, { echo, send: SEND, noTin: true });
       }
+      if (S.papel) S.papel.note(t, midi, dur, (m.voice === 'carton' ? 0.3 : 0.27) * MID * vel, strong);
       if (m.layer2 && live(2)) cuadrada(ctx, bus.layer[2], t, midi, dur, 0.14 * 0.35 * MID, { echo, send: SEND });
       if (m.aSection && live(2)) cuadrada(ctx, bus.layer[2], t, midi + 12, dur, 0.14 * 0.3 * MID, { echo, send: SEND });
     }
@@ -124,6 +126,9 @@ export function createMusic(ctx, bus, opts = {}) {
     bar: () => Math.floor((S.step % LOOP_STEPS) / BAR_STEPS),
     setTarget(n) {
       S.target = n;
+    },
+    setPapel(p) {
+      S.papel = p;
     },
     setReduced(v) {
       S.reduced = v;

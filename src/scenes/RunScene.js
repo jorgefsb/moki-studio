@@ -433,6 +433,7 @@ export class RunScene extends Phaser.Scene {
     if (this.ambient) this.ambient.reset();
     if (this.ambient) this.ambient.biomas = this.demo ? null : level.biomas || null; // biomas de papel por tramo (NIVELES.md §8)
     if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
+    audio.setPapel(!this.demo && level.biomas ? level.biomas[this.tramoIdx] : null); // timbre del papel (clásico y demo: sin papel)
   }
 
   showModo() {
@@ -1160,7 +1161,9 @@ export class RunScene extends Phaser.Scene {
       this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue };
       if (this.partida && !this.demo) this.partida.maxTramo = Math.max(this.partida.maxTramo, this.tramoIdx);
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
-      audio.stinger('checkpoint');
+      // con papel, el cruce es pasar página: su stinger sustituye al de checkpoint (el clásico no cambia)
+      if (!this.demo && this.level.biomas) audio.pagina(this.level.biomas[this.tramoIdx]);
+      else audio.stinger('checkpoint');
       if (!this.demo) this.ambient.good('checkpoint', this.t); // globo 0.3-0.8 s después
       audio.setTramo(this.tramoIdx);
       if (!this.demo) this.ambient.setDay(this.tramoIdx); // hora del día: crossfade de 6 s tras el checkpoint (el demo la cambia a los 31 s)
