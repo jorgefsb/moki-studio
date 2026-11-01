@@ -24,6 +24,8 @@ Canon: GBrain specs/moki-studio-build-in-public-2026-10-29 y critical-context/am
 14. **Gasto sin confundir.** Lo real es la suscripción fija prorrateada (Claude Max, 200 USD al mes, compartida con todo lo que Jorge hace con Claude). Los tokens por día salen de la herramienta de gasto. El "equivalente por consumo" solo se menciona junto a la frase "no es lo que se paga". Nunca escribas que el estudio costó el equivalente.
 15. **La mejora se mide en el método también.** Una vez por semana, el post de los viernes dice qué cambió en cómo trabaja el estudio (skills nuevos, reglas, organización) y si mejoró algo medible.
 
+16. **Fácil de leer para cualquiera.** Todo lo público pasa por la skill lectura-facil y por `python3 herramientas/legible.py` (índice de 70 o más, sin frases de más de 25 palabras, sin palabras técnicas sin explicar). Diario va imagen con gráfica; video corto cuando el cambio se ve mejor en movimiento, y uno explicativo por semana (los Shorts pasan por Jorge).
+
 ## Tus archivos
 - **DECISIONES.md** (raíz del repo): una fila por decisión, la más nueva arriba. `fecha hora · quién · decisión · por qué · qué descartamos · evidencia`. Incluye cuando el director elige pieza, cuando algo no se integra y cuando se congela.
 - **BITACORA.md:** a las 18:30 CDMX, una línea que empiece con `PARA PUBLICAR HOY:` con 3 cambios en lenguaje no técnico, la mejor captura (ruta en evidencia/), un dato numérico real para el gráfico y una lección.
