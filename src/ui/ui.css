@@ -218,6 +218,8 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 /* E1b: la subida de nivel lleva cinta kraft (un solo foco naranja en la tira) y peso normal para no competir con
    'Sello nuevo'; ambas líneas van a 18 px de interlineado para caber a 375 sin crecer la tira */
 .ui-cuaderno .cu-subio { border-left-color: #b99168; font: 400 14px/18px Inter, sans-serif; }
+/* Día 4: qué sigue, en tinta con cinta kraft como la subida (sin naranja: no compite con el sello nuevo) */
+.ui-cuaderno .cu-sigue { margin: 6px 0 0; padding-left: 8px; border-left: 4px solid #b99168; color: #22211f; font: 400 14px/18px Inter, sans-serif; }
 /* El sello nuevo se estampa: se acerca girado (anticipación), cae con Back.out y se asienta */
 .ui-cuaderno .cu-stamp.new { animation: cu-stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both; }
 @keyframes cu-stamp { 0% { transform: scale(1.9) rotate(-28deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
@@ -227,7 +229,8 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
    20 px de aire abajo quepan sin recortar renglones ni el "Sello nuevo" */
 @media (max-width: 420px) {
   .ui-cuaderno { padding: 6px 12px 8px; }
-  .ui-cuaderno .cu-sellos { margin-top: 4px; }
+  .ui-cuaderno .cu-sellos,
+  .ui-cuaderno .cu-sigue { margin-top: 4px; }
 }
 
 /* Racha (GDD §3): saludo de Moki en el título, etiqueta de papel sobre el chip de modo; tinta, nada de naranja chico */

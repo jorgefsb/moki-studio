@@ -169,6 +169,7 @@ export function revisar(st) {
     de: TOTAL_SELLOS,
     nivel: nv.nivel,
     completo: nv.completo,
+    ultimo: nv.nivel >= NIVEL_MAX, // Día 4: el nivel abierto es el último (lo que sigue es terminar el Cuaderno)
     subio: nv.hechos > antes, // Moki subió de nivel en esta revisión
     selloNivel: nv.hechos > antes ? nv.hechos : 0, // sello del nivel recién completo (1-10), 0 si no hubo
   };

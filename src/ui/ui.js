@@ -340,9 +340,20 @@ export function createUI() {
       if (!list.children.length) list.append(el('li', 'done', t('cu.todo')));
       strip.append(list);
       if (tira.subio) strip.append(el('p', 'cu-sellos cu-subio', t(tira.completo ? 'cu.completo' : 'cu.subio', { n: tira.nivel })));
+      // Día 4: qué sigue. Al cerrar un set de tres, el primer encargo del nivel nuevo (si no salió ya como renglón);
+      // al llegar a la meta sin subir, cuántos encargos faltan para el siguiente nivel. En fallo sin subida, nada.
+      let sigue = '';
+      if (!tira.completo && tira.activas.length) {
+        const k = tira.activas.length;
+        const primero = tira.activas[0].id;
+        const enRenglon = [...list.querySelectorAll('.cu-txt')].some((n) => n.textContent === t(`cu.nota.${primero}`));
+        if (tira.subio) sigue = enRenglon ? '' : t('cu.sigue', { s: t(`cu.nota.${primero}`) });
+        else if (host === state.final) sigue = t(`cu.${k === 1 ? 'falta' : 'faltan'}${tira.ultimo ? '.fin' : ''}`, { k, n: tira.nivel + 1 });
+      }
       // Día 2: el sello del nivel recién completo va primero en la línea de sellos nuevos
       const sellosNuevos = [...(tira.selloNivel ? [t('cu.sello.nivel', { n: tira.selloNivel })] : []), ...tira.nuevosSellos.map((id) => t(`cu.sello.${id}`))];
       if (sellosNuevos.length) strip.append(el('p', 'cu-sellos', t('cu.sellos', { s: sellosNuevos.join(' · ') })));
+      if (sigue) strip.append(el('p', 'cu-sigue', sigue)); // al final: se lee como cierre de la tira
       strip.style.visibility = 'hidden';
       scrim.append(strip);
       // Caja de la tarjeta en px de pantalla (offset* ignora el transform de la animación de entrada)
@@ -367,7 +378,12 @@ export function createUI() {
       // (queda al menos uno), luego la línea de sellos de partida (E1b: el sello nuevo pesa más que una nota
       // activa). La subida de nivel es lo último que se va.
       let top = lugar();
-      const sobra = () => tira.subio && ((list.children.length > 1 && list.lastElementChild) || strip.querySelector('.cu-sellos:not(.cu-subio)'));
+      // Día 4: sin subida, lo primero que se va es la línea de qué sigue (la tira queda como antes); con subida va
+      // después de renglones y sellos.
+      const sobra = () =>
+        tira.subio
+          ? (list.children.length > 1 && list.lastElementChild) || strip.querySelector('.cu-sellos:not(.cu-subio)') || strip.querySelector('.cu-sigue')
+          : strip.querySelector('.cu-sigue');
       for (let q = sobra(); top === null && q; q = sobra()) {
         q.remove();
         top = lugar();

@@ -1898,6 +1898,7 @@ export class RunScene extends Phaser.Scene {
     const l = this.level;
     const P = this.partida || { crashesByTramo: {} };
     const c = leerCuaderno();
+    const nv = nivelDe(c);
     const fecha = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '');
     return textoTarjeta({
       modo: this.modoLabel() || t('share.clasico'),
@@ -1905,6 +1906,8 @@ export class RunScene extends Phaser.Scene {
       paginas: l.tramos.map((_, i) => ({ caidas: P.crashesByTramo[i] || 0 })),
       sellos: contarSellos(c),
       de: TOTAL_SELLOS,
+      nivel: nv.nivel,
+      completo: nv.completo,
       racha: leerRacha().racha,
       paseo: !!(this.finalData && this.finalData.paseo),
     });
