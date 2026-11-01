@@ -136,6 +136,8 @@ Origen: gauntlet R3/R4n ("ni cerca", sin movimiento fuera del ruido) y juicios d
 4. Suelo: bajar su altura (hoy >30% del cuadro) y quitar la textura de rasguños; el primer plano es lo más oscuro.
 5. Canto del pino y la casita +1 px; sol separado de la etiqueta de piezas a 375.
 
+Línea base de contraste con el instrumento nuevo (CONTRASTE, 7fa4950, 1-nov): torre a 1280 = 5.28 de día y 2.62 de noche (antes 5.11 y 2.56). El instrumento viejo da lo mismo en la misma página; la diferencia era el vaivén de entrada de la torre, no una regresión. Las 4 horas a 1280 miden en ~10 s con semáforo VERDE (11.9 s en AMARILLO).
+
 ### v1 pública
 Libro de 4 páginas + papel del día + cuaderno + racha; poses nuevas de Moki dibujadas por la marca; carga <3 s en gama media; métricas de portal (sesión 10+ min, D1 10-15%, 80% juega 1+ min) medidas en moki-prueba antes de cualquier portal. Spark publica; nada se publica desde el estudio.
 
