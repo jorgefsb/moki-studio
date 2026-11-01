@@ -405,13 +405,16 @@ const A = {
       const t = Math.max(this.ctx.currentTime, now) + 0.005;
       m.stingerPagina(this.ctx, this.bus.sfxMix, t, { reduced: this.reduced, papel: this.papelName });
       this.paginas = (this.paginas || 0) + 1;
+      // ducking solo en juego, y vuelve al nivel de juego (1), no al valor del instante: si la página cae a media
+      // rampa (tras un fallo, en el fade de entrada) la música no se queda baja
+      if (this.state !== 'playing' && this.state !== 'tutorial') return;
       const g = this.bus.duckGain.gain;
       const cur = g.value;
       g.cancelScheduledValues(t);
       g.setValueAtTime(cur, t);
       g.linearRampToValueAtTime(Math.min(cur, 0.55), t + 0.08);
       g.setValueAtTime(Math.min(cur, 0.55), t + 0.6);
-      g.linearRampToValueAtTime(cur, t + 1.0);
+      g.linearRampToValueAtTime(1, t + 1.0);
     };
     if (this.papelMod) play(this.papelMod);
     else this.loadPapel().then(play);

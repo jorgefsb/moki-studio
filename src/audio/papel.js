@@ -5,6 +5,8 @@
 import { carton, campana, voiceTools, mtof } from './voices.js';
 
 const { noise, osc, lp, shape } = voiceTools;
+// la octava arriba no pasa de Sol6 (AUDIO §0 regla 4 y §6: casi nada sobre 4 kHz)
+const up = (midi) => (midi + 12 > 91 ? midi : midi + 12);
 
 // Cada papel dobla la melodía con su color y mueve el eco. No toca tempo, notas ni capas del tema.
 //   kraft      cálido: triangular una octava abajo, lowpass 1.3 kHz (cartón grueso)
@@ -31,7 +33,7 @@ const COLOR = {
   },
   cuaderno(ctx, dest, t, midi, dur, peak, strong) {
     if (!strong) return;
-    campana(ctx, dest, t, midi + 12, peak * 0.2, { tail: 0.16 });
+    campana(ctx, dest, t, up(midi), peak * 0.32, { tail: 0.22 });
   },
   periodico(ctx, dest, t, midi, dur, peak) {
     const end = t + Math.min(dur, 0.06) + 0.05;
@@ -43,7 +45,7 @@ const COLOR = {
     f.connect(dest);
   },
   cartulina(ctx, dest, t, midi, dur, peak, strong) {
-    campana(ctx, dest, t, midi + 12, peak * (strong ? 0.5 : 0.36), { tail: 0.3 });
+    campana(ctx, dest, t, up(midi), peak * (strong ? 0.5 : 0.36), { tail: 0.3 });
   },
 };
 
