@@ -354,11 +354,13 @@ export function createUI() {
       const left = Math.max(16, Math.min(c.l, W - 16 - w));
       // Debajo de la tarjeta si no tapa a Moki (en horizontal la tarjeta ya va a su derecha); si no, abajo sobre el
       // suelo de papel. Si no hay lugar sin traslape con la tarjeta ni con Moki, no se enseña: la tarjeta manda.
+      // ENCARGOS-D: 20 px de aire con el borde de abajo (era 12; a 375 la tira se veía pegada al borde)
+      const aire = 20;
       const lugar = () => {
         const sh = strip.offsetHeight;
         const t0 = c.t + c.h + 10;
-        if (t0 + sh <= H - 12 && (zonas.wide || t0 + sh <= zonas.headY - 6)) return t0;
-        const t1 = H - 12 - sh;
+        if (t0 + sh <= H - aire && (zonas.wide || t0 + sh <= zonas.headY - 6)) return t0;
+        const t1 = H - aire - sh;
         return t1 < zonas.floorY + 4 || t1 < c.t + c.h + 6 ? null : t1;
       };
       // Si no cabe (celular con subida de nivel), se recorta antes de esconderla: primero renglones desde abajo

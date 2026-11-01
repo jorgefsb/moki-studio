@@ -223,6 +223,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 @keyframes cu-stamp { 0% { transform: scale(1.9) rotate(-28deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ui-cuaderno .cu-stamp.new { animation: none; } }
 .ui-cuaderno li.cu-mas { font-weight: 600; color: #22211f; padding-left: 26px; }
+/* ENCARGOS-D: en celular la tira gana 8 px de alto menos (relleno y separación de las líneas de sellos) para que los
+   20 px de aire abajo quepan sin recortar renglones ni el "Sello nuevo" */
+@media (max-width: 420px) {
+  .ui-cuaderno { padding: 6px 12px 8px; }
+  .ui-cuaderno .cu-sellos { margin-top: 4px; }
+}
 
 /* Racha (GDD §3): saludo de Moki en el título, etiqueta de papel sobre el chip de modo; tinta, nada de naranja chico */
 .ui-saludo {
