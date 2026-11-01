@@ -173,6 +173,12 @@ export function handTic(ctx, dest, t, o = {}) {
   tic(ctx, P.out, t, 0.1, { atkMin: P.atkMin, vol: P.pk });
 }
 
+// Aviso del pop-up: un tic corto y más bajo que el de la mano (secundario, AUDIO §3)
+export function popAviso(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  tic(ctx, P.out, t, 0.08, { atkMin: P.atkMin, vol: P.pk * P.v });
+}
+
 // Arco completo (especial): Do6, Mi6, Sol6
 export function arc(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
@@ -245,5 +251,5 @@ export function stingerFinal(ctx, dest, t, o = {}) {
   [84, 88, 91].forEach((n, i) => campana(ctx, P.out, end + 0.1 + i * 0.12, n, 0.14, { ...opt, tail: 1.2, echo: o.echo, send: 0.3 }));
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc };
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

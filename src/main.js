@@ -54,6 +54,7 @@ async function boot() {
       audioState: () =>
         Promise.resolve(audioFacade).then((a) => ({
           unlocked: a.unlocked,
+          popTics: a.popTics || 0,
           ctx: a.ctx ? a.ctx.state : null,
           muted: a.muted,
           state: a.state,

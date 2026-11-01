@@ -51,6 +51,13 @@ export function validateLevel(level, force = null, jitterMs = 0) {
         const plan = force || o.plan;
         if (o.D - dist <= airTravel(plan, speed) / 2 - pair - (jitterMs / 1000) * speed) {
           o.handled = true;
+          // Pop-up: al despegar ya debe estar arriba y el aviso debe llevar >= reactSec en pantalla
+          if (o.pop) {
+            const lead = (o.D - dist) / speed;
+            if (lead > C.popup.solidSec + 1e-6 || C.popup.warnSec - lead < C.popup.reactSec - 1e-6) {
+              return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'popup-tiempo', D: Math.round(o.D) };
+            }
+          }
           jump = { t0: t, pts: simulateJump(HOLD_MS[plan]).pts };
         }
       }
@@ -72,4 +79,24 @@ export function validateLevel(level, force = null, jitterMs = 0) {
     t += DT;
   }
   return { ok: true, sec: +t.toFixed(1), minClear: +minClear.toFixed(1) };
+}
+
+// Pop-up justo (NIVELES / GDD §4): el aviso dura >= 450 ms antes de que sea sólido, empieza con la caja entera dentro de
+// lo que se ve delante de Moki con minVisibleWidth y nunca antes de minGapBeforeSec del obstáculo anterior. Devuelve la primera falla o null.
+export function popupFalla(level) {
+  const P = C.popup;
+  const ahead = C.world.minVisibleWidth - Math.min(C.player.xMax, C.world.minVisibleWidth * C.player.xRatio);
+  if (P.warnSec - P.solidSec < 0.45 - 1e-9) return 'aviso < 450 ms';
+  const obs = level.entities.filter((e) => e.kind === 'obs');
+  for (let i = 0; i < obs.length; i++) {
+    const o = obs[i];
+    if (!o.pop) continue;
+    let tr = 0;
+    while (tr + 1 < level.starts.length && o.D >= level.starts[tr + 1]) tr++;
+    const v = level.tramos[tr].speed;
+    if (P.warnSec * v + C.obstacleSizes.caja.width / 2 > ahead + 1e-6) return `aviso fuera de pantalla a ${v} px/s`;
+    const prev = obs.slice(0, i).reverse().find((q) => q.D < o.D - 1e-6);
+    if (prev && (o.D - prev.D) / v < P.minGapBeforeSec - 1e-6) return `pop-up a ${((o.D - prev.D) / v).toFixed(2)} s del anterior`;
+  }
+  return null;
 }

@@ -788,7 +788,63 @@ export class RunScene extends Phaser.Scene {
       o.shadow.destroy();
       if (o.threads) o.threads.forEach((h) => h.destroy());
     };
+    if (e.pop) {
+      // Pop-up: nace bajo el suelo; stepPopup lo asoma, lo sube y lo vuelve sólido según los segundos que le faltan
+      const starts = this.level.starts;
+      let tr = 0;
+      while (tr + 1 < starts.length && e.D >= starts[tr + 1]) tr++;
+      o.pop = true;
+      o.v = this.level.tramos[tr].speed;
+      o.shA = o.shadow.alpha;
+      o.shW = o.shadow.displayWidth;
+      o.entered = true; // sin vaivén de entrada: el aviso es su propio movimiento
+      // Corte en el suelo (ARTE: peligro = franja naranja): se ve con el aviso y se apaga cuando la caja ya está arriba.
+      // Naranja arriba y tinta abajo: de día el naranja y el kraft casi empatan en luz; la tinta da el contraste.
+      o.slitInk = this.add.rectangle(x, g + 3, size.width - 8, 3, 0x22211f).setDepth(10.4).setVisible(false);
+      o.slit = this.add.rectangle(x, g + 1, size.width - 8, 2, 0xff6b35).setDepth(10.5).setVisible(false);
+      const d0 = o.destroy;
+      o.destroy = () => {
+        d0();
+        o.slit.destroy();
+        o.slitInk.destroy();
+      };
+      this.stepPopup(o);
+    }
     this.obstacles.push(o);
+  }
+
+  // Aviso del pop-up (C.popup): asoma un labio de cartón que tiembla y su sombra crece; luego sube con rebote.
+  // Solo visual y por distancia (igual en pausa, reintento y cualquier ancho); el choque lo gobierna o.up.
+  stepPopup(o) {
+    const P = C.popup;
+    const g = C.world.groundY;
+    const s = (o.D - this.dist) / o.v;
+    const H = o.sprite.frame.height;
+    let h = 0;
+    if (s <= P.solidSec) h = H;
+    else if (s <= P.solidSec + P.riseSec) {
+      const k = -(s - P.solidSec) / P.riseSec; // avance - 1 para Back.Out a mano: el paquete recortado de Phaser no trae Easing
+      h = P.lipPx + (H - P.lipPx) * (1 + 2.70158 * k * k * k + 1.70158 * k * k);
+    }
+    else if (s <= P.warnSec) h = P.lipPx;
+    o.up = s <= P.solidSec;
+    if (!o.warned && s <= P.warnSec) {
+      o.warned = true;
+      if (!this.demo && h < H) audio.sfx('popAviso');
+    }
+    o.sprite.setVisible(h > 0);
+    const shake = h > 0 && s > P.solidSec + P.riseSec && !this.reduced ? Math.sin(this.t / 11) * P.shakePx : 0;
+    o.sprite.x = o.x + shake;
+    o.sprite.y = g + 2 + Math.max(0, H - h) - Math.max(0, h - H);
+    if (h >= H) {
+      if (o.sprite.isCropped) o.sprite.setCrop();
+    } else o.sprite.setCrop(0, 0, o.sprite.frame.width, h);
+    // la sombra llega completa en los primeros 120 ms del aviso y crece de ancho hasta que la caja está arriba
+    const k = Phaser.Math.Clamp((P.warnSec - s) / (P.warnSec - P.solidSec), 0, 1);
+    o.shadow.setAlpha(o.shA * Phaser.Math.Clamp((P.warnSec - s) / 0.12, 0, 1)).setDisplaySize(o.shW * (0.7 + 0.3 * k), 18);
+    const sa = Phaser.Math.Clamp((s - P.solidSec) / P.riseSec, 0, 1) * (this.paseoRun ? C.paseo.obstacleAlpha : 1);
+    o.slit.setVisible(h > 0).setPosition(o.x + shake, g + 1).setAlpha(sa);
+    o.slitInk.setVisible(h > 0).setPosition(o.x + shake, g + 3).setAlpha(sa * 0.75);
   }
 
   spawnPickup(e) {
@@ -1098,6 +1154,7 @@ export class RunScene extends Phaser.Scene {
       o.x = px + o.D - dist;
       o.sprite.x = o.x;
       o.shadow.x = o.x + (o.type === 'viga' ? 6 : 9);
+      if (o.pop) this.stepPopup(o);
       if (o.threads) {
         o.threads.forEach((h, i) => {
           h.x = o.x + (i ? 34 : -34);
@@ -1206,7 +1263,7 @@ export class RunScene extends Phaser.Scene {
           P.passed[o.type] += 1;
         }
       }
-      if (this.rewinding || this.god || this.paseoRun) continue;
+      if (this.rewinding || this.god || this.paseoRun || (o.pop && !o.up)) continue;
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
         this.crash(o);

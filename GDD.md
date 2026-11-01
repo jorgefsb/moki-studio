@@ -32,12 +32,13 @@ Vara de calidad: **Alto's Odyssey**, solo como vara de belleza y feel. No copiam
 - **Tarjeta para compartir:** texto con emojis al portapapeles (fila de sellos por página + fecha). La comparte el jugador; nosotros no publicamos nada.
 
 ## 4. Niveles procedurales (rama `sprint/niveles`, ver NIVELES.md)
-- **Bloques escritos a mano** de 3 a 6.5 s, dificultad 1 a 4 (hoy 43 + 5 sorpresas; pieza 5b, validados uno a uno con `node scripts/bloques.mjs`), cada uno con su cola de ≥1.2 s.
+- **Bloques escritos a mano** de 3 a 6.5 s, dificultad 1 a 4 (hoy 50 + 5 sorpresas; pieza 5b y pop-up, validados uno a uno con `node scripts/bloques.mjs`), cada uno con su cola de ≥1.2 s.
 - **Esqueleto por página de 30 s:** 2 s de calma, sorpresa en ventana fija, relleno de piezas para cerrar huecos.
 - **Gramática:** nunca dos bloques de dificultad ≥3 seguidos; después de un 4, respiro; máximo 4 patrones sin fila de piezas; ningún bloque repetido seguido, máximo 2 por página.
 - **Curva:** velocidad por página 320/350/385/420; dificultad en ventana 1-2, 1-3, 2-4, 2-4.
 - **Semillas:** Clásico = guion fijo (primera partida de la vida); Del día = hash de la fecha **UTC** (igual para todos; se dice en pantalla que cambia a las 18:00 en México); Libre = `crypto`. Semilla por página: reintentar no cambia nada (el fallo sigue enseñando).
 - **Reglas de justicia medibles (las verifica un bot):** ≥0.75 s entre obstáculos; ≥1.0 s entre dos que piden mantener; torre→viga ≥1.0 s, viga→torre ≥0.9 s, nunca juntas; ≥0.12 s entre aterrizar y despegar; holgura `minClear` ≥4 px; todo se libra con el despegue desplazado ±40 ms; bots tap/hold/adjust como hoy; 0% de caída al clásico en 365 fechas y 500 semillas.
+- **Pop-up (U, rama v2/popup):** caja que sale del suelo, solo en bloques de dificultad ≥2 desde T2 (Reto y Libre; nunca clásico ni demo). Aviso (labio de 12 px que tiembla, sombra y corte naranja con tinta) a 0.85 s de llegar, sólida a 0.36 s: 490 ms de aviso. Reglas que verifica el bot: aviso ≥450 ms, la caja entera dentro de lo que se ve con el ancho mínimo, ≥1.4 s tras el obstáculo anterior y el despegue con la caja ya arriba.
 - **Riesgo de monotonía:** medir histograma de bloques; las filas de piezas sueltas ≤20% de cada página.
 
 ## 5. Look and feel

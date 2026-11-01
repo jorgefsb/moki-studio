@@ -3,7 +3,7 @@
 //
 // Obstáculos: C caja · T torre · CC dos cajas pegadas (un salto largo) · C.C dos cajas a 0.9 s · V viga ·
 //   VC caja bajo viga · T.V torre y viga 1.0 s después · C.V caja y viga 0.9 s después · T.C torre y caja 0.9 s después ·
-//   P5 fila de 5 piezas en el suelo · OLA 6 cajas cada 0.8 s con una pieza sobre cada una.
+//   P5 fila de 5 piezas en el suelo · OLA 6 cajas cada 0.8 s con una pieza sobre cada una · U pop-up (caja que sale del suelo).
 // Premios (con "+"): A3 arco corto de 3 · A3up arco alto de 3 · Aup arco alto de 5 · Adn arco bajo de 4 ·
 //   Aup7 arco regalo de 7 · AupAmb arco alto con pieza ámbar · Aup7Amb arco de 7 con ámbar · P5 fila bajo la viga.
 import { CONFIG as C } from './config.js';
@@ -40,6 +40,7 @@ const OBS = {
   'T.V': [{ type: 'torre', at: 0, plan: 'hold' }, { type: 'viga', at: 1.0, plan: 'none' }],
   'C.V': [{ type: 'caja', at: 0, plan: 'tap' }, { type: 'viga', at: C.pairGapSec, plan: 'none' }],
   'T.C': [{ type: 'torre', at: 0, plan: 'hold' }, { type: 'caja', at: C.pairGapSec, plan: 'tap' }],
+  U: [{ type: 'caja', at: 0, plan: 'tap', pop: true }], // pop-up: caja que sale del suelo (solo en bloques del generador)
 };
 
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
@@ -62,7 +63,7 @@ function expand(code, t, speed, tramo, arcSeq) {
     const holdForArc = reward && reward.startsWith('Aup');
     for (const o of OBS[main]) {
       const D = base + (o.atPx !== undefined ? o.atPx : o.at * speed);
-      out.push({ kind: 'obs', type: o.type, D, plan: holdForArc && o.plan === 'tap' && first === null ? 'hold' : main === 'V' && reward === 'Adn' ? 'tap' : o.plan });
+      out.push({ kind: 'obs', type: o.type, D, plan: holdForArc && o.plan === 'tap' && first === null ? 'hold' : main === 'V' && reward === 'Adn' ? 'tap' : o.plan, ...(o.pop && { pop: true }) });
       if (first === null) first = D;
     }
     hint.center = main === 'CC' ? base + C.cajaPegadaGapPx / 2 : base;

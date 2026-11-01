@@ -339,6 +339,12 @@ export async function saveSessionWav(name = 't3g2-audio-piezas-20s.wav', seconds
         }
         routeSfx(ctx, bus, st, 'arc', SFX.arc, t0 + 4 * 0.14, { echo: bus.echoIn }, cfg);
         routeSfx(ctx, bus, st, 'land', SFX.land, t0 + 0.9, { echo: bus.echoIn }, cfg);
+        // pop-up: el tic del aviso encima del peor momento (salto y arco completo), y otro suelto
+        if (pop) {
+          routeSfx(ctx, bus, st, 'popAviso', SFX.popAviso, t0 - 0.35, { echo: bus.echoIn }, cfg);
+          routeSfx(ctx, bus, st, 'popAviso', SFX.popAviso, t0 + 4 * 0.14, { echo: bus.echoIn }, cfg);
+          routeSfx(ctx, bus, st, 'popAviso', SFX.popAviso, t0 + 2, { echo: bus.echoIn }, cfg);
+        }
       }
     },
     cfg
@@ -392,7 +398,7 @@ async function renderPapelTheme(papel, level, seconds, cfg) {
 }
 
 // Sesión con papel: música E2, saltos y piezas con racha, y una página nueva cada 6 s (stinger + cambio de papel).
-async function renderPapelSession(order, seconds, cfg) {
+async function renderPapelSession(order, seconds, cfg, pop = false) {
   const { createPapel, stingerPagina } = await import('../audio/papel.js');
   return renderWith(
     seconds,
@@ -424,6 +430,12 @@ async function renderPapelSession(order, seconds, cfg) {
         }
         routeSfx(ctx, bus, st, 'arc', SFX.arc, t0 + 4 * 0.14, { echo: bus.echoIn }, cfg);
         routeSfx(ctx, bus, st, 'land', SFX.land, t0 + 0.9, { echo: bus.echoIn }, cfg);
+        // pop-up: el tic del aviso encima del peor momento (salto y arco completo), y otro suelto
+        if (pop) {
+          routeSfx(ctx, bus, st, 'popAviso', SFX.popAviso, t0 - 0.35, { echo: bus.echoIn }, cfg);
+          routeSfx(ctx, bus, st, 'popAviso', SFX.popAviso, t0 + 4 * 0.14, { echo: bus.echoIn }, cfg);
+          routeSfx(ctx, bus, st, 'popAviso', SFX.popAviso, t0 + 2, { echo: bus.echoIn }, cfg);
+        }
       }
     },
     cfg
@@ -470,5 +482,19 @@ export async function measurePapel({ wav = false, cfg = C.audio } = {}) {
   const ses = await renderPapelSession(order, 24, cfg);
   out.sesion = { orden: order, segundos: 24, picoDb: +peakDb(ses).toFixed(1) };
   if (wav) out.wavs['v2-audio-sesion-papeles-24s.wav'] = b64(wavBytes(ses, SR));
+  return out;
+}
+
+// Pop-up (pieza POP-UP): pico de la misma sesión de 24 s con y sin el tic del aviso, y el tic solo
+export async function measurePopup({ wav = false, cfg = C.audio } = {}) {
+  const order = ['kraft', 'periodico', 'cartulina', 'cuaderno'];
+  const sin = await renderPapelSession(order, 24, cfg, false);
+  const con = await renderPapelSession(order, 24, cfg, true);
+  const solo = await renderWith(0.5, (ctx, bus) => routeSfx(ctx, bus, {}, 'popAviso', SFX.popAviso, 0.05, { echo: bus.echoIn }, cfg), cfg);
+  const out = { sesionSinPopDb: +peakDb(sin).toFixed(1), sesionConPopDb: +peakDb(con).toFixed(1), ticSoloDb: +peakDb(solo).toFixed(1), ticMs: tailMs(solo), wavs: {} };
+  if (wav) {
+    out.wavs['v2-popup-tic.wav'] = b64(wavBytes(solo, SR));
+    out.wavs['v2-popup-sesion-24s.wav'] = b64(wavBytes(con, SR));
+  }
   return out;
 }
