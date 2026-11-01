@@ -8,7 +8,7 @@ import { BLOQUES, T1_INTRO, SORPRESAS } from './bloques.js';
 // Respiro sin nada (antes una fila de 5 piezas): con fila, las páginas pasaban de 35% de filas de piezas (tope 20%)
 const RELLENO = (dur) => ({ id: 'relleno', dur, ev: [], dif: 1, tags: ['descanso'] });
 import { rng, hashSeed, todayKey } from './rng.js';
-import { validateLevel } from './validar.js';
+import { validateLevel, popupFalla } from './validar.js';
 
 const LEN = 30;
 const BY_ID = Object.fromEntries(BLOQUES.map((b) => [b.id, b]));
@@ -134,7 +134,7 @@ export function holdHold(level) {
 // Página justa: legible, mantener->mantener >= 1 s, filas <= 20% y el bot la libra con holgura >= 4 px despegando a tiempo y ±40 ms
 export function tramoValido(script, speed) {
   const level = buildLevel([{ speed, len: LEN, script }]);
-  if (!legible(level) || !holdHold(level) || filasPiezas(script) > TOPE_FILAS + 1e-9) return false;
+  if (!legible(level) || !holdHold(level) || popupFalla(level) || filasPiezas(script) > TOPE_FILAS + 1e-9) return false;
   return [0, ...JITTER_MS].every((j) => {
     const r = validateLevel(level, null, j);
     return r.ok && r.minClear >= MIN_CLEAR_PX;

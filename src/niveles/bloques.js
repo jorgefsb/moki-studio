@@ -54,6 +54,15 @@ export const BLOQUES = [
   { id: 'cv-torre',     dur: 4,   ev: [[0, 'C.V'], [2.2, 'T+Aup']],             dif: 3, min: 3, max: 4, tags: ['viga', 'torre', 'premio'] },
   { id: 'viga-tc',      dur: 6.5, ev: [[0, 'VC'], [2, 'T.C'], [4, 'C.V']],      dif: 4, min: 3, max: 4, tags: ['viga', 'ritmo'] },
   { id: 'gran-viga',    dur: 5.5, ev: [[0, 'T.V'], [2.2, 'CC'], [4.2, 'VC']],   dif: 4, min: 3, max: 4, tags: ['viga', 'salto-largo'] },
+  // pop-up (U): solo dificultad >= 2 y desde T2; nunca a los 0 s del bloque y >= 1.8 s tras el obstáculo anterior,
+  // para que el aviso empiece con Moki ya en el suelo
+  { id: 'pop-intro',    dur: 4,   ev: [[0, 'C'], [2.2, 'U']],                   dif: 2, min: 2, max: 4, tags: ['popup', 'caja'] },
+  { id: 'pop-arco',     dur: 4,   ev: [[0, 'C+A3'], [2.2, 'U+A3']],             dif: 2, min: 2, max: 4, tags: ['popup', 'premio'] },
+  { id: 'pop-torre',    dur: 4,   ev: [[0, 'T'], [2.2, 'U']],                   dif: 3, min: 2, max: 4, tags: ['popup', 'torre'] },
+  { id: 'pop-largo',    dur: 4.5, ev: [[0, 'CC'], [2.4, 'U+A3']],               dif: 3, min: 2, max: 4, tags: ['popup', 'salto-largo', 'premio'] },
+  { id: 'pop-doble',    dur: 5,   ev: [[0, 'C'], [1.8, 'U'], [3.6, 'U']],       dif: 3, min: 2, max: 4, tags: ['popup', 'ritmo'] },
+  { id: 'pop-viga',     dur: 4,   ev: [[0, 'VC'], [2.2, 'U']],                  dif: 3, min: 3, max: 4, tags: ['popup', 'viga'] },
+  { id: 'pop-ritmo',    dur: 5.5, ev: [[0, 'T.C'], [2.4, 'U'], [4.2, 'T']],     dif: 4, min: 3, max: 4, tags: ['popup', 'ritmo'] },
   // sorpresas (1 por tramo; se colocan aparte, ver §4)
   { id: 'regalo7',      dur: 4,   ev: [[0, 'T+Aup7'], [2, 'P5']],               dif: 1, min: 1, max: 1, tags: ['sorpresa', 'premio'] },
   { id: 'ambar',        dur: 4.5, ev: [[0, 'T+AupAmb'], [2.5, 'C.C']],          dif: 2, min: 2, max: 3, tags: ['sorpresa', 'premio'] },

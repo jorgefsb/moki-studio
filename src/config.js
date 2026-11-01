@@ -26,6 +26,10 @@ export const CONFIG = {
   minGapSec: 0.75,
   pairGapSec: 0.9,
   waveGapSec: 0.8,
+  // Pop-up (código U): caja que sale del suelo. Todo en segundos de llegada a Moki, a la velocidad de su tramo.
+  // Aviso (labio de cartón que tiembla + sombra) desde warnSec; sube entre solidSec + riseSec y solidSec; sólida desde solidSec.
+  // warnSec: la caja completa cabe en lo que se ve delante con minVisibleWidth a 420 px/s (389 px); reactSec: del aviso al despegue del bot.
+  popup: { warnSec: 0.85, riseSec: 0.12, solidSec: 0.36, lipPx: 12, shakePx: 1.5, reactSec: 0.45, minGapBeforeSec: 1.4 },
 
   // Audio (AUDIO.md §3): el maestro es fijo; solo se calibran los dos buses
   // Calibrado con OfflineAudioContext: música con todas las capas = -18 dBFS de pico, efectos principales ≈ -12 dBFS
