@@ -147,9 +147,9 @@ export function createUI() {
       state.saludo = s;
       ui.placeSaludo(zonas);
     },
-    // E1b: la pastilla queda a ~10 px de la línea del suelo (nunca la cruza) y de la bota de Moki. Si ya está
-    // libre en su lugar de CSS, ahí se queda; si no, baja al suelo de papel cuando cabe sobre los chips y, si no,
-    // sube sobre el suelo a la derecha de Moki. offset* ignora el transform (centrado, ladeo y entrada).
+    // E1b/E1c: la pastilla queda a ~10 px de la línea del suelo (nunca la cruza ni flota lejos de ella) y de Moki:
+    // baja al suelo de papel cuando cabe con 12 px de aire sobre los chips y, si no, sube sobre el suelo; en los dos
+    // casos se corre a la derecha de Moki si lo alcanza. offset* ignora el transform (centrado, ladeo y entrada).
     placeSaludo(zonas) {
       const s = state.saludo;
       if (!s || !zonas) return;
@@ -160,17 +160,10 @@ export function createUI() {
       const W = root.clientWidth;
       const h = s.offsetHeight;
       const w = s.offsetWidth;
-      const t0 = s.offsetTop;
-      const libre = t0 + h <= zonas.floorY - G || t0 >= zonas.floorY + G;
-      if (libre) return;
-      const tope = state.modo ? state.modo.offsetTop - 8 : root.clientHeight - 12;
-      let top;
+      const tope = state.modo ? state.modo.offsetTop - 12 : root.clientHeight - 12;
+      const top = zonas.floorY + G + h <= tope ? zonas.floorY + G : zonas.floorY - G - h;
       let cx = s.offsetLeft; // con translateX(-50%) el left es el centro
-      if (zonas.floorY + G + h <= tope) top = zonas.floorY + G;
-      else {
-        top = zonas.floorY - G - h;
-        if (cx - w / 2 < zonas.mokiR + G) cx = Math.min(zonas.mokiR + G + w / 2, W - 16 - w / 2);
-      }
+      if (cx - w / 2 < zonas.mokiR + G) cx = Math.min(zonas.mokiR + G + w / 2, W - 16 - w / 2);
       Object.assign(s.style, { top: `${Math.round(top)}px`, bottom: 'auto', left: `${Math.round(cx)}px` });
     },
     hideSaludo() {
