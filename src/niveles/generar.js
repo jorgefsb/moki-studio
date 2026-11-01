@@ -110,7 +110,7 @@ export function generarTramo(seed, tramo, intento = 0) {
 }
 
 // V4 legibilidad: entre obstáculos distintos >= minGapSec (mismo punto en VC; la segunda caja de CC no cuenta).
-function legible(level) {
+export function legible(level) {
   const obs = level.entities.filter((e) => e.kind === 'obs' && e.plan !== 'skip');
   const v = level.tramos[0].speed;
   for (let i = 1; i < obs.length; i++) {
@@ -124,7 +124,7 @@ function legible(level) {
 export const filasPiezas = (script) => script.filter(([, c]) => hasP5(c)).length / Math.max(1, script.length);
 
 // mantener -> mantener >= 1.0 s entre llegadas (el dedo necesita soltar y volver a mantener)
-function holdHold(level) {
+export function holdHold(level) {
   const v = level.tramos[0].speed;
   const holds = level.entities.filter((e) => e.kind === 'obs' && e.plan === 'hold');
   for (let i = 1; i < holds.length; i++) if ((holds[i].D - holds[i - 1].D) / v < HOLD_HOLD_SEC - 1e-6) return false;
