@@ -783,6 +783,11 @@ export class RunScene extends Phaser.Scene {
     if (this.ambient) o.sprite.setTint(this.ambient.obsTint);
     // Paseo: el obstáculo se dibuja atenuado para que cruzarlo se lea a propósito y no como un error de colisión
     if (this.paseoRun) [o.sprite, o.shadow, ...(o.threads || [])].forEach((g) => g.setAlpha(g.alpha * C.paseo.obstacleAlpha));
+    o.destroy = () => {
+      o.sprite.destroy();
+      o.shadow.destroy();
+      if (o.threads) o.threads.forEach((h) => h.destroy());
+    };
     if (e.pop) {
       // Pop-up: nace bajo el suelo; stepPopup lo asoma, lo sube y lo vuelve sólido según los segundos que le faltan
       const starts = this.level.starts;
@@ -793,8 +798,8 @@ export class RunScene extends Phaser.Scene {
       o.shA = o.shadow.alpha;
       o.shW = o.shadow.displayWidth;
       o.entered = true; // sin vaivén de entrada: el aviso es su propio movimiento
-      // Corte en el suelo (ARTE: peligro = franja naranja): se ve con el aviso y se apaga cuando la caja ya está arriba
-      // naranja arriba y tinta abajo: de día el naranja y el kraft casi empatan en luz; la tinta da el contraste
+      // Corte en el suelo (ARTE: peligro = franja naranja): se ve con el aviso y se apaga cuando la caja ya está arriba.
+      // Naranja arriba y tinta abajo: de día el naranja y el kraft casi empatan en luz; la tinta da el contraste.
       o.slitInk = this.add.rectangle(x, g + 3, size.width - 8, 3, 0x22211f).setDepth(10.4).setVisible(false);
       o.slit = this.add.rectangle(x, g + 1, size.width - 8, 2, 0xff6b35).setDepth(10.5).setVisible(false);
       const d0 = o.destroy;
@@ -805,11 +810,6 @@ export class RunScene extends Phaser.Scene {
       };
       this.stepPopup(o);
     }
-    o.destroy = () => {
-      o.sprite.destroy();
-      o.shadow.destroy();
-      if (o.threads) o.threads.forEach((h) => h.destroy());
-    };
     this.obstacles.push(o);
   }
 
@@ -823,7 +823,7 @@ export class RunScene extends Phaser.Scene {
     let h = 0;
     if (s <= P.solidSec) h = H;
     else if (s <= P.solidSec + P.riseSec) {
-      const k = 1 - (s - P.solidSec) / P.riseSec - 1; // Back.Out a mano: el paquete recortado de Phaser no trae Easing
+      const k = -(s - P.solidSec) / P.riseSec; // avance - 1 para Back.Out a mano: el paquete recortado de Phaser no trae Easing
       h = P.lipPx + (H - P.lipPx) * (1 + 2.70158 * k * k * k + 1.70158 * k * k);
     }
     else if (s <= P.warnSec) h = P.lipPx;
