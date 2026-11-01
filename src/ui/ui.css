@@ -198,7 +198,8 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-cuaderno .cu-txt { flex: 1; min-width: 0; }
 .ui-cuaderno .cu-val { font-variant-numeric: tabular-nums; font-weight: 600; }
 .ui-cuaderno li.done .cu-val { color: #22211f; font-weight: 700; }
-/* Sello: círculo de cartón; pendiente = punteado; cumplido = kraft relleno con palomita de tinta, un pelo girado */
+/* Sello: círculo de cartón; pendiente = punteado; cumplido = kraft relleno con palomita de tinta, un pelo girado
+   (E1c: la palomita era naranja; ahora tinta #22211F para dejar un solo foco naranja en la tira) */
 .ui-cuaderno .cu-stamp {
   flex: none;
   width: 18px;
@@ -209,7 +210,7 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 }
 .ui-cuaderno li.done .cu-stamp {
   border: 2px solid #22211f;
-  background: #d9b98c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4.5 9.5l3 3 6-7' fill='none' stroke='%23ff6b35' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  background: #d9b98c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4.5 9.5l3 3 6-7' fill='none' stroke='%2322211f' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
   transform: rotate(-8deg);
 }
 /* Sello nuevo: tinta sobre papel con cinta naranja de acento (ARTE §5: nada de texto naranja chico) */
@@ -247,3 +248,28 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 }
 .ui-cuaderno .cu-head { flex-wrap: wrap; align-items: center; }
 .ui-cuaderno .cu-tit { display: flex; align-items: center; }
+/* Tachado a media partida (Día 2): etiqueta de papel bajo el HUD, ladeada; el sello kraft se estampa y una raya fina
+   de tinta (60%, para que el texto se siga leyendo) tacha el encargo. Tinta sobre papel, sin naranja (ARTE §5); no se toca y nunca tapa a Moki ni el carril. */
+.ui-tachado {
+  position: absolute; left: 50%; top: 128px; transform: translateX(-50%) rotate(-1.5deg);
+  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 6px 14px 6px 10px; pointer-events: none; white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+  background: #f4e8d5; border: 2px solid #8a7e70; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
+  color: #22211f; font: 700 16px/22px Outfit, sans-serif;
+  animation: ui-tachado-in 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.ui-tachado.out { animation: ui-tachado-out 200ms ease-in both; }
+.ui-tachado .cu-stamp {
+  flex: none; width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; border: 2px solid #b99168;
+  background: #d9b98c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4.5 9.5l3 3 6-7' fill='none' stroke='%2322211f' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  animation: cu-stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 120ms both;
+}
+.ui-tachado s { position: relative; text-decoration: none; }
+.ui-tachado s::after {
+  content: ''; position: absolute; left: -2px; right: -2px; top: 56%; height: 1.5px; border-radius: 1px; background: rgba(34, 33, 31, 0.6);
+  transform-origin: left center; animation: ui-tachar 260ms ease-out 360ms both;
+}
+@keyframes ui-tachado-in { from { opacity: 0; transform: translateX(-50%) translateY(-10px) rotate(1deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-1.5deg); } }
+@keyframes ui-tachado-out { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(-6px) rotate(-1.5deg); } }
+@keyframes ui-tachar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .ui-tachado, .ui-tachado.out, .ui-tachado .cu-stamp, .ui-tachado s::after { animation: none; } }

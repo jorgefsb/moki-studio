@@ -87,7 +87,9 @@ export const SELLOS = [
   { id: 'arcos3', ok: (st) => st.arcs >= 3 },
 ];
 
-export const TOTAL_SELLOS = NOTAS.length + SELLOS.length;
+// Día 2: un sello por nivel completo. Se deriva de las notas (no se guarda aparte): lo guardado no cambia de forma
+// y la migración v1/v2 sigue igual.
+export const TOTAL_SELLOS = NOTAS.length + SELLOS.length + NIVEL_MAX;
 const NOTA_IDS = new Set(NOTAS.map((n) => n.id));
 const SELLO_IDS = new Set(SELLOS.map((s) => s.id));
 // v1 -> v2: lo ya cumplido se conserva aunque cambie la condición. 'Pasa 3 vigas' no estaba garantizado; queda como 'Pasa 2 vigas'.
@@ -126,6 +128,16 @@ export const activas = (c) => {
   return hechos >= NIVEL_MAX ? [] : NIVELES[hechos].filter((n) => !c.notas.includes(n.id));
 };
 
+// Sellos que lleva el Cuaderno: uno por encargo, los de partida y uno por nivel completo
+export const contarSellos = (c) => c.notas.length + c.sellos.length + nivelDe(c).hechos;
+
+// Tachado a media partida (Día 2): los encargos que esta partida puede cumplir (los activos del nivel con que
+// empezó). Solo se lee al empezar; la escena avisa cuando uno llega a su meta y revisar() lo guarda al caer o llegar.
+export function porTachar(st) {
+  const c = leerCuaderno();
+  return Number.isInteger(st.nivel) && nivelDe(c).hechos === st.nivel ? activas(c) : [];
+}
+
 // nivel = índice del nivel abierto al empezar: una partida solo cumple encargos de ese nivel (un nivel por partida,
 // como Alto's). El set nuevo cuenta desde la siguiente partida; si no, una partida buena vaciaba el Cuaderno entero.
 export function nuevaPartida() {
@@ -153,10 +165,11 @@ export function revisar(st) {
     activas: activas(c).map((n) => ({ id: n.id, goal: n.goal, val: nv.hechos === abierto ? Math.min(n.goal, n.val(st)) : 0 })),
     nuevasNotas,
     nuevosSellos,
-    total: c.notas.length + c.sellos.length,
+    total: contarSellos(c),
     de: TOTAL_SELLOS,
     nivel: nv.nivel,
     completo: nv.completo,
     subio: nv.hechos > antes, // Moki subió de nivel en esta revisión
+    selloNivel: nv.hechos > antes ? nv.hechos : 0, // sello del nivel recién completo (1-10), 0 si no hubo
   };
 }

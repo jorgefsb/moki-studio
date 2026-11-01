@@ -19,6 +19,7 @@ export const CONFIG = {
   respawnSpeedMult: 0.85,
   respawnCalmSec: 2,
   retryLockoutMs: 550, // la tarjeta de fallo no acepta toque antes (guarda contra el toque de pánico)
+  tachadoMs: 1600, // Día 2: lo que dura en pantalla el aviso de encargo tachado a media partida
 
   // Guion (DISENO.md §3 y §8)
   cajaPegadaGapPx: 84,
