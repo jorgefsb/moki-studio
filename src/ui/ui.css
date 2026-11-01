@@ -213,7 +213,10 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
   transform: rotate(-8deg);
 }
 /* Sello nuevo: tinta sobre papel con cinta naranja de acento (ARTE §5: nada de texto naranja chico) */
-.ui-cuaderno .cu-sellos { margin: 6px 0 0; padding-left: 8px; border-left: 4px solid #ff6b35; color: #22211f; font: 700 15px/20px Outfit, sans-serif; }
+.ui-cuaderno .cu-sellos { margin: 6px 0 0; padding-left: 8px; border-left: 4px solid #ff6b35; color: #22211f; font: 700 15px/18px Outfit, sans-serif; }
+/* E1b: la subida de nivel lleva cinta kraft (un solo foco naranja en la tira) y peso normal para no competir con
+   'Sello nuevo'; ambas líneas van a 18 px de interlineado para caber a 375 sin crecer la tira */
+.ui-cuaderno .cu-subio { border-left-color: #b99168; font: 400 14px/18px Inter, sans-serif; }
 /* El sello nuevo se estampa: se acerca girado (anticipación), cae con Back.out y se asienta */
 .ui-cuaderno .cu-stamp.new { animation: cu-stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both; }
 @keyframes cu-stamp { 0% { transform: scale(1.9) rotate(-28deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
@@ -240,7 +243,7 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .cu-nivel {
   display: inline-block; margin-right: 8px; padding: 0 7px; transform: rotate(-3deg);
   background: #d9b98c; border: 2px solid #8a7e70; border-radius: 6px; box-shadow: 0 2px 0 rgba(34, 33, 31, 0.22);
-  color: #22211f; font: 700 15px/20px Outfit, sans-serif; white-space: nowrap;
+  color: #22211f; font: 700 16px/20px Outfit, sans-serif; white-space: nowrap; /* E1b: 16 px, mínimo de UI de ARTE §5 */
 }
 .ui-cuaderno .cu-head { flex-wrap: wrap; align-items: center; }
 .ui-cuaderno .cu-tit { display: flex; align-items: center; }

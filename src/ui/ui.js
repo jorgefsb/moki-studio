@@ -137,7 +137,7 @@ export function createUI() {
 
     // Saludo de Moki según la racha (GDD §3): una etiqueta de papel en el título, solo texto, sin cuenta regresiva
     // nivel (E1): etiqueta de cartón "Nivel N" dentro del mismo globo, a la izquierda del saludo
-    showSaludo(text, nivel) {
+    showSaludo(text, nivel, zonas) {
       ui.hideSaludo();
       if (!text) return;
       const s = el('div', 'ui-saludo');
@@ -145,6 +145,33 @@ export function createUI() {
       s.append(document.createTextNode(text));
       root.appendChild(s);
       state.saludo = s;
+      ui.placeSaludo(zonas);
+    },
+    // E1b: la pastilla queda a ~10 px de la línea del suelo (nunca la cruza) y de la bota de Moki. Si ya está
+    // libre en su lugar de CSS, ahí se queda; si no, baja al suelo de papel cuando cabe sobre los chips y, si no,
+    // sube sobre el suelo a la derecha de Moki. offset* ignora el transform (centrado, ladeo y entrada).
+    placeSaludo(zonas) {
+      const s = state.saludo;
+      if (!s || !zonas) return;
+      const G = 10;
+      s.style.top = '';
+      s.style.bottom = '';
+      s.style.left = '';
+      const W = root.clientWidth;
+      const h = s.offsetHeight;
+      const w = s.offsetWidth;
+      const t0 = s.offsetTop;
+      const libre = t0 + h <= zonas.floorY - G || t0 >= zonas.floorY + G;
+      if (libre) return;
+      const tope = state.modo ? state.modo.offsetTop - 8 : root.clientHeight - 12;
+      let top;
+      let cx = s.offsetLeft; // con translateX(-50%) el left es el centro
+      if (zonas.floorY + G + h <= tope) top = zonas.floorY + G;
+      else {
+        top = zonas.floorY - G - h;
+        if (cx - w / 2 < zonas.mokiR + G) cx = Math.min(zonas.mokiR + G + w / 2, W - 16 - w / 2);
+      }
+      Object.assign(s.style, { top: `${Math.round(top)}px`, bottom: 'auto', left: `${Math.round(cx)}px` });
     },
     hideSaludo() {
       if (state.saludo) state.saludo.remove();
@@ -310,10 +337,11 @@ export function createUI() {
         const t1 = H - 12 - sh;
         return t1 < zonas.floorY + 4 || t1 < c.t + c.h + 6 ? null : t1;
       };
-      // Si no cabe (celular con subida de nivel), se recorta antes de esconderla: primero la línea de sellos de
-      // partida, luego renglones desde abajo (queda al menos uno). La subida de nivel es lo último que se va.
+      // Si no cabe (celular con subida de nivel), se recorta antes de esconderla: primero renglones desde abajo
+      // (queda al menos uno), luego la línea de sellos de partida (E1b: el sello nuevo pesa más que una nota
+      // activa). La subida de nivel es lo último que se va.
       let top = lugar();
-      const sobra = () => tira.subio && (strip.querySelector('.cu-sellos:not(.cu-subio)') || (list.children.length > 1 && list.lastElementChild));
+      const sobra = () => tira.subio && ((list.children.length > 1 && list.lastElementChild) || strip.querySelector('.cu-sellos:not(.cu-subio)'));
       for (let q = sobra(); top === null && q; q = sobra()) {
         q.remove();
         top = lugar();
