@@ -21,14 +21,23 @@ export function createUI() {
 
   let primary = null; // acción del botón/gesto principal de la tarjeta abierta
   const siguienteTachado = () => {
-    const text = state.tachados.shift();
-    if (text === undefined) return (state.tachado = null);
+    const sig = state.tachados.shift();
+    if (sig === undefined) return (state.tachado = null);
+    const { text, zona } = sig;
     const n = el('div', 'ui-tachado');
     n.setAttribute('role', 'status');
     const stamp = el('span', 'cu-stamp');
     stamp.setAttribute('aria-hidden', 'true');
     n.append(stamp, el('s', '', text));
     root.appendChild(n);
+    // ENCARGOS-D: si cae sobre el sol de papel, baja 12 px bajo él, siempre que siga arriba de la zona de lectura
+    // (offset* ignora el transform de la animación de entrada)
+    const e = zona && zona.evita;
+    if (e) {
+      const a = { l: n.offsetLeft - n.offsetWidth / 2, t: n.offsetTop, r: n.offsetLeft + n.offsetWidth / 2 };
+      const top = Math.round(e.b + 12);
+      if (a.l < e.r + 8 && a.r > e.l - 8 && a.t < e.b + 8 && top + n.offsetHeight <= zona.limite) n.style.top = `${top}px`;
+    }
     const still = reducedMQ.matches || feel.level === 0;
     const timer = setTimeout(() => {
       n.classList.add('out');
@@ -345,11 +354,13 @@ export function createUI() {
       const left = Math.max(16, Math.min(c.l, W - 16 - w));
       // Debajo de la tarjeta si no tapa a Moki (en horizontal la tarjeta ya va a su derecha); si no, abajo sobre el
       // suelo de papel. Si no hay lugar sin traslape con la tarjeta ni con Moki, no se enseña: la tarjeta manda.
+      // ENCARGOS-D: 20 px de aire con el borde de abajo (era 12; a 375 la tira se veía pegada al borde)
+      const aire = 20;
       const lugar = () => {
         const sh = strip.offsetHeight;
         const t0 = c.t + c.h + 10;
-        if (t0 + sh <= H - 12 && (zonas.wide || t0 + sh <= zonas.headY - 6)) return t0;
-        const t1 = H - 12 - sh;
+        if (t0 + sh <= H - aire && (zonas.wide || t0 + sh <= zonas.headY - 6)) return t0;
+        const t1 = H - aire - sh;
         return t1 < zonas.floorY + 4 || t1 < c.t + c.h + 6 ? null : t1;
       };
       // Si no cabe (celular con subida de nivel), se recorta antes de esconderla: primero renglones desde abajo
@@ -370,8 +381,8 @@ export function createUI() {
     },
     // Tachado a media partida (Día 2): etiqueta de papel bajo el HUD con el encargo tachado y su sello. Sale, se
     // queda C.tachadoMs y se va; varios de golpe van en fila. Sin toque ni bloqueo: el juego nunca espera al aviso.
-    showTachado(text) {
-      state.tachados.push(text);
+    showTachado(text, zona = null) {
+      state.tachados.push({ text, zona });
       if (!state.tachado) siguienteTachado();
     },
     hideTachado() {
