@@ -931,7 +931,20 @@ export class RunScene extends Phaser.Scene {
     const hechas = this.porTachar.filter((n) => n.val(this.partida) >= n.goal);
     if (!hechas.length) return;
     this.porTachar = this.porTachar.filter((n) => !hechas.includes(n));
-    hechas.forEach((n) => this.ui.showTachado(t(`cu.nota.${n.id}`)));
+    hechas.forEach((n) => this.ui.showTachado(t(`cu.nota.${n.id}`), this.zonaTachado()));
+  }
+
+  // ENCARGOS-D: en vertical alto (390) el sol de papel queda justo bajo el HUD y el aviso caía encima. Se le pasa la
+  // caja del sol en px de pantalla para que el aviso baje bajo él, y el límite de arriba de la zona de lectura (el
+  // arco alto llega a 164 sobre el suelo) para que nunca baje a donde se juega.
+  zonaTachado() {
+    const cam = this.cameras.main;
+    const z = cam.zoom;
+    const y = (v) => (v - cam.worldView.y) * z;
+    const limite = y(C.world.groundY - 164) - 8;
+    if (!this.sun || !this.sun.visible || this.sun.alpha < 0.5) return { evita: null, limite };
+    const b = this.sun.getBounds();
+    return { evita: { l: (b.x - cam.worldView.x) * z, t: y(b.y), r: (b.right - cam.worldView.x) * z, b: y(b.bottom) }, limite };
   }
 
   // Velocidad del tramo con rampa de 2 s al cambiar (sin rampa continua).

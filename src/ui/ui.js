@@ -21,14 +21,23 @@ export function createUI() {
 
   let primary = null; // acción del botón/gesto principal de la tarjeta abierta
   const siguienteTachado = () => {
-    const text = state.tachados.shift();
-    if (text === undefined) return (state.tachado = null);
+    const sig = state.tachados.shift();
+    if (sig === undefined) return (state.tachado = null);
+    const { text, zona } = sig;
     const n = el('div', 'ui-tachado');
     n.setAttribute('role', 'status');
     const stamp = el('span', 'cu-stamp');
     stamp.setAttribute('aria-hidden', 'true');
     n.append(stamp, el('s', '', text));
     root.appendChild(n);
+    // ENCARGOS-D: si cae sobre el sol de papel, baja 12 px bajo él, siempre que siga arriba de la zona de lectura
+    // (offset* ignora el transform de la animación de entrada)
+    const e = zona && zona.evita;
+    if (e) {
+      const a = { l: n.offsetLeft - n.offsetWidth / 2, t: n.offsetTop, r: n.offsetLeft + n.offsetWidth / 2 };
+      const top = Math.round(e.b + 12);
+      if (a.l < e.r + 8 && a.r > e.l - 8 && a.t < e.b + 8 && top + n.offsetHeight <= zona.limite) n.style.top = `${top}px`;
+    }
     const still = reducedMQ.matches || feel.level === 0;
     const timer = setTimeout(() => {
       n.classList.add('out');
@@ -370,8 +379,8 @@ export function createUI() {
     },
     // Tachado a media partida (Día 2): etiqueta de papel bajo el HUD con el encargo tachado y su sello. Sale, se
     // queda C.tachadoMs y se va; varios de golpe van en fila. Sin toque ni bloqueo: el juego nunca espera al aviso.
-    showTachado(text) {
-      state.tachados.push(text);
+    showTachado(text, zona = null) {
+      state.tachados.push({ text, zona });
       if (!state.tachado) siguienteTachado();
     },
     hideTachado() {
