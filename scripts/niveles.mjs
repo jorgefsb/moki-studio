@@ -4,6 +4,10 @@ globalThis.__JORGE_INTERVENTIONS__ = 0;
 const { GAME_LEVEL } = await import('../src/tramos.js');
 const { validateLevel } = await import('../src/niveles/validar.js');
 const { generarNivel, filasPiezas } = await import('../src/niveles/generar.js');
+const { BLOQUES } = await import('../src/niveles/bloques.js');
+const B = Object.fromEntries(BLOQUES.map((b) => [b.id, b]));
+const dif = (id) => (B[id] ? B[id].dif : 1); // relleno = dif 1, descanso
+const descanso = (id) => id === 'relleno' || (B[id] && B[id].tags.includes('descanso'));
 
 console.log('clasico', validateLevel(GAME_LEVEL), validateLevel(GAME_LEVEL, 'tap').sec, validateLevel(GAME_LEVEL, 'hold').tramo);
 
@@ -24,6 +28,7 @@ const holdTramo = {};
 const uso = {};
 const filas = [];
 let jitFail = 0;
+const gram = { paginas: 0, dosDuros: 0, sinRespiroTras4: 0, repetidoSeguido: 0, masDe2: 0, filasSobre20: 0 };
 for (const s of seeds) {
   const L = generarNivel(s);
   fb += L.fallbacks.length;
@@ -42,6 +47,20 @@ for (const s of seeds) {
   }
   L.tramos.forEach((tr) => filas.push(filasPiezas(tr.script)));
   L.bloques.forEach((ids) => ids.forEach((id) => (uso[id] = (uso[id] || 0) + 1)));
+  // Gramática GDD §4 por página: nunca dos >=3 seguidos, respiro tras un 4, nada repetido seguido, máx 2 por página
+  L.bloques.forEach((ids, k) => {
+    gram.paginas++;
+    if (filasPiezas(L.tramos[k].script) > 0.2 + 1e-9) gram.filasSobre20++;
+    const veces = {};
+    ids.forEach((id, i) => {
+      if (id !== 'relleno' && id !== 'respiro' && (veces[id] = (veces[id] || 0) + 1) === 3) gram.masDe2++;
+      if (!i) return;
+      const p = ids[i - 1];
+      if (dif(p) >= 3 && dif(id) >= 3) gram.dosDuros++;
+      if (dif(p) >= 4 && !descanso(id)) gram.sinRespiroTras4++;
+      if (p === id && id !== 'relleno') gram.repetidoSeguido++;
+    });
+  });
 }
 // mismo seed = mismo nivel
 const same = JSON.stringify(generarNivel('2026-10-29').entities) === JSON.stringify(generarNivel('2026-10-29').entities);
@@ -49,5 +68,12 @@ const diff = JSON.stringify(generarNivel('2026-10-29').entities) !== JSON.string
 filas.sort((a, b) => a - b);
 console.log({ niveles: seeds.length, fallosConJitter40: jitFail, filasPiezasPorPagina: { media: +(filas.reduce((a, b) => a + b, 0) / filas.length).toFixed(3), max: +filas[filas.length - 1].toFixed(3) }, fallos: bad.length, respaldoTramos: fb, holguraMinPx: minClear, tapMuereSeg: [Math.min(...tapAt), Math.max(...tapAt)], holdMuereEnTramo: holdTramo, mismaSemillaMismoNivel: same, otraFechaOtroNivel: diff });
 if (bad.length) console.log(bad.slice(0, 10));
-console.log('bloques (veces en todos los niveles)', Object.fromEntries(Object.entries(uso).sort((a, b) => b[1] - a[1])));
-process.exit(bad.length || jitFail || fb || !same || !diff ? 1 : 0);
+const escritos = Object.entries(uso).filter(([id]) => id !== 'relleno' && id !== 'clasico');
+const total = escritos.reduce((a, [, n]) => a + n, 0);
+const pct = escritos.map(([id, n]) => [id, +((100 * n) / total).toFixed(2)]).sort((a, b) => b[1] - a[1]);
+const sobre8 = pct.filter(([, p]) => p > 8);
+const sinUso = BLOQUES.filter((b) => !uso[b.id]).map((b) => b.id);
+console.log({ gramatica: gram, apariciones: total, relleno: uso.relleno || 0, bloquesSobre8pct: sobre8, bloquesSinUso: sinUso });
+console.log('bloques (% de apariciones, sin relleno)', Object.fromEntries(pct));
+const gramMal = gram.dosDuros + gram.sinRespiroTras4 + gram.repetidoSeguido + gram.masDe2 + gram.filasSobre20;
+process.exit(bad.length || jitFail || fb || !same || !diff || gramMal || sobre8.length ? 1 : 0);

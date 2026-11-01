@@ -32,7 +32,7 @@ Vara de calidad: **Alto's Odyssey**, solo como vara de belleza y feel. No copiam
 - **Tarjeta para compartir:** texto con emojis al portapapeles (fila de sellos por página + fecha). La comparte el jugador; nosotros no publicamos nada.
 
 ## 4. Niveles procedurales (rama `sprint/niveles`, ver NIVELES.md)
-- **Bloques escritos a mano** de 3 a 6.5 s, dificultad 1 a 4 (hoy 24 + 5 sorpresas), cada uno con su cola de ≥1.2 s.
+- **Bloques escritos a mano** de 3 a 6.5 s, dificultad 1 a 4 (hoy 43 + 5 sorpresas; pieza 5b, validados uno a uno con `node scripts/bloques.mjs`), cada uno con su cola de ≥1.2 s.
 - **Esqueleto por página de 30 s:** 2 s de calma, sorpresa en ventana fija, relleno de piezas para cerrar huecos.
 - **Gramática:** nunca dos bloques de dificultad ≥3 seguidos; después de un 4, respiro; máximo 4 patrones sin fila de piezas; ningún bloque repetido seguido, máximo 2 por página.
 - **Curva:** velocidad por página 320/350/385/420; dificultad en ventana 1-2, 1-3, 2-4, 2-4.
