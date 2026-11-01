@@ -136,10 +136,13 @@ export function createUI() {
     },
 
     // Saludo de Moki según la racha (GDD §3): una etiqueta de papel en el título, solo texto, sin cuenta regresiva
-    showSaludo(text) {
+    // nivel (E1): etiqueta de cartón "Nivel N" dentro del mismo globo, a la izquierda del saludo
+    showSaludo(text, nivel) {
       ui.hideSaludo();
       if (!text) return;
-      const s = el('div', 'ui-saludo', text);
+      const s = el('div', 'ui-saludo');
+      if (nivel) s.append(el('span', 'cu-nivel', t('cu.nivel', { n: nivel })));
+      s.append(document.createTextNode(text));
       root.appendChild(s);
       state.saludo = s;
     },
@@ -267,7 +270,9 @@ export function createUI() {
       const strip = el('div', 'ui-cuaderno');
       strip.setAttribute('role', 'status');
       const head = el('div', 'cu-head');
-      head.append(el('b', '', t('cu.title')), el('span', '', t('cu.count', { n: tira.total, de: tira.de })));
+      const tit = el('span', 'cu-tit');
+      tit.append(el('span', 'cu-nivel', t('cu.nivel', { n: tira.nivel })), el('b', '', t('cu.title')));
+      head.append(tit, el('span', '', t('cu.count', { n: tira.total, de: tira.de })));
       strip.append(head);
       const list = el('ul');
       const row = (id, done, txt, isNew) => {
@@ -285,6 +290,7 @@ export function createUI() {
       tira.activas.slice(0, Math.max(0, 3 - list.children.length)).forEach((n) => row(n.id, false, n.goal > 1 ? `${n.val}/${n.goal}` : '', false));
       if (!list.children.length) list.append(el('li', 'done', t('cu.todo')));
       strip.append(list);
+      if (tira.subio) strip.append(el('p', 'cu-sellos cu-subio', t(tira.completo ? 'cu.completo' : 'cu.subio', { n: tira.nivel })));
       if (tira.nuevosSellos.length) strip.append(el('p', 'cu-sellos', t('cu.sellos', { s: tira.nuevosSellos.map((id) => t(`cu.sello.${id}`)).join(' · ') })));
       strip.style.visibility = 'hidden';
       scrim.append(strip);
@@ -294,17 +300,27 @@ export function createUI() {
       const c = { l: card.offsetLeft, t: card.offsetTop, w: card.offsetWidth, h: card.offsetHeight };
       const w = Math.min(W - 32, Math.max(c.w, 300));
       strip.style.width = `${w}px`;
-      const sh = strip.offsetHeight;
       const left = Math.max(16, Math.min(c.l, W - 16 - w));
       // Debajo de la tarjeta si no tapa a Moki (en horizontal la tarjeta ya va a su derecha); si no, abajo sobre el
       // suelo de papel. Si no hay lugar sin traslape con la tarjeta ni con Moki, no se enseña: la tarjeta manda.
-      let top = c.t + c.h + 10;
-      if (!(top + sh <= H - 12 && (zonas.wide || top + sh <= zonas.headY - 6))) {
-        top = H - 12 - sh;
-        if (top < zonas.floorY + 4 || top < c.t + c.h + 6) {
-          strip.remove();
-          return;
-        }
+      const lugar = () => {
+        const sh = strip.offsetHeight;
+        const t0 = c.t + c.h + 10;
+        if (t0 + sh <= H - 12 && (zonas.wide || t0 + sh <= zonas.headY - 6)) return t0;
+        const t1 = H - 12 - sh;
+        return t1 < zonas.floorY + 4 || t1 < c.t + c.h + 6 ? null : t1;
+      };
+      // Si no cabe (celular con subida de nivel), se recorta antes de esconderla: primero la línea de sellos de
+      // partida, luego renglones desde abajo (queda al menos uno). La subida de nivel es lo último que se va.
+      let top = lugar();
+      const sobra = () => tira.subio && (strip.querySelector('.cu-sellos:not(.cu-subio)') || (list.children.length > 1 && list.lastElementChild));
+      for (let q = sobra(); top === null && q; q = sobra()) {
+        q.remove();
+        top = lugar();
+      }
+      if (top === null) {
+        strip.remove();
+        return;
       }
       Object.assign(strip.style, { left: `${left}px`, top: `${top}px`, visibility: '' });
       state.cuaderno = strip;
