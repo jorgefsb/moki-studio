@@ -11,7 +11,7 @@ import { audio } from '../audio/audio.js';
 import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
-import { nuevaPartida, revisar, leerCuaderno, TOTAL_SELLOS } from '../cuaderno.js';
+import { nuevaPartida, revisar, leerCuaderno, nivelDe, TOTAL_SELLOS } from '../cuaderno.js';
 import { registrarDia, saludo, leerRacha } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
@@ -425,7 +425,7 @@ export class RunScene extends Phaser.Scene {
       save('moki.modo', this.modo);
       this.showModo();
       const hola = saludo();
-      this.ui.showSaludo(t(hola.key, { n: hola.n }));
+      this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel);
     }, this.paseo, () => {
       this.paseo = !this.paseo;
       save('moki.paseo', this.paseo ? '1' : '0');
@@ -436,7 +436,7 @@ export class RunScene extends Phaser.Scene {
       }
       this.showModo();
       const hola = saludo();
-      this.ui.showSaludo(t(hola.key, { n: hola.n }));
+      this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel);
     }, { on: this.vuelta && vueltaAbierta(), locked: !vueltaAbierta() }, () => {
       if (!vueltaAbierta()) return; // bloqueada: el candado ya explica cómo se abre, el toque no hace nada
       this.vuelta = !this.vuelta;
@@ -447,7 +447,7 @@ export class RunScene extends Phaser.Scene {
       }
       this.showModo();
       const hola = saludo();
-      this.ui.showSaludo(t(hola.key, { n: hola.n }));
+      this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel);
     });
   }
 
@@ -572,7 +572,7 @@ export class RunScene extends Phaser.Scene {
     this.ui.showDemo(this.coarse);
     this.showModo();
     const hola = saludo();
-    this.ui.showSaludo(t(hola.key, { n: hola.n })); // Moki saluda según la racha
+    this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel); // Moki saluda según la racha
     this.demoStripping = false;
   }
 
@@ -1156,10 +1156,12 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       if (!o.passed && o.x < this.px - 60) {
         o.passed = true;
-        // Cuaderno: cada obstáculo cuenta una vez por partida aunque se repita el tramo tras un reintento
+        // Cuaderno: cada obstáculo cuenta una vez por partida aunque se repita el tramo tras un reintento.
+        // Clave tipo+D: la caja y la viga de una VC comparten D y antes la viga no contaba (E1, inventario).
         const P = this.partida;
-        if (P && !this.demo && P.passed[o.type] !== undefined && !(P.seen = P.seen || new Set()).has(o.D)) {
-          P.seen.add(o.D);
+        const k = `${o.type}:${o.D}`;
+        if (P && !this.demo && P.passed[o.type] !== undefined && !(P.seen = P.seen || new Set()).has(k)) {
+          P.seen.add(k);
           P.passed[o.type] += 1;
         }
       }
