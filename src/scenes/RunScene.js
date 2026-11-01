@@ -365,6 +365,22 @@ export class RunScene extends Phaser.Scene {
     // Mano y etiqueta junto a Moki, sobre su cabeza (no en la esquina): ahí está la mirada del jugador.
     this.tutC.setScale(1 / z).setPosition(this.px - 34 / z, g - 232 - 60 / z); // 60 px de pantalla más arriba y a la izquierda: ni Moki ni el arco quedan tapados
     this.tutLabelC.setPosition(62, 0);
+    if (this.ui && this.rig) this.ui.placeSaludo(this.saludoZonas());
+  }
+
+  saludar() {
+    const hola = saludo();
+    this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel, this.saludoZonas());
+  }
+
+  // E1b: zonas en px de pantalla para que la pastilla del saludo no toque la bota ni cruce la línea del suelo.
+  // La línea que se ve es el borde de la superficie de cartón (groundY - 8, ver layout), no groundY.
+  // El borde derecho de Moki sale de su títere, medido desde su x (en un resize el títere aún no se movió).
+  saludoZonas() {
+    const z = this.zoom;
+    const c = this.rig.container;
+    const b = c.getBounds();
+    return { floorY: (C.world.groundY - 8 - this.top) * z, mokiR: (this.px + b.right - c.x) * z };
   }
 
   // ---------- Estado de la partida ----------
@@ -424,8 +440,7 @@ export class RunScene extends Phaser.Scene {
       this.modo = this.modo === 'libre' ? 'reto' : 'libre';
       save('moki.modo', this.modo);
       this.showModo();
-      const hola = saludo();
-      this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel);
+      this.saludar();
     }, this.paseo, () => {
       this.paseo = !this.paseo;
       save('moki.paseo', this.paseo ? '1' : '0');
@@ -435,8 +450,7 @@ export class RunScene extends Phaser.Scene {
         save('moki.vuelta', '0');
       }
       this.showModo();
-      const hola = saludo();
-      this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel);
+      this.saludar();
     }, { on: this.vuelta && vueltaAbierta(), locked: !vueltaAbierta() }, () => {
       if (!vueltaAbierta()) return; // bloqueada: el candado ya explica cómo se abre, el toque no hace nada
       this.vuelta = !this.vuelta;
@@ -446,8 +460,7 @@ export class RunScene extends Phaser.Scene {
         save('moki.paseo', '0');
       }
       this.showModo();
-      const hola = saludo();
-      this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel);
+      this.saludar();
     });
   }
 
@@ -571,8 +584,7 @@ export class RunScene extends Phaser.Scene {
     this.lastM = 0;
     this.ui.showDemo(this.coarse);
     this.showModo();
-    const hola = saludo();
-    this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel); // Moki saluda según la racha
+    this.saludar(); // Moki saluda según la racha
     this.demoStripping = false;
   }
 
