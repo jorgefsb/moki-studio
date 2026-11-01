@@ -23,4 +23,4 @@ Fuente: Jorge, 31-oct-2026 22:00: nada de lo de building in public debe ser dif�
 
 ## Imagen o video
 - Diario: tarjeta con imagen y gráfica.
-- Video corto (15 a 30 s, subtítulos grandes, sin tecnicismos) cuando el cambio se ve mejor en movimiento (algo nuevo para jugar) y uno explicativo por semana. Los videos para YouTube Shorts pasan por Jorge antes de salir en público.
+- Video corto (15 a 30 s, subtítulos grandes, sin tecnicismos) cuando el cambio se ve mejor en movimiento (algo nuevo para jugar) y uno explicativo por semana. Los videos y Shorts salen directo y se califican a las 24 h (regla 17 de build-in-public).
