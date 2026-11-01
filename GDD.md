@@ -104,6 +104,37 @@ Entró: Reto del día y Libre con bloques y semilla (clásico intacto), papeles 
 
 Pendientes que dejó la QA del sprint: el fondo no pone postes ni pinos detrás de un obstáculo (a 1280 un poste se leía como parte de la torre); mejor marca por modo si no entró hoy. Densidad del generado: hoy trae ~20% menos obstáculos y el doble de filas de piezas que el clásico (decisión A, amable); revisar con personas. Cuaderno de 3 notas y sellos; racha con perdón; tarjeta para compartir; modo Paseo; Vuelta rápida; obstáculos pop-up; luz de lámpara, perspectiva atmosférica, hito gigante y clima; 40+ bloques; hueco en el suelo; papeles temáticos con arte nuevo; **pruebas con 3-5 personas reales en celular** (ms de toque, duración real, mezcla oída).
 
+### Pieza 5b de la v2: luz y tono de noche (31-oct, director)
+Por qué: gauntlet R5 calentado (noche 1280 contra alto-04): luz 3, tono 4, contra 9 y 9. Es el hueco más grande y el faldón no lo mueve. Pilar que sirve: cartón legible y bonito de noche. Conflicto de pilares (anotado, no resuelto): "papel kraft cálido" contra "noche fría"; se resuelve con cielo frío y todo lo de papel/cartón cálido, y se lleva a Jorge si arte lo ve roto.
+Qué cambia (solo perillas de `atmosphere.night` y el cielo de la hora noche en `ambient.js`):
+1. Cielo: del marrón #A69682 a un azul-violeta de papel frío (arranque #6E7391 antes de mezclar con tinta; tinte sobre la textura, no color plano). `night.sky` se ajusta para que la cima quede la más oscura.
+2. Horizonte: degradado de cielo frío arriba a papel cálido rosado tenue abajo (`horizon.color` de #B7B3AD a un cálido apagado tipo #C9A99A); esa es la luz de fondo.
+3. Fuente de luz: el sol del cielo se vuelve luna de papel crema frío (#EDE6D6) con halo de dos anillos concéntricos de papel, alfa 0.12 y 0.06, arriba a la izquierda (donde está la lámpara). Sin elementos nuevos del tipo globos.
+4. Acento cálido: el que ya hay (Moki naranja, cintas de la caja). No se añade otro.
+No se toca: contorno de la viga (4 px + tinta), cordillera #625545, suelo, faldón, mañana (0 px), clásico.
+Hecho = en captura calentada (>=240 updates) a 1280 y 375, gauntlet a ciegas con crítico nuevo: luz >=5 y tono >=5 (hoy 3 y 4; con ruido de ±2 solo cuenta si ambos suben >=2), legibilidad >=7, profundidad sin bajar de 4. Medidas: viga con sonda de arte >=2.0 a 375 y >=2.5 a 1280, torre/caja >=2.2 donde se pueda (torre 1280 ya está en 2.01-2.02 en la base, no se exige más), mañana a 0 px, clásico 78/78 y 2142 con ?nivel=clasico, consola 0.
+Veredicto de arte esperado: AJUSTAR pero publicable; sigue "ni cerca" de Alto, el objetivo es subir luz y tono, no ganar.
+Riesgo: un cielo más oscuro y frío puede bajar el contraste de la cordillera y la torre contra el fondo; medir antes de dar por buena.
+
+### Pieza 5c de la v2: escalones de valor y luz sobre Moki (31-oct, director)
+Por qué: gauntlet R5 y R6 (calentado, noche contra alto-04): luz 3-4 y profundidad 4-5 contra 9. Los tres críticos dicen lo mismo: cordillera, pino y casita tienen casi el mismo valor y no hay luz que caiga sobre algo. El color del cielo no ayudó (5b). Pilar: cartón legible y con volumen. Sin cambio de color de cielo ni de tokens (opción A; los 3 colores de 5b quedan fuera).
+Rama nueva desde master 89775b1 (ecd9521 ya dentro), NO desde v2/noche-luz.
+Qué cambia (primero las perillas que ya existen; nada de elementos nuevos):
+1. Escalones: medir en captura calentada la luminancia de cada plano (horizonte, cordillera, casita lejana, pino medio, suelo) y dejar orden fondo claro a frente oscuro con >=6% de luminosidad HSL por paso (tope 8%) entre planos vecinos. Perillas: `night.planes.far`, `night.planes.mid`, `ground.dim`, `ridgeLight`. La cordillera se queda en #625545 (arte: si se aclara pierde la masa oscura); se oscurecen los de adelante, no se aclaran los de atrás.
+2. Luz sobre Moki y el suelo: reencender y medir lo que ya existe antes de inventar: `moonRim` en Moki (alfa baja, la lámpara arriba a la izquierda) y un canto claro de papel de 2 px sobre el borde del suelo (alfa <=0.25, mismo color del horizonte actual #B7B3AD). Sombra de contacto de Moki coherente con esa luz.
+No se toca: color del cielo, horizonte, luna, viga (4 px + tinta), faldón, mañana, clásico.
+Hecho = captura calentada (>=240 updates) a 1280 y 375; gauntlet a ciegas con crítico nuevo contra alto-04: luz >=5 y profundidad >=6 (base calentada hoy 3 y 4; con ruido de +-2 solo cuenta si ambos suben >=2), legibilidad >=7. Medido: pasos de valor >=6% entre planos vecinos en las capturas; viga sonda de arte >=2.0 a 375 y >=2.5 a 1280; caja >=2.2; torre 1280 no peor que la base calentada (1.91); mañana a 0 px; clásico 78/78 y 2142 con ?nivel=clasico; consola 0.
+Veredicto de arte esperado: AJUSTAR pero publicable; sigue 'ni cerca' de Alto.
+Corte: una sola rama, un trabajo pesado a la vez (flock), una perilla por paso con captura calentada. Si tras dos pasadas completas del constructor (escalones; escalones + luz) el gauntlet no sube luz y profundidad >=2, se para y se anota 'no es de perillas': el siguiente paso sería arte nuevo (otra cordillera, no más valores) y eso se le plantea a Jorge. Para el corte de las 18:30 del 31-oct solo entra a master con PASS del probador y mi gauntlet sin retroceso; si no, sale lo que hay.
+
+### Pieza 6 de la v2 (queda para el siguiente día de trabajo; rama v2/noche-escalera 61adfb4 guardada)
+Origen: gauntlet R3/R4n ("ni cerca", sin movimiento fuera del ruido) y juicios de arte del 30-oct. Hecho = arte aprueba en foto fija, viga/torre/caja >=2.0 (torre 1280 D=260 con nubes fijas en la medida), mañana intacta, y el gauntlet de noche sube luz y profundidad a >=5 (el ruido de crítico es ±2: cuenta que arte lo vea).
+1. Faldón con canto de papel de 2-3 px, borde superior ondulado, fibra ~0.06, 4-6% más claro bajo las colinas claras de la derecha; sin tocar el borde superior del suelo.
+2. Tiras de horizonte DETRÁS de la cordillera, salto de valor de 6-8% entre contiguas (#B7B3AD, #A9A59F, #9C988F), alto mínimo 24 px a 1280 y 14 px a 375, canto claro arriba-izquierda y sombra 0.10 abajo. La cordillera oscura de la base se conserva.
+3. Escalones de valor entre cordillera, pino y casita (hoy dentro de ~10%) y cielo distinto al de las colinas.
+4. Suelo: bajar su altura (hoy >30% del cuadro) y quitar la textura de rasguños; el primer plano es lo más oscuro.
+5. Canto del pino y la casita +1 px; sol separado de la etiqueta de piezas a 375.
+
 ### v1 pública
 Libro de 4 páginas + papel del día + cuaderno + racha; poses nuevas de Moki dibujadas por la marca; carga <3 s en gama media; métricas de portal (sesión 10+ min, D1 10-15%, 80% juega 1+ min) medidas en moki-prueba antes de cualquier portal. Spark publica; nada se publica desde el estudio.
 

@@ -496,3 +496,27 @@ Anota en DECISIONES.md cuando una idea venga de esa calibración.
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
