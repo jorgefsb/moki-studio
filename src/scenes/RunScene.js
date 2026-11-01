@@ -374,12 +374,13 @@ export class RunScene extends Phaser.Scene {
   }
 
   // E1b: zonas en px de pantalla para que la pastilla del saludo no toque la bota ni cruce la línea del suelo.
+  // La línea que se ve es el borde de la superficie de cartón (groundY - 8, ver layout), no groundY.
   // El borde derecho de Moki sale de su títere, medido desde su x (en un resize el títere aún no se movió).
   saludoZonas() {
     const z = this.zoom;
     const c = this.rig.container;
     const b = c.getBounds();
-    return { floorY: (C.world.groundY - this.top) * z, mokiR: (this.px + b.right - c.x) * z };
+    return { floorY: (C.world.groundY - 8 - this.top) * z, mokiR: (this.px + b.right - c.x) * z };
   }
 
   // ---------- Estado de la partida ----------
