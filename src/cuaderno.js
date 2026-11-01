@@ -47,7 +47,7 @@ export const NIVELES = [
   ],
   // 6 · encadenar y juntar
   [
-    { id: 'racha5', goal: 5, val: (st) => st.maxCombo },
+    { id: 'cinta2', goal: 1, val: (st) => st.cintas2 || 0 },
     { id: 'piezas30', goal: 30, val: (st) => st.maxPieces },
     { id: 'arcos3P1', goal: 3, val: (st) => st.arcsByTramo[0] || 0 },
   ],
@@ -55,7 +55,7 @@ export const NIVELES = [
   [
     { id: 'sinCaerP2', goal: 1, val: (st) => paginaLimpia(st, 1) },
     { id: 'torres4', goal: 4, val: (st) => st.passed.torre },
-    { id: 'racha7', goal: 7, val: (st) => st.maxCombo },
+    { id: 'cinta3', goal: 1, val: (st) => st.cintas3 || 0 }, // x3 = 6 seguidas: garantizada en la página 1
   ],
   // 8
   [
@@ -94,6 +94,9 @@ const NOTA_IDS = new Set(NOTAS.map((n) => n.id));
 const SELLO_IDS = new Set(SELLOS.map((s) => s.id));
 // v1 -> v2: lo ya cumplido se conserva aunque cambie la condición. 'Pasa 3 vigas' no estaba garantizado; queda como 'Pasa 2 vigas'.
 const DE_V1 = { vigas3: 'vigas2' };
+// Cinta de combo (1-nov): la racha se volvió cinta. Quien tenía la racha ya cobró esa cinta (5 seguidas = x2, 7 = x3).
+// Vale para v1 y v2, y se reescribe la primera vez que se lee.
+const DE_RACHA = { racha5: 'cinta2', racha7: 'cinta3' };
 
 // Lo guardado puede venir roto, viejo (v1) o de otra versión: se filtra a ids conocidos y nunca truena.
 // Un v1 se sube a v2 la primera vez que se lee (si no se puede escribir, la sesión sigue con la copia en memoria).
@@ -107,8 +110,9 @@ export function leerCuaderno() {
   if (!d || typeof d !== 'object') d = null;
   const v1 = !!d && d.v !== 2;
   const arr = (a, ok, map = {}) => (Array.isArray(a) ? [...new Set(a.filter((x) => typeof x === 'string').map((x) => map[x] || x).filter((x) => ok.has(x)))] : []);
-  const c = { notas: arr(d && d.notas, NOTA_IDS, v1 ? DE_V1 : {}), sellos: arr(d && d.sellos, SELLO_IDS) };
-  if (v1 && (c.notas.length || c.sellos.length)) guardar(c);
+  const c = { notas: arr(d && d.notas, NOTA_IDS, v1 ? { ...DE_V1, ...DE_RACHA } : DE_RACHA), sellos: arr(d && d.sellos, SELLO_IDS) };
+  const viejas = !!d && Array.isArray(d.notas) && d.notas.some((x) => Object.hasOwn(DE_RACHA, x));
+  if ((v1 || viejas) && (c.notas.length || c.sellos.length)) guardar(c);
   return c;
 }
 
@@ -141,7 +145,7 @@ export function porTachar(st) {
 // nivel = índice del nivel abierto al empezar: una partida solo cumple encargos de ese nivel (un nivel por partida,
 // como Alto's). El set nuevo cuenta desde la siguiente partida; si no, una partida buena vaciaba el Cuaderno entero.
 export function nuevaPartida() {
-  return { passed: { caja: 0, torre: 0, viga: 0 }, maxTramo: 0, maxCombo: 0, maxPieces: 0, arcs: 0, arcsByTramo: {}, amber: 0, crashes: 0, crashesByTramo: {}, finished: false, pieceTotal: 0, nivel: nivelDe(leerCuaderno()).hechos };
+  return { passed: { caja: 0, torre: 0, viga: 0 }, maxTramo: 0, maxCombo: 0, maxPieces: 0, arcs: 0, arcsByTramo: {}, amber: 0, cintas2: 0, cintas3: 0, crashes: 0, crashesByTramo: {}, finished: false, pieceTotal: 0, nivel: nivelDe(leerCuaderno()).hechos };
 }
 
 // Revisa la partida contra los encargos activos del nivel con que empezó y los sellos de partida.

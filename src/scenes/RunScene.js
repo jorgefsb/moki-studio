@@ -4,6 +4,7 @@ import { PAL, TONE } from '../art/palette.js';
 import { buildTextures } from '../art/textures.js';
 import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
+import { Cinta } from '../art/cinta.js';
 import { Ambient } from '../art/ambient.js';
 import { MID_PROPS, MID_WRAP, MID_H } from '../art/textures.js';
 import { createUI } from '../ui/ui.js';
@@ -148,6 +149,7 @@ export class RunScene extends Phaser.Scene {
     this.rig = createMokiRig(this);
     this.rig.debugOn = ANIM_DEBUG;
     this.particles = new Particles(this);
+    this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
     this.ambient = new Ambient(this, Number(Q.get('amb')) || C.ambient.seed); // ?amb=N cambia la semilla del fondo (prueba de determinismo)
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
@@ -428,6 +430,7 @@ export class RunScene extends Phaser.Scene {
     this.hideBanner(true);
     this.rig.reset();
     this.particles.clear();
+    if (this.cinta) this.cinta.reset();
     this.tutSetState('off');
     this.tutArc.setVisible(false);
     if (this.ambient) this.ambient.reset();
@@ -925,9 +928,18 @@ export class RunScene extends Phaser.Scene {
     if (this.esc) this.esc.tick(dtMs); // el guion del escaparate maneja pantallas y bot
     else this.idleCheck();
 
-    if (this.screen === 'dead') return this.updateDead(dtMs);
-    if (this.screen === 'final') return this.updateFinal(dtMs);
-    this.updateRun(dtMs);
+    if (this.screen === 'dead') this.updateDead(dtMs);
+    else if (this.screen === 'final') this.updateFinal(dtMs);
+    else this.updateRun(dtMs);
+    this.cinta.update(dtMs, this.px, this.y, this.dist, this.reduced || C.juice === 0);
+  }
+
+  // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
+  cobrarCinta(aviso) {
+    const mult = this.cinta.cobrar(aviso);
+    const P = !this.demo && this.partida;
+    if (P && mult >= 2) P.cintas2 += 1;
+    if (P && mult >= 3) P.cintas3 += 1;
   }
 
   // Después de la pantalla final, 20 s sin tocar vuelven al demo (no guarda récord).
@@ -964,6 +976,7 @@ export class RunScene extends Phaser.Scene {
     }
     // La racha se acaba a los 0.9 s sin piezas
     if (this.combo > 0 && this.t - this.lastPickAt > C.combo.windowMs) {
+      this.cobrarCinta(true);
       this.combo = 0;
       audio.setStreak(0);
       this.setPieceLabel(1);
@@ -1364,6 +1377,7 @@ export class RunScene extends Phaser.Scene {
     let mult = 1;
     let arcFull = false;
     for (const [from, v] of R.steps) if (this.combo >= from) mult = v;
+    const valor0 = this.pieceValue;
     this.pieces += 1;
     this.pieceValue += (k.amber ? C.amberValue : 1) * mult;
     const P = !this.demo && this.partida;
@@ -1393,6 +1407,7 @@ export class RunScene extends Phaser.Scene {
         this.shake(1, 80);
       }
     }
+    this.cinta.grow(this.combo, mult, this.pieceValue - valor0);
     this.setPieceLabel(mult);
     if (!arcFull) this.pop(this.hudR, 1.08 + 0.02 * Math.min(mult, 3), 120); // la ficha brinca más con la racha
     this.particles.burst('collect', k.x, k.y, { combo: this.combo });
@@ -1698,6 +1713,7 @@ export class RunScene extends Phaser.Scene {
         this.placeEntities();
       }
     }
+    this.cobrarCinta(false); // al chocar la cinta se enrolla sin cartel; lo juntado ya contó
     this.dead = true;
     this.screen = 'dead';
     this.deadFor = 0;
@@ -1819,6 +1835,7 @@ export class RunScene extends Phaser.Scene {
     this.release();
     this.rig.startHop();
     if (!this.paseoRun) save('moki.done', '1'); // abre Hardcore (decisión del líder); un paseo no lo abre
+    this.cobrarCinta(true);
     if (this.partida) Object.assign(this.partida, { finished: true, pieceTotal: this.level.pieceTotal });
     // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
     const best = num(this.bestKey(), 0);
