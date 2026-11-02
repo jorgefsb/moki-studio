@@ -56,6 +56,9 @@ async function boot() {
           unlocked: a.unlocked,
           popTics: a.popTics || 0,
           ctx: a.ctx ? a.ctx.state : null,
+          master: a.bus ? +a.bus.master.gain.value.toFixed(3) : null, // ganancia general (hide() la baja a 0)
+          musica: a.bus ? +a.bus.duckGain.gain.value.toFixed(3) : null, // nivel de la música
+          sonando: a.music ? a.music.state.running : null,
           muted: a.muted,
           state: a.state,
           energy: a.music ? a.music.state.target : null,
