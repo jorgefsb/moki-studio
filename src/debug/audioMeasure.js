@@ -498,3 +498,109 @@ export async function measurePopup({ wav = false, cfg = C.audio } = {}) {
   }
   return out;
 }
+
+// ---- CRECE corte 1: capas del Cuaderno (AUDIO-CAPAS.md §6) ----
+// Tema con capas fijas: energía 0 (o la que se pida), compases 1 a 8, nivel del Cuaderno n, de día o de noche
+async function renderCapas(nivel, noche, seconds, cfg, energia = 0, extra) {
+  const { createCapas } = await import('../audio/capas.js');
+  return renderWith(
+    seconds,
+    (ctx, bus) => {
+      for (let k = 1; k <= 3; k++) bus.layer[k].gain.value = energia >= k ? (k === 3 && nivel >= 4 ? 0.7 : 1) : 0;
+      const capas = nivel >= 2 ? createCapas(ctx, bus, cfg, { fijo: true, nivel, noche }) : null;
+      const music = createMusic(ctx, bus, { level: energia, capas });
+      for (let s = 0; s < Math.ceil(seconds / STEP); s++) music.scheduleStep(s % LOOP_STEPS, s * STEP);
+      if (extra) extra(ctx, bus);
+    },
+    cfg
+  );
+}
+
+// Reparto de potencia por bandas (%), para describir un clip sin oírlo
+const BANDAS = [0, 150, 400, 1000, 2500, 5000, 11025];
+function bandas(d, sr = SR) {
+  const N = 4096;
+  const acc = new Array(BANDAS.length - 1).fill(0);
+  for (let off = 0; off + N < d.length; off += N) {
+    const re = new Float64Array(N);
+    const im = new Float64Array(N);
+    for (let i = 0; i < N; i++) re[i] = d[off + i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N));
+    fft(re, im);
+    for (let k = 1; k < N / 2; k++) {
+      const f = (k * sr) / N;
+      const b = BANDAS.findIndex((x, i) => f >= x && f < BANDAS[i + 1]);
+      if (b >= 0) acc[b] += re[k] * re[k] + im[k] * im[k];
+    }
+  }
+  const tot = acc.reduce((a, b) => a + b, 0);
+  return acc.map((p) => +((100 * p) / tot).toFixed(1));
+}
+// Ataques por segundo: ventanas de 10 ms cuya energía sube 6 dB sobre las 5 anteriores
+function ataques(d, sr = SR) {
+  const W = Math.round(sr / 100);
+  const e = [];
+  for (let i = 0; i + W <= d.length; i += W) e.push(rmsDb(d, i, i + W));
+  let n = 0;
+  for (let i = 5; i < e.length; i++) if (e[i] > -50 && e[i] - Math.max(...e.slice(i - 5, i)) > 6) n++;
+  return +(n / (d.length / sr)).toFixed(2);
+}
+// Parte sostenida: % de ventanas de 50 ms a menos de 12 dB del RMS del clip (colchón y soplo la suben)
+function sostenido(d, sr = SR) {
+  const W = Math.round(sr / 20);
+  const ref = rmsDb(d);
+  let n = 0;
+  let m = 0;
+  for (let i = 0; i + W <= d.length; i += W, m++) if (rmsDb(d, i, i + W) > ref - 12) n++;
+  return Math.round((100 * n) / m);
+}
+const describe = (d) => ({ rmsDb: +rmsDb(d).toFixed(1), picoDb: +peakDb(d).toFixed(1), centroideHz: centroidHz(d), bandasPct: bandas(d), ataquesPorSeg: ataques(d), sostenidoPct: sostenido(d) });
+
+// Distancia de forma entre dos clips con el volumen igualado: diferencia de bandas (puntos %) y de ataques
+const distancia = (a, b) => ({
+  bandasPuntos: +a.bandasPct.reduce((s, v, i) => s + Math.abs(v - b.bandasPct[i]), 0).toFixed(1),
+  ataquesDif: +Math.abs(a.ataquesPorSeg - b.ataquesPorSeg).toFixed(2),
+  rmsDifDb: +(b.rmsDb - a.rmsDb).toFixed(1),
+});
+
+// Pico con todo encima (§6c): nivel 6, energía 3, racha x3 (5 piezas y arco), un salto, una pieza y el timbre juntos
+async function peorCaso(noche, cfg) {
+  const { timbre } = await import('../audio/capas.js');
+  const evs = [[0, 'jump', {}], [0, 'pickup', { index: 4, tier: 2 }], [0.02, 'timbre', {}], [0.14, 'pickup', { index: 5, tier: 2 }], [0.28, 'pickup', { index: 6, tier: 2 }], [0.42, 'pickup', { index: 7, tier: 2 }], [0.56, 'pickup', { index: 8, tier: 2 }], [0.56, 'arc', {}]];
+  let max = -200;
+  // en tres lugares del compás (tiempo 1, pasos 4 y 10) y en dos compases distintos
+  for (const at of [2.5, 2.5 + 4 * STEP, 2.5 + 10 * STEP, 7.5]) {
+    const d = await renderCapas(6, noche, at + 1.5, cfg, 3, (ctx, bus) => {
+      const st = {};
+      for (const [t, n, o] of evs) routeSfx(ctx, bus, st, n, n === 'timbre' ? timbre : SFX[n], at + t, { ...o, echo: bus.echoIn }, cfg);
+    });
+    max = Math.max(max, peakDb(d));
+  }
+  return +max.toFixed(1);
+}
+
+// Devuelve los números de las capas, los clips de 20 s (con wav: true, en base64) y las pilas de pico
+export async function measureCapas({ wav = false, cfg = C.audio } = {}) {
+  const { timbre } = await import('../audio/capas.js');
+  const out = { niveles: {}, distancias: {}, pico: {}, timbre: {}, wavs: {} };
+  for (const noche of [false, true]) {
+    const dn = noche ? 'noche' : 'dia';
+    const desc = {};
+    for (const n of [1, 2, 3, 4, 5, 6]) {
+      const d = await renderCapas(n, noche, 20, cfg);
+      desc[n] = describe(d);
+      if (wav && (n === 1 || n === 3 || n === 5 || n === 6)) out.wavs[`crece-nivel${n}-${dn}-20s.wav`] = b64(wavBytes(d, SR));
+    }
+    out.niveles[dn] = desc;
+    out.distancias[dn] = { '1-3': distancia(desc[1], desc[3]), '3-6': distancia(desc[3], desc[6]), '3-5': distancia(desc[3], desc[5]), '1-6': distancia(desc[1], desc[6]) };
+    out.pico[dn] = { soloMusicaNivel6E3: +peakDb(await renderCapas(6, noche, 8, cfg, 3)).toFixed(1), conTodo: await peorCaso(noche, cfg) };
+  }
+  // la base sin capas (lo que oye el clásico): el mismo render de siempre
+  out.pico.temaSinCapasE0 = +peakDb(await renderTheme(0, 8, cfg)).toFixed(1);
+  for (const reduced of [false, true]) {
+    const d = await renderWith(0.6, (ctx, bus) => routeSfx(ctx, bus, {}, 'timbre', timbre, 0.05, { reduced }, cfg), cfg);
+    const p = await renderWith(0.6, (ctx, bus) => routeSfx(ctx, bus, {}, 'pickup', SFX.pickup, 0.05, { index: 11, reduced }, cfg), cfg);
+    out.timbre[reduced ? 'reducido' : 'normal'] = { picoDb: +peakDb(d).toFixed(1), colaMs: tailMs(d), centroideHz: centroidHz(d), campanitaDeAntesDb: +peakDb(p).toFixed(1), campanitaCentroideHz: centroidHz(p) };
+    if (wav) out.wavs[`crece-timbre${reduced ? '-reducido' : ''}.wav`] = b64(wavBytes(d, SR));
+  }
+  return out;
+}

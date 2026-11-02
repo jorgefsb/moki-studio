@@ -72,6 +72,10 @@ async function boot() {
           papelCargado: !!a.papel, // papel.js descargado y capa armada
           papelSonando: a.papel ? a.papel.state.name : null,
           paginas: a.paginas || 0, // stingers de pasar página que sí sonaron
+          nivel: a.nivel, // nivel del Cuaderno que oye la música
+          capasCargado: !!a.capas, // capas.js descargado
+          capasOn: a.capas ? a.capas.state.on : 0, // capas encendidas (sube en el límite de compás)
+          capasNoche: a.capas ? a.capas.state.noche : null,
         })),
       // Bots de DISENO ('tap' | 'hold' | 'adjust') y tabla de alturas de salto; módulo aparte, solo en depuración.
       bot: (kind, maxSec, seed) => import('./debug/bots.js').then((m) => m.runBot(game.scene.scenes[0], kind, maxSec, seed)),

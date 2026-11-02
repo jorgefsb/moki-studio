@@ -361,3 +361,14 @@ Se vuelve a revisar con los criterios de la sección 11 cuando el constructor ci
 4. Tempo fijo en 96 BPM, sin cambio de tonalidad. La energía crece por capas.
 5. Título en silencio hasta el primer gesto.
 6. Se aceptan los especiales de más de 150 ms (pieza ámbar, tarjeta, arco completo).
+
+## Capas del Cuaderno y timbre de bici (CRECE corte 1, 2-nov)
+
+Plan: AUDIO-CAPAS.md. Código: `src/audio/capas.js` (diferido, 1.4 KB gzip).
+- Eje aparte de la energía: `createCapas` arma 5 ganancias (niveles 2 a 6) hacia un filtro propio y de ahí a `musicMix`. `music.js` llama `capas.step()` en cada paso. Las capas cambian solo al inicio de compás (rampa de 0.4 s, 1.5 s con movimiento reducido).
+- Capas: 2 percusión de papel, 3 contracanto sostenido, 4 colchón, 5 bajo caminante y soplo, 6 brillo (campanitas y pulso).
+- Noche (`audio.nt()`, que RunScene toma de `ambient.nt`; de noche si pasa de 0.5): las capas dejan fuera la tercera y el filtro baja de 8 kHz a 3.2 kHz en 4 s (con movimiento reducido: 8 s y no baja de 4.5 kHz).
+- Mezcla: desde el nivel 4, E3 sube a 0.7 en vez de 1. El bus de música queda x0.9 en los niveles 4 y 5 y x0.81 en el 6.
+- `audio.setNivel(n)` lo llama RunScene en cada arranque de tramo. Clásico y demo pasan 1, así que `capas.js` ni se descarga. Con el sonido apagado tampoco se pide; se pide al volver a encenderlo.
+- `audio.sfx('timbre')`: campana de bici, ring-ring a 0 y 55 ms (1568 y 4330 Hz). Va por el canal de recompensa. Si `capas.js` aún no carga, suena la campanita de pieza más alta.
+- Medición: `measureCapas()` en `src/debug/audioMeasure.js`; el script es `evidencia/crece-audio-medir.mjs`.
