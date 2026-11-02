@@ -818,25 +818,32 @@ export class RunScene extends Phaser.Scene {
     o.sono = true;
     this.timbres.add(o.tid);
     audio.sfx('pickup', { index: 11 }); // campanita: la pieza en su tono más alto (el sonido propio va a la fila de audio)
-    const ray = this.add.graphics({ x: o.sprite.x, y: o.sprite.y + 92 }).setDepth(10.5).lineStyle(2, 0x22211f, 0.7); // 92 = 71 x 1.3
-    ray.lineBetween(-21, -12, -28, -16).lineBetween(0, -24, 0, -32).lineBetween(21, -12, 28, -16);
-    this.tweens.add({ targets: ray, alpha: 0, duration: 320, onComplete: () => ray.destroy() });
     if (!this.reduced) this.tweens.add({ targets: o.sprite, angle: -14, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
     o.sprite.setAlpha(0.55); // usado: más tenue, así no tapa a Moki al cruzarlo
     const tw = this.obstacles.find((q) => q.tid === o.tid && q !== o);
     if (tw) this.tumbar(tw);
-    // el arco se va al sonar; las 5 de piso salen cuando la torre ya cayó (240 ms, con el golpe), escalonadas 30 ms,
-    // y brincan 7 px con un abanico de papel: la torre "suelta" las piezas (game-feel). En reducido, sin brinco.
+    // las 3 del arco caen con la torre (240 ms, quadIn) a los lugares 1-3 del piso y se vuelven esas piezas (no suben la
+    // racha); los lugares 4-5 salen con el golpe, escalonados 30 ms, y brincan 7 px.
+    // En reducido, sin viaje: las del arco aparecen en el piso a los 240 ms.
     const T0 = C.timbre.caidaSec * 800;
+    const slots = this.level.entities.filter((e) => e.cae === o.tid);
+    const arco = this.pickups.filter((k) => k.pie === o.tid && !k.taken);
     let n = 0;
     for (const k of this.pickups) {
-      if (k.pie === o.tid) this.verPieza(k, false);
       if (k.cae !== o.tid) continue;
-      const d = T0 + 30 * n;
+      // su lugar lo toma una del arco: se queda escondida (los lugares 1-3 ya nacieron: el adelanto vw + 80 - px pasa de
+      // los 346 + 76 px del timbre al lugar 3)
+      if (slots.findIndex((e) => e.D === k.D) < arco.length) continue;
+      const d = T0 + 30 * n++;
       k.revela = this.t + d; // por tiempo de juego (se pausa con la partida); lo revela placeEntities
-      k.abanico = !n++;
       if (!this.reduced) this.tweens.add({ targets: k.sprite, y: k.y - 7, delay: d, duration: 90, yoyo: true, ease: 'Quad.easeOut' });
     }
+    arco.forEach((k, i) => {
+      k.pie = 0;
+      k.cae = o.tid;
+      k.h = 46;
+      k.cayendo = { t: this.t, D: k.D, D1: slots[i].D, y: k.sprite.y }; // la caída va por tiempo de juego (placeEntities)
+    });
   }
 
   verPieza(k, on) {
@@ -1300,12 +1307,16 @@ export class RunScene extends Phaser.Scene {
       }
     }
     for (const k of this.pickups) {
-      k.x = px + k.D - dist;
-      if (k.revela && this.t >= k.revela) {
-        k.revela = 0;
-        this.verPieza(k, true);
-        if (k.abanico) this.particles.burst('arc', k.x + 56, C.world.groundY - 40); // abanico de papel sobre las 5
+      const c = k.cayendo; // pieza del arco que cae con la torre a su lugar de piso (quadIn, 240 ms)
+      if (c) {
+        let p = Math.min(1, (this.t - c.t) / (C.timbre.caidaSec * 800));
+        p = this.reduced ? p | 0 : p * p; // reducido: sin viaje, aparece en el piso a los 240 ms
+        k.D = c.D + (c.D1 - c.D) * p;
+        k.sprite.y = c.y + (C.world.groundY - 46 - c.y) * p;
+        if (p >= 1) k.cayendo = 0;
       }
+      k.x = px + k.D - dist;
+      if (k.revela && this.t >= k.revela) (k.revela = 0), this.verPieza(k, true);
       if (!k.taken) {
         k.sprite.x = k.x;
         k.shadow.x = k.x + 4;
