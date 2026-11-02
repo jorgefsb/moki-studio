@@ -1,0 +1,9 @@
+{
+  "fecha": "2026-11-01",
+  "titulo": "Lo nuevo de hoy",
+  "lineas": [
+    "Al terminar, el Cuaderno te dice qué sigue.",
+    "Moki sube de nivel con cada 3 encargos."
+  ],
+  "ir_a": "cuaderno"
+}

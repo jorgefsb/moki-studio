@@ -60,7 +60,7 @@ export const CONFIG = {
   // ?escaparate (guion en bucle para la pantalla de Jorge): título con saludo, tropiezo en la página 2, Paseo en la tarde
   // tituloMs: título con el saludo de racha; tropiezoSec: segundos dentro de la página 2 antes de buscar la caja del
   // tropiezo; falloMs: tarjeta de fallo visible; paseoCajas: cajas fantasma que Moki cruza sin saltar; finalMs: tarjeta final
-  escaparate: { tituloMs: 7000, tropiezoSec: 4, falloMs: 5000, paseoCajas: 2, finalMs: 6000, rachaAyer: 3 },
+  escaparate: { tituloMs: 5000, tropiezoSec: 4, falloMs: 10000, paseoCajas: 2, finalMs: 6000, rachaAyer: 3 },
 
   // Moki
   squashMax: 0.03,
