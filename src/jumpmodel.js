@@ -50,9 +50,13 @@ export const PLANS = {
 
 export const planJump = (kind) => simulateJump(PLANS[kind].holdMs);
 
+// Viento: pendiente de la rampa (k por segundo) y un paso de dt hacia la k que toca (juego y validador usan este paso)
+const RAMPA = () => (C.viento.favor - 1) / C.viento.rampaSec;
+export const vientoPaso = (cur, k, dt) => cur + Math.max(-RAMPA() * dt, Math.min(RAMPA() * dt, k - cur));
+
 // Distancia horizontal (px) del despegue al aterrizaje a velocidad v.
-// k: viento (el salto avanza a v * k; la curva vertical no cambia)
-export const airTravel = (kind, v, k = 1) => planJump(kind).air * v * k;
+// k: viento (el salto avanza a v * k tras la rampa; la curva vertical no cambia)
+export const airTravel = (kind, v, k = 1) => planJump(kind).air * v * k - ((k - 1) * Math.abs(k - 1) * v) / (2 * RAMPA());
 
 // Altura de Moki (pies) a x px del despegue, a velocidad v.
 export function riseAt(kind, v, xPx, k = 1) {

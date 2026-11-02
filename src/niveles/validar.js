@@ -1,7 +1,7 @@
 // Validador sin navegador: un bot "adjust" (el mismo plan que src/debug/bots.js) corre el nivel con la física de
 // jumpmodel y las cajas de colisión de RunScene. Si choca, el nivel no es pasable. Puro JS: corre en Node y en el juego.
 import { CONFIG as C } from '../config.js';
-import { simulateJump, simulateBounce, airTravel } from '../jumpmodel.js';
+import { simulateJump, simulateBounce, airTravel, vientoPaso } from '../jumpmodel.js';
 import { TRAMP_PISA } from '../tramos.js';
 
 const DT = 1 / 60;
@@ -22,7 +22,8 @@ function box(type) {
 // force 'none' = bot pasivo (nunca salta): debe morir; pisar un trampolín no le alcanza para pasar una página.
 // ruta (trampolín): 'arriba' lo pisa y sobrevuela el nudo; 'abajo' lo salta con un toque y pasa el nudo a mano.
 // Al caer del vuelo, el siguiente obstáculo queda a >= C.tramp.caidaLibreSec (si no: cause 'caida').
-// Viento: el salto que despega dentro de una zona avanza a speed * k; el bot apunta con airTravel(plan, speed, k).
+// Viento: el salto que despega dentro de una zona avanza a speed * k, con rampa de C.viento.rampaSec al despegar y al
+// aterrizar (vientoPaso); el bot apunta con airTravel(plan, speed, k), que ya descuenta la rampa.
 // opts.ciego: el bot apunta con k = 1 pero sufre el viento (prueba del instrumento: debe chocar con C< a 320 y 350).
 // Al aterrizar de un salto con k != 1, lo siguiente a >= C.viento.salidaSec (si no: cause 'viento-salida').
 export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba', opts = {}) {
@@ -45,6 +46,7 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
   let accel = 0;
   let tramo = 0;
   let jump = null; // { t0, pts }
+  let kv = 1; // viento que lleva el mundo ahora (rampa hacia jump.k o hacia 1)
   let t = 0;
   let minClear = Infinity;
   let next = 0;
@@ -123,7 +125,8 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
       }
       minClear = Math.min(minClear, o.type === 'viga' ? o.box.lo - hi : lo - o.box.hi);
     }
-    dist += speed * (jump ? jump.k : 1) * DT;
+    kv = vientoPaso(kv, jump ? jump.k : 1, DT);
+    dist += speed * kv * DT;
     t += DT;
   }
   return { ok: true, sec: +t.toFixed(1), minClear: +minClear.toFixed(1) };

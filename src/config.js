@@ -88,7 +88,8 @@ export const CONFIG = {
   // avanza a speed * k mientras Moki está en el aire. Zona de D - antesSec a D + despuesSec; al aterrizar con k != 1,
   // lo siguiente a >= salidaSec. Solo en Libre desde el nivel 5 del Cuaderno.
   // contra 0.85 (no 0.8): con 0.8 la ventana de C< a 320 px/s mide 80 ms y no aguanta ±40 (scripts/viento-calibrar.mjs)
-  viento: { favor: 1.3, contra: 0.85, antesSec: 0.7, despuesSec: 0.15, salidaSec: 0.75, nivel: 5 },
+  // rampaSec: el mundo va de 1 a k (y de vuelta al aterrizar) en línea recta; a favor tarda 60 ms y en contra 30 (misma pendiente; con 80 el ciego a -40 ya no chocaba: scripts/viento-calibrar.mjs)
+  viento: { favor: 1.3, contra: 0.85, antesSec: 0.7, despuesSec: 0.15, salidaSec: 0.75, rampaSec: 0.06, nivel: 5 },
   hitboxShrink: { x: 18, top: 16 }, // torre y viga (la lección de Mantén no se toca)
   hitboxShrinkCaja: { x: 22, top: 20 }, // la caja perdona más (T3f): ventana de despegue de 109 a 156 ms y de dos cajas de 94 a ~134 ms a 320 px/s
   pickupSize: 30,
