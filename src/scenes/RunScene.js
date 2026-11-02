@@ -454,7 +454,9 @@ export class RunScene extends Phaser.Scene {
     if (this.ambient) this.ambient.biomas = this.demo ? null : level.biomas || null; // biomas de papel por tramo (NIVELES.md §8)
     if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
     audio.setPapel(!this.demo && level.biomas ? level.biomas[this.tramoIdx] : null); // timbre del papel (clásico y demo: sin papel)
-    audio.setNivel(!this.demo && level.biomas ? nivelDe(leerCuaderno()).nivel : 1); // capas del Cuaderno (clásico y demo: solo la base)
+    const nivelCu = !this.demo && level.biomas ? nivelDe(leerCuaderno()).nivel : 1;
+    audio.setNivel(nivelCu); // capas del Cuaderno (clásico y demo: solo la base)
+    this.pasos = nivelCu >= 4; // pasos de cartón desde el nivel 4
   }
 
   showModo() {
@@ -1687,6 +1689,10 @@ export class RunScene extends Phaser.Scene {
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
     this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f));
+    // Pasos de cartón (CRECE, Cuaderno nivel 4): la suela pisa en las fases 0 y 0.5 del ciclo; suena 1 de cada 2
+    const ph = this.rig.debug.phi;
+    if (this.pasos && this.screen === 'play' && this.grounded && !this.dead && (ph < this.phi0 || (ph >= 0.5 && this.phi0 < 0.5)) && (this.pisadas = (this.pisadas || 0) + 1) % 2) audio.sfx('paso');
+    this.phi0 = ph;
 
     if (this.debugEl) {
       const d = this.rig.debug;

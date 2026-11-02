@@ -604,3 +604,55 @@ export async function measureCapas({ wav = false, cfg = C.audio } = {}) {
   }
   return out;
 }
+
+// ---- CRECE corte 1b: pasos de cartón (nivel 4) ----
+// Música del nivel 4 (energía 1) con un paso cada `cada` s (el juego toca 1 de cada 2 pisadas), los pasos solos y el
+// peor caso del corte 1 (nivel 6, E3, racha x3, salto, timbre) con y sin un paso encima. Con wav: 2 min de música + pasos.
+export async function measurePasos({ wav = false, cada = 0.42, seconds = 120, cfg = C.audio } = {}) {
+  // azar con semilla: el peor caso con y sin paso se comparan con los mismos ±8% de volumen y ±3% de tono
+  const rnd = Math.random;
+  const semilla = () => {
+    let x = 7;
+    Math.random = () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
+  };
+  const pasos = (ctx, bus, t0, t1) => {
+    const st = {};
+    for (let t = t0; t < t1; t += cada) routeSfx(ctx, bus, st, 'paso', SFX.paso, t, {}, cfg);
+  };
+  const solo = await renderWith(6, (ctx, bus) => pasos(ctx, bus, 0.5, 5.5), cfg);
+  const mus = await renderCapas(4, false, 20, cfg, 1);
+  const mix = await renderCapas(4, false, 20, cfg, 1, (ctx, bus) => pasos(ctx, bus, 0.3, 19.8));
+  const out = {
+    cadaSeg: cada,
+    pasoPicoDb: +peakDb(solo).toFixed(1),
+    pasoRmsDb: +rmsDb(solo).toFixed(1),
+    musicaN4PicoDb: +peakDb(mus).toFixed(1),
+    musicaN4RmsDb: +rmsDb(mus).toFixed(1),
+    musicaConPasosPicoDb: +peakDb(mix).toFixed(1),
+    musicaConPasosRmsDb: +rmsDb(mix).toFixed(1),
+    wavs: {},
+  };
+  // el peor caso del corte 1 sin y con dos pasos encima del salto (a 0 y 40 ms), con la misma semilla en cada lugar
+  // del compás; los pasos van al final para no mover el azar de los demás efectos
+  const { timbre } = await import('../audio/capas.js');
+  const base = [[0, 'jump', {}], [0, 'pickup', { index: 4, tier: 2 }], [0.02, 'timbre', {}], [0.14, 'pickup', { index: 5, tier: 2 }], [0.28, 'pickup', { index: 6, tier: 2 }], [0.42, 'pickup', { index: 7, tier: 2 }], [0.56, 'pickup', { index: 8, tier: 2 }], [0.56, 'arc', {}]];
+  for (const [k, evs] of [['peorCasoSinPasoDb', base], ['peorCasoConPasoDb', [...base, [0, 'paso', {}], [0.04, 'paso', {}]]]]) {
+    let max = -200;
+    for (const at of [2.5, 2.5 + 4 * STEP, 2.5 + 10 * STEP, 7.5]) {
+      semilla();
+      const d = await renderCapas(6, false, at + 1.5, cfg, 3, (ctx, bus) => {
+        const st = {};
+        for (const [t, n, o] of evs) routeSfx(ctx, bus, st, n, n === 'timbre' ? timbre : SFX[n], at + t, { ...o, echo: bus.echoIn }, cfg);
+      });
+      max = Math.max(max, peakDb(d));
+    }
+    out[k] = +max.toFixed(2);
+  }
+  Math.random = rnd;
+  if (wav) {
+    const largo = await renderCapas(4, false, seconds, cfg, 1, (ctx, bus) => pasos(ctx, bus, 0.3, seconds - 0.2));
+    out.wavs['crece-pasos-nivel4-2min.wav'] = b64(wavBytes(largo, SR));
+    out.wavs['crece-pasos-solos.wav'] = b64(wavBytes(solo, SR));
+  }
+  return out;
+}
