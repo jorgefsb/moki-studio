@@ -519,7 +519,7 @@ export function createUI() {
         link.rel = 'noopener';
         foot.append(link);
       }
-      foot.append(back);
+      foot.append(back, el('p', 'credito', t('how.credito'))); // licencia del arte de las poses (CC BY-NC)
       asi.append(wrap, foot);
       root.appendChild(asi);
       primary = onBack;
