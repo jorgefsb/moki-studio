@@ -1689,10 +1689,10 @@ export class RunScene extends Phaser.Scene {
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
     this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f));
-    // Pasos de cartón (CRECE, Cuaderno nivel 4): la suela pisa en las fases 0 y 0.5 del ciclo; suena 1 de cada 2
-    const ph = this.rig.debug.phi;
-    if (this.pasos && this.screen === 'play' && this.grounded && !this.dead && (ph < this.phi0 || (ph >= 0.5 && this.phi0 < 0.5)) && (this.pisadas = (this.pisadas || 0) + 1) % 2) audio.sfx('paso');
-    this.phi0 = ph;
+    // Pasos de cartón (CRECE, Cuaderno nivel 4): uno por ciclo de la carrera normal (1 de cada 2 pisadas), contado por
+    // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
+    if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead) this.pasoD = this.dist;
+    else if (this.dist - this.pasoD >= this.rig.debug.cyclePxFull) (this.pasoD = this.dist), audio.sfx('paso');
 
     if (this.debugEl) {
       const d = this.rig.debug;

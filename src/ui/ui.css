@@ -225,21 +225,24 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-cuaderno .cu-stamp.new { animation: cu-stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both; }
 @keyframes cu-stamp { 0% { transform: scale(1.9) rotate(-28deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-6deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ui-cuaderno .cu-stamp.new { animation: none; } }
-/* CRECE nivel 2: llueven recortes en la tira detrás del texto (la tira aísla y recorta; el recorte va a -1) */
-.ui-cuaderno.cu-conf { isolation: isolate; overflow: hidden; }
-.ui-cuaderno .cu-recorte { position: absolute; top: -10px; z-index: -1; width: 8px; height: 12px; border-radius: 1px; opacity: 0; animation: cu-recorte 600ms cubic-bezier(0.2, 0.6, 0.4, 1) both; }
-@keyframes cu-recorte { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 1; transform: translate(var(--x), var(--y)) rotate(var(--r)); } }
-/* CRECE nivel 6: el sello cae de golpe (1.15 a 1 en 90 ms) y deja un aro de tinta. Poquito 1.06 sin aro; Hardcore 1.2
-   con rebote; Nada o reducido: aparece quieto */
+/* CRECE nivel 2: recortes que nacen del sello en una capa detrás de la tarjeta y de la tira (va primera en el velo):
+   solo se ven fuera de sus cajas y nunca tapan texto */
+.cu-recortes { position: absolute; pointer-events: none; }
+.cu-recortes i { position: absolute; width: 8px; height: 12px; margin: -6px 0 0 -4px; border-radius: 1px; opacity: 0; animation: cu-recorte 800ms cubic-bezier(0.25, 0.5, 0.45, 1) both; }
+@keyframes cu-recorte { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 35% { opacity: 1; transform: translate(calc(var(--x) * 0.45), var(--u)) rotate(calc(var(--r) * 0.4)); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); } }
+/* CRECE nivel 6: el sello cae de golpe (1.15 a 1 en 90 ms) y deja un aro de tinta. Poquito 1.06 sin aro; Hardcore el
+   estampado grande de siempre más el aro y la tarjeta baja 2 px; Nada o reducido: aparece quieto. Sin sello nuevo, la
+   línea de subida da el golpe chico */
 .ui-cuaderno.cu-golpe .cu-stamp.new { position: relative; animation: cu-golpe 90ms cubic-bezier(0.5, 0, 0.9, 0.6) 380ms both; }
+.ui-cuaderno.cu-golpe .cu-linea { --g: 1.06; --rot: 0deg; transform-origin: left center; border-left-color: #ff6b35; font-weight: 700; animation: cu-golpe 90ms cubic-bezier(0.5, 0, 0.9, 0.6) 380ms both; }
 .ui-cuaderno.cu-golpe.fx1 .cu-stamp.new { --g: 1.06; }
-.ui-cuaderno.cu-golpe.fx3 .cu-stamp.new { animation: cu-golpe-hc 170ms ease-out 380ms both; }
-.ui-cuaderno.cu-golpe.fx0 .cu-stamp.new { animation: none; }
-@keyframes cu-golpe { 0% { opacity: 0; transform: scale(var(--g, 1.15)) rotate(-8deg); } 30% { opacity: 1; } 100% { opacity: 1; transform: scale(1) rotate(-8deg); } }
-@keyframes cu-golpe-hc { 0% { opacity: 0; transform: scale(1.2) rotate(-8deg); } 50% { opacity: 1; transform: scale(0.92) rotate(-8deg); } 100% { opacity: 1; transform: scale(1) rotate(-8deg); } }
+.ui-cuaderno.cu-golpe.fx3 .cu-stamp.new { animation: cu-stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 380ms both; }
+.ui-cuaderno.cu-golpe.fx0 .cu-stamp.new, .ui-cuaderno.cu-golpe.fx0 .cu-linea { animation: none; }
+@keyframes cu-golpe { 0% { opacity: 0; transform: scale(var(--g, 1.15)) rotate(var(--rot, -8deg)); } 30% { opacity: 1; } 100% { opacity: 1; transform: scale(1) rotate(var(--rot, -8deg)); } }
 .ui-cuaderno.cu-golpe.fx2 .cu-stamp.new::after, .ui-cuaderno.cu-golpe.fx3 .cu-stamp.new::after { content: ''; position: absolute; inset: -6px; border: 3px solid #ff6b35; border-radius: 50%; opacity: 0; animation: cu-aro 340ms ease-out 470ms both; }
+.ui-cuaderno.cu-golpe.fx3 .cu-stamp.new::after { animation-delay: 610ms; }
 @keyframes cu-aro { 0% { opacity: 0.8; transform: scale(0.6); } 100% { opacity: 0; transform: scale(2.4); } }
-@media (prefers-reduced-motion: reduce) { .ui-cuaderno .cu-recorte, .ui-cuaderno.cu-golpe .cu-stamp.new::after { display: none; } .ui-cuaderno.cu-golpe .cu-stamp.new { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .cu-recortes, .ui-cuaderno.cu-golpe .cu-stamp.new::after { display: none; } .ui-cuaderno.cu-golpe .cu-stamp.new, .ui-cuaderno.cu-golpe .cu-linea { animation: none; } }
 .ui-cuaderno li.cu-mas { font-weight: 600; color: #22211f; padding-left: 26px; }
 /* ENCARGOS-D: en celular la tira gana 8 px de alto menos (relleno y separación de las líneas de sellos) para que los
    20 px de aire abajo quepan sin recortar renglones ni el "Sello nuevo" */

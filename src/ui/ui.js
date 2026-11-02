@@ -396,41 +396,53 @@ export function createUI() {
       }
       Object.assign(strip.style, { left: `${left}px`, top: `${top}px`, visibility: '' });
       state.cuaderno = strip;
-      // CRECE (DISENO.md, tabla final): del nivel 2 al 5 el sello nuevo trae lluvia de recortes; desde el 6 se estampa
-      // con golpe (tok y campanita) y sin confeti, para que se lea distinto (confeti = subiste, golpe = sello).
-      // Efectos: Poquito = poquito, Hardcore = más; Nada o reducido = quieto.
-      const sello = strip.querySelector('.cu-stamp.new');
-      if (!sello) return;
+      // CRECE (DISENO.md, tabla final): del nivel 2 al 5 el sello nuevo trae recortes; desde el 6 se estampa con golpe
+      // (tok y campanita) y sin confeti, para que se lea distinto (confeti = subiste, golpe = sello). Una subida desde
+      // el 6 sin sello nuevo da el golpe chico en la línea de subida. Efectos: Poquito = poquito, Hardcore = más; Nada
+      // o reducido = quieto.
       const fx = reducedMQ.matches ? 0 : feel.level;
       const golpe = tira.nivel >= 6;
-      const at = golpe && fx ? 470 : 610; // cuando el sello toca el papel
+      const sello = strip.querySelector('.cu-stamp.new') || (golpe && tira.subio && strip.querySelector('.cu-subio'));
+      if (!sello) return;
+      // cuando toca el papel: golpe 380 + 90 ms; el estampado grande (Hardcore en el 6, y el de siempre) ~610 ms
+      const at = golpe && fx && fx < 3 ? 470 : 610;
       if (golpe) {
         strip.classList.add('cu-golpe', `fx${fx}`);
+        if (!sello.classList.contains('cu-stamp')) sello.classList.add('cu-linea');
         setTimeout(() => {
           if (state.cuaderno !== strip) return;
           if (ui.sfx) ui.sfx('sello');
           if (fx === 3) card.animate([{ translate: '0 0' }, { translate: '0 2px' }, { translate: '0 0' }], 120);
         }, fx ? at : 380);
+        return;
       }
-      if (golpe || tira.nivel < 2 || !fx) return;
-      strip.classList.add('cu-conf');
-      // llueve papel a lo ancho de la tira, detrás del texto (la tira recorta lo que se sale)
-      const W2 = strip.clientWidth;
-      const H2 = strip.clientHeight;
+      if (tira.nivel < 2 || !fx) return;
+      // Los recortes nacen del sello en una capa DETRÁS de la tarjeta y de la tira: solo se ven fuera de sus cajas,
+      // así nunca tapan texto. Saltan, abren hacia los lados y caen.
+      const caja = el('div', 'cu-recortes');
+      const W2 = strip.offsetWidth;
+      const H2 = strip.offsetHeight;
+      Object.assign(caja.style, { left: strip.style.left, top: strip.style.top, width: `${W2}px`, height: `${H2}px` });
+      scrim.prepend(caja);
+      const sx = sello.offsetLeft + 9;
+      const sy = sello.offsetTop + 9;
       const n = [0, 4, 10, 16][fx];
       for (let i = 0; i < n; i++) {
-        const c = el('i', 'cu-recorte');
+        const c = el('i');
+        const der = i % 5 > 1; // 3 de cada 5 a la derecha (el sello está a la izquierda)
         Object.assign(c.style, {
-          left: `${Math.round(((i + 0.2 + Math.random() * 0.6) / n) * (W2 - 12))}px`,
+          left: `${sx}px`,
+          top: `${sy}px`,
           background: ['#ff6b35', '#ffa500', '#f4e8d5'][i % 3],
-          animationDuration: `${fx === 1 ? 400 : 700}ms`,
-          animationDelay: `${at + (i % 5) * 30}ms`,
+          animationDuration: `${fx === 1 ? 500 : 800}ms`,
+          animationDelay: `${at + (i % 4) * 25}ms`,
         });
-        c.style.setProperty('--x', `${Math.round(Math.random() * 24 - 12)}px`);
-        c.style.setProperty('--y', `${H2 + 24}px`); // atraviesa la tira y sale por abajo: llueve, no se queda
+        c.style.setProperty('--x', `${Math.round(der ? (W2 - sx) * (0.7 + Math.random() * 0.5) : -(sx + 16 + Math.random() * 40))}px`);
+        c.style.setProperty('--u', `${-Math.round(30 + Math.random() * 50)}px`);
+        c.style.setProperty('--y', `${Math.round(H2 - sy + 20 + Math.random() * 40)}px`);
         c.style.setProperty('--r', `${fx === 3 ? Math.round(Math.random() * 360 - 180) : Math.round(Math.random() * 60 - 30)}deg`);
-        c.onanimationend = () => c.remove();
-        strip.append(c);
+        c.onanimationend = () => (c.remove(), caja.children.length || caja.remove());
+        caja.append(c);
       }
     },
     // Tachado a media partida (Día 2): etiqueta de papel bajo el HUD con el encargo tachado y su sello. Sale, se
