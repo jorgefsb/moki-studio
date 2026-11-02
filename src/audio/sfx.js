@@ -251,5 +251,21 @@ export function stingerFinal(ctx, dest, t, o = {}) {
   [84, 88, 91].forEach((n, i) => campana(ctx, P.out, end + 0.1 + i * 0.12, n, 0.14, { ...opt, tail: 1.2, echo: o.echo, send: 0.3 }));
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso };
+// Trampolín (placeholder para audio): golpe de cartón grave y un "oing" triangular que sube con vibrato. Cola 140 ms.
+export function boing(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const a = Math.max(0.003, P.atkMin);
+  gl(ctx, P.out, t, 'sine', 120 * P.d, 70 * P.d, 60, 0.3 * P.pk * P.v, a, 0.07);
+  const g = gl(ctx, P.out, t + 0.01, 'triangle', 170 * P.d, 470 * P.d, 130, 0.3 * P.pk * P.v, a, 0.14);
+  void g;
+  if (!P.r) {
+    const lfo = osc(ctx, 'sine', 28, t, t + 0.15);
+    const d = ctx.createGain();
+    d.gain.value = 0.08 * P.pk * P.v;
+    lfo.connect(d);
+    d.connect(g.gain);
+  }
+}
+
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

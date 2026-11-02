@@ -79,7 +79,7 @@ export const CONFIG = {
     caja: { width: 60, height: 56 },
     torre: { width: 60, height: 92 }, // exige 76 de salto: se libra manteniendo desde ~130 ms; el toque (apex 62-72) no la libra
     viga: { width: 91, height: 32, hangBottom: 190 }, // colgante: 20% más ancha que antes; castiga saltar de más (pico > 94 px)
-    tramp: { width: 72, height: 22 }, // trampolín de cartón (J): no choca; pisarlo lanza
+    tramp: { width: 88, height: 24 }, // trampolín de cartón (J): no choca; pisarlo lanza
   },
   // Trampolín (NIVELES.md flow, mecánica #1): pisarlo lanza con vy fija y gravedad flotada; vuelo ~1.25 s, pico ~234 px.
   // Libra un obstáculo a 0.9 s (el nudo; torre con >= 52 px a 320 px/s) y pide 0.75 s libres al caer. Solo en Libre desde el nivel 3 del Cuaderno.
