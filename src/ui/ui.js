@@ -339,7 +339,7 @@ export function createUI() {
       tira.activas.slice(0, Math.max(0, 3 - list.children.length)).forEach((n) => row(n.id, false, n.goal > 1 ? `${n.val}/${n.goal}` : '', false));
       if (!list.children.length) list.append(el('li', 'done', t('cu.todo')));
       strip.append(list);
-      if (tira.subio) strip.append(el('p', 'cu-sellos cu-subio', t(tira.completo ? 'cu.completo' : 'cu.subio', { n: tira.nivel })));
+      if (tira.subio) strip.append(el('p', 'cu-sellos cu-subio cu-sube', t(tira.completo ? 'cu.completo' : 'cu.subio', { n: tira.nivel })));
       // mecánica nueva del nivel (NIVELES.md flow §5)
       for (const m of ['tramp', 'viento', 'timbre']) if (tira.subio && tira.nivel === C[m].nivel) strip.append(el('p', 'cu-sellos cu-subio', t(`cu.${m}`)));
       // Día 4: qué sigue. Al cerrar un set de tres, el primer encargo del nivel nuevo (si no salió ya como renglón);

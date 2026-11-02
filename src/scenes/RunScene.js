@@ -1691,7 +1691,7 @@ export class RunScene extends Phaser.Scene {
     this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f));
     // Pasos de cartón (CRECE, Cuaderno nivel 4): uno por ciclo de la carrera normal (1 de cada 2 pisadas), contado por
     // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
-    if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead) this.pasoD = this.dist;
+    if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead || this.dist < this.pasoD) this.pasoD = this.dist;
     else if (this.dist - this.pasoD >= this.rig.debug.cyclePxFull) (this.pasoD = this.dist), audio.sfx('paso');
 
     if (this.debugEl) {
