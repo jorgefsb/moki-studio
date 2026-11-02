@@ -1,9 +1,9 @@
 {
-  "fecha": "2026-11-01",
+  "fecha": "2026-11-02",
   "titulo": "Lo nuevo de hoy",
   "lineas": [
     "Al terminar, el Cuaderno te dice qué sigue.",
-    "Moki sube de nivel con cada 3 encargos.",
+    "Ahora Moki corre, salta y cae con sus propios cuadros.",
     "Si recoges piezas seguidas, una cinta de papel crece detrás de Moki."
   ],
   "ir_a": "cuaderno"
