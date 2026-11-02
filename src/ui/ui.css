@@ -245,6 +245,13 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-cuaderno.cu-golpe.fx3 .cu-stamp.new::after { animation-delay: 610ms; }
 @keyframes cu-aro { 0% { opacity: 0.8; transform: scale(0.6); } 100% { opacity: 0; transform: scale(2.4); } }
 @media (prefers-reduced-motion: reduce) { .cu-recortes, .ui-cuaderno.cu-golpe .cu-stamp.new::after { display: none; } .ui-cuaderno.cu-golpe .cu-stamp.new, .ui-cuaderno.cu-golpe .cu-linea { animation: none; } }
+/* CRECE nivel 10: Moki festeja en la línea de subida (cuadro 2 de 5 de la tira de salto, 52 px que sobresalen 8 px arriba y abajo sin crecer la línea, pixel nítido, sin
+   espejar). Mucho brinca 3 px dos veces, Hardcore 6 px tres veces; Poquito, Nada o reducido: quieto */
+.ui-cuaderno .cu-festejo { float: left; width: 52px; height: 52px; margin: -8px 6px -8px -6px; background: no-repeat -104px 0 / 260px 52px; image-rendering: pixelated; transform-origin: 50% 100%; }
+.ui-cuaderno .cu-festejo.fx2 { --h: -3px; animation: cu-festejo 360ms ease-out 620ms 2 both; }
+.ui-cuaderno .cu-festejo.fx3 { --h: -6px; animation: cu-festejo 320ms ease-out 620ms 3 both; }
+@keyframes cu-festejo { 0%, 100% { transform: none; } 20% { transform: scale(1.06, 0.9); } 55% { transform: translateY(var(--h)) scale(0.96, 1.05); } }
+@media (prefers-reduced-motion: reduce) { .ui-cuaderno .cu-festejo { animation: none; } }
 .ui-cuaderno li.cu-mas { font-weight: 600; color: #22211f; padding-left: 26px; }
 /* ENCARGOS-D: en celular la tira gana 8 px de alto menos (relleno y separación de las líneas de sellos) para que los
    20 px de aire abajo quepan sin recortar renglones ni el "Sello nuevo" */

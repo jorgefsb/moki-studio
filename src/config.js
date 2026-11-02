@@ -41,6 +41,7 @@ export const CONFIG = {
   // Piezas y puntaje
   pickupReach: { dx: 30, dy: 34, bodyCenter: 46 }, // la caja de recogida sigue el cuerpo, no todo Moki
   combo: { windowMs: 900, steps: [[1, 1], [3, 2], [6, 3]] }, // [desde N piezas seguidas, valor]
+  crece: { estelaV: 350, estelaMs: 120 }, // CRECE nivel 8: estela desde 350 px/s (tramo 2 en adelante), un recorte cada 120 ms
   arcBonus: 5,
   amberValue: 5,
   scorePerPiece: 10,

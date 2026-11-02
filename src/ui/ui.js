@@ -4,6 +4,7 @@ import { CONFIG as C } from '../config.js';
 import { t } from '../i18n.js';
 import { feel, JUICE_NAMES } from '../feel.js';
 import { EMBED } from '../embed.js';
+import festejoUrl from '../../assets/moki/pixel/moki_jump_rise_right_strip5.png';
 
 const reducedMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -401,6 +402,16 @@ export function createUI() {
       // el 6 sin sello nuevo da el golpe chico en la línea de subida. Efectos: Poquito = poquito, Hardcore = más; Nada
       // o reducido = quieto.
       const fx = reducedMQ.matches ? 0 : feel.level;
+      // CRECE nivel 10: Moki festeja en la línea de subida (cuadro de salto del kit pixel, brazo arriba, sin espejar) y
+      // suena una cadena de campanitas. Mucho brinca 3 px, Hardcore 6; Poquito, Nada o reducido: pose fija y 2 notas.
+      const sube = tira.subio && tira.nivel >= 10 && strip.querySelector('.cu-sube');
+      if (sube) {
+        const m = el('i', `cu-festejo fx${fx}`);
+        m.setAttribute('aria-hidden', 'true');
+        m.style.backgroundImage = `url(${festejoUrl})`;
+        sube.prepend(m);
+        setTimeout(() => state.cuaderno === strip && ui.sfx && ui.sfx('festejo', { n: fx >= 2 ? 4 : 2 }), 700);
+      }
       const golpe = tira.nivel >= 6;
       const sello = strip.querySelector('.cu-stamp.new') || (golpe && tira.subio && strip.querySelector('.cu-subio'));
       if (!sello) return;
