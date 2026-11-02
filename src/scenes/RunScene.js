@@ -291,9 +291,14 @@ export class RunScene extends Phaser.Scene {
       if (this.screen === 'play') this.pauseGame();
     };
     window.addEventListener('blur', lose);
-    document.addEventListener('visibilitychange', () => document.hidden && lose());
-    window.addEventListener('pointerdown', () => (this.lastInputAt = this.time.now), true);
-    window.addEventListener('keydown', () => (this.lastInputAt = this.time.now), true);
+    // Hueco D (probador, 1-nov): si el foco se pierde en una tarjeta (final, fallo) o en el título y la persona no
+    // pica "Otra vez", el audio quedaba mudo. Al volver el foco, la pestaña o con cualquier clic o tecla, regresa.
+    // En 'play' no aplica (lose() pausa) y en 'pause' manda "Seguir". show() respeta el mute.
+    const gain = () => !document.hidden && this.screen !== 'play' && this.screen !== 'pause' && audio.show();
+    window.addEventListener('focus', gain);
+    document.addEventListener('visibilitychange', () => (document.hidden ? lose() : gain()));
+    window.addEventListener('pointerdown', () => ((this.lastInputAt = this.time.now), gain()), true);
+    window.addEventListener('keydown', () => ((this.lastInputAt = this.time.now), gain()), true);
   }
 
   // La banda jugable (960x540) siempre se ve completa; si sobra pantalla en vertical,
