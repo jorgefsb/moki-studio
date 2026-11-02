@@ -92,6 +92,8 @@ export class RunScene extends Phaser.Scene {
     if (ESCAPARATE) this.esc = new Escaparate(this); // ?escaparate: el guion arranca su propio título
     else if (START_SCREEN === 'play') this.startGame();
     else this.startDemo();
+    // MOKI SE MUEVE: las 4 poses llegan en diferido; mientras, y si no cargan, corre el títere de siempre
+    if (!Q.has('titere')) import('../art/mokiPoses.js').then((m) => m.montar(this)).catch(() => {});
     // La portada HTML se retira cuando la escena ya está lista (Moki corriendo en el siguiente cuadro)
     // Las fuentes pueden llegar después del primer cuadro: el HUD se vuelve a medir cuando están listas
     document.fonts.ready.then(() => {
@@ -933,6 +935,7 @@ export class RunScene extends Phaser.Scene {
     else if (this.screen === 'final') this.updateFinal(dtMs);
     else this.updateRun(dtMs);
     this.cinta.update(dtMs, this.px, this.y, this.dist, this.reduced || C.juice === 0);
+    if (this.poses) this.poses.update(); // con poses listas, el sprite reemplaza al títere (calma, choque y meta: títere)
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
