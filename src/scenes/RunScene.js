@@ -1385,7 +1385,7 @@ export class RunScene extends Phaser.Scene {
       gr.lineStyle(2, this.ambient && this.ambient.nt > 0.5 ? 0xf4e8d5 : 0x22211f, 0.5);
       for (let i = 0; i < w / 90; i++) {
         const x = x0 + ((((i * 131 + v) % w) + w) % w);
-        if (Math.abs(x - 17 * d - this.px) < 45) continue; // nunca encima de Moki (quieta, parecía un disparo)
+        if (Math.abs(x - 17 * d - this.px) < (this.reduced ? 64 : 45)) continue; // nunca encima de Moki; quieta, más lejos (la punta en la cabeza parecía dardo)
         const yy = y - 46 - ((i * 53) % 120);
         gr.lineBetween(x - 34 * d, yy, x, yy);
         gr.beginPath();
@@ -1554,8 +1554,10 @@ export class RunScene extends Phaser.Scene {
       },
       dtMs
     );
-    // viento: Moki se inclina 3° hacia adelante (a favor) o atrás (en contra) en el aire; nunca se espeja
-    if (!this.grounded && this.vientoK !== 1 && !this.reduced) this.rig.container.setAngle(this.vientoK > 1 ? 3 : -3);
+    // viento: Moki se inclina hasta 3° hacia adelante (a favor) o atrás (en contra), al paso de la rampa del mundo
+    // (entra y sale con vientoV, encima del ángulo que ya puso el títere); nunca se espeja
+    const V = this.vientoV - 1;
+    if (V && !this.reduced) this.rig.container.setAngle(this.rig.container.angle + (3 * V) / (V > 0 ? C.viento.favor - 1 : 1 - C.viento.contra));
 
     let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {
