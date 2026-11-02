@@ -380,3 +380,106 @@ Invitado de niveles, sobre `v2/repisas` 7058eab. El arte reprobó porque la tabl
 - Las orillas suman (≈+90).
 - Neto ≈ +1557. Si no baja de 1536, se quita la bajada de 2 px al pisar (se queda el tok, ≈−35). Si aun así no llega, vale el tope de 1.6 KB que ya está aceptado.
 - **Riesgos:** el trato queda en 75.0 % justo con ×3. Con una sola caja abajo hay menos tentación de mantener, y el "techo" se puede leer más débil. A 470, R1 completa solo se ve 0.23 s. F4 puede bajar un poco porque el bloque es más corto.
+
+### 9. #4 Timbre, especificación (2-nov)
+Invitado de niveles. Los "≈" salen a mano de `config.js` (gravedad 2200, salto 720, toque con pico de 62 a 72, salto mantenido con pico de 118, caja de Moki de 86, torre de 92) y no los corrí. El constructor los confirma antes de tocar el juego.
+
+**1. Qué cambia al jugar y qué pregunta hace.** Un timbre de cartón flota a 1.0 s antes de una torre. Si lo tocas con un salto mantenido, suena y la torre se acuesta hacia adelante (lejos de Moki): ya no tienes que saltarla y sus piezas caen al piso. Si no lo tocas, la torre sigue de pie y la pasas a mano, con salto mantenido. La pregunta: "¿piezas seguras o subo el combo?".
+- **Tocar (seguro, sin combo):** las 3 piezas del arco caen con la torre y salen 2 más: 5 piezas a ras de piso (`h = 46`). Tumbar la torre no cuenta como pasarla, así que el combo se pausa (no suma ni rompe, igual que el vuelo). Valen **5**.
+- **A mano (combo con riesgo):** el arco `A3up` sobre la torre de pie, con el combo subiendo: 1+1+2 = **4**. Con combo en ×3: **9**.
+- **Reparto:** con combo en cero, 5 contra 4 (56/44). Con ×3, 5 contra 9 (36/64). Ninguna ruta pasa del 75 %.
+
+**2. Física y tiempos.**
+- **Altura:** la caja del timbre va de **186 a 214 px** sobre el suelo, mide 28 px de ancho y no mata. El toque sube la cabeza hasta ≈158 (28 px por debajo: nunca suena). El salto mantenido la sube hasta ≈204 (la mete 18 px) y la deja ≥ 186 durante ≈0.255 s (82 px a 320). Con ±40 ms solo cambia la x en 13 a 19 px, así que suena siempre. Va en `config.js`: `timbre: { lo: 186, hi: 214, ancho: 28, torreSec: 1.0, retardo: 0.1, caidaSec: 0.3, nivel: 9 }`.
+- **Torre:** a +1.0 s del timbre (como `T.V`). Si suena, la torre empieza a caer 0.1 s después (primero la campanita y luego el golpe) y tarda 0.3 s. Queda acostada a ≤ +0.51 s, o sea **≥ 0.45 s antes** de que llegue Moki, a cualquier velocidad. Acostada mide 92×20, es solo dibujo y no tiene choque. A 470, la torre entra a pantalla a +0.17 s, así que se ve casi toda la caída.
+- Para saber si se tocó: en `RunScene`, si se cruzan la caja de Moki y la del timbre, se pone `torre.caida = true` y deja de chocar. Es lo mismo que el `used` del trampolín.
+
+**3. Bloques.** En `tramos.js`, `B` es el timbre solo y `C+B` es una caja con el timbre encima. `expand()` enlaza el timbre con la primera `T` que venga ≤ 1.2 s después (`{ type: 'timbre', plan: 'hold', torre: i }`). Ese `A3up` lleva `cae: 5`.
+| id | dur | ev | dif | tags | mec |
+|---|---|---|---|---|---|
+| `timbre-intro` | 3 | `[[0,'B'],[1.0,'T+A3up']]` | 2 | timbre, premio | timbre |
+| `timbre-caja` | 3 | `[[0,'C+B'],[1.0,'T+A3up']]` | 2 | timbre | timbre |
+| `timbre-tc` | 4 | `[[0,'C+B'],[1.0,'T.C+A3up']]` | 3 | timbre, ritmo | timbre |
+| `timbre-viga` | 4 | `[[0,'C+B'],[1.0,'T+A3up'],[2.2,'V']]` | 3 | timbre, viga | timbre |
+- `timbre-viga` castiga mantener por reflejo después de tocar el timbre. `timbre-tc` deja de pie la caja de `T.C`.
+- **Unión:** nunca en calma, en el respiro ni en T1. La primera vez sale `timbre-intro` al abrir la subida, y `tc` y `viga` solo en el pico. Como mucho 1 por página, y el mismo id no sale en dos páginas seguidas. No va dentro de una zona de viento ni 1 s después (el viento mueve la x del toque), ni bajo una repisa (el techo corta el salto mantenido), ni bajo el vuelo de un trampolín (≥ 2.2 s después de un `J`). La regla (a) separa el tema `timbre`. Después del salto que toca el timbre, 0.75 s libres antes de algo que mate. Solo en Libre, desde el nivel 9 o con `?mec=timbre`. El Clásico y el Reto no cambian. La tarjeta dice "Ahora hay timbres en Libre" (con el `ui.js` generalizado del viento).
+
+**4. Bot (`validar.js`).** Se reusa `ruta`. `arriba` = **toca** (plan `hold` en el timbre: si se cruzan las cajas, la torre pasa a `caida` y se salta como el `tramp` de la línea 118). `abajo` = **a mano** (`tap` o `none` en el timbre, y la torre de pie con `hold`). Las dos rutas pasan con ±40 ms en 320, 350, 385 y 420, y en la vuelta rápida hasta 470. El pasivo falla. **Prueba del instrumento:** (1) el toque nunca suena, a ninguna velocidad; (2) el salto mantenido suena a −40, 0 y +40; (3) `simulateJump(130)`, el mantenido más corto que libra la torre, se mide y se reporta: si suena a medias según la velocidad, se sube `lo` hasta que quede de un solo lado.
+
+**5. Vara de F4, calculada antes de fijarla (regla única).** Hoy master en Libre da 21.9 %. Supongo ≈18 decisiones por página (0.69 por segundo en 26 s activos), o sea ≈3.94 con elección. Cada bloque de timbre trae 2 o 3 decisiones y **1 elección** (el timbre: `hold` cobra 5 y `tap` cobra 0 en `flow-medir`, como el `tramp` de la línea 140). La torre o la caja que siguen ya están decididas y cuentan como 1 plan. Un bloque de timbre reemplaza a uno medio de 3.5 s (≈2.4 decisiones y 0.53 elecciones): +0.47. Si desplaza a un trampolín (1 de 2), suma +0. Con 2 a 4 por partida (≈0.5 por página) y 1 de cada 3 desplazando a un trampolín: +0.16 por página, o sea (3.94 + 0.16) / 18.05 = **22.7 %**. **Vara: F4 ≥ 22.7 % (+0.8).** El techo, si saliera en cada página sin desplazar nada, es ≈24.4 %. **Paso 0 del constructor:** medir decisiones por página y desplazamiento en master con `flow-medir`, y rehacer esta cuenta con esos datos antes de tocar el juego.
+- **Las demás varas:** F1 ≥ master + 0.3 (salen `B`, `C+B` y la torre acostada). F2a ≤ 4.5 s. F2b ≤ 12 %. F3 ≤ 4.0 s, con F3b = 0. F6 no sube respecto a master. Justicia con 0 fallos en 465 niveles y las 2 rutas. Fallback 0 %. Clásico idéntico (78/78 y 2142). Peso ≤ +1.5 KB gzip (estimo ≈1.2 KB: config 60 B, códigos 120, validador 250, choque y caída 400, dibujo 250, campanita 120). A 375, ≥ 55 fps en Hardcore.
+
+**6. Boceto antes del código (lo pide el invitado de arte).** Son 3 cuadros estáticos a 375×812, de día y de noche, en cartón y tinta `#22211F`, sin naranja. (a) Moki corre hacia una caja con el timbre encima y la torre detrás. (b) Moki estirado en el salto mantenido toca el timbre, con 3 rayitas de "suena", y la torre se inclina hacia adelante. (c) La torre acostada con sus 5 piezas encima. El timbre es una campanita redonda de mostrador (28 px, kraft claro, botón de tinta) que cuelga de un hilo con un moño. Tiene que verse distinta de la viga: redonda, de un tercio de su ancho y **sin el contorno claro de peligro** (ARTE.md: ese contorno solo lo llevan las cosas que matan). La torre cae lejos de Moki, nunca hacia él. Moki no se espeja. **Pasa si** un invitado a ciegas responde "se cae la torre" a "¿qué pasa si tocas eso?" y no dice "peligro", con ≥ 4/5 en "se toca" y ≥ 4/5 en "no mata".
+
+**7. Riesgos y orden de recorte.**
+- **#1. El timbre se lee como una viga o como peligro.** Cuelga en la misma franja (la viga cuelga a 190), así que la gente lo esquiva con un toque y la ruta a mano pasa del 75 %. Se recorta en este orden: (1) piezas brillando junto al timbre y campanita al pasar cerca; (2) solo `intro` y `caja` (sin la viga en el bloque); (3) `C.timbre.nivel = 99`.
+- **#2. La torre que cae se lee como "algo me cae encima", o cae fuera de pantalla a 420-470.** Se recorta en este orden: (1) que caiga solo hacia adelante, con el golpe de cartón ya acostada; (2) timbres solo en tramos de 385 o menos; (3) apagar.
+
+**8. Sabremos que estuvo bien si:** F4 ≥ 22.7 % con la regla única (Libre, nivel ≥ 9, 30 semillas, contra master). Las demás varas del punto 5 sin romperse. Con 3 a 5 personas, ninguna ruta pasa del 75 % de los usos. Un invitado a ciegas, con 2 capturas a 375 (antes y después del timbre, también con movimiento reducido), dice "tocas la campana y se cae la torre" sin pista.
+**Tope: 2.5 h.** Boceto e invitado 0.4. Config, códigos y bloques 0.4. Choque, caída y combo en `RunScene` 0.7. Validador, rutas e instrumento 0.5. `flow-medir` y métricas 0.3. Campanita 0.2. Si se pasa, sale con `intro` y `caja` solamente, y `tc` y `viga` van en la siguiente vuelta.
+
+#### Arte del timbre (boceto)
+Invitado de arte, 2-nov. Desarrolla el punto 6 de la §9. Referencias leídas: `ARTE.md` §4 y §8, `src/art/palette.js` (`TONE`), `block()`, `torre()` y `tramp()` de `src/art/textures.js`. Medidas en px lógicos (960×540); a 375 de ancho el zoom es ≈ 0.69, así que 1 px lógico ≈ 0.7 px de pantalla. Todo con primitivas, sin imágenes nuevas. Los hex salen de mezclar tokens, como `TONE`. Dos cambios al punto 6: el timbre es una **campana colgante con badajo** (no de mostrador con botón: a 25 px de pantalla un botón redondo se lee como bola o foco) y **no usa `block()`**, porque `block()` dibuja siempre el contorno claro de 4 px al 70 %, que es la marca de peligro.
+
+**1. Silueta del timbre (día).** Origen en el centro de la caja de choque (altura 200 sobre el suelo; la caja sigue siendo de 28×28, de 186 a 214). Las y son hacia abajo, en px lógicos.
+| Parte | Forma y medida | Color |
+|---|---|---|
+| Domo | `roundRect` de 38×28, de x −19 a 19 e y −14 a 14, radio 16 arriba y 3 abajo | cuerpo `#CEAF8E` (kraftLight) |
+| Luz | franja de 6×18 en el lado izquierdo del domo, y sombra de 8×18 a la derecha | `#F4E8D5` al 45 % y `#B99168` |
+| Aro (labio) | `rect` de 46×7, de x −23 a 23 e y +14 a +21, esquinas de 3 | `#8F7254` (kraftDark), canto superior de 2 px en `#B99168` |
+| Badajo | círculo de radio 4.5 en (0, +26), pegado al aro con un palito de 2×5 | `#22211F` |
+| Soporte | "grapa" de cartón de 14×6 sobre el domo, de y −20 a −14, con un ojal de 3 px | `#8F7254`, ojal `#22211F` |
+| Hilo | línea de 1.5 px, de y −20 a −66 (46 px; unos 32 px de pantalla), recta | `#22211F` al 80 % |
+| Remate | anillo de papel de radio 5 en (0, −71), trazo de 2 px, sin relleno | `#22211F` al 80 % |
+| Perfil | trazo de 2 px alrededor del domo y el aro (no del hilo) | `#22211F` al 40 %, como `block()` |
+| Fibras | 2 trazos cortos de 0.8 px en el domo | `#22211F` al 10 % |
+- **Tamaño total del dibujo:** 46 de ancho × 47 de alto sin el hilo (≈ 32×33 px de pantalla a 375), 118 con hilo y anillo (≈ 82 px). El domo mide 38×28 lógicos, o sea 26×19 en pantalla. Es el mínimo que acepto; no bajarlo.
+- **Contraste con la viga y las cajas:** más claro que ellas (kraftLight contra kraftDanger `#866B4F`), redondo, 46 de ancho contra 91, **sin naranja, sin cinta y sin contorno claro**. Pesa más hacia arriba y se balancea; la viga es un tablón horizontal con rayas.
+- **Cómo se ve en el aire sin parecer viga:** (1) el hilo único, vertical y largo, que termina en un anillo en vez de apoyarse en nada; (2) una sombra de contacto suave en el suelo, elipse de 40×6 con `#22211F` al 14 %, **sin borde duro**, bien separada del timbre (que cuelga a 140 px del piso) y alineada con su x; (3) el badajo, que cuelga abajo y es la parte que se mueve.
+- **Noche:** cada color pasa por `mix(col, #22211F, 0.245)`, la misma fórmula que `tramp(dim)`: domo `#A48C73`, aro y soporte `#745E47`, cuerpo/sombra `#947656`. El perfil sube al 55 % y se añade **un solo canto de luz de 1.5 px**, `#F4E8D5` al 55 %, solo en la curva superior izquierda del domo (no es un contorno completo y no brilla). El hilo y el anillo suben a `#B7B3AD` al 70 % para que se lean sobre la cordillera `#625545`.
+- **Dibujo:** ≈ 12 primitivas (4 `roundRect`/`rect`, 2 círculos, 3 líneas y la elipse). **Estimo ≈ 260 B**; el constructor lo mide. Si pasa de 300, se quita primero la elipse del suelo y luego las fibras.
+
+**2. Estado "tocado" (3 cuadros, 320 ms en total, easing `quadOut`, sin loop).** Gira sobre el anillo (0, −71). Ningún cuadro usa glow ni cambia de tamaño; el timbre no se comprime.
+| Cuadro | Tiempo | Giro | Badajo | Extra |
+|---|---|---|---|---|
+| T1 | 0 a 70 ms | −14° (se aleja de Moki) | +8 px hacia la derecha, golpea el aro | domo con `#F4E8D5` al 25 % plano, y **3 rayitas de "suena"** de 2 px y 8 px de largo en `#22211F` al 70 %, a −60°, 0° y +60° desde el domo |
+| T2 | 70 a 170 ms | +9° | −5 px | solo 2 rayitas, más cortas (5 px) y al 40 % |
+| T3 | 170 a 320 ms | −3° y luego 0° | vuelve a 0 | sin rayitas |
+- Después se queda quieto y "usado": igual que el normal, pero domo `#B99168` (un tono más apagado). Con movimiento reducido: solo T1 estático durante 120 ms, sin giro, y luego el estado usado.
+- La rayita 0° va hacia arriba; las otras dos, a los lados. Nada de ondas ni círculos concéntricos (se leerían como radar o glow).
+
+**3. Torre de pie y acostada.**
+- **De pie:** sin cambios. Sigue siendo `torre()` (60×92, `#866B4F` con cinta naranja): todavía mata.
+- **Cae hacia adelante** (a la derecha, lejos de Moki), girando sobre su **esquina inferior derecha** (el pie delantero), en el sentido de las agujas del reloj. 0 a 0.24 s, de 0° a 90°, `quadIn` (arranca lenta y acelera, como cartón que se vence). Al sonar el timbre, la **cinta naranja baja de alfa 1 a 0 durante toda la caída**, y el cuerpo pasa de `#866B4F` a `#B99168`. Así se ve que dejó de ser peligro. Solo en el último giro hay un contorno de papel, y nunca el de 4 px al 70 %.
+- **Aplastado (0.24 a 0.30 s):** la torre caída (92×60) se cruza en 60 ms con la lámina acostada de abajo. El golpe de cartón (0.1 s antes de llegar al piso) sale aquí.
+- **Acostada (puente/piso), 92×20, sin choque:** `rect` de 92×20 con esquinas de 5, tapa de 3 px `#CEAF8E`, canto de 6 px `#8F7254`, cuerpo `#B99168`. Una línea de pliegue en el centro (`#8A7E70` al 65 %, 1.5 px, más la línea clara de 1.5 px a su lado) que marca que son las 2 cajas de 46. Donde estaba la cinta queda un parche `#8F7254` al 50 % de 12×20, sin naranja. Perfil de tinta al 40 %. Sombra de contacto `#22211F` al 22 %, 4 px, pegada debajo. Noche: la misma fórmula de 0.245, o sea `#947656` y `#745E47`.
+- **Piezas:** 5 fichas (las del arco `cae: 5`) a h = 46, separadas 28 px lógicos en x y centradas sobre la lámina. Las 3 del medio quedan encima de la lámina y las 2 de los lados, sobre el piso. No hay que dibujar nada nuevo; se usan las fichas actuales. Con 26 px de ficha y 28 de separación se ven una por una.
+- La lámina es solo decoración: Moki la cruza sin choque. Si la lámina midiera más de 20 de alto, Moki parecería atravesar una caja.
+
+**4. Boceto: 3 cuadros a 375×812, día y noche (6 imágenes).** Fondo y cordillera: los valores de día y de noche que ya trae `config.js`, sin inventar. Suelo en y = 540 de pantalla. Moki con las poses aprobadas de correr, salto y caída del juego (sin inventar poses), a su escala actual, y **nunca espejado**. Todo lo que se mueve avanza hacia la derecha; el mundo viene de la derecha hacia Moki, que está en x ≈ 72.
+| Cuadro | Qué se ve (px de pantalla) |
+|---|---|
+| (a) Acercándose | Moki corriendo en x = 72. Caja de 60 lógicos (41 de pantalla) en x = 120 con el timbre encima: centro del timbre a y = 540 − 138 = 402, hilo y anillo hasta y ≈ 335. La torre de pie en x = 341 (a 1.0 s a 320 px/s caen 221 px): ocupa de x = 321 a 362, entera. Sombra del timbre en el suelo bajo x = 120. |
+| (b) Tocando | Moki estirado en el salto mantenido, con la mano arriba, en x = 72. El timbre en x = 84, en T1 (−14°, 3 rayitas, badajo a la derecha). La torre, a 221 px del timbre, en x = 305, inclinada 35° hacia la derecha sobre su pie delantero, con la cinta ya al 60 %. Le quedan ≈ 40 px de aire a la derecha de la pantalla. |
+| (c) Torre acostada | Moki cayendo, a media altura, en x = 72. El timbre ya salió por la izquierda (si queda, que se vea solo el hilo, x < 0). La lámina de 92×20 lógicos (63×14 de pantalla) en x = 186 a 249, y las 5 fichas encima, desde x ≈ 177 hasta 257, a 32 px sobre el suelo. Sombra de contacto debajo. Sin cinta ni naranja. |
+- **Naranja:** solo el visor/Moki, si ya lo lleva su pose, y la cinta de la torre de pie en (a) y (b). Ninguno en el timbre ni en la lámina.
+- Al menos una captura de (a) con la distancia real de 1.0 s para que se vea la torre entera. A velocidades de 385 o más la torre no cabe junto al timbre. Eso ya lo cubre el riesgo #2.
+
+**5. Cómo se aprueba el boceto (5 criterios, de 0 a 5).** Lo revisa un invitado a ciegas con las 6 imágenes, sin pistas. Se le pregunta primero "¿qué es eso colgado?" y "¿qué pasa si lo tocas?".
+| # | Criterio | Mide | Pasa con |
+|---|---|---|---|
+| 1 | **Se lee como timbre** | dice "campana/timbre/campanita" sin que se le sugiera, a 375 y a tamaño real, de día y de noche | **≥ 4** |
+| 2 | **No parece peligro** | no dice peligro/pincho/trampa/viga; la ve menos amenazante que la caja y la viga; sin naranja ni contorno claro | **≥ 4** |
+| 3 | Silueta completa y legible | el domo, el aro, el badajo y el hilo se distinguen a 375; ninguna parte sale de pantalla; en la noche se separa del fondo sin brillar | ≥ 3 |
+| 4 | Consistencia con las cajas y el trampolín | mismo cartón, perfil de tinta al 40 %, canto, fibras y sombra de contacto; no parece plástico ni de otro juego | ≥ 3 |
+| 5 | Torre: cae lejos de Moki y queda como piso | en (b) y (c) entiende "se cae hacia adelante" y en (c) "ya se puede pasar"; las 5 fichas se ven una por una | ≥ 3 |
+- **Aprueba** si 1 y 2 sacan ≥ 4 en el día y en la noche, y los otros tres ≥ 3. Si 1 o 2 bajan de 4: se cambia la forma (más alto el domo, badajo más grande, hilo más largo) y se repite el boceto, no se mete al juego. Hasta 3 vueltas; si no pasa a la tercera, `C.timbre.nivel = 99` y se archiva, como las repisas.
+- Marca "ARTE: AJUSTAR" lo que quede entre 2 y 3 en 1 o 2, y "RECHAZADO" lo que quede en 0 o 1.
+
+**6. Riesgos del arte.**
+- **Tamaño.** A 375 el domo mide 26×19 px de pantalla. Si el invitado no lo lee, la solución es agrandar el dibujo (domo 46×34, aro 56), no ponerle detalles. Entonces la caja de choque de 28 queda muy chica contra un dibujo de 56; el líder decide si sube el choque a 36.
+- **Dibujo 46 contra choque 28.** Moki puede rozar el aro y no sonar. Es lo que más frustra; que el constructor lo pruebe con el salto mantenido en el bot.
+- **La caída de 90° a 20 de alto (aplastado en 60 ms)** puede verse como un truco. Si lo parece, la torre cae al ras en 0.3 s sin aplastar y la lámina se dibuja de golpe al final, con el golpe de cartón.
+- **Las 5 fichas sobre una lámina de 92.** Si se superponen con la que ya está en el piso, bajar la separación a 24 o dejar solo la lámina y las fichas ordenadas.
+- **Torre fuera de pantalla** a 385 o más con 1.0 s de separación (221 px a 320, 266 a 385). El boceto se hace a 320. Si hace falta, el líder decide acortar `torreSec`.
+- **Poses.** No se inventó ninguna. Si la pose de salto no tiene la mano arriba al tocar, hay que avisar al líder para que lo escale.
