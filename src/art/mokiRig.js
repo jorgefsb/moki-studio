@@ -294,7 +294,7 @@ export function createMokiRig(scene) {
     deadT: -1,
     sal: 0,
   };
-  const debug = { slide: 0, maxSlide: 0, lastSlide: 0, sink: 0, period: 0, cyclePx: runFull.cyclePx, bob: 0, phi: 0, contact: null };
+  const debug = { slide: 0, maxSlide: 0, lastSlide: 0, sink: 0, period: 0, cyclePx: runFull.cyclePx, cyclePxFull: runFull.cyclePx, bob: 0, phi: 0, contact: null };
   let stanceRef = null;
   let stanceMax = 0;
   let bobMin = 1e9;
