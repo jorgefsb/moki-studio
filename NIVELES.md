@@ -227,6 +227,101 @@ T1 conserva `T1_INTRO` (0-12 s = calma y subida). T3 conserva `viga-intro` como 
 Reglas del trampolín: nunca antes del segundo 12 de T1, ni en Clásico. Bajo el vuelo no puede haber vigas (V3). Al caer, 0.75 s libres como mínimo. Arriba no se suma combo, pero tampoco se rompe. 5 bloques: `tramp-intro` (sin nudo, enseña), `tramp-nudo` (`C.C` abajo), `tramp-torre` (`T.C`), `tramp-viga` (viga después de caer: castiga el salto mantenido por reflejo), `tramp-doble`.
 **Reto del día:** sigue igual para todos, así que no usa mecánicas destrabadas (dependen del nivel de cada quien). Las mecánicas salen en Libre. `generarNivel(seed, modo, { mecanicas })` filtra los bloques por su campo `mec`. Pregunta para el director: ¿el Reto suma el trampolín para todos cuando cumpla una semana? Recomiendo que sí.
 
+#### #2 Viento, especificación (2-nov)
+Invitado de niveles. Los números con "≈" los calculé a mano con las perillas de `config.js` y no los corrí. El constructor los confirma con la prueba de calibración del punto 4 antes de tocar el juego.
+
+**1. Física: el viento estira o encoge el salto en horizontal, y nada más.**
+- Si Moki **despega** dentro de una zona, todo ese salto (hasta que aterriza) avanza a `speed × k`. En el juego es el paso del mundo (`RunScene`, línea ~984: `step = speed × dt × vientoK`). En el suelo, `k = 1` siempre. El `k` se fija al despegar y vuelve a 1 al aterrizar, al morir o al reaparecer.
+- A favor, `k = 1.3`. En contra, `k = 0.8`. Van en `config.js`: `viento: { favor: 1.3, contra: 0.8, antesSec: 0.7, despuesSec: 0.15, salidaSec: 0.75, nivel: 5 }`.
+- **Por qué esta variante y no otra.** (a) Si cambia la gravedad, cambia la altura del pico: la viga y la torre dejan de medir lo mismo y hay que simular otra curva. Estirar en x deja igual la curva vertical (`simulateJump`), así que no hace falta una simulación nueva. `jumpmodel` solo suma `k` a lo que ya existe: `airTravel(kind, v, k = 1)` y `riseAt(kind, v, x, k = 1)` usan `v × k`. Es más simple que `simulateBounce`. (b) Si cambia la velocidad del mundo también en el suelo, el momento de tocar **no cambia**: la caja llega antes, pero el salto también va más rápido y se compensan. Solo cambiar el aire mueve el momento de tocar de verdad.
+- **Qué pide al jugador (y una corrección al encargo).** Con viento a favor el salto es más largo: hay que despegar **más lejos**, o sea **tocar antes**, y además se perdona tocar temprano. Con viento en contra el salto es más corto: hay que **tocar después**, más cerca de la caja. Es al revés de lo que decía el encargo, porque así sale la física, y la tarjeta y la prueba a ciegas se escriben con este sentido. Caja con toque, a 320 px/s (≈): sin viento se libra despegando entre 42 y 96 px antes de la caja. A favor, entre 48 y 138 px. En contra, entre 38 y 72 px. Quien toca "como siempre" con viento en contra (≈75 px) choca. Ahí está la mecánica.
+- Las piezas no cambian de altura. Los arcos sobre un obstáculo con viento abren su separación `× k` (`gap × k`) y el centro queda en el mismo lugar.
+
+**2. Cómo se ve y se oye.**
+- La zona va de `D − 0.7 s` a `D + 0.15 s` del primer y del último obstáculo (`antesSec`, `despuesSec`, en segundos a la velocidad del tramo). Así cubre cualquier despegue útil: el toque despega ≈0.2 s antes de la caja y el salto mantenido ≈0.42 s antes con `k` de 1.3.
+- **Marca principal (sin partículas):** comillas de tinta pintadas sobre el suelo a lo largo de la zona, `»»»` a favor y `«««` en contra. Son 3 trazos por cada 60 px, con 3 px de grosor, en la tinta #22211F de día y en papel claro de noche, todo con `Graphics` y sin textura nueva. Se ven en cuanto la zona entra a pantalla: a 375 px hay 389 px por delante, o sea ≥ 0.9 s antes de la caja a 420 px/s. Se lee por la dirección y no por el color, así que sirve también para daltónicos.
+- **Marca de apoyo:** las tiras de papel del pool actual (6 a la vez como máximo). A favor vuelan **hacia la derecha**, y nada más en pantalla se mueve hacia allá, así que se nota al instante. En contra vuelan hacia la izquierda al doble de la velocidad del suelo. Empiezan a salir 1.2 s antes de que la zona llegue a Moki.
+- **Moki** se inclina 3° hacia adelante en el aire a favor y 3° hacia atrás en contra, con el `tilt` que ya existe. No se espeja.
+- **Sonido "soplido":** sale al despegar dentro de la zona (es cuando el viento actúa). Ruido filtrado de 260 ms, con el filtro de 800 a 2000 Hz a favor (sube) y de 2000 a 700 Hz en contra (baja), 6 dB por debajo del boing.
+- **Movimiento reducido:** sin tiras y sin inclinación. Las comillas se quedan, porque son la mecánica. La prueba a ciegas se hace también con movimiento reducido.
+
+**3. Bloques.** En `tramos.js`, un sufijo `>` (a favor) o `<` (en contra) sobre un código base de `OBS`: `C>`, `C<`, `T>`. `expand()` quita el sufijo, arma el obstáculo de siempre y agrega `{ kind: 'viento', D0, D1, k }`. Dos zonas seguidas con el mismo `k` y a menos de 0.3 s se juntan en una.
+| id | dur | ev | dif | tags | mec |
+|---|---|---|---|---|---|
+| `viento-intro` | 3 | `[[0, 'C>+Aup']]` | 1 | viento, premio | viento |
+| `viento-contra` | 3 | `[[0, 'C<']]` | 2 | viento | viento |
+| `viento-torre` | 3 | `[[0, 'T>+Aup']]` | 2 | viento, torre | viento |
+| `viento-par` | 4 | `[[0, 'C>'], [1.5, 'C<']]` | 3 | viento, ritmo | viento |
+| `viento-ritmo` | 4 | `[[0, 'C<'], [1.0, 'C<'], [2.2, 'C<']]` | 3 | viento, ritmo | viento |
+- `viento-par` es la firma de la mecánica: la misma caja dos veces, primero hay que tocar antes y luego después. `viento-ritmo` usa huecos de 1.0 y 1.2 s para no regalar una repetición a F3. Las dos cajas de `C>+Aup` y `T>+Aup` dejan elegir: con toque pasas, con salto mantenido cobras el arco estirado. Así F4 no baja.
+- **Fases:** nunca en calma (0-4 s) ni en T1. La primera vez en la partida sale `viento-intro` al abrir la subida (como `viga-intro`) y `viento-contra` en esa misma página. `par` y `ritmo` solo van en el pico. En el respiro solo `viento-intro`, y nada con viento después del segundo 26. Como máximo 2 bloques de viento por página.
+- **No se mezcla:** dentro de una zona y hasta 1 s después de `D1` no van vigas, pop-ups (`U`), filas `P5`, trampolines ni `OLA`. Ningún trampolín a menos de vuelo + 0.75 s antes de `D0` (en `FIN`, `J` ya cubre 2.2 s). La regla (a) ya separa el tema `viento` del tema `trampolin`. Solo Libre, desde el nivel 5 del Cuaderno o con `?mec=viento` (que acepte lista: `?mec=tramp,viento`). El Clásico y el Reto no cambian, y el Reto lo recibe una semana después, igual que el trampolín. La tarjeta del nivel 5 dice "Ahora hay viento en Libre" (`cu.viento`; generalizar `ui.js:343`, que hoy solo mira `C.tramp.nivel`).
+
+**4. Justicia (`validar.js`).**
+- El bot busca la zona en la `dist` donde despega y apunta con `airTravel(plan, speed, kZona) / 2`. Mientras está en el aire avanza `dist += speed × jump.k × DT`.
+- **Aire libre al salir:** cuando aterriza un salto con `k ≠ 1`, el siguiente obstáculo debe quedar a ≥ 0.75 s (`salidaSec`, a velocidad de suelo). Si no, `cause: 'viento-salida'` y se vuelve a sortear, igual que con `caida` en el trampolín.
+- **Pasa:** el bot con viento a −40, 0 y +40 ms, en las 4 velocidades de tramo y en vuelta rápida (×1.12, hasta 470). Siguen las dos rutas del trampolín, y el pasivo falla en todas.
+- **Prueba del instrumento** (en la prueba de `validar`, no en cada nivel): un bot **ciego al viento** (apunta con `k = 1` pero sufre la física) debe chocar con `C<` aislada a 320 y 350 px/s. Si la libra, el viento es pura decoración y la mecánica no pasa.
+- **Calibración primero:** con el centrado de `air/2`, `C<` a 320 queda justa (≈ ±44 a 52 ms). Si el bot con viento no pasa a ±40, sube `contra` a 0.85 y repite. Si con 0.85 el ciego ya no choca, ve al punto 6.
+
+**5. Sabremos que estuvo bien si** (Libre, nivel ≥ 5, 30 semillas, contra master `f068d24`):
+- F1 sube de ≈8.3 a **≥ 9.3** (son 4 patrones nuevos: `C>`, `C<`, `T>` y los pares). F6 baja de 28 a **≤ 24 s**.
+- No se rompe nada más: F2a ≤ 4.5 s, F2b ≤ 12 %, F3 ≤ 4.0 s y F3b = 0, F4 ≥ 20 % (hoy 23.6 %). Justicia sin fallas en 465 niveles, fallback 0 %, Clásico idéntico (78/78 y 2142).
+- Peso ≤ +1.5 KB gzip (estimo ≈1.1 KB: configuración, sufijo, 2 parámetros en jumpmodel, validador, comillas, soplido). 375 px a ≥ 55 fps en Hardcore.
+- **Invitado a ciegas:** ve dos capturas a 375 px (antes de la zona y con Moki en el aire dentro de ella), primero a favor y luego en contra, también con movimiento reducido. Debe decir "viento" (o "empuja"/"frena") y su dirección sin pista, en las dos.
+
+**6. Riesgo #1: que el cambio de paso del mundo en el aire se sienta como lag y no como viento.** Con `k = 0.8`, el fondo se frena justo al despegar, y en un celular viejo eso parece que el juego se trabó. Si el invitado a ciegas o 2 de 5 personas dicen "se trabó" o "lag", se corta así: (1) suavizar el cambio de `k` en 60 ms, con el mismo suavizado en el validador; (2) más tiras y comillas más gruesas; (3) bajar a 1.2/0.85 si el ciego todavía choca. Si sigue fallando, `C.viento.nivel = 99` apaga la mecánica sin borrar nada y el nivel 5 se queda con la música, como hoy.
+
+**¿Viento o Repisas?** Vale el viento primero: es S-M (≈1.1 KB, sin superficies que pisar) y ataca F6 (28 s contra un tope de 30, la métrica más justa). Repisas ataca F4, que ya pasa (23.6 % ≥ 20), y cuesta M-L con más de 1.5 KB probables.
+
+#### #3 Repisas, especificación (2-nov)
+Invitado de niveles. Los "≈" salen a mano de `config.js` (gravedad 2200, salto 720, trampolín 750 con ×0.55, Moki de 92 con caja de 86, viga en 190) y no los corrí. El constructor los confirma con la prueba del punto 5 antes de tocar el juego.
+
+**1. Recorte: una repisa alta que solo se sube con el trampolín.**
+- **Se cae el salto mantenido para subir.** Es geometría, no gusto: el salto mantenido llega a 118 px y Moki mide 92. Una repisa que se alcance así tendría el piso a 100 px como mucho, y abajo Moki no cabe parado. No hay forma de tener a la vez "se sube saltando" y "se pasa por debajo". El trampolín llega a ≈232 px y sí deja las dos cosas. (Para después: un escalón de caja para subir con salto mantenido. No va en este corte.)
+- **Medidas:** cara de abajo a **176 px** sobre el suelo, grosor 14, piso a **190 px**. Va en `config.js`: `repisa: { alto: 190, grosor: 14, nivel: 7 }`. La cara de abajo funciona como una **viga larga**. El toque pasa por debajo (cabeza a ≈148, 28 px de holgura) y el salto mantenido choca (cabeza a ≈204). Es la misma lección que la viga, que ya se enseñó: "bajo techo, toque corto".
+- **Largo:** se mide en segundos desde el `J`, igual que todo lo demás. Empieza en **+0.45 s** y termina en **+3.3 s**. El trampolín lanza en `J − 20 px`. Los pies pasan los 190 px de subida a ≈+0.35 s y de bajada a ≈+0.83 s. Así Moki cruza la orilla con ≈27 px de aire y cae sobre la repisa a ≈+0.83 s, a cualquier velocidad de 320 a 470.
+- **Subir:** solo pisando el `J`. **Bajar:** se acaba la repisa (o hay un hueco) y Moki cae solo. Son 190 px en ≈0.42 s y no hay gesto nuevo. **Canto:** no hay pared que se choque de frente. Lo único que mata es la cara de abajo (la caja `{ lo: 176, hi: 190 }` en todo el largo), y solo si saltas mantenido debajo de ella.
+
+**2. Física y modelo.**
+- **RunScene:** `pisoEn(x)` devuelve `groundY − 190` si los pies de Moki (`x ± 16`) tocan un tramo de repisa y venía por encima. Si no, devuelve `groundY`. `stepJump` usa ese piso en lugar de `C.world.groundY` en las líneas 1067, 1075, 1076 y 1086. Solo se aterriza **desde arriba**: `vy ≥ 0 && yPrev ≤ piso && y ≥ piso` (la repisa no frena al que sube desde abajo, a ese lo mata la cara de abajo). Si Moki está en el suelo y `pisoEn` baja, entonces `grounded = false`, `lastGroundedAt = t` (el coyote de 90 ms vale) y `vy = 0`. Al aterrizar en la repisa se apaga `vuelo` con el mismo bloque de código que ya existe. La sombra y las partículas van en el piso. Sin repisas en pantalla, `pisoEn` regresa `groundY` sin hacer cuentas, y por eso el Clásico queda idéntico.
+- **Combo:** mientras `enRepisa`, se trata igual que el vuelo: no suma ni rompe, y la ventana corre desde que Moki cae al suelo.
+- **jumpmodel (sin simulación nueva):** `cruzaVuelo(h)` saca de `simulateBounce().pts` (que ya está en caché) los dos tiempos en que el vuelo pasa por `h`. `caidaSec(h, v0 = 0)` da la caída en forma cerrada: `(−v0 + √(v0² + 2gh)) / g`. `tramos.js` los usa para afirmar al armar cada bloque: `orilla ≥ sube + 16/v + 0.03` y `orilla ≤ baja − 0.1`.
+- **validar.js:** el salto lleva `base` (0 o 190) y la altura es `base + pts.rise`. Cada cuadro, si va bajando y cruza `sueloEn(dist)`, aterriza ahí. Si se acaban los `pts` con `base > 0` y abajo no hay repisa, sigue la caída cerrada `alt = base − vL·τ − 1100·τ²`. Las repisas van en una lista aparte (como mucho una viva), y su cara de abajo se revisa por tramo `[D0 − 16, D1 + 16]`, no por centro. El bot **no** usa coyote, para quedar del lado seguro.
+
+**3. Arriba y abajo (el trato).**
+- **Arriba (seguro, sin combo):** 7 piezas a `h = 236` (190 + 46): una fila de 5 de +1.0 a +1.6 s y 2 más después del hueco. Valen 7. El riesgo es un **hueco** de 0.3 s en la repisa: si no lo saltas, caes al carril de abajo vivo y pierdes las 2 últimas piezas. El toque lo libra con una ventana de ≈270 ms a 320 y ≈240 ms a 470, más el coyote.
+- **Abajo (combo con riesgo):** 3 cajas con toque bajo techo a +0.85, +1.65 y +2.45 s, cada una con 1 pieza a `h = 95` (como `OLA`), y 3 piezas de suelo (`h = 46`) entre ellas. Son 6 piezas a 0.4 s una de otra, dentro de la ventana de 900 ms. Si arrancas en cero valen 1+1+2+2+2+3 = **11**. El riesgo es mantener por reflejo bajo el techo, y eso mata.
+- **Reparto:** con combo en cero, 7 contra 11 (arriba 39 %, abajo 61 %). Con combo ya en ×3, 7 contra 18 (abajo 72 %). Ninguna pasa del 75 %. Las piezas de un carril no se alcanzan desde el otro (`dy` 34 contra más de 100 px de distancia).
+
+**4. Bloques.** Hay códigos nuevos en `tramos.js`. `R<seg>` es un tramo de repisa de `t` a `t + seg` (`{ kind: 'repisa', D0, D1 }`). Dos `R` separados por menos de 0.6 s forman un **hueco**, que es un pseudoobstáculo `{ type: 'hueco', plan: 'tap', arriba: true }` sin choque. `+A1` es una pieza a 95 sobre la caja, `p` una pieza de suelo y `PR5`/`PR2` una fila sobre la repisa (48 px). `buildLevel` marca `bajo` todo lo que queda bajo `[D0, D1]` (como hoy con el nudo).
+| id | dur | ev | dif | tags | mec |
+|---|---|---|---|---|---|
+| `repisa-intro` | 5 | `[[0,'J'],[0.45,'R2.85'],[0.85,'C+A1'],[1.25,'p'],[1.65,'C+A1'],[1.0,'PR5']]` | 2 | repisa, premio | repisa |
+| `repisa-hueco` | 5 | `[[0,'J'],[0.45,'R2.1'],[2.85,'R0.45'],[0.85,'C+A1'],[1.25,'p'],[1.65,'C+A1'],[2.05,'p'],[2.45,'C+A1'],[2.85,'p'],[1.0,'PR5'],[3.0,'PR2']]` | 3 | repisa | repisa |
+| `repisa-pop` | 5 | igual que `hueco`, pero la caja de +1.65 es `U+A1` | 3 | repisa, sorpresa | repisa |
+| `repisa-salida` | 5.5 | `repisa-hueco` + `[4.6,'T']` | 4 | repisa, torre | repisa |
+- `repisa-salida` cambia "bajo techo, toque" por "torre, mantén" justo al salir, con 0.85 s libres desde el aterrizaje más tardío. Es el único `dif 4` del pico.
+- **Fases:** nunca en calma ni en T1. La primera vez sale `repisa-intro` al abrir la subida. `hueco` y `pop` van en la subida o en el pico, y `salida` solo en el pico. En el respiro no hay ninguna (duran 5 s y nada mata después del 28). Como mucho 1 bloque de repisa por página, y el mismo id no sale en dos páginas seguidas (protege F3).
+- **Con el trampolín:** el `J` de la repisa es suyo. No va ningún otro `J` a menos de 2 s antes (vuelo más 0.75 s). Nada de `Avu`, porque el vuelo se corta al caer en la repisa. La regla (a) separa el tema `repisa` del tema `trampolin`. **Con el viento:** no hay zona de viento dentro del bloque ni hasta 1 s después de `+3.3`. Si el viento se apaga, no cambia nada.
+- Solo en Libre, desde el nivel 7 o con `?mec=repisa`. El Clásico y el Reto no cambian. La tarjeta dice "Ahora hay repisas en Libre", con la misma generalización de `ui.js` que el viento.
+
+**5. Justicia (`validar.js`).**
+- **Rutas:** `arriba` (pisa el `J`, cae en la repisa, salta el hueco), `abajo` (salta el `J` con un toque y toca las 3 cajas bajo techo) y una nueva, `cae` (arriba sin saltar el hueco). Las tres deben pasar con ±40 ms en las 4 velocidades y en la vuelta rápida (hasta 470). `cae` cuesta una bandera: `salta(hueco) = false`.
+- **Aire libre:** al tocar suelo después de caer de la repisa (por la orilla o por el hueco), el siguiente obstáculo queda a ≥ 0.75 s. Si no, `cause: 'caida'`, como en el trampolín. Con los números de la tabla, el peor caso por el hueco cae a ≈+3.0, y la caja de +2.45 ya quedó 0.075 s atrás.
+- **El pasivo falla:** pisa el `J`, cae arriba y luego al suelo, pero no pasa la página. Esto ya se prueba hoy.
+- **Prueba del instrumento:** (1) el bot forzado a `hold` bajo la repisa debe morir con `cause: 'repisa'`; (2) en `arriba`, el aterrizaje sobre la repisa cae a +0.83 s ±1 cuadro a 320 y a 470. Si el (2) falla, se corrige la orilla y no el validador.
+- **375 px:** hay ≈389 px por delante. El techo y la primera caja de abajo se ven ≥ 0.8 s antes del despegue a 470, y el hueco ≥ 0.8 s antes visto desde arriba. **Límite conocido:** a 420 o más, la orilla aparece ≈0.3 s antes del `J`. Nadie muere por no verla (las dos rutas viven), pero esa elección se toma a ciegas. Por eso `repisa-intro` solo sale en tramos de 385 o menos.
+- **Arte:** se dibuja en canvas una tabla de cartón (marrón medio, borde claro arriba y las ondas del corrugado en las dos puntas), dos hilos de tinta de 1 px hacia arriba y una **sombra** de 40 % sobre el suelo bajo todo el largo, que es lo que marca el techo en el carril de abajo. Sin naranja. Al caer encima, la repisa baja 2 px durante 80 ms y suena el "tok" hueco de la tabla del punto 5. Con movimiento reducido no baja, y el tok se queda. Moki no se espeja.
+
+**6. Sabremos que estuvo bien si** (Libre, nivel ≥ 7, 30 semillas, contra master `f068d24` o contra el viento si ya entró):
+- **F4 sube de 23.6 % a ≥ 27 %.** Cada bloque suma 2 elecciones reales (el `J` y el hueco: las dos rutas viven y dan distintas piezas). `medirFlow` cuenta el hueco como decisión y las cajas bajo techo como decisión de un solo plan.
+- No se rompe nada: F1 ≥ 8.3, F2a ≤ 4.5 s, F2b ≤ 12 %, **F3 ≤ 4.0 s** con F3b = 0, F6 ≤ 28 s. Justicia con 0 fallos en 465 niveles y las 3 rutas, fallback 0 %, Clásico idéntico (78/78 y 2142), y peso **≤ +1.5 KB** gzip (estimo ≈1.35 KB). A 375 px, ≥ 55 fps en Hardcore. Hay que revisar en una captura que el salto mantenido desde arriba (cabeza a ≈394 px del suelo) no se corte por arriba a 375 px.
+- **Invitado a ciegas:** ve 2 capturas a 375 px de la misma repisa, una con Moki cayendo sobre ella y otra con Moki abajo saltando una caja bajo la sombra. Debe nombrar los dos caminos ("arriba y abajo", "por encima o por debajo") sin pista, también con movimiento reducido.
+
+**7. Riesgo #1: el techo mata por reflejo.** Quien viene de torres mantiene bajo la repisa y muere, y lo siente injusto, peor a 375 px y rápido. Si 2 de 5 personas (o el bot del demo) mueren ahí más que en la viga, el corte va en este orden: (1) primera caja de abajo a +1.1 y sombra al 60 %; (2) repisas solo en tramos de 385 o menos; (3) `C.repisa.nivel = 99` la apaga sin borrar nada.
+**Costo: ≈3 h, justo en el tope.** Config, códigos y bloques 0.5 h; `pisoEn`, aterrizaje y combo en RunScene 0.8 h; validador con base y caída cerrada más ruta `cae` 0.8 h; sprite, sombra y tok 0.4 h; métricas y prueba del instrumento 0.5 h. Para que cupiera **recorté** el subir con salto mantenido, el escalón, `Avu` en la repisa y la repisa que se dobla (#5). Si se pasa de 3 h, sale con `intro` y `hueco` nada más, y `pop` y `salida` van en la siguiente vuelta.
+
 ### 5. La tabla de DISENO.md se reacomoda (no se tira)
 Las mecánicas caen en niveles impares, que ya tienen su capa de música. Cada una trae además su sonido propio, chico y sintetizado. Los efectos visuales se quedan en los pares, como estaban.
 | Nv | Mundo | Música (se queda) | Sonido de la mecánica | Efecto (se queda) |
