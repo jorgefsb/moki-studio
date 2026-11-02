@@ -542,6 +542,30 @@ function torre(dim = 0, soft = 1, ink = 1) {
   return c;
 }
 
+// Trampolín (J, placeholder para el director de arte): tabla de kraft cálido con canto oscuro (no es peligro: sin
+// kraftDanger ni naranja) sobre un resorte de cartón doblado en zigzag y una base. 88x24 de juego; al lanzar se aplasta.
+function tramp(dim = 0) {
+  const [c, x] = mk(100, 34);
+  const k = (col) => mix(col, PAL.ink, dim * 0.35);
+  x.fillStyle = k(TONE.kraftDark);
+  x.beginPath();
+  x.roundRect(10, 27, 80, 6, 3);
+  x.fill();
+  x.lineJoin = 'round';
+  x.beginPath();
+  for (let i = 0; i <= 8; i++) x.lineTo(16 + i * 8.5, i % 2 ? 15 : 27);
+  x.strokeStyle = PAL.ink;
+  x.lineWidth = 9;
+  x.stroke();
+  x.strokeStyle = k(TONE.kraftDark);
+  x.lineWidth = 6;
+  x.stroke();
+  block(x, 2, 2, 96, 14, { body: k(PAL.kraft), tape: false, seed: 61, dim });
+  x.fillStyle = k(TONE.kraftDark);
+  x.fillRect(5, 12, 90, 3);
+  return c;
+}
+
 // Viga colgante: tablón de cartón con franja naranja, colgado de dos hilos (títere). 76x32 de juego.
 function viga(dim = 0, soft = 1) {
   const [c, x] = mk(95, 36);
@@ -1178,6 +1202,8 @@ export function buildTextures(scene) {
   defer('caja_n', () => caja(0.7));
   defer('torre_n', () => torre(0.7));
   defer('viga_n', () => viga(C.atmosphere.night.vigaDim));
+  defer('tramp', () => tramp());
+  defer('tramp_n', () => tramp(0.7));
   defer('hilo', () => hilo());
   defer('hand', () => hand());
   defer('keycap', () => keycap());

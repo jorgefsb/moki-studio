@@ -1,5 +1,6 @@
 // MEDIR FLOW (NIVELES.md "Flow y mecánicas (plan 1-nov)", punto 1): cuánta variedad tiene una partida, sin navegador.
-//   node scripts/flow-medir.mjs > evidencia/v2-flow-base.json
+//   node scripts/flow-medir.mjs [semillas libres=10] [mecánica: tramp] > evidencia/v2-flow-base.json
+//   (con mecánica, Libre se genera con ella destrabada; Clásico y Reto nunca la llevan)
 // Instrumento fuera del paquete del juego (como scripts/inventario-encargos.mjs): lee el nivel que arma el juego
 // (GAME_LEVEL y generarNivel) y su guion por tramo [segundo, código]; no cambia nada del juego. Determinista: misma
 // semilla, mismo número.
@@ -22,9 +23,11 @@ globalThis.__JORGE_INTERVENTIONS__ = 0;
 const { CONFIG: C } = await import('../src/config.js');
 const { GAME_LEVEL, SCRIPTS } = await import('../src/tramos.js');
 const { generarNivel } = await import('../src/niveles/generar.js');
-const { simulateJump } = await import('../src/jumpmodel.js');
+const { simulateJump, simulateBounce } = await import('../src/jumpmodel.js');
 
-const LIBRES = Array.from({ length: 10 }, (_, i) => String((i * 2654435761) >>> 0));
+const N_LIBRES = Number(process.argv[2]) || 10;
+const MEC = process.argv[3] ? [process.argv[3]] : [];
+const LIBRES = Array.from({ length: N_LIBRES }, (_, i) => String((i * 2654435761) >>> 0));
 const RETOS = Array.from({ length: 10 }, (_, i) => {
   const d = new Date(2026, 10, 1 + i);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -43,8 +46,9 @@ const PARTES = {
   'T.V': [['torre', 0], ['viga', 1.0]],
   'C.V': [['caja', 0], ['viga', C.pairGapSec]],
   OLA: Array.from({ length: 6 }, (_, i) => ['caja', i * C.waveGapSec]),
+  J: [['tramp', 0]],
 };
-const BASE = { caja: 'caja', torre: 'torre', viga: 'viga', vc: 'viga', cc: 'salto largo' };
+const BASE = { caja: 'caja', torre: 'torre', viga: 'viga', vc: 'viga', cc: 'salto largo', tramp: 'trampolín' };
 const tipoBase = (patron, tipo) => (patron === 'U' ? 'pop-up' : patron === 'OLA' ? 'ola' : BASE[tipo]);
 
 const ARCS = {
@@ -128,12 +132,25 @@ function medir(L) {
       eventos.push({ t: t0 + t, patron: main });
       partes.forEach(([tipo, at], k) => {
         const arco = k === 0 && reward && ARCS[reward] ? ARCS[reward] : null;
-        decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo, patron: main, base: tipoBase(main, tipo), tramo: i, ...evaluar(tipo, tr.speed, arco) });
+        // trampolín: pisarlo (none) vuela y cobra el arco del vuelo; saltarlo (tap) no lo cobra. Ambos sobreviven
+        // (el validador lo prueba con las dos rutas y ±40 ms).
+        const ev = tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed, arco);
+        decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo, patron: main, base: tipoBase(main, tipo), tramo: i, ...ev });
       });
     }
     t0 += tr.len;
   });
   const dur = t0;
+  // Bajo el vuelo de un trampolín (el nudo) también se pasa volando: plan 'vuelo', que no cobra el arco del nudo.
+  const vuelo = simulateBounce().air;
+  for (const j of decisiones.filter((d) => d.tipo === 'tramp')) {
+    for (const d of decisiones) {
+      if (d === j || d.t <= j.t || d.t - j.t > vuelo - 0.1) continue;
+      d.vivos = [...d.vivos, 'vuelo'];
+      d.cobro = { ...d.cobro, vuelo: 0 };
+      d.eleccion = d.vivos.length >= 2 && new Set(d.vivos.map((p) => d.cobro[p] || 0)).size >= 2;
+    }
+  }
   const cps = L.tramos.map((_, i) => i * L.tramos[0].len);
   decisiones.sort((a, b) => a.t - b.t);
 
@@ -256,6 +273,6 @@ const resumen = (rs) => {
 
 const clasico = medir(GAME_LEVEL);
 const retos = RETOS.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'reto')) }));
-const libres = LIBRES.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'libre')) }));
+const libres = LIBRES.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'libre', { mecanicas: MEC })) }));
 const vara = { F1: '>= 7', F2a: '<= 4.5 s', F2b: '<= 12 %', F3: '<= 4 s', F3b: '0', F4: '>= 20 %', F6: '<= 30 s' };
-console.log(JSON.stringify({ fecha: '2026-11-01', vara, resumen: { clasico: resumen([clasico]), reto: resumen(retos), libre: resumen(libres) }, clasico, retos, libres }, null, 1));
+console.log(JSON.stringify({ fecha: '2026-11-01', libres: N_LIBRES, mecanicas: MEC, vara, resumen: { clasico: resumen([clasico]), reto: resumen(retos), libre: resumen(libres) }, clasico, retos, libres }, null, 1));

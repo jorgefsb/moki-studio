@@ -5,11 +5,13 @@ import { CONFIG as C } from './config.js';
 const cache = new Map();
 
 // holdMs: tiempo con el botón presionado (Infinity = no se suelta). Devuelve { peak, air (s), pts [{t, rise}] }.
-export function simulateJump(holdMs) {
-  const key = holdMs === Infinity ? 'inf' : Math.round(holdMs);
+// bounce: vuelo del trampolín (vy C.tramp.velocity, gravedad * gravityK, sin corte al soltar).
+export function simulateJump(holdMs, bounce = false) {
+  const key = bounce ? 'tramp' : holdMs === Infinity ? 'inf' : Math.round(holdMs);
   if (cache.has(key)) return cache.get(key);
   const dt = 1 / 240;
-  let vy = -C.jumpVelocity;
+  const g = C.gravity * (bounce ? C.tramp.gravityK : 1);
+  let vy = bounce ? -C.tramp.velocity : -C.jumpVelocity;
   let rise = 0;
   let t = 0;
   let jumping = true;
@@ -17,17 +19,17 @@ export function simulateJump(holdMs) {
   let peak = 0;
   const pts = [{ t: 0, rise: 0 }];
   for (let i = 0; i < 2000; i++) {
-    if (!released && t * 1000 >= holdMs) {
+    if (!bounce && !released && t * 1000 >= holdMs) {
       released = true;
       if (jumping && vy < 0 && t * 1000 < C.jumpHoldMaxMs) {
         const f = Math.min(1, Math.max(0, (t * 1000 - C.jumpHoldRamp.fromMs) / (C.jumpHoldRamp.toMs - C.jumpHoldRamp.fromMs)));
         let cut = vy * (C.jumpCutMultiplier + (1 - C.jumpCutMultiplier) * f);
-        if (rise + (cut * cut) / (2 * C.gravity) < C.jumpMinPx) cut = -Math.sqrt(2 * C.gravity * (C.jumpMinPx - rise));
+        if (rise + (cut * cut) / (2 * g) < C.jumpMinPx) cut = -Math.sqrt(2 * g * (C.jumpMinPx - rise));
         vy = Math.max(vy, cut);
         jumping = false;
       }
     }
-    vy += C.gravity * dt;
+    vy += g * dt;
     rise -= vy * dt;
     t += dt;
     peak = Math.max(peak, rise);
@@ -38,6 +40,8 @@ export function simulateJump(holdMs) {
   cache.set(key, out);
   return out;
 }
+
+export const simulateBounce = () => simulateJump(0, true);
 
 export const PLANS = {
   tap: { holdMs: 16 },

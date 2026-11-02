@@ -16,7 +16,7 @@ import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, 
 import { registrarDia, saludo, leerRacha } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
-import { GAME_LEVEL, buildDemo } from '../tramos.js';
+import { GAME_LEVEL, buildDemo, TRAMP_PISA } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump } from '../jumpmodel.js';
 import mokiLado from '../../assets/moki/moki-lado.webp';
@@ -29,6 +29,7 @@ const START_TUT = Q.get('tut') === '2' ? 2 : 0; // ?tut=2 salta a la lección 2
 const START_SCREEN = Q.get('screen'); // ?screen=play salta el demo (pruebas)
 const SEED = Q.get('seed'); // ?seed=2026-10-29 | 123 fija el nivel; ?nivel=clasico usa los 4 tramos escritos a mano
 const CLASICO = Q.get('nivel') === 'clasico';
+const MEC = Q.get('mec'); // ?mec=tramp destraba el trampolín en Libre sin el nivel del Cuaderno (pruebas)
 // Vuelta rápida se abre con el sello Coleccionista (>=80% de las piezas al terminar; cuaderno.js)
 const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
 const GOD = Q.has('god') && (import.meta.env.DEV || Q.has('debug')); // sin choques, solo para pruebas
@@ -423,6 +424,7 @@ export class RunScene extends Phaser.Scene {
     this.pressedAt = -1e9;
     this.holding = false;
     this.jumping = false;
+    this.vuelo = false;
     this.jumpStartAt = 0;
     this.takeoffAt = -1e9;
     this.landAt = -1e9;
@@ -522,7 +524,9 @@ export class RunScene extends Phaser.Scene {
       return GAME_LEVEL;
     }
     const modo = this.modo;
-    return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo);
+    // Mecánicas (NIVELES.md flow): solo en Libre; el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno.
+    const mecanicas = modo === 'libre' && (MEC === 'tramp' || nivelDe(leerCuaderno()).nivel >= C.tramp.nivel) ? ['tramp'] : [];
+    return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
 
   startGame() {
@@ -992,7 +996,7 @@ export class RunScene extends Phaser.Scene {
       if (!this.demo) this.ambient.good('hold', this.t); // salto mantenido >= 220 ms: pajaritos
     }
     // La racha se acaba a los 0.9 s sin piezas
-    if (this.combo > 0 && this.t - this.lastPickAt > C.combo.windowMs) {
+    if (this.combo > 0 && !this.vuelo && this.t - this.lastPickAt > C.combo.windowMs) {
       this.cobrarCinta(true, this.t - this.cpAt > C.art.checkpointLabelMs); // el x2 chico no pisa el checkpoint
       this.combo = 0;
       audio.setStreak(0);
@@ -1045,7 +1049,8 @@ export class RunScene extends Phaser.Scene {
   }
 
   stepJump(dt) {
-    const canJump = this.grounded || this.t - this.lastGroundedAt <= C.coyoteMs;
+    // en el vuelo del trampolín no se salta (el búfer no pisa el lanzamiento; igual que el validador)
+    const canJump = !this.vuelo && (this.grounded || this.t - this.lastGroundedAt <= C.coyoteMs);
     const buffered = this.t - this.pressedAt <= C.jumpBufferMs;
     if (canJump && buffered && !this.jumping) {
       this.vy = -C.jumpVelocity;
@@ -1064,7 +1069,7 @@ export class RunScene extends Phaser.Scene {
       if (!this.holding) this.release();
     }
 
-    this.vy += C.gravity * dt;
+    this.vy += C.gravity * (this.vuelo ? C.tramp.gravityK : 1) * dt;
     const impact = this.vy;
     this.y += this.vy * dt;
     if (this.y >= C.world.groundY) {
@@ -1073,6 +1078,10 @@ export class RunScene extends Phaser.Scene {
       if (!this.grounded) {
         this.lastGroundedAt = this.t;
         this.landAt = this.t;
+        if (this.vuelo) {
+          this.vuelo = false;
+          if (this.combo > 0) this.lastPickAt = this.t; // arriba el combo no se rompe: la ventana corre desde que cae
+        }
         if (impact > 260) {
           this.particles.burst('land', this.px, C.world.groundY);
           audio.sfx('land', { fall: impact / C.jumpVelocity });
@@ -1296,6 +1305,11 @@ export class RunScene extends Phaser.Scene {
           P.passed[o.type] += 1;
         }
       }
+      if (o.type === 'tramp') {
+        // Trampolín: no choca. En el suelo o cayendo, con los pies a su altura, al llegar a TRAMP_PISA de su centro: lanza
+        if (!o.used && this.vy >= 0 && this.y >= g - C.obstacleSizes.tramp.height && this.px >= o.x - TRAMP_PISA && this.px < o.x + C.obstacleSizes.tramp.width / 2) this.lanzar(o);
+        continue;
+      }
       if (this.rewinding || this.god || this.paseoRun || (o.pop && !o.up)) continue;
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
@@ -1305,6 +1319,22 @@ export class RunScene extends Phaser.Scene {
     }
     void step;
     void dtMs;
+  }
+
+  // Trampolín: vy fija y gravedad flotada hasta caer (jumpmodel.simulateBounce). Moki no se espeja: solo se estira.
+  lanzar(o) {
+    o.used = true;
+    this.vy = -C.tramp.velocity;
+    this.vuelo = true;
+    this.grounded = false;
+    this.jumping = false; // soltar no corta el lanzamiento
+    this.pressedAt = -1e9;
+    audio.sfx('boing');
+    this.buzz(10, 1);
+    if (!this.calm && o.sprite) {
+      this.tweens.add({ targets: o.sprite, scaleY: o.sprite.scaleY * 0.55, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
+    }
+    this.particles.burst('kick', this.px, C.world.groundY);
   }
 
   // Caja de colisión de un obstáculo en coordenadas de mundo (la misma que usa el choque)
@@ -1390,9 +1420,9 @@ export class RunScene extends Phaser.Scene {
   collect(k) {
     const R = C.combo;
     k.taken = true;
-    // Racha: cada pieza a menos de 0.9 s de la anterior suma
-    if (this.t - this.lastPickAt > R.windowMs) this.combo = 0;
-    this.combo += 1;
+    // Racha: cada pieza a menos de 0.9 s de la anterior suma. En el vuelo del trampolín no suma ni se rompe.
+    if (!this.vuelo && this.t - this.lastPickAt > R.windowMs) this.combo = 0;
+    if (!this.vuelo) this.combo += 1;
     this.lastPickAt = this.t;
     let mult = 1;
     let arcFull = false;

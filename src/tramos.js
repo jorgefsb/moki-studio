@@ -3,10 +3,17 @@
 //
 // Obstáculos: C caja · T torre · CC dos cajas pegadas (un salto largo) · C.C dos cajas a 0.9 s · V viga ·
 //   VC caja bajo viga · T.V torre y viga 1.0 s después · C.V caja y viga 0.9 s después · T.C torre y caja 0.9 s después ·
-//   P5 fila de 5 piezas en el suelo · OLA 6 cajas cada 0.8 s con una pieza sobre cada una · U pop-up (caja que sale del suelo).
+//   P5 fila de 5 piezas en el suelo · OLA 6 cajas cada 0.8 s con una pieza sobre cada una · U pop-up (caja que sale del suelo) ·
+//   J trampolín de cartón (pisarlo lanza; solo bloques del generador con mecánica 'tramp').
 // Premios (con "+"): A3 arco corto de 3 · A3up arco alto de 3 · Aup arco alto de 5 · Adn arco bajo de 4 ·
-//   Aup7 arco regalo de 7 · AupAmb arco alto con pieza ámbar · Aup7Amb arco de 7 con ámbar · P5 fila bajo la viga.
+//   Aup7 arco regalo de 7 · AupAmb arco alto con pieza ámbar · Aup7Amb arco de 7 con ámbar · P5 fila bajo la viga ·
+//   Avu arco del vuelo del trampolín (5 piezas sobre la curva del lanzamiento).
 import { CONFIG as C } from './config.js';
+import { simulateBounce } from './jumpmodel.js';
+
+// Moki pisa el trampolín cuando su centro llega a TRAMP_PISA px antes del centro del trampolín (juego y validador).
+export const TRAMP_PISA = 20;
+const VUELO_T = [0.12, 0.3, 0.5, 0.7, 0.85]; // s desde que pisa: piezas del arco Avu
 
 export const TRAMO_SPEEDS = C.tramos.map((t) => t.speed);
 
@@ -41,6 +48,7 @@ const OBS = {
   'C.V': [{ type: 'caja', at: 0, plan: 'tap' }, { type: 'viga', at: C.pairGapSec, plan: 'none' }],
   'T.C': [{ type: 'torre', at: 0, plan: 'hold' }, { type: 'caja', at: C.pairGapSec, plan: 'tap' }],
   U: [{ type: 'caja', at: 0, plan: 'tap', pop: true }], // pop-up: caja que sale del suelo (solo en bloques del generador)
+  J: [{ type: 'tramp', at: 0, plan: 'none' }], // trampolín: el bot de "arriba" lo pisa, el de "abajo" lo salta (tap)
 };
 
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
@@ -69,7 +77,14 @@ function expand(code, t, speed, tramo, arcSeq) {
     hint.center = main === 'CC' ? base + C.cajaPegadaGapPx / 2 : base;
   }
   if (reward) {
-    if (reward === 'P5') {
+    if (reward === 'Avu') {
+      const b = simulateBounce();
+      const id = `${tramo}:${arcSeq.n++}`;
+      VUELO_T.forEach((vt, i) => {
+        const rise = b.pts[Math.round(vt * 240)].rise;
+        out.push({ kind: 'pick', D: base - TRAMP_PISA + vt * speed, h: Math.round(rise + C.pickupReach.bodyCenter), arc: id, arcN: VUELO_T.length, amber: false });
+      });
+    } else if (reward === 'P5') {
       for (let i = 0; i < 5; i++) out.push({ kind: 'pick', D: base + (i - 2) * 48, h: 46 });
     } else {
       const arc = ARCS[reward];
@@ -97,6 +112,15 @@ export function buildLevel(tramos) {
     acc += tr.len * tr.speed;
   });
   entities.sort((a, b) => a.D - b.D);
+  // Lo que pasa bajo el vuelo de un trampolín (el "nudo"): en la ruta de arriba no se salta, se sobrevuela.
+  entities.forEach((j) => {
+    if (j.kind !== 'obs' || j.type !== 'tramp') return;
+    let tr = 0;
+    while (tr + 1 < starts.length && j.D >= starts[tr + 1]) tr++;
+    const v = tramos[tr].speed;
+    const air = simulateBounce().air;
+    for (const o of entities) if (o.kind === 'obs' && o !== j && o.D > j.D && o.D - j.D + TRAMP_PISA < air * v - 30) o.bajo = true;
+  });
   return {
     tramos,
     starts, // distancia global de inicio de cada tramo (checkpoint)
