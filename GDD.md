@@ -53,7 +53,7 @@ Vara de calidad: **Alto's Odyssey**, solo como vara de belleza y feel. No copiam
 1. **Luz de lámpara real:** halo cálido arriba a la izquierda, viñeta de tinta, sombras proyectadas hacia la derecha por capa.
 2. **Perspectiva atmosférica con tokens:** cada capa se mezcla hacia el color del cielo según distancia (0.55 / 0.35 / 0.18).
 3. **Escala:** un hito gigante (montaña de cartón a 0.05x, sol o luna de papel), ≥5 planos distinguibles, rango tonal de tinta casi negra a blanco cálido.
-4. **Papeles por página/día:** kraft, cuaderno, periódico, cartulina, como tinte derivado de tokens. Colores nuevos (p. ej. índigo de noche) **solo con OK de Jorge**.
+4. **Papeles por página/día:** kraft, cuaderno, periódico, cartulina, como tinte derivado de tokens. Colores nuevos (p. ej. índigo de noche) los decide el equipo (canon "hecho es mejor que perfecto", 1-nov).
 5. **Clima de papel finito:** recortes, papel de seda o copos; apagado en Nada y en movimiento reducido.
 6. **Un solo foco naranja:** Moki y la acción; todo lo demás apagado.
 
@@ -155,7 +155,7 @@ Libro de 4 páginas + papel del día + cuaderno + racha; poses nuevas de Moki di
 - **Por pieza** (feel, niveles, fondo, menús, audio): el constructor construye; un crítico distinto, con contexto nuevo, recibe dos capturas sin etiqueta (A/B al azar), dice cuál gana y nombra la brecha más grande. Sin elogios. Se repite hasta que el nuestro gane o hasta el congelado, y se anota en BITACORA.
 - **Criterios de "el nuestro gana" en captura fija:** luz legible con sombras coherentes; ≥5 planos con tono que aclara hacia el fondo; negro cercano y blanco cálido; un hito enorme con escala contra Moki; un elemento de atmósfera; un solo foco naranja; en vertical ningún tercio vacío.
 
-## 12. Decisiones para Jorge (cuando pueda; nada bloquea el sprint)
-1. ¿Papeles nuevos y un color de noche fuera de los 8 tokens? Recomiendo: sí, derivados de los tokens, y que los apruebe en una captura.
-2. ¿Poses nuevas de Moki (zancada, salto, caída, aterrizaje)? Recomiendo: sí, es la brecha visual #1 contra la vara.
-3. ¿El reto del día cambia a las 18:00 de México (UTC) o a medianoche local? Recomiendo: UTC, igual para todos.
+## 12. Decisiones del equipo (Jorge califica después)
+1. Papeles nuevos y un color de noche fuera de los 8 tokens: **sí**, derivados de los tokens. Se juzgan en gauntlet a ciegas y Jorge califica en vivo. [decidido por el equipo, 1-nov]
+2. Poses nuevas de Moki (zancada, salto, caída, aterrizaje): **sí**, desde las animaciones de Moki Pixel o Moki HD, con el canon intacto (parche en la oreja derecha, nunca espejo, nunca en T). Pieza macro del 2-nov. [decidido por el equipo, 1-nov]
+3. El reto del día cambia a medianoche UTC (18:00 en México), igual para todos: **sí**. [decidido por el equipo, 1-nov]
