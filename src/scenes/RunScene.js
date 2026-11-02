@@ -836,7 +836,6 @@ export class RunScene extends Phaser.Scene {
       if (slots.findIndex((e) => e.D === k.D) < arco.length) continue;
       const d = T0 + 30 * n++;
       k.revela = this.t + d; // por tiempo de juego (se pausa con la partida); lo revela placeEntities
-      if (!this.reduced) this.tweens.add({ targets: k.sprite, y: k.y - 7, delay: d, duration: 90, yoyo: true, ease: 'Quad.easeOut' });
     }
     arco.forEach((k, i) => {
       k.pie = 0;
@@ -1316,7 +1315,13 @@ export class RunScene extends Phaser.Scene {
         if (p >= 1) k.cayendo = 0;
       }
       k.x = px + k.D - dist;
-      if (k.revela && this.t >= k.revela) (k.revela = 0), this.verPieza(k, true);
+      if (k.revela && this.t >= k.revela) (k.revela = 0), this.verPieza(k, true), (k.brinca = !this.reduced && this.t);
+      // brinco de 7 px desde su lugar de piso en 180 ms, por tiempo de juego (un tween con retraso dejaba y = 0 si se
+      // adelantaba o completaba antes de arrancar)
+      if (k.brinca) {
+        const p = (this.t - k.brinca) / 180;
+        k.sprite.y = k.y - (p < 1 ? 7 * Math.sin(Math.PI * p) : (k.brinca = 0));
+      }
       if (!k.taken) {
         k.sprite.x = k.x;
         k.shadow.x = k.x + 4;
