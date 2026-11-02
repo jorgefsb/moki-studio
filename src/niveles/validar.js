@@ -9,6 +9,7 @@ const HOLD_MS = { tap: 16, hold: 400 };
 
 // Caja de colisión de un obstáculo en coordenadas de suelo (altura sobre el suelo, x relativa a su centro).
 function box(type) {
+  if (type === 'timbre') return { half: C.timbre.ancho / 2, lo: C.timbre.lo, hi: C.timbre.hi };
   const s = C.obstacleSizes[type];
   const hs = type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink;
   const half = s.width / 2 - hs.x;
@@ -26,6 +27,9 @@ function box(type) {
 // aterrizar (vientoPaso); el bot apunta con airTravel(plan, speed, k), que ya descuenta la rampa.
 // opts.ciego: el bot apunta con k = 1 pero sufre el viento (prueba del instrumento: debe chocar con C< a 320 y 350).
 // Al aterrizar de un salto con k != 1, lo siguiente a >= C.viento.salidaSec (si no: cause 'viento-salida').
+// Timbre (ruta 'arriba' = lo toca con el salto mantenido; 'abajo' = a mano): no mata; si el cuerpo cruza su caja, la
+// torre con su tid se acuesta y deja de chocar y,
+// al aterrizar de ese salto, lo siguiente que mata a >= C.timbre.libreSec ('timbre-salida').
 export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba', opts = {}) {
   const vientos = level.vientos || [];
   const kAt = (d) => (vientos.find((z) => d >= z.D0 && d <= z.D1) || { k: 1 }).k;
@@ -33,9 +37,10 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
   const tramps = obs.filter((o) => o.type === 'tramp');
   const planDe = (q) => (q.type === 'tramp' ? (ruta === 'abajo' ? 'tap' : 'none') : q.plan);
   const salta = (q) => {
-    if (force === 'none') return false;
+    if (force === 'none' || q.caida) return false;
     if (force) return q.plan !== 'skip';
-    if (ruta === 'arriba' && q.bajo) return false;
+    if (q.type === 'timbre') return ruta === 'arriba';
+    if (ruta === 'arriba' && (q.bajo || q.conTimbre)) return false;
     const p = planDe(q);
     return p === 'tap' || p === 'hold';
   };
@@ -62,18 +67,12 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
     if (jump) {
       const i = Math.round((t - jump.t0) * 240);
       if (i >= jump.pts.length - 1) {
-        if (jump.k !== 1) {
-          const sig = obs.find((q) => q.type !== 'tramp' && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
-          if (sig && (sig.D - (sig.box.half + pw / 2) - dist) / speed < C.viento.salidaSec - 1e-6) {
-            return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'viento-salida', D: Math.round(sig.D) };
-          }
-        }
-        if (jump.vuelo) {
-          const sig = obs.find((q) => q.type !== 'tramp' && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
-          if (sig && (sig.D - (sig.box.half + pw / 2) - dist) / speed < C.tramp.caidaLibreSec - 1e-6) {
-            return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'caida', D: Math.round(sig.D) };
-          }
-        }
+        // lo siguiente que mata (el timbre y la torre acostada no)
+        const sig = obs.find((q) => q.type !== 'tramp' && q.type !== 'timbre' && !q.caida && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
+        const libre = sig ? (sig.D - (sig.box.half + pw / 2) - dist) / speed : Infinity;
+        if (jump.k !== 1 && libre < C.viento.salidaSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'viento-salida', D: Math.round(sig.D) };
+        if (jump.vuelo && libre < C.tramp.caidaLibreSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'caida', D: Math.round(sig.D) };
+        if (jump.sono && libre < C.timbre.libreSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'timbre-salida', D: Math.round(sig.D) };
         jump = null;
         cae = true;
       } else {
@@ -115,11 +114,22 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
     while (next < obs.length && obs[next].D - dist < -80) next++;
     for (let k = next; k < obs.length && obs[k].D - dist < 120; k++) {
       const o = obs[k];
-      if (o.type === 'tramp') continue; // no choca: se pisa o se salta
+      if (o.type === 'tramp' || o.caida) continue; // no choca: se pisa o se salta; la torre acostada es piso
       const dx = Math.abs(o.D - dist);
       if (dx >= o.box.half + pw / 2) continue;
       const lo = rise + 2;
       const hi = rise + ph;
+      if (o.type === 'timbre') {
+        // no mata: si el cuerpo cruza su caja, suena y su torre se acuesta (antes de que llegue Moki)
+        if (!o.sono && lo < o.box.hi && hi > o.box.lo) {
+          o.sono = true;
+          if (jump) jump.sono = true;
+          // (su torre va a 0.9 s en todos los bloques y cae en 0.24: siempre queda acostada antes; timbre-calibrar lo mide)
+          const tw = obs.find((q) => q.type === 'torre' && q.tid === o.tid);
+          if (tw) tw.caida = true;
+        }
+        continue;
+      }
       if (lo < o.box.hi && hi > o.box.lo) {
         return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: o.type, D: Math.round(o.D) };
       }

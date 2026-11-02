@@ -81,7 +81,8 @@ const gramMal = gram.dosDuros + gram.sinRespiroTras4 + gram.repetidoSeguido + gr
 // siempre) terminan con ±40 ms y holgura >= 4 px; el pasivo (nunca salta), el de solo toque y el de solo mantener mueren.
 const tr = { niveles: 0, trampolines: 0, respaldoTramos: 0, rutaArribaFalla: 0, rutaAbajoFalla: 0, pasivoTermina: 0, tapTermina: 0, holdTermina: 0, causas: {} };
 for (let i = 0; i < N; i++) {
-  const L = generarNivel(String((i * 2654435761) >>> 0), 'libre', { mecanicas: ['tramp', 'viento'] });
+  const L = generarNivel(String((i * 2654435761) >>> 0), 'libre', { mecanicas: process.argv[3] ? process.argv[3].split(',') : ['tramp', 'viento'] }); // 3er argumento: mecánicas (tramp,viento,timbre)
+  tr.timbres = (tr.timbres || 0) + L.entities.filter((e) => e.type === 'timbre').length;
   tr.zonasViento = (tr.zonasViento || 0) + (L.vientos || []).length;
   tr.niveles++;
   tr.trampolines += L.entities.filter((e) => e.type === 'tramp').length;

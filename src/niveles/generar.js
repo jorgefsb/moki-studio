@@ -64,6 +64,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (b.mec && !ctx.mecanicas.includes(b.mec)) return false; // mecánica no destrabada (o Reto/Clásico)
       if (b.soloPico && ctx.fase !== 'pico') return false; // viento-par y viento-ritmo: solo en el pico
       if (b.mec === 'viento' && ctx.nViento >= 2) return false; // máx. 2 bloques de viento por página
+      if (b.mec === 'timbre' && (ctx.nTimbre || b.soloEstreno || C.tramos[tramo - 1].speed > C.timbre.vMax || ctx.fase !== 'pico' && ctx.fase !== 'subida')) return false; // timbre: máx. 1 por página, nunca en calma ni respiro; la intro no se sortea
       if (tramo < b.min || tramo > b.max) return false; // G1
       if (b.dur > rem - 0.75 + 1e-9) return false; // 0.75 = minGapSec: con fases cortas, los bloques dif 4 de 5.5-6.5 s ya no cabían con 1.5
       if (!isDescanso(b) && (b.dif < lo || b.dif > hi)) return false; // G6
@@ -99,6 +100,7 @@ function put(ctx, b) {
   ctx.prev = b;
   ctx.ids.push(b.id);
   if (b.mec === 'viento') ctx.nViento = (ctx.nViento || 0) + 1;
+  if (b.mec === 'timbre') ctx.nTimbre = 1;
   ctx.fasesIds.push([ctx.fase || 'intro', b.id]); // regla (c): qué bloque cayó en qué fase
 }
 
@@ -120,12 +122,22 @@ const DE_PICO = { 1: FACILES[1], 2: ['CC', 'T', 'U', 'C.C'], 3: ['V', 'VC', 'C.V
 const DUROS = new Set(['T', 'V', 'VC', 'CC', 'T.C', 'T.V', 'C.V']);
 const principal = (code) => code.split('+')[0];
 const base = (code) => principal(code).replace(/[<>]$/, ''); // sin el viento (C> -> C)
+const patronDe = (code) => (code.endsWith('+B') ? `${principal(code)}B` : principal(code)); // C+B es su propio patrón (CB), como en flow-medir
 const esDuro = (b) => b.ev.some(([, c]) => DUROS.has(base(c)));
 
 // Viento que no se mezcla (NIVELES.md §3): de 0.7 s antes a 1.15 s después de cada obstáculo con viento no van vigas,
 // pop-ups, filas P5, trampolines ni OLA; ningún trampolín a menos de su vuelo + 0.75 s (2.2 s) antes de la zona.
 const NO_VIENTO = new Set(['V', 'VC', 'C.V', 'T.V', 'U', 'OLA', 'P5']);
 const ventanasViento = (script) => script.filter(([, c]) => /[<>]$/.test(principal(c))).map(([t]) => [t - C.viento.antesSec, t + C.viento.despuesSec + 1]);
+// Timbre (NIVELES.md §9): ni dentro de una zona de viento ni 1 s después (el viento mueve la x del toque), ni bajo el
+// vuelo de un trampolín (>= 2.2 s después de un J)
+const esTimbre = (c) => principal(c) === 'B' || c.endsWith('+B');
+function timbreMezcla(script) {
+  const bs = script.filter(([, c]) => esTimbre(c)).map(([t]) => t);
+  if (!bs.length) return false;
+  const vs = ventanasViento(script);
+  return bs.some((t) => vs.some(([a, b]) => t >= a - 0.4 && t <= b) || script.some(([tj, c]) => principal(c) === 'J' && t > tj && t - tj < 2.2));
+}
 function vientoMezcla(script) {
   const vs = ventanasViento(script);
   if (!vs.length) return false;
@@ -253,6 +265,8 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   if (tramo === 3) put(ctx, BY_ID['viga-intro']); // la viga se enseña siempre igual, ahora al empezar la subida
   const estrenaViento = tramo === 2 && ctx.mecanicas.includes('viento');
   if (estrenaViento) put(ctx, BY_ID['viento-intro']); // la primera página con viento lo enseña al abrir la subida
+  // el timbre se estrena al abrir la subida de la primera página libre de estrenos (la 2 si no hay viento, si no la 3)
+  if (ctx.mecanicas.includes('timbre') && tramo === (ctx.mecanicas.includes('viento') ? 3 : 2)) put(ctx, BY_ID['timbre-intro']);
   fase(14, [lo, Math.min(hi, lo + 1)]);
   ctx.fase = 'pico';
   if (estrenaViento) put(ctx, BY_ID['viento-contra']); // ...y el contrario abre el pico de esa misma página
@@ -290,7 +304,7 @@ export const filasPiezas = (script) => script.filter(([, c]) => hasP5(c)).length
 // mantener -> mantener >= 1.0 s entre llegadas (el dedo necesita soltar y volver a mantener)
 export function holdHold(level) {
   const v = level.tramos[0].speed;
-  const holds = level.entities.filter((e) => e.kind === 'obs' && e.plan === 'hold');
+  const holds = level.entities.filter((e) => e.kind === 'obs' && e.plan === 'hold' && e.type !== 'timbre'); // el timbre y su torre nunca se mantienen en la misma ruta
   for (let i = 1; i < holds.length; i++) if ((holds[i].D - holds[i - 1].D) / v < HOLD_HOLD_SEC - 1e-6) return false;
   return true;
 }
@@ -315,9 +329,9 @@ export function tramoValido(script, speed) {
   const level = buildLevel([{ speed, len: LEN, script }]);
   if (!legible(level) || !holdHold(level) || popupFalla(level) || filasPiezas(script) > TOPE_FILAS + 1e-9) return false;
   if (repetidoPegado(script)) return false;
-  if (vientoMezcla(script)) return false;
+  if (vientoMezcla(script) || timbreMezcla(script)) return false;
   // con trampolín, las dos rutas (pisarlo y saltarlo) se libran con ±40 ms
-  const rutas = script.some(([, c]) => principal(c) === 'J') ? ['arriba', 'abajo'] : ['arriba'];
+  const rutas = script.some(([, c]) => principal(c) === 'J' || esTimbre(c)) ? ['arriba', 'abajo'] : ['arriba']; // y con timbre: tocarlo y a mano
   return rutas.every((ruta) =>
     [0, ...JITTER_MS].every((j) => {
       const r = validateLevel(level, null, j, ruta);
@@ -332,15 +346,17 @@ const NOVEDAD_MAX = 28;
 // F3 entre páginas: ¿la página trae una secuencia de 2-4 fichas patrón@hueco (0.25 s) de más de F3_MAX s que ya salió
 // antes en la partida? Mismo cálculo que scripts/flow-medir.mjs; 'antes' son los eventos [s de partida, patrón].
 const F3_MAX = 4;
-function repiteTramo(antes, script, s0) {
-  const ev = [...antes, ...script.filter(([, c]) => principal(c) !== 'P5').map(([s, c]) => [s0 + s, principal(c)]).sort((a, b) => a[0] - b[0])];
+// max (con timbre destrabado, 3.85): flow-medir mide la primera aparición y aquí se mide la repetición; con fichas
+// redondeadas a 0.25 s las dos difieren hasta ~0.15 (C@1.75 U@4.00 era 4.11 antes y 4.0 aquí). Sin timbre, F3_MAX.
+function repiteTramo(antes, script, s0, max = F3_MAX) {
+  const ev = [...antes, ...script.filter(([, c]) => principal(c) !== 'P5').map(([s, c]) => [s0 + s, patronDe(c)]).sort((a, b) => a[0] - b[0])];
   const f = ev.map(([t, p], i) => `${p}@${i ? (Math.round((t - ev[i - 1][0]) * 4) / 4).toFixed(2) : '0'}`);
   const k0 = antes.length;
   for (let len = 2; len <= 4; len++) {
     const vistas = new Set();
     for (let i = 0; i + len <= k0; i++) vistas.add(f.slice(i, i + len).join(' '));
     for (let i = Math.max(1, k0 - len + 1); i + len <= ev.length; i++) {
-      if (ev[i + len - 1][0] - ev[i][0] <= F3_MAX) continue;
+      if (ev[i + len - 1][0] - ev[i][0] <= max) continue;
       if (vistas.has(f.slice(i, i + len).join(' '))) return true;
     }
   }
@@ -352,7 +368,7 @@ function huecoNovedad(script, s0, ultimoNuevo, global, hasta) {
   let u = ultimoNuevo;
   let h = 0;
   for (const [s, c] of [...script].sort((a, b) => a[0] - b[0])) {
-    const p = principal(c);
+    const p = patronDe(c);
     if (p === 'P5' || vistos.has(p)) continue;
     vistos.add(p);
     h = Math.max(h, s0 + s - u);
@@ -410,8 +426,9 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
       // reglas de no repetir (NIVELES.md flow): (b) el pico no repite la firma del pico anterior; (c) un bloque no
       // sale en la misma fase de dos páginas seguidas. Castigan como un hueco de novedad: se elige otro intento.
       const reglaB = !!prevPico && firmaPico(script) === prevPico;
-      const reglaC = script.fases.some(([fa, id]) => id !== 'relleno' && prevFases.has(`${fa}:${id}`));
-      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0) + (reglaB || reglaC ? 50 : 0) + (i > 0 && fpPagina(script) < FP_MIN ? 100 : 0); // pico más suave que el respiro: otro intento
+      // (c) y, para el timbre, el mismo id tampoco en otra fase de la página siguiente
+      const reglaC = script.fases.some(([fa, id]) => id !== 'relleno' && (prevFases.has(`${fa}:${id}`) || (id.startsWith('timbre') && [...prevFases].some((f) => f.endsWith(`:${id}`)))));
+      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN, mecanicas.includes('timbre') ? 3.85 : F3_MAX) ? 100 : 0) + (reglaB || reglaC ? 50 : 0) + (i > 0 && fpPagina(script) < FP_MIN ? 100 : 0) + (mecanicas.includes('timbre') && i >= 1 && tr.speed <= C.timbre.vMax && !script.ids.some((id) => id.startsWith('timbre')) ? 6 : 0); // con timbre, las páginas que pueden llevarlo prefieren uno (F4) // pico más suave que el respiro: otro intento
       if (h < mejor) {
         mejor = h;
         t = { speed: tr.speed, len: LEN, script, ids: script.ids, fases: script.fases };
@@ -422,12 +439,12 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
       t = { speed: tr.speed, len: LEN, script: SCRIPTS[i], ids: ['clasico'] };
     }
     for (const [s, c] of [...t.script].sort((a, b) => a[0] - b[0])) {
-      const p = principal(c);
+      const p = patronDe(c);
       if (p === 'P5' || global.has(p)) continue;
       global.add(p);
       ultimoNuevo = i * LEN + s;
     }
-    for (const [s, c] of [...t.script].sort((a, b) => a[0] - b[0])) if (principal(c) !== 'P5') eventos.push([i * LEN + s, principal(c)]);
+    for (const [s, c] of [...t.script].sort((a, b) => a[0] - b[0])) if (principal(c) !== 'P5') eventos.push([i * LEN + s, patronDe(c)]);
     prev = new Set(t.script.map(([, c]) => principal(c)));
     prevPico = firmaPico(t.script);
     prevFases = new Set((t.fases || []).map(([fa, id]) => `${fa}:${id}`));

@@ -10,6 +10,8 @@
 //   Avu arco del vuelo del trampolín (5 piezas sobre la curva del lanzamiento).
 // Viento: sufijo > (a favor) o < (en contra) sobre un código de OBS (C>, C<, T>): mismo obstáculo y una zona
 //   { kind: 'viento', D0, D1, k } que estira o encoge el salto que despega dentro (arco con gap * k).
+// Timbre (NIVELES.md §9): B timbre solo, +B timbre encima de una caja (C+B). buildLevel lo enlaza con la primera torre
+//   a <= 1.2 s (mismo tid): el arco de esa torre lleva pie (se va si cae) y salen 5 piezas de piso con cae.
 import { CONFIG as C } from './config.js';
 import { simulateBounce } from './jumpmodel.js';
 
@@ -51,6 +53,7 @@ const OBS = {
   'T.C': [{ type: 'torre', at: 0, plan: 'hold' }, { type: 'caja', at: C.pairGapSec, plan: 'tap' }],
   U: [{ type: 'caja', at: 0, plan: 'tap', pop: true }], // pop-up: caja que sale del suelo (solo en bloques del generador)
   J: [{ type: 'tramp', at: 0, plan: 'none' }], // trampolín: el bot de "arriba" lo pisa, el de "abajo" lo salta (tap)
+  B: [{ type: 'timbre', at: 0, plan: 'hold' }], // timbre: el bot de "arriba" lo toca (mantener), el de "abajo" no
 };
 
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
@@ -82,7 +85,8 @@ function expand(code, t, speed, tramo, arcSeq) {
     hint.center = main === 'CC' ? base + C.cajaPegadaGapPx / 2 : base;
   }
   if (reward) {
-    if (reward === 'Avu') {
+    if (reward === 'B') out.push({ kind: 'obs', type: 'timbre', D: base, plan: 'hold' }, Object.assign(out.pop(), { conTimbre: true }));
+    else if (reward === 'Avu') {
       const b = simulateBounce();
       const id = `${tramo}:${arcSeq.n++}`;
       VUELO_T.forEach((vt, i) => {
@@ -139,13 +143,26 @@ export function buildLevel(tramos) {
     const air = simulateBounce().air;
     for (const o of entities) if (o.kind === 'obs' && o !== j && o.D > j.D && o.D - j.D + TRAMP_PISA < air * v - 30) o.bajo = true;
   });
+  // Timbre: enlaza con la primera torre a <= 1.2 s; su arco se va si la torre cae y salen 5 piezas de piso (h 46, cada
+  // 28 px, centradas en la torre acostada: gira sobre su pie delantero, así que queda de D + 30 a D + 122)
+  let tid = 0;
+  for (const b of entities.filter((e) => e.type === 'timbre')) {
+    let tr = 0;
+    while (tr + 1 < starts.length && b.D >= starts[tr + 1]) tr++;
+    const t = entities.find((o) => o.type === 'torre' && o.D > b.D && o.D - b.D <= 1.2 * tramos[tr].speed);
+    if (!t) continue;
+    b.tid = t.tid = ++tid;
+    for (const k of entities) if (k.kind === 'pick' && k.arc && Math.abs(k.D - t.D) < 100) k.pie = tid;
+    for (let i = 0; i < 5; i++) entities.push({ kind: 'pick', D: t.D + 76 + (i - 2) * 28, h: 46, cae: tid });
+  }
+  if (tid) entities.sort((a, b) => a.D - b.D);
   return {
     tramos,
     starts, // distancia global de inicio de cada tramo (checkpoint)
     end: acc, // meta
     entities: entities.filter((e) => e.kind !== 'viento'),
     vientos: zonas,
-    pieceTotal: entities.filter((e) => e.kind === 'pick').length,
+    pieceTotal: entities.filter((e) => e.kind === 'pick' && !e.cae).length + 2 * tid, // con timbre, la ruta que más da (5 contra 3)
   };
 }
 
