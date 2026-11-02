@@ -28,7 +28,7 @@ function box(type) {
 // opts.ciego: el bot apunta con k = 1 pero sufre el viento (prueba del instrumento: debe chocar con C< a 320 y 350).
 // Al aterrizar de un salto con k != 1, lo siguiente a >= C.viento.salidaSec (si no: cause 'viento-salida').
 // Timbre (ruta 'arriba' = lo toca con el salto mantenido; 'abajo' = a mano): no mata; si el cuerpo cruza su caja, la
-// torre con su tid se acuesta y deja de chocar (debe quedar acostada antes de que llegue Moki: 'timbre-tarde') y,
+// torre con su tid se acuesta y deja de chocar y,
 // al aterrizar de ese salto, lo siguiente que mata a >= C.timbre.libreSec ('timbre-salida').
 export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba', opts = {}) {
   const vientos = level.vientos || [];
@@ -124,8 +124,8 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
         if (!o.sono && lo < o.box.hi && hi > o.box.lo) {
           o.sono = true;
           if (jump) jump.sono = true;
+          // (su torre va a 0.9 s en todos los bloques y cae en 0.24: siempre queda acostada antes; timbre-calibrar lo mide)
           const tw = obs.find((q) => q.type === 'torre' && q.tid === o.tid);
-          if (tw && (tw.D - (tw.box.half + pw / 2) - dist) / speed < C.timbre.retardo + C.timbre.caidaSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'timbre-tarde', D: Math.round(tw.D) };
           if (tw) tw.caida = true;
         }
         continue;

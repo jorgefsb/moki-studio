@@ -64,7 +64,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (b.mec && !ctx.mecanicas.includes(b.mec)) return false; // mecánica no destrabada (o Reto/Clásico)
       if (b.soloPico && ctx.fase !== 'pico') return false; // viento-par y viento-ritmo: solo en el pico
       if (b.mec === 'viento' && ctx.nViento >= 2) return false; // máx. 2 bloques de viento por página
-      if (b.mec === 'timbre' && (ctx.nTimbre || b.soloEstreno || ctx.fase !== 'pico' && ctx.fase !== 'subida')) return false; // timbre: máx. 1 por página, nunca en calma ni respiro; la intro no se sortea
+      if (b.mec === 'timbre' && (ctx.nTimbre || b.soloEstreno || C.tramos[tramo - 1].speed > C.timbre.vMax || ctx.fase !== 'pico' && ctx.fase !== 'subida')) return false; // timbre: máx. 1 por página, nunca en calma ni respiro; la intro no se sortea
       if (tramo < b.min || tramo > b.max) return false; // G1
       if (b.dur > rem - 0.75 + 1e-9) return false; // 0.75 = minGapSec: con fases cortas, los bloques dif 4 de 5.5-6.5 s ya no cabían con 1.5
       if (!isDescanso(b) && (b.dif < lo || b.dif > hi)) return false; // G6
@@ -304,7 +304,7 @@ export const filasPiezas = (script) => script.filter(([, c]) => hasP5(c)).length
 // mantener -> mantener >= 1.0 s entre llegadas (el dedo necesita soltar y volver a mantener)
 export function holdHold(level) {
   const v = level.tramos[0].speed;
-  const holds = level.entities.filter((e) => e.kind === 'obs' && e.plan === 'hold');
+  const holds = level.entities.filter((e) => e.kind === 'obs' && e.plan === 'hold' && e.type !== 'timbre'); // el timbre y su torre nunca se mantienen en la misma ruta
   for (let i = 1; i < holds.length; i++) if ((holds[i].D - holds[i - 1].D) / v < HOLD_HOLD_SEC - 1e-6) return false;
   return true;
 }
@@ -428,7 +428,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
       const reglaB = !!prevPico && firmaPico(script) === prevPico;
       // (c) y, para el timbre, el mismo id tampoco en otra fase de la página siguiente
       const reglaC = script.fases.some(([fa, id]) => id !== 'relleno' && (prevFases.has(`${fa}:${id}`) || (id.startsWith('timbre') && [...prevFases].some((f) => f.endsWith(`:${id}`)))));
-      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN, mecanicas.includes('timbre') ? 3.85 : F3_MAX) ? 100 : 0) + (reglaB || reglaC ? 50 : 0) + (i > 0 && fpPagina(script) < FP_MIN ? 100 : 0) + (mecanicas.includes('timbre') && i >= 1 && !script.ids.some((id) => id.startsWith('timbre')) ? 3 : 0); // con timbre, las páginas 2-4 prefieren uno (F4) // pico más suave que el respiro: otro intento
+      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN, mecanicas.includes('timbre') ? 3.85 : F3_MAX) ? 100 : 0) + (reglaB || reglaC ? 50 : 0) + (i > 0 && fpPagina(script) < FP_MIN ? 100 : 0) + (mecanicas.includes('timbre') && i >= 1 && tr.speed <= C.timbre.vMax && !script.ids.some((id) => id.startsWith('timbre')) ? 6 : 0); // con timbre, las páginas que pueden llevarlo prefieren uno (F4) // pico más suave que el respiro: otro intento
       if (h < mejor) {
         mejor = h;
         t = { speed: tr.speed, len: LEN, script, ids: script.ids, fases: script.fases };

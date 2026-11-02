@@ -805,7 +805,8 @@ export class RunScene extends Phaser.Scene {
     gr.fillStyle(col(TONE.kraftDark)).fillRoundedRect(-23, 85, 46, 7, 3);
     gr.lineStyle(2, 0x22211f, 0.8).strokeRoundedRect(-23, 85, 46, 7, 3);
     gr.fillStyle(0x22211f).fillRect(-1, 92, 2, 5).fillCircle(0, 97, 4.5);
-    const sprite = this.add.container(x, C.world.groundY - (C.timbre.lo + C.timbre.hi) / 2 - 71, [gr]).setDepth(10);
+    const S = C.timbre.escala;
+    const sprite = this.add.container(x, C.world.groundY - 202 - 71 * S, [gr]).setDepth(10).setScale(S); // 202: centro de la caja (lo 190, hi 214)
     sprite.setTint = sprite.setTexture = () => sprite; // Ambient tiñe y cambia la textura de cada obstáculo: el timbre ya nace con su color
     const o = { D: e.D, type: 'timbre', tid: e.tid, x, sprite, shadow: this.addShadow(x, 40, 0.14) };
     o.destroy = () => (sprite.destroy(), o.shadow.destroy());
@@ -816,8 +817,8 @@ export class RunScene extends Phaser.Scene {
   tocarTimbre(o) {
     o.sono = true;
     this.timbres.add(o.tid);
-    audio.sfx('amber'); // placeholder de la campanita (peso); lo revisa audio
-    const ray = this.add.graphics({ x: o.sprite.x, y: o.sprite.y + 71 }).setDepth(10.5).lineStyle(2, 0x22211f, 0.7);
+    audio.sfx('pickup', { index: 11 }); // campanita: la pieza en su tono más alto (el sonido propio va a la fila de audio)
+    const ray = this.add.graphics({ x: o.sprite.x, y: o.sprite.y + 92 }).setDepth(10.5).lineStyle(2, 0x22211f, 0.7); // 92 = 71 x 1.3
     ray.lineBetween(-21, -12, -28, -16).lineBetween(0, -24, 0, -32).lineBetween(21, -12, 28, -16);
     this.tweens.add({ targets: ray, alpha: 0, duration: 320, onComplete: () => ray.destroy() });
     if (!this.reduced) this.tweens.add({ targets: o.sprite, angle: -14, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
@@ -836,7 +837,7 @@ export class RunScene extends Phaser.Scene {
   tumbar(o, ya) {
     o.caida = true;
     const lam = (o.lamina = this.add.graphics({ x: o.x + 30, y: C.world.groundY + 2 }).setDepth(9.9).setVisible(false));
-    lam.fillStyle(this.ambient && this.ambient.nt > 0.5 ? 0x947656 : 0xb99168).fillRoundedRect(0, -20, 92, 20, 5);
+    lam.fillStyle(0xb99168).fillRoundedRect(0, -20, 92, 20, 5);
     lam.lineStyle(2, 0x22211f, 0.4).strokeRoundedRect(0, -20, 92, 20, 5);
     const d0 = o.destroy;
     o.destroy = () => (d0(), lam.destroy());

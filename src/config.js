@@ -93,7 +93,9 @@ export const CONFIG = {
   // Timbre (NIVELES.md §9): campana colgante a 1.0 s antes de una torre; si la toca el salto mantenido, la torre se
   // acuesta hacia adelante (retardo + caída) y deja 5 piezas de piso. Caja de 46 de ancho = el dibujo (líder, 2-nov).
   // lo 186 -> 190: el mantenido de 130 ms sube la cabeza a 189 y sonaba a medias; el completo llega a 202 (timbre-calibrar).
-  timbre: { lo: 190, hi: 214, ancho: 46, torreSec: 1.0, retardo: 0.1, caidaSec: 0.3, libreSec: 0.75, nivel: 9 },
+  // vuelta A (director, 2-nov 05:10): x1.3 con choque igual al dibujo (aro 46 x 1.3 = 60), torre a 0.9 s (a 385 queda
+  // entera en los 389 px que se ven delante de Moki a 375: 346 + 30) y solo en tramos de <= vMax px/s
+  timbre: { lo: 190, hi: 214, ancho: 60, escala: 1.3, torreSec: 0.9, vMax: 385, caidaSec: 0.3, libreSec: 0.75, nivel: 9 },
   hitboxShrink: { x: 18, top: 16 }, // torre y viga (la lección de Mantén no se toca)
   hitboxShrinkCaja: { x: 22, top: 20 }, // la caja perdona más (T3f): ventana de despegue de 109 a 156 ms y de dos cajas de 94 a ~134 ms a 320 px/s
   pickupSize: 30,
