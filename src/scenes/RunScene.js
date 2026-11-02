@@ -261,6 +261,7 @@ export class RunScene extends Phaser.Scene {
       if (KEY_JUMP.includes(e.key) && !e.repeat) {
         e.preventDefault();
         this.coarse = false;
+        this.pressKey = true; // el toque de tecla usa su propia rampa (C.jumpHoldRampKey)
         this.press();
       }
       if (['Escape', 'p', 'P'].includes(e.key) && !e.repeat) this.pauseGame();
@@ -273,6 +274,7 @@ export class RunScene extends Phaser.Scene {
       this.lastInputAt = this.time.now;
       if (this.ui.modalOpen) return;
       this.coarse = true;
+      this.pressKey = false;
       if (this.screen === 'demo') this.startGame();
       else this.press();
     });
@@ -611,6 +613,11 @@ export class RunScene extends Phaser.Scene {
     if (this.tut && (this.tut.state === 'decel' || this.tut.state === 'stopped')) this.tut.pressed = true;
   }
 
+  // Rampa toque/mantener del salto en curso: la de teclado si despegó con tecla (los bots nunca marcan jumpKey)
+  holdRamp() {
+    return this.jumpKey ? C.jumpHoldRampKey : C.jumpHoldRamp;
+  }
+
   release() {
     this.holding = false;
     // Tap: si suelta pronto mientras sube, recorta el salto.
@@ -618,7 +625,8 @@ export class RunScene extends Phaser.Scene {
       const rise = C.world.groundY - this.y;
       // Entre fromMs y toMs el corte se afloja hasta 1 (salto completo): 120 ms de mantener ya libra la torre
       const held = this.t - this.jumpStartAt;
-      const f = clamp((held - C.jumpHoldRamp.fromMs) / (C.jumpHoldRamp.toMs - C.jumpHoldRamp.fromMs), 0, 1);
+      const H = this.holdRamp();
+      const f = clamp((held - H.fromMs) / (H.toMs - H.fromMs), 0, 1);
       let cut = this.vy * (C.jumpCutMultiplier + (1 - C.jumpCutMultiplier) * f);
       // Un toque rápido nunca baja de jumpMinPx de altura.
       if (rise + (cut * cut) / (2 * C.gravity) < C.jumpMinPx) cut = -Math.sqrt(2 * C.gravity * (C.jumpMinPx - rise));
@@ -970,7 +978,7 @@ export class RunScene extends Phaser.Scene {
 
     this.stepJump(dt);
     // Salto alto: al mantener 140 ms suena el segundo "bip" que sube (AUDIO §5)
-    if (this.jumping && this.holding && !this.highPlayed && this.t - this.jumpStartAt >= C.jumpHoldRamp.fromMs + 10) {
+    if (this.jumping && this.holding && !this.highPlayed && this.t - this.jumpStartAt >= this.holdRamp().fromMs + 10) {
       this.highPlayed = true;
       audio.sfx('jumpHigh', { holdMs: this.t - this.jumpStartAt });
     }
@@ -1039,6 +1047,8 @@ export class RunScene extends Phaser.Scene {
       this.grounded = false;
       this.jumping = true;
       this.jumpStartAt = this.t;
+      this.jumpKey = !!this.pressKey; // el tipo de entrada se fija al despegar y se apaga: bots y demo llaman press() sin marcarlo
+      this.pressKey = false;
       this.takeoffAt = this.t;
       this.pressedAt = -1e9;
       this.highPlayed = false;

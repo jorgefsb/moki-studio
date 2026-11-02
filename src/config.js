@@ -6,6 +6,9 @@ export const CONFIG = {
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
   jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
   jumpHoldRamp: { fromMs: 110, toMs: 145 }, // entre estos ms de mantener el corte se afloja hasta el salto completo
+  // Teclado (bug P1 de Jorge, 1-nov): un toque de tecla dura más que un clic o un dedo; con la rampa de arriba la
+  // flecha casi siempre daba salto largo. Solo cuando el salto empezó con tecla; mouse, táctil y bots no cambian.
+  jumpHoldRampKey: { fromMs: 180, toMs: 215 },
   jumpMinPx: 62, // altura mínima de un toque: libra la caja (exige 38) y queda >= 15 px por debajo de la torre de 96 (exige 78)
   coyoteMs: 90,
   jumpBufferMs: 110,
