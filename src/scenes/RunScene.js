@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { CONFIG as C } from '../config.js';
-import { PAL, TONE } from '../art/palette.js';
+import { PAL, TONE, mix } from '../art/palette.js';
 import { buildTextures } from '../art/textures.js';
 import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
@@ -29,7 +29,7 @@ const START_TUT = Q.get('tut') === '2' ? 2 : 0; // ?tut=2 salta a la lección 2
 const START_SCREEN = Q.get('screen'); // ?screen=play salta el demo (pruebas)
 const SEED = Q.get('seed'); // ?seed=2026-10-29 | 123 fija el nivel; ?nivel=clasico usa los 4 tramos escritos a mano
 const CLASICO = Q.get('nivel') === 'clasico';
-const MEC = (Q.get('mec') || '').split(','); // ?mec=tramp,viento destraba mecánicas en Libre sin el nivel del Cuaderno (pruebas)
+const MEC = (Q.get('mec') || '').split(','); // ?mec=tramp,viento,timbre destraba mecánicas en Libre sin el nivel del Cuaderno (pruebas)
 // Vuelta rápida se abre con el sello Coleccionista (>=80% de las piezas al terminar; cuaderno.js)
 const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
 const GOD = Q.has('god') && (import.meta.env.DEV || Q.has('debug')); // sin choques, solo para pruebas
@@ -428,6 +428,7 @@ export class RunScene extends Phaser.Scene {
     this.jumping = false;
     this.vuelo = false;
     this.vientoK = this.vientoV = 1;
+    this.timbres = new Set(); // tid de los timbres que ya sonaron (sus torres están acostadas)
     this.jumpStartAt = 0;
     this.takeoffAt = -1e9;
     this.landAt = -1e9;
@@ -529,7 +530,7 @@ export class RunScene extends Phaser.Scene {
     const modo = this.modo;
     // Mecánicas (NIVELES.md flow): solo en Libre; el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno.
     const nv = nivelDe(leerCuaderno()).nivel;
-    const mecanicas = modo !== 'libre' ? [] : ['tramp', 'viento'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
+    const mecanicas = modo !== 'libre' ? [] : ['tramp', 'viento', 'timbre'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
 
@@ -791,11 +792,72 @@ export class RunScene extends Phaser.Scene {
     return this.paseoRun && this.textures.exists(`${type}_p`) ? `${type}_p` : type;
   }
 
+  // Timbre (NIVELES.md §9 y su arte): campana colgante de cartón con badajo, sin el contorno claro de peligro; aro e
+  // hilo de 2 px con tinta. Gira sobre el anillo (el origen del container). No mata: si el cuerpo cruza su caja, suena.
+  spawnTimbre(e) {
+    const x = this.px + e.D - this.dist;
+    const n = this.ambient && this.ambient.nt > 0.5;
+    const col = (s) => parseInt((n ? mix(s, PAL.ink, 0.245) : s).slice(1), 16);
+    const gr = this.add.graphics(); // y desde el anillo: el centro de la caja de choque queda en +71
+    gr.lineStyle(2, 0x22211f, 0.85).lineBetween(0, 5, 0, 57).strokeCircle(0, 0, 5);
+    gr.fillStyle(col(TONE.kraftLight)).fillRoundedRect(-19, 57, 38, 28, { tl: 14, tr: 14, bl: 3, br: 3 });
+    gr.lineStyle(2, 0x22211f, n ? 0.55 : 0.4).strokeRoundedRect(-19, 57, 38, 28, { tl: 14, tr: 14, bl: 3, br: 3 });
+    gr.fillStyle(col(TONE.kraftDark)).fillRoundedRect(-23, 85, 46, 7, 3);
+    gr.lineStyle(2, 0x22211f, 0.8).strokeRoundedRect(-23, 85, 46, 7, 3);
+    gr.fillStyle(0x22211f).fillRect(-1, 92, 2, 5).fillCircle(0, 97, 4.5);
+    const sprite = this.add.container(x, C.world.groundY - (C.timbre.lo + C.timbre.hi) / 2 - 71, [gr]).setDepth(10);
+    sprite.setTint = sprite.setTexture = () => sprite; // Ambient tiñe y cambia la textura de cada obstáculo: el timbre ya nace con su color
+    const o = { D: e.D, type: 'timbre', tid: e.tid, x, sprite, shadow: this.addShadow(x, 40, 0.14) };
+    o.destroy = () => (sprite.destroy(), o.shadow.destroy());
+    this.obstacles.push(o);
+  }
+
+  // Suena: campanita, se mece (sin glow ni escala; con movimiento reducido, quieto), 3 rayitas, y su torre se acuesta
+  tocarTimbre(o) {
+    o.sono = true;
+    this.timbres.add(o.tid);
+    audio.sfx('amber'); // placeholder de la campanita (peso); lo revisa audio
+    const ray = this.add.graphics({ x: o.sprite.x, y: o.sprite.y + 71 }).setDepth(10.5).lineStyle(2, 0x22211f, 0.7);
+    ray.lineBetween(-21, -12, -28, -16).lineBetween(0, -24, 0, -32).lineBetween(21, -12, 28, -16);
+    this.tweens.add({ targets: ray, alpha: 0, duration: 320, onComplete: () => ray.destroy() });
+    if (!this.reduced) this.tweens.add({ targets: o.sprite, angle: -14, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
+    const tw = this.obstacles.find((q) => q.tid === o.tid && q !== o);
+    if (tw) this.tumbar(tw);
+    for (const k of this.pickups) if (k.pie === o.tid || k.cae === o.tid) this.verPieza(k, k.cae === o.tid);
+  }
+
+  verPieza(k, on) {
+    k.off = !on;
+    k.sprite.setVisible(on);
+    k.shadow.setVisible(on);
+  }
+
+  // La torre se acuesta hacia adelante (lejos de Moki) sobre su pie delantero y queda como lámina de 92x20 sin choque
+  tumbar(o, ya) {
+    o.caida = true;
+    const lam = (o.lamina = this.add.graphics({ x: o.x + 30, y: C.world.groundY + 2 }).setDepth(9.9).setVisible(false));
+    lam.fillStyle(this.ambient && this.ambient.nt > 0.5 ? 0x947656 : 0xb99168).fillRoundedRect(0, -20, 92, 20, 5);
+    lam.lineStyle(2, 0x22211f, 0.4).strokeRoundedRect(0, -20, 92, 20, 5);
+    const d0 = o.destroy;
+    o.destroy = () => (d0(), lam.destroy());
+    const acostar = () => {
+      o.sprite.setVisible(false);
+      lam.setVisible(true);
+      if (!ya) audio.sfx('land', { fall: 0.5 }), this.particles.burst('land', o.x + 76, C.world.groundY); // golpe de cartón
+    };
+    if (ya) return acostar();
+    o.sprite.setOrigin(1, 1).setAngle(this.reduced ? 0 : 4); // game-feel: se vence en el primer cuadro, sin espera
+    o.ox = 30; // medio ancho de la torre
+    // con movimiento reducido no gira: espera lo mismo y aparece acostada
+    this.tweens.add({ targets: o.sprite, angle: this.reduced ? 0 : 90, duration: C.timbre.caidaSec * 800, ease: 'Quad.easeIn', onComplete: acostar });
+  }
+
   spawnObstacle(e) {
+    if (e.type === 'timbre') return this.spawnTimbre(e);
     const g = C.world.groundY;
     const size = C.obstacleSizes[e.type];
     const x = this.px + e.D - this.dist;
-    const o = { D: e.D, type: e.type, plan: e.plan, size, x, entered: false, passed: false, handled: false };
+    const o = { D: e.D, type: e.type, plan: e.plan, size, x, entered: false, passed: false, handled: false, tid: e.tid };
     if (e.type === 'viga') {
       const topY = g - size.hangBottom - size.height;
       o.sprite = this.add.image(x, topY - 2, this.obsTex('viga')).setOrigin(0.5, 0).setDepth(10);
@@ -837,6 +899,7 @@ export class RunScene extends Phaser.Scene {
       };
       this.stepPopup(o);
     }
+    if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
     this.obstacles.push(o);
   }
 
@@ -879,11 +942,13 @@ export class RunScene extends Phaser.Scene {
     const x = this.px + e.D - this.dist;
     const sprite = this.add.image(x, g - e.h, e.amber ? 'tokenAmber' : 'token').setDepth(11);
     const shadow = this.addShadow(x + 4, 26, 0.18);
-    const k = { D: e.D, h: e.h, x, y: g - e.h, arc: e.arc, arcN: e.arcN, amber: !!e.amber, sprite, shadow, taken: false };
+    const k = { D: e.D, h: e.h, x, y: g - e.h, arc: e.arc, arcN: e.arcN, amber: !!e.amber, sprite, shadow, taken: false, pie: e.pie, cae: e.cae };
     k.destroy = () => {
       sprite.destroy();
       shadow.destroy();
     };
+    // timbre: las piezas de piso (cae) solo se ven si sonó; el arco de la torre (pie) se va si sonó
+    if (e.cae || e.pie) this.verPieza(k, e.cae ? this.timbres.has(e.cae) : !this.timbres.has(e.pie));
     this.pickups.push(k);
   }
 
@@ -1204,7 +1269,8 @@ export class RunScene extends Phaser.Scene {
     const dist = this.dist;
     for (const o of this.obstacles) {
       o.x = px + o.D - dist;
-      o.sprite.x = o.x;
+      o.sprite.x = o.x + (o.ox || 0); // la torre que cae gira sobre su pie delantero
+      if (o.lamina) o.lamina.x = o.x + 30;
       o.shadow.x = o.x + (o.type === 'viga' ? 6 : 9);
       if (o.pop) this.stepPopup(o);
       if (o.threads) {
@@ -1294,7 +1360,7 @@ export class RunScene extends Phaser.Scene {
     const R = C.pickupReach;
     const bodyY = g - this.y + R.bodyCenter;
     for (const k of this.pickups) {
-      if (k.taken) continue;
+      if (k.taken || k.off) continue;
       if (Math.abs(k.x - this.px) < R.dx && Math.abs(k.h - bodyY) < R.dy) this.collect(k);
     }
 
@@ -1311,7 +1377,7 @@ export class RunScene extends Phaser.Scene {
         // Clave tipo+D: la caja y la viga de una VC comparten D y antes la viga no contaba (E1, inventario).
         const P = this.partida;
         const k = `${o.type}:${o.D}`;
-        if (P && !this.demo && P.passed[o.type] !== undefined && !(P.seen = P.seen || new Set()).has(k)) {
+        if (P && !this.demo && !o.caida && P.passed[o.type] !== undefined && !(P.seen = P.seen || new Set()).has(k)) {
           P.seen.add(k);
           P.passed[o.type] += 1;
         }
@@ -1321,7 +1387,13 @@ export class RunScene extends Phaser.Scene {
         if (!o.used && this.vy >= 0 && this.y >= g - C.obstacleSizes.tramp.height && this.px >= o.x - TRAMP_PISA && this.px < o.x + C.obstacleSizes.tramp.width / 2) this.lanzar(o);
         continue;
       }
-      if (this.rewinding || this.god || this.paseoRun || (o.pop && !o.up)) continue;
+      if (o.type === 'timbre') {
+        // Timbre: no mata; si el cuerpo cruza su caja (46 de ancho, de lo a hi sobre el suelo), suena
+        const T = C.timbre;
+        if (!o.sono && pl < o.x + T.ancho / 2 && pl + pw > o.x - T.ancho / 2 && pt < g - T.lo && pb > g - T.hi) this.tocarTimbre(o);
+        continue;
+      }
+      if (o.caida || this.rewinding || this.god || this.paseoRun || (o.pop && !o.up)) continue; // la torre acostada es piso
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
         this.crash(o);
@@ -1435,7 +1507,7 @@ export class RunScene extends Phaser.Scene {
       const lo = this.dist - this.px - 300;
       const hi = this.dist - this.px + this.vw + 300;
       for (const e of this.level.entities) {
-        if (e.kind !== 'obs' || e.D < lo || e.D > hi) continue;
+        if (e.kind !== 'obs' || e.type === 'timbre' || e.D < lo || e.D > hi) continue;
         const b = this.obsBox(e.type, this.px + e.D - this.dist);
         boxes.push({ l: b.l - mg, r: b.r + mg, t: b.t - mg, b: b.b + mg });
       }
@@ -1486,9 +1558,11 @@ export class RunScene extends Phaser.Scene {
   collect(k) {
     const R = C.combo;
     k.taken = true;
-    // Racha: cada pieza a menos de 0.9 s de la anterior suma. En el vuelo del trampolín no suma ni se rompe.
-    if (!this.vuelo && this.t - this.lastPickAt > R.windowMs) this.combo = 0;
-    if (!this.vuelo) this.combo += 1;
+    // Racha: cada pieza a menos de 0.9 s de la anterior suma. En el vuelo del trampolín y en las piezas de la torre
+    // tumbada por el timbre (tumbarla no es pasarla) no suma ni se rompe.
+    const quieto = this.vuelo || k.cae;
+    if (!quieto && this.t - this.lastPickAt > R.windowMs) this.combo = 0;
+    if (!quieto) this.combo += 1;
     this.lastPickAt = this.t;
     let mult = 1;
     let arcFull = false;

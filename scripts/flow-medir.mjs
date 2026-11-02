@@ -47,8 +47,9 @@ const PARTES = {
   'C.V': [['caja', 0], ['viga', C.pairGapSec]],
   OLA: Array.from({ length: 6 }, (_, i) => ['caja', i * C.waveGapSec]),
   J: [['tramp', 0]],
+  B: [['timbre', 0]],
 };
-const BASE = { caja: 'caja', torre: 'torre', viga: 'viga', vc: 'viga', cc: 'salto largo', tramp: 'trampolín' };
+const BASE = { caja: 'caja', torre: 'torre', viga: 'viga', vc: 'viga', cc: 'salto largo', tramp: 'trampolín', timbre: 'timbre' };
 const tipoBase = (patron, tipo) => (patron === 'U' ? 'pop-up' : patron === 'OLA' ? 'ola' : BASE[tipo]);
 
 const ARCS = {
@@ -132,27 +133,42 @@ function medir(L) {
       const kv = sopla === '>' ? C.viento.favor : sopla === '<' ? C.viento.contra : 1;
       const partes = PARTES[sopla ? main.slice(0, -1) : main];
       if (!partes) throw new Error(`código sin parte: ${code}`);
-      eventos.push({ t: t0 + t, patron: main });
+      // timbre (NIVELES.md §9): B solo o +B sobre una caja (patrón CB). Tocarlo (hold) acuesta la torre y cobra 5 piezas
+      // de piso; a mano (tap) no cobra nada aquí: es una elección real. La caja de C+B ya va en ese salto.
+      const timbre = main === 'B' || reward === 'B';
+      const patron = reward === 'B' ? `${main}B` : main;
+      eventos.push({ t: t0 + t, patron });
       partes.forEach(([tipo, at], k) => {
         const arco = k === 0 && reward && ARCS[reward] ? { ...ARCS[reward], gap: ARCS[reward].gap * kv } : null;
         // trampolín: pisarlo (none) vuela y cobra el arco del vuelo; saltarlo (tap) no lo cobra. Ambos sobreviven
         // (el validador lo prueba con las dos rutas y ±40 ms).
-        const ev = tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed * kv, arco);
-        decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo, patron: main, base: tipoBase(sopla ? main.slice(0, -1) : main, tipo), tramo: i, ...ev });
+        const ev = timbre ? { vivos: ['hold', 'tap'], eleccion: true, cobro: { hold: 5, tap: 0 } } : tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed * kv, arco);
+        decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo: timbre ? 'timbre' : tipo, patron, base: timbre ? 'timbre' : tipoBase(sopla ? main.slice(0, -1) : main, tipo), tramo: i, ...ev });
       });
     }
     t0 += tr.len;
   });
   const dur = t0;
-  // Bajo el vuelo de un trampolín (el nudo) también se pasa volando: plan 'vuelo', que no cobra el arco del nudo.
+  // Regla única (director, DECISIONES 2-nov 01:05): bajo el vuelo del trampolín la decisión ya se tomó al pisar o
+  // saltar el J, así que lo de abajo cuenta como UN solo plan, no como elección. Argumento 4 'regla-vieja' (solo para
+  // rastrear): el nudo suma el plan 'vuelo', que cobra distinto.
+  const reglaVieja = process.argv[4] === 'regla-vieja';
   const vuelo = simulateBounce().air;
   for (const j of decisiones.filter((d) => d.tipo === 'tramp')) {
     for (const d of decisiones) {
       if (d === j || d.t <= j.t || d.t - j.t > vuelo - 0.1) continue;
+      if (!reglaVieja) {
+        d.eleccion = false;
+        continue;
+      }
       d.vivos = [...d.vivos, 'vuelo'];
       d.cobro = { ...d.cobro, vuelo: 0 };
       d.eleccion = d.vivos.length >= 2 && new Set(d.vivos.map((p) => d.cobro[p] || 0)).size >= 2;
     }
+  }
+  // Timbre: lo que sigue a <= 1.2 s (la torre ligada y su caja) ya se decidió al tocarlo o no: un solo plan
+  for (const j of decisiones.filter((d) => d.tipo === 'timbre')) {
+    for (const d of decisiones) if (d !== j && d.t > j.t && d.t - j.t <= 1.2 + 1e-9) d.eleccion = false;
   }
   const cps = L.tramos.map((_, i) => i * L.tramos[0].len);
   decisiones.sort((a, b) => a.t - b.t);

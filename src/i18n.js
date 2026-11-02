@@ -95,6 +95,7 @@ const ES = {
   'cu.subio': '¡Moki sube al nivel {n}! Lo nuevo cuenta desde la siguiente partida.',
   'cu.tramp': 'Ahora hay trampolines en Libre.',
   'cu.viento': 'Ahora hay viento en Libre.',
+  'cu.timbre': 'Ahora hay timbres en Libre.',
   'cu.completo': '¡Moki terminó el nivel {n}!',
   // Día 4: qué sigue al terminar la partida o el set de tres; cuenta lo que falta, sin reloj ni castigo
   'cu.sigue': 'Sigue: {s}',
