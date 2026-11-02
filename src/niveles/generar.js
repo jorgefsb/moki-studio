@@ -86,6 +86,50 @@ function put(ctx, b) {
   ctx.ids.push(b.id);
 }
 
+// Curva de flow, paso 4 (NIVELES.md "Flow y mecánicas", director 1-nov): calma y respiro no son aire vacío, son
+// decisiones fáciles. Donde quedan más de HUECO_MAX s sin decidir nada (filas P5 sueltas, relleno, colas de bloque),
+// entra una decisión fácil de tocar o de no saltar (nunca mantener: mantener->mantener pide 1 s). Primero un patrón
+// que la página todavía no tiene (sube F1). No toca la intro del tutorial (T1 0-12 s) ni pone nada después del 28.
+// El validador de siempre (física real, ±40 ms) decide si la página queda; si no, se re-sortea.
+const HUECO_MAX = 2.5;
+const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec };
+const FACILES = { 1: ['C+A3', 'C'], 2: ['U', 'C+A3', 'C.C', 'C'], 3: ['V', 'U', 'C.V', 'C+A3', 'VC', 'C.C', 'C'], 4: ['V', 'U', 'C.V', 'VC', 'C+A3', 'C.C', 'C'] };
+const principal = (code) => code.split('+')[0];
+function densificar(script, tramo, r) {
+  const ev = [...script].sort((a, b) => a[0] - b[0]);
+  const filas = ev.filter(([, c]) => principal(c) === 'P5').map(([t]) => t);
+  const dec = ev.filter(([, c]) => principal(c) !== 'P5');
+  const vistos = new Set(dec.map(([, c]) => principal(c)));
+  const desde = tramo === 1 ? 12 : 0;
+  const nuevos = [];
+  const pon = (t) => {
+    const libres = FACILES[tramo].filter((c) => !vistos.has(principal(c)));
+    const code = libres.length ? libres[0] : FACILES[tramo][Math.floor(r() * FACILES[tramo].length)];
+    vistos.add(principal(code));
+    nuevos.push([+t.toFixed(2), code]);
+  };
+  // Huecos entre decisiones seguidas, más los dos de la orilla de la página: el hueco que cruza el checkpoint es
+  // (30 - última) + (primera de la siguiente - 2), así que la página arranca a más tardar en 2.5 s (ancla en 0) y
+  // termina no antes de 27.5 (ancla en 30). Nada antes del segundo 2 ni después del 28.
+  const puntos = dec.map(([t, c]) => ({ t, fin: t + (FIN[principal(c)] || 0) }));
+  for (let i = 0; i <= puntos.length; i++) {
+    const a = i ? puntos[i - 1].fin : tramo === 1 ? null : 0; // T1 empieza con la intro del tutorial
+    const b = i < puntos.length ? puntos[i].t : LEN;
+    if (a === null || a < desde || b - a <= HUECO_MAX) continue;
+    const k = Math.ceil((b - a) / HUECO_MAX) - 1;
+    for (let j = 1; j <= k; j++) {
+      let t = a + ((b - a) * j) / (k + 1);
+      // lejos de una fila de piezas en el suelo (la caja la taparía)
+      const fila = filas.find((f) => Math.abs(f - t) < 0.5);
+      if (fila !== undefined) t = fila + (t >= fila ? 0.5 : -0.5);
+      t = Math.min(28, Math.max(2, t));
+      if ((i && t - a < C.minGapSec) || (i < puntos.length && b - t < C.minGapSec)) continue;
+      pon(t);
+    }
+  }
+  return [...ev, ...nuevos].sort((x, y) => x[0] - y[0]);
+}
+
 // Un tramo (1-4) como guion [[s, código]] de 30 s.
 export function generarTramo(seed, tramo, intento = 0) {
   const r = rng(hashSeed(`${seed}:${tramo}:${intento}`));
@@ -106,7 +150,7 @@ export function generarTramo(seed, tramo, intento = 0) {
   ctx.reserva = 0;
   put(ctx, sorpresa);
   fill(r, LEN, ctx, tramo);
-  return Object.assign(ctx.script, { ids: ctx.ids });
+  return Object.assign(densificar(ctx.script, tramo, r), { ids: ctx.ids });
 }
 
 // V4 legibilidad: entre obstáculos distintos >= minGapSec (mismo punto en VC; la segunda caja de CC no cuenta).
