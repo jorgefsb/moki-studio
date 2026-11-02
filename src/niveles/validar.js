@@ -1,7 +1,8 @@
 // Validador sin navegador: un bot "adjust" (el mismo plan que src/debug/bots.js) corre el nivel con la física de
 // jumpmodel y las cajas de colisión de RunScene. Si choca, el nivel no es pasable. Puro JS: corre en Node y en el juego.
 import { CONFIG as C } from '../config.js';
-import { simulateJump, airTravel } from '../jumpmodel.js';
+import { simulateJump, simulateBounce, airTravel } from '../jumpmodel.js';
+import { TRAMP_PISA } from '../tramos.js';
 
 const DT = 1 / 60;
 const HOLD_MS = { tap: 16, hold: 400 };
@@ -18,8 +19,20 @@ function box(type) {
 // level: salida de buildLevel. Devuelve { ok, sec, tramo, cause, D, minClear } (minClear: px de holgura más justa).
 // force: 'tap' | 'hold' juega todo con ese salto (prueba del instrumento: el de solo toque debe morir en la primera torre).
 // jitterMs: el bot despega ese tanto antes (-) o después (+) del punto ideal (NIVELES: todo se libra con ±40 ms).
-export function validateLevel(level, force = null, jitterMs = 0) {
+// force 'none' = bot pasivo (nunca salta): debe morir; pisar un trampolín no le alcanza para pasar una página.
+// ruta (trampolín): 'arriba' lo pisa y sobrevuela el nudo; 'abajo' lo salta con un toque y pasa el nudo a mano.
+// Al caer del vuelo, el siguiente obstáculo queda a >= C.tramp.caidaLibreSec (si no: cause 'caida').
+export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba') {
   const obs = level.entities.filter((e) => e.kind === 'obs').map((e) => ({ ...e, box: box(e.type), handled: false }));
+  const tramps = obs.filter((o) => o.type === 'tramp');
+  const planDe = (q) => (q.type === 'tramp' ? (ruta === 'abajo' ? 'tap' : 'none') : q.plan);
+  const salta = (q) => {
+    if (force === 'none') return false;
+    if (force) return q.plan !== 'skip';
+    if (ruta === 'arriba' && q.bajo) return false;
+    const p = planDe(q);
+    return p === 'tap' || p === 'hold';
+  };
   const pw = C.player.width - 6;
   const ph = C.player.height - 6;
   let dist = 0;
@@ -38,17 +51,39 @@ export function validateLevel(level, force = null, jitterMs = 0) {
     if (speed === target) accel = 0;
 
     let rise = 0;
+    let cae = !jump;
     if (jump) {
       const i = Math.round((t - jump.t0) * 240);
-      if (i >= jump.pts.length - 1) jump = null;
-      else rise = jump.pts[i].rise;
+      if (i >= jump.pts.length - 1) {
+        if (jump.vuelo) {
+          const sig = obs.find((q) => q.type !== 'tramp' && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
+          if (sig && (sig.D - (sig.box.half + pw / 2) - dist) / speed < C.tramp.caidaLibreSec - 1e-6) {
+            return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'caida', D: Math.round(sig.D) };
+          }
+        }
+        jump = null;
+        cae = true;
+      } else {
+        rise = jump.pts[i].rise;
+        cae = i > 0 && jump.pts[i].rise < jump.pts[i - 1].rise;
+      }
+    }
+    // Trampolín: en el suelo o cayendo, con los pies a su altura, al llegar a TRAMP_PISA antes de su centro
+    if (cae && rise <= C.obstacleSizes.tramp.height) {
+      const j = tramps.find((q) => !q.used && dist >= q.D - TRAMP_PISA && dist < q.D + q.box.half);
+      if (j) {
+        j.used = true;
+        j.handled = true;
+        jump = { t0: t, pts: simulateBounce().pts, vuelo: true };
+        rise = 0;
+      }
     }
     // Bot: en el suelo, despega cuando el siguiente obstáculo que se salta queda a la mitad del recorrido aéreo
     if (!jump) {
-      const o = obs.find((q) => !q.handled && q.D - dist > -4 && (q.plan === 'tap' || q.plan === 'hold' || (force && q.plan !== 'skip')));
+      const o = obs.find((q) => !q.handled && q.D - dist > -4 && salta(q));
       if (o) {
         const pair = obs.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;
-        const plan = force || o.plan;
+        const plan = force || planDe(o);
         if (o.D - dist <= airTravel(plan, speed) / 2 - pair - (jitterMs / 1000) * speed) {
           o.handled = true;
           // Pop-up: al despegar ya debe estar arriba y el aviso debe llevar >= reactSec en pantalla
@@ -66,6 +101,7 @@ export function validateLevel(level, force = null, jitterMs = 0) {
     while (next < obs.length && obs[next].D - dist < -80) next++;
     for (let k = next; k < obs.length && obs[k].D - dist < 120; k++) {
       const o = obs[k];
+      if (o.type === 'tramp') continue; // no choca: se pisa o se salta
       const dx = Math.abs(o.D - dist);
       if (dx >= o.box.half + pw / 2) continue;
       const lo = rise + 2;

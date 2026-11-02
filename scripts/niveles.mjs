@@ -76,4 +76,28 @@ const sinUso = BLOQUES.filter((b) => !uso[b.id]).map((b) => b.id);
 console.log({ gramatica: gram, apariciones: total, relleno: uso.relleno || 0, bloquesSobre8pct: sobre8, bloquesSinUso: sinUso });
 console.log('bloques (% de apariciones, sin relleno)', Object.fromEntries(pct));
 const gramMal = gram.dosDuros + gram.sinRespiroTras4 + gram.repetidoSeguido + gram.masDe2 + gram.filasSobre20;
-process.exit(bad.length || jitFail || fb || !same || !diff || gramMal || sobre8.length ? 1 : 0);
+
+// Libre con trampolín (mecánica 'tramp'): las N semillas libres. Las dos rutas forzadas (pisar siempre / saltar
+// siempre) terminan con ±40 ms y holgura >= 4 px; el pasivo (nunca salta), el de solo toque y el de solo mantener mueren.
+const tr = { niveles: 0, trampolines: 0, respaldoTramos: 0, rutaArribaFalla: 0, rutaAbajoFalla: 0, pasivoTermina: 0, tapTermina: 0, holdTermina: 0, causas: {} };
+for (let i = 0; i < N; i++) {
+  const L = generarNivel(String((i * 2654435761) >>> 0), 'libre', { mecanicas: ['tramp'] });
+  tr.niveles++;
+  tr.trampolines += L.entities.filter((e) => e.type === 'tramp').length;
+  tr.respaldoTramos += L.fallbacks.length;
+  for (const ruta of ['arriba', 'abajo']) {
+    for (const j of [0, -40, 40]) {
+      const r = validateLevel(L, null, j, ruta);
+      if (!r.ok || r.minClear < 4) {
+        tr[ruta === 'arriba' ? 'rutaArribaFalla' : 'rutaAbajoFalla']++;
+        tr.causas[r.cause || 'holgura'] = (tr.causas[r.cause || 'holgura'] || 0) + 1;
+      }
+    }
+  }
+  if (validateLevel(L, 'none').ok) tr.pasivoTermina++;
+  if (validateLevel(L, 'tap').ok) tr.tapTermina++;
+  if (validateLevel(L, 'hold').ok) tr.holdTermina++;
+}
+console.log({ libreConTrampolin: tr });
+const trMal = tr.respaldoTramos + tr.rutaArribaFalla + tr.rutaAbajoFalla + tr.pasivoTermina + tr.tapTermina + tr.holdTermina;
+process.exit(bad.length || jitFail || fb || !same || !diff || gramMal || sobre8.length || trMal ? 1 : 0);

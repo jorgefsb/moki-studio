@@ -39,6 +39,28 @@ export function simulateJump(holdMs) {
   return out;
 }
 
+// Vuelo del trampolín: misma integración que RunScene (vy fija, gravedad * gravityK, sin corte al soltar).
+let bounce = null;
+export function simulateBounce() {
+  if (bounce) return bounce;
+  const dt = 1 / 240;
+  let vy = -C.tramp.velocity;
+  let rise = 0;
+  let t = 0;
+  let peak = 0;
+  const pts = [{ t: 0, rise: 0 }];
+  for (let i = 0; i < 2000; i++) {
+    vy += C.gravity * C.tramp.gravityK * dt;
+    rise -= vy * dt;
+    t += dt;
+    peak = Math.max(peak, rise);
+    pts.push({ t, rise: Math.max(0, rise) });
+    if (rise <= 0 && vy > 0) break;
+  }
+  bounce = { peak, air: t, pts };
+  return bounce;
+}
+
 export const PLANS = {
   tap: { holdMs: 16 },
   hold: { holdMs: Infinity },

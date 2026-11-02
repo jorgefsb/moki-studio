@@ -61,6 +61,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
     }
     const cands = BLOQUES.filter((b) => {
       if (b.tags.includes('sorpresa')) return false; // G5
+      if (b.mec && !ctx.mecanicas.includes(b.mec)) return false; // mecánica no destrabada (o Reto/Clásico)
       if (tramo < b.min || tramo > b.max) return false; // G1
       if (b.dur > rem - 0.75 + 1e-9) return false; // 0.75 = minGapSec: con fases cortas, los bloques dif 4 de 5.5-6.5 s ya no cabían con 1.5
       if (!isDescanso(b) && (b.dif < lo || b.dif > hi)) return false; // G6
@@ -80,7 +81,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (rem < 4.5) return;
       continue;
     }
-    put(ctx, pick(r, cands.map((q) => [q, (isDescanso(q) ? 1 : PESO_DIF[tramo][q.dif] || 1) * (tramo === 3 && q.tags.includes('viga') ? 2 : 1) * (ctx.used[q.id] ? 0.5 : 1) * (nuevo(ctx, q) ? 2 : 1) * (ctx.fase === 'pico' && esDuro(q) ? 3 : 1)])));
+    put(ctx, pick(r, cands.map((q) => [q, (isDescanso(q) ? 1 : PESO_DIF[tramo][q.dif] || 1) * (tramo === 3 && q.tags.includes('viga') ? 2 : 1) * (ctx.used[q.id] ? 0.5 : 1) * (nuevo(ctx, q) ? 2 : 1) * (ctx.fase === 'pico' && esDuro(q) ? 3 : 1) * (q.mec ? PESO_MEC : 1)])));
   }
 }
 
@@ -103,7 +104,10 @@ function put(ctx, b) {
 // que la página todavía no tiene (sube F1). No toca la intro del tutorial (T1 0-12 s) ni pone nada después del 28.
 // El validador de siempre (física real, ±40 ms) decide si la página queda; si no, se re-sortea.
 const HUECO_MAX = 2.5;
-const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec };
+// J: el vuelo y los 0.75 s libres al caer (lo siguiente a >= 2.2 s del trampolín, con minGapSec de densificar)
+// Peso de los bloques de una mecánica destrabada: que salga de 2 a 4 veces por partida (F4 >= 20 % en Libre)
+const PESO_MEC = 5;
+const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec, J: 2.2 - C.minGapSec };
 // Decisiones fáciles por fase (RETO EN 4 FASES): calma, subida y respiro solo toque o pop-up; el pico pasa por debajo
 // (viga) o mantiene (torre, caja doble). Antes las vigas caían en calma y respiro: el pico salía más suave que ellas.
 const FACILES = { 1: ['C+A3', 'C'], 2: ['U', 'C+A3', 'C.C', 'C'], 3: ['U', 'C+A3', 'C.C', 'C'], 4: ['U', 'C+A3', 'C.C', 'C'] };
@@ -144,7 +148,16 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
   // Huecos entre decisiones seguidas, más los dos de la orilla de la página: el hueco que cruza el checkpoint es
   // (30 - última) + (primera de la siguiente - 2), así que la página arranca a más tardar en 2.5 s (ancla en 0) y
   // termina no antes de 27.5 (ancla en 30). Nada antes del segundo 2 ni después del 28.
-  const puntos = dec.map(([t, c]) => ({ t, fin: t + (FIN[principal(c)] || 0) }));
+  // med: desde dónde se mide el hueco (la decisión y la cola de su par); libre: desde dónde se puede meter algo
+  // (la cola más larga hasta ahí: el vuelo del trampolín y su caída libre cubren al nudo). Sin trampolín son iguales.
+  let medMax = -Infinity;
+  let libMax = -Infinity;
+  const puntos = dec.map(([t, c]) => {
+    const p = principal(c);
+    if (p !== 'J') medMax = Math.max(medMax, t + (FIN[p] || 0));
+    libMax = Math.max(libMax, t + (FIN[p] || 0));
+    return { t, fin: Math.max(medMax, t), libre: libMax };
+  });
   for (let i = 0; i <= puntos.length; i++) {
     let a = i ? puntos[i - 1].fin : tramo === 1 ? null : 0; // T1 empieza con la intro del tutorial
     const b = i < puntos.length ? puntos[i].t : LEN;
@@ -157,6 +170,16 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
       a = desde;
     }
     if (b - a <= HUECO_MAX) continue;
+    // tras un trampolín: la primera decisión va en cuanto se puede (vuelo + caída libre); lo demás se reparte igual
+    if (i && puntos[i - 1].libre > a) {
+      const t1 = puntos[i - 1].libre + C.minGapSec;
+      if (b - t1 < C.minGapSec) continue;
+      antes = pon(t1, antes, b - t1 <= HUECO_MAX ? despues : null, puntos[i - 1].libre);
+      a = t1 + (FIN[antes] || 0); // la segunda caja de un par también cuenta
+      if (b - a < C.minGapSec) nuevos.pop(); // no cupo el par: se quita (el validador decide el resto)
+      if (b - a < C.minGapSec) continue;
+      if (b - a <= HUECO_MAX) continue;
+    }
     let previo = i ? a : -Infinity; // último obstáculo antes del que se mete (FIN ya cuenta la segunda caja de un par)
     const k = Math.ceil((b - a) / HUECO_MAX) - 1;
     for (let j = 1; j <= k; j++) {
@@ -175,9 +198,9 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
 }
 
 // Un tramo (1-4) como guion [[s, código]] de 30 s.
-export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set()) {
+export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set(), mecanicas = []) {
   const r = rng(hashSeed(`${seed}:${tramo}:${intento}`));
-  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev) };
+  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas };
   if (tramo === 1) {
     ctx.script.push(...T1_INTRO); // el tutorial depende de este inicio
     ctx.filas = T1_INTRO.filter(([, c]) => hasP5(c)).length;
@@ -209,6 +232,8 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   // respiro: sin bloques sorteados (los pocos bloques suaves pasaban del 8 % de uso); queda relleno y densificar lo
   // llena con decisiones fáciles que rotan
   ctx.fase = 'suave';
+  // con trampolín destrabado, el respiro abre con uno sin nudo: pisarlo es descansar y cobra el arco (elección real, F4)
+  if (ctx.mecanicas.includes('tramp') && tramo > 1 && ctx.pos <= 25 + 1e-9 && ctx.prevTema !== 'trampolin') put(ctx, BY_ID['tramp-intro']);
   if (ctx.pos < LEN - 1e-9) put(ctx, RELLENO(LEN - ctx.pos));
   return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global), { ids: ctx.ids });
 }
@@ -255,10 +280,14 @@ export function tramoValido(script, speed) {
   const level = buildLevel([{ speed, len: LEN, script }]);
   if (!legible(level) || !holdHold(level) || popupFalla(level) || filasPiezas(script) > TOPE_FILAS + 1e-9) return false;
   if (repetidoPegado(script)) return false;
-  return [0, ...JITTER_MS].every((j) => {
-    const r = validateLevel(level, null, j);
-    return r.ok && r.minClear >= MIN_CLEAR_PX;
-  });
+  // con trampolín, las dos rutas (pisarlo y saltarlo) se libran con ±40 ms
+  const rutas = script.some(([, c]) => principal(c) === 'J') ? ['arriba', 'abajo'] : ['arriba'];
+  return rutas.every((ruta) =>
+    [0, ...JITTER_MS].every((j) => {
+      const r = validateLevel(level, null, j, ruta);
+      return r.ok && r.minClear >= MIN_CLEAR_PX;
+    }),
+  );
 }
 
 // F6 por página: hueco más largo sin patrón nuevo desde ultimoNuevo (s de la partida), con los estrenos de esta
@@ -297,7 +326,9 @@ function huecoNovedad(script, s0, ultimoNuevo, global, hasta) {
 }
 
 // seed: texto ("2026-10-29") o número. Devuelve el nivel de buildLevel más { seed, modo, biomas, fallbacks }.
-export function generarNivel(seed, modo = 'reto') {
+// opts.mecanicas: mecánicas destrabadas (['tramp']); solo las pasa Libre. Sin ellas, el nivel es el de siempre.
+export function generarNivel(seed, modo = 'reto', opts = {}) {
+  const mecanicas = opts.mecanicas || [];
   const fallbacks = [];
   let prev = new Set();
   const global = new Set();
@@ -310,7 +341,7 @@ export function generarNivel(seed, modo = 'reto') {
     let t = null;
     let mejor = Infinity;
     for (let k = 0; k < INTENTOS && mejor > NOVEDAD_MAX; k++) {
-      const script = generarTramo(seed, i + 1, k, prev, global);
+      const script = generarTramo(seed, i + 1, k, prev, global, mecanicas);
       if (!tramoValido(script, tr.speed)) continue;
       // repetir una secuencia larga de una página anterior cuenta como hueco de novedad perdido
       const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0);
@@ -339,7 +370,7 @@ export function generarNivel(seed, modo = 'reto') {
     const j = Math.floor(r() * (i + 1));
     [biomas[i], biomas[j]] = [biomas[j], biomas[i]];
   }
-  return { ...buildLevel(tramos), seed: String(seed), modo, biomas, fallbacks, bloques: tramos.map((t) => t.ids) };
+  return { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, biomas, fallbacks, bloques: tramos.map((t) => t.ids) };
 }
 
 export const semillaReto = () => todayKey();
