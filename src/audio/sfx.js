@@ -276,7 +276,7 @@ export function soplido(ctx, dest, t, o = {}) {
   f.frequency.setValueAtTime(o.favor ? 800 : 2000, t);
   f.frequency.exponentialRampToValueAtTime(o.favor ? 2000 : 700, t + 0.24);
   const g = ctx.createGain();
-  shape(g, t, Math.max(0.02, P.atkMin), 0.15 * P.pk * P.v, t + 0.26);
+  shape(g, t, Math.max(0.02, P.atkMin), 0.15 * P.pk * P.v * (o.suave ? 0.45 : 1), t + 0.26);
   nz.connect(f);
   f.connect(g);
   g.connect(P.out);
@@ -301,5 +301,12 @@ export function sello(ctx, dest, t, o = {}) {
   campana(ctx, P.out, t + 0.02, 88, 0.1 * P.pk, { atkMin: P.atkMin, tail: 0.25 });
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello };
+// Festejo (CRECE nivel 10, tarjeta): cadena de campanitas que sube (sol, si, re, sol); o.n = 4 o 2 notas; en Hardcore (o.hc) la última suena más
+export function festejo(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const N = [79, 83, 86, 91].slice(o.n === 2 ? 2 : 0);
+  N.forEach((m, i) => campana(ctx, P.out, t + i * 0.11, m, (0.07 + i * 0.008) * P.pk, { atkMin: P.atkMin, tail: i === N.length - 1 ? (o.hc ? 0.6 : 0.4) : 0.18 }));
+}
+
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello, festejo };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

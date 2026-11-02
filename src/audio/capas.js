@@ -119,7 +119,8 @@ export function createCapas(ctx, bus, cfg, o = {}) {
     rampa(bus.musicBus.gain, cfg.musicBus * (S.nivel >= 6 ? 0.81 : S.nivel >= 4 ? 0.9 : 1), t, S.reduced ? 1.5 : 0.4);
   }
   if (o.fijo) {
-    S.nivel = S.on = o.nivel;
+    S.nivel = S.on = Math.min(6, o.nivel);
+    S.n = o.nivel;
     S.noche = !!o.noche;
     for (let k = 2; k <= 6; k++) g[k].gain.value = o.nivel >= k ? 1 : 0;
     f.frequency.value = o.noche ? 3200 : 8000;
@@ -129,12 +130,15 @@ export function createCapas(ctx, bus, cfg, o = {}) {
     state: S,
     e3: () => (S.nivel >= 4 ? 0.7 : 1),
     set(n) {
+      S.n = n;
       S.nivel = Math.max(1, Math.min(6, n));
     },
     // el secuenciador llama aquí en cada paso (después de la base y la energía)
     step(s, bar, ch, t) {
       if (!o.fijo && s === 0) compas(t);
       for (let k = 2; k <= Math.max(S.nivel, S.on); k++) CAPA[k](ctx, g[k], s, bar, ch, t, S.noche);
+      // nivel 10: campanas al compás (en los 4 tiempos) del primer compás de cada vuelta del tema, sobre el brillo
+      if (S.n >= 10 && bar === 0 && s % 4 === 0) campana(ctx, g[6], t, arriba(ch[2][s / 4], S.noche ? 72 : 84), 0.14 * M, { tail: 0.45 });
     },
   };
 }

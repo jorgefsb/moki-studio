@@ -72,7 +72,7 @@ export class RunScene extends Phaser.Scene {
     this.ui.onPause = () => this.pauseGame();
     // Botón de sonido (moki.sound): refleja solo la preferencia, sin importar el juice
     this.ui.onSound = () => audio.toggle();
-    this.ui.sfx = (n) => audio.sfx(n);
+    this.ui.sfx = (n, o) => audio.sfx(n, o);
     this.ui.soundOn = !audio.muted;
     audio.onChange((muted) => this.ui.setSound(!muted));
     performance.mark('c3');
@@ -457,6 +457,7 @@ export class RunScene extends Phaser.Scene {
     const nivelCu = !this.demo && level.biomas ? nivelDe(leerCuaderno()).nivel : 1;
     audio.setNivel(nivelCu); // capas del Cuaderno (clásico y demo: solo la base)
     this.pasos = nivelCu >= 4; // pasos de cartón desde el nivel 4
+    this.estela = nivelCu >= 8; // estela de papel al correr desde el nivel 8
   }
 
   showModo() {
@@ -1088,6 +1089,7 @@ export class RunScene extends Phaser.Scene {
     }
     if (this.jumping && this.holding && !this.highGood && this.t - this.jumpStartAt >= 220) {
       this.highGood = true;
+      if (this.estela) audio.sfx('soplido', { favor: true, suave: true }); // CRECE nivel 8: soplido suave en el salto largo
       if (!this.demo) this.ambient.good('hold', this.t); // salto mantenido >= 220 ms: pajaritos
     }
     // La racha se acaba a los 0.9 s sin piezas
@@ -1693,6 +1695,13 @@ export class RunScene extends Phaser.Scene {
     // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
     if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead || this.dist < this.pasoD) this.pasoD = this.dist;
     else if (this.dist - this.pasoD >= this.rig.debug.cyclePxFull) (this.pasoD = this.dist), audio.sfx('paso');
+    // Estela de papel (CRECE, Cuaderno nivel 8): un recorte cada 120 ms (80 en Hardcore) detrás de Moki a velocidad alta, sigue su
+    // altura (en el salto se curva). Poquito: solo con racha x2 o más. El tope y el pool los cuida particles.js
+    const E = C.crece;
+    if (this.estela && this.screen === 'play' && !this.dead && this.speed >= E.estelaV && this.t - (this.estelaAt || 0) >= (C.juice >= 3 ? E.estelaMsHC : E.estelaMs)) {
+      const racha2 = this.t - this.lastPickAt <= C.combo.windowMs && C.combo.steps.some(([from, v]) => v >= 2 && this.combo >= from);
+      if (C.juice >= 2 || racha2) (this.estelaAt = this.t), this.particles.estela(this.px - 22, this.y - 52, this.speed);
+    }
 
     if (this.debugEl) {
       const d = this.rig.debug;

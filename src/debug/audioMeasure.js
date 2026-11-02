@@ -656,3 +656,43 @@ export async function measurePasos({ wav = false, cada = 0.42, seconds = 120, cf
   }
   return out;
 }
+
+// ---- CRECE corte 2: nivel 10 (campanas en los 4 tiempos del primer compás de la vuelta), festejo y soplido suave ----
+// El peor caso del corte 1 (energía 3, racha x3 con 5 piezas y arco, salto, timbre) más el soplido del salto largo y
+// la cadena de 4 notas del festejo, en los 4 tiempos del compás 0 (donde caen las campanas) y en el compás 1 (sin
+// campanas), con la misma semilla de azar en nivel 6 (master) y nivel 10. Con wav: 8 s del nivel 10 con festejo.
+export async function measureCrece2({ wav = false, cfg = C.audio } = {}) {
+  const { timbre } = await import('../audio/capas.js');
+  const rnd = Math.random;
+  const semilla = () => {
+    let x = 7;
+    Math.random = () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
+  };
+  const base = [[0, 'jump', {}], [0, 'pickup', { index: 4, tier: 2 }], [0.02, 'timbre', {}], [0.14, 'pickup', { index: 5, tier: 2 }], [0.28, 'pickup', { index: 6, tier: 2 }], [0.42, 'pickup', { index: 7, tier: 2 }], [0.56, 'pickup', { index: 8, tier: 2 }], [0.56, 'arc', {}]];
+  const nuevos = [[0.22, 'soplido', { favor: true, suave: true }], [0, 'festejo', { n: 4, hc: true }]];
+  const out = { pico: {}, wavs: {} };
+  const pila = async (nivel, noche, evs) => {
+    let max = -200;
+    for (const at of [0.02, 4 * STEP, 8 * STEP, 12 * STEP, 16 * STEP + 4 * STEP]) {
+      semilla();
+      const d = await renderCapas(nivel, noche, at + 1.5, cfg, 3, (ctx, bus) => {
+        const st = {};
+        for (const [t, n, o] of evs) routeSfx(ctx, bus, st, n, n === 'timbre' ? timbre : SFX[n], at + t, { ...o, echo: bus.echoIn }, cfg);
+      });
+      max = Math.max(max, peakDb(d));
+    }
+    Math.random = rnd;
+    return +max.toFixed(2);
+  };
+  for (const noche of [false, true]) {
+    out.pico[noche ? 'noche' : 'dia'] = {
+      soloMusicaN6: +peakDb(await renderCapas(6, noche, 4, cfg, 3)).toFixed(2),
+      soloMusicaN10: +peakDb(await renderCapas(10, noche, 4, cfg, 3)).toFixed(2),
+      corte1N6: await pila(6, noche, base),
+      todoN10: await pila(10, noche, [...base, ...nuevos]),
+    };
+  }
+  out.pico.festejoSolo = +peakDb(await renderWith(1, (ctx, bus) => routeSfx(ctx, bus, {}, 'festejo', SFX.festejo, 0.05, { n: 4 }, cfg), cfg)).toFixed(2);
+  if (wav) out.wavs['crece2-nivel10-festejo-8s.wav'] = b64(wavBytes(await renderCapas(10, false, 8, cfg, 1, (ctx, bus) => routeSfx(ctx, bus, {}, 'festejo', SFX.festejo, 4.2, { n: 4 }, cfg)), SR));
+  return out;
+}
