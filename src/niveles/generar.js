@@ -96,6 +96,7 @@ function put(ctx, b) {
   if (b.id !== 'relleno') ctx.prevTema = tema(b);
   ctx.prev = b;
   ctx.ids.push(b.id);
+  ctx.fasesIds.push([ctx.fase || 'intro', b.id]); // regla (c): qué bloque cayó en qué fase
 }
 
 // Curva de flow, paso 4 (NIVELES.md "Flow y mecánicas", director 1-nov): calma y respiro no son aire vacío, son
@@ -139,7 +140,8 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
       ok.filter((c) => p(c) !== 'C'),
       ok,
     ];
-    const libres = escalones.find((x) => x.length);
+    // respiro (>= 24 s): al azar entre las fáciles que no repiten vecino; con la escalera, el final salía con la misma jugada entre fechas
+    const libres = t >= 24 ? ok : escalones.find((x) => x.length);
     const code = libres[Math.floor(r() * libres.length)];
     vistos.add(principal(code));
     nuevos.push([+t.toFixed(2), code]);
@@ -187,6 +189,8 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
       // lejos de una fila de piezas en el suelo (la caja la taparía)
       const fila = filas.find((f) => Math.abs(f - t) < 0.5);
       if (fila !== undefined) t = fila + (t >= fila ? 0.5 : -0.5);
+      // respiro: la posición varía (el final se repetía entre fechas) dentro de lo que sobra del espaciado: ningún hueco > HUECO_MAX
+      if (t >= 24) t += (r() - 0.5) * 2 * Math.min(0.25, Math.max(0, (HUECO_MAX - (b - a) / (k + 1)) / 2));
       t = Math.min(28, Math.max(2, t));
       if (despues === 'U' && b - t < C.popup.minGapBeforeSec) t = b - C.popup.minGapBeforeSec; // el pop-up de después también pide su aire
       if (t - previo < C.minGapSec || (i < puntos.length && b - t < C.minGapSec)) continue;
@@ -200,7 +204,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
 // Un tramo (1-4) como guion [[s, código]] de 30 s.
 export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set(), mecanicas = []) {
   const r = rng(hashSeed(`${seed}:${tramo}:${intento}`));
-  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas };
+  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas, fasesIds: [] };
   if (tramo === 1) {
     ctx.script.push(...T1_INTRO); // el tutorial depende de este inicio
     ctx.filas = T1_INTRO.filter(([, c]) => hasP5(c)).length;
@@ -223,7 +227,9 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   ctx.fase = 'subida';
   if (tramo === 3) put(ctx, BY_ID['viga-intro']); // la viga se enseña siempre igual, ahora al empezar la subida
   fase(14, [lo, Math.min(hi, lo + 1)]);
-  const S = Math.max(ctx.pos, 14 + Math.floor(r() * 13) / 2);
+  // la sorpresa empieza entre 14 y 20 y termina antes del 24 (la ola de 6.5 s en el 14 dejaba el pico en relleno)
+  const sMax = Math.max(14, Math.min(20, 24 - sorpresa.dur));
+  const S = Math.max(ctx.pos, 14 + Math.floor(r() * ((sMax - 14) * 2 + 1)) / 2);
   ctx.fase = 'pico';
   fase(S, pico);
   ctx.reserva = 0;
@@ -233,9 +239,10 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   // llena con decisiones fáciles que rotan
   ctx.fase = 'suave';
   // con trampolín destrabado, el respiro abre con uno sin nudo: pisarlo es descansar y cobra el arco (elección real, F4)
-  if (ctx.mecanicas.includes('tramp') && tramo > 1 && ctx.pos <= 25 + 1e-9 && ctx.prevTema !== 'trampolin') put(ctx, BY_ID['tramp-intro']);
+  // regla (c): alterna sin nudo (T2, T4) y con nudo suave (T3) para no repetir bloque en la misma fase
+  if (ctx.mecanicas.includes('tramp') && tramo > 1 && ctx.pos <= 25 + 1e-9 && ctx.prevTema !== 'trampolin') put(ctx, BY_ID[tramo === 3 ? 'tramp-nudo' : 'tramp-intro']);
   if (ctx.pos < LEN - 1e-9) put(ctx, RELLENO(LEN - ctx.pos));
-  return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global), { ids: ctx.ids });
+  return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global), { ids: ctx.ids, fases: ctx.fasesIds });
 }
 
 // V4 legibilidad: entre obstáculos distintos >= minGapSec (mismo punto en VC; la segunda caja de CC no cuenta).
@@ -325,6 +332,9 @@ function huecoNovedad(script, s0, ultimoNuevo, global, hasta) {
   return Math.max(h, hasta - u);
 }
 
+// Firma del pico (regla b): patrones de 14 a 24 s, sin filas de piezas
+const firmaPico = (script) => [...script].sort((a, b) => a[0] - b[0]).filter(([t, c]) => t >= 14 && t < 24 && principal(c) !== 'P5').map(([, c]) => principal(c)).join(' ');
+
 // seed: texto ("2026-10-29") o número. Devuelve el nivel de buildLevel más { seed, modo, biomas, fallbacks }.
 // opts.mecanicas: mecánicas destrabadas (['tramp']); solo las pasa Libre. Sin ellas, el nivel es el de siempre.
 export function generarNivel(seed, modo = 'reto', opts = {}) {
@@ -334,6 +344,8 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
   const global = new Set();
   let ultimoNuevo = 0; // segundo de la partida del último patrón que no había salido (F6)
   const eventos = []; // [s de partida, patrón] de las páginas ya puestas (F3 entre páginas)
+  let prevPico = null;
+  let prevFases = new Set();
   const n = C.tramos.length;
   const tramos = C.tramos.map((tr, i) => {
     // De los intentos válidos gana el primero que mantiene F6 (<= NOVEDAD_MAX s sin patrón nuevo, contando hasta
@@ -344,10 +356,14 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
       const script = generarTramo(seed, i + 1, k, prev, global, mecanicas);
       if (!tramoValido(script, tr.speed)) continue;
       // repetir una secuencia larga de una página anterior cuenta como hueco de novedad perdido
-      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0);
+      // reglas de no repetir (NIVELES.md flow): (b) el pico no repite la firma del pico anterior; (c) un bloque no
+      // sale en la misma fase de dos páginas seguidas. Castigan como un hueco de novedad: se elige otro intento.
+      const reglaB = !!prevPico && firmaPico(script) === prevPico;
+      const reglaC = script.fases.some(([fa, id]) => id !== 'relleno' && prevFases.has(`${fa}:${id}`));
+      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0) + (reglaB || reglaC ? 50 : 0);
       if (h < mejor) {
         mejor = h;
-        t = { speed: tr.speed, len: LEN, script, ids: script.ids };
+        t = { speed: tr.speed, len: LEN, script, ids: script.ids, fases: script.fases };
       }
     }
     if (!t) {
@@ -362,6 +378,8 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
     }
     for (const [s, c] of [...t.script].sort((a, b) => a[0] - b[0])) if (principal(c) !== 'P5') eventos.push([i * LEN + s, principal(c)]);
     prev = new Set(t.script.map(([, c]) => principal(c)));
+    prevPico = firmaPico(t.script);
+    prevFases = new Set((t.fases || []).map(([fa, id]) => `${fa}:${id}`));
     return t;
   });
   const r = rng(hashSeed(`${seed}:bioma`));
@@ -370,7 +388,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
     const j = Math.floor(r() * (i + 1));
     [biomas[i], biomas[j]] = [biomas[j], biomas[i]];
   }
-  return { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, biomas, fallbacks, bloques: tramos.map((t) => t.ids) };
+  return { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, biomas, fallbacks, bloques: tramos.map((t) => t.ids), bloquesFase: tramos.map((t) => t.fases || []) };
 }
 
 export const semillaReto = () => todayKey();

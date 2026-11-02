@@ -69,7 +69,7 @@ export const BLOQUES = [
   { id: 'tramp-nudo',   dur: 3,   ev: [[0, 'J+Avu'], [0.9, 'C+A3']],            dif: 2, min: 1, max: 4, tags: ['trampolin', 'premio'], mec: 'tramp' },
   { id: 'tramp-torre',  dur: 3,   ev: [[0, 'J+Avu'], [0.9, 'T+A3up']],          dif: 3, min: 2, max: 4, tags: ['trampolin', 'torre'], mec: 'tramp' },
   { id: 'tramp-viga',   dur: 4,   ev: [[0, 'J+Avu'], [0.9, 'C+A3'], [2.3, 'V']], dif: 3, min: 3, max: 4, tags: ['trampolin', 'viga'], mec: 'tramp' },
-  { id: 'tramp-doble',  dur: 5,   ev: [[0, 'J+Avu'], [0.9, 'C+A3'], [2.4, 'J+Avu'], [3.3, 'T']], dif: 4, min: 3, max: 4, tags: ['trampolin', 'ritmo'], mec: 'tramp' },
+  { id: 'tramp-doble',  dur: 5,   ev: [[0, 'J+Avu'], [0.9, 'C+A3'], [2.4, 'J+Avu'], [3.3, 'T']], dif: 3, min: 3, max: 4, tags: ['trampolin', 'ritmo'], mec: 'tramp' },
   // sorpresas (1 por tramo; se colocan aparte, ver §4)
   { id: 'regalo7',      dur: 4,   ev: [[0, 'T+Aup7'], [2, 'P5']],               dif: 1, min: 1, max: 1, tags: ['sorpresa', 'premio'] },
   { id: 'ambar',        dur: 4.5, ev: [[0, 'T+AupAmb'], [2.5, 'C.C']],          dif: 2, min: 2, max: 3, tags: ['sorpresa', 'premio'] },
