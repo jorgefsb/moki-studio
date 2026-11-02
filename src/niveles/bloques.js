@@ -70,6 +70,13 @@ export const BLOQUES = [
   { id: 'tramp-torre',  dur: 3,   ev: [[0, 'J+Avu'], [0.9, 'T+A3up']],          dif: 3, min: 2, max: 4, tags: ['trampolin', 'torre'], mec: 'tramp' },
   { id: 'tramp-viga',   dur: 4,   ev: [[0, 'J+Avu'], [0.9, 'C+A3'], [2.3, 'V']], dif: 3, min: 3, max: 4, tags: ['trampolin', 'viga'], mec: 'tramp' },
   { id: 'tramp-doble',  dur: 5,   ev: [[0, 'J+Avu'], [0.9, 'C+A3'], [2.4, 'J+Avu'], [3.3, 'T']], dif: 3, min: 3, max: 4, tags: ['trampolin', 'ritmo'], mec: 'tramp' },
+  // viento (mec 'viento', NIVELES.md "#2 Viento" §3): > a favor (tocar antes), < en contra (tocar después). Nunca en T1;
+  // par y ritmo solo en el pico (soloPico); máx. 2 por página; la primera página con viento abre con intro y contra.
+  { id: 'viento-intro', dur: 3,   ev: [[0, 'C>+Aup']],                          dif: 1, min: 2, max: 4, tags: ['viento', 'premio'], mec: 'viento' },
+  { id: 'viento-contra', dur: 3,  ev: [[0, 'C<']],                              dif: 2, min: 2, max: 4, tags: ['viento'], mec: 'viento' },
+  { id: 'viento-torre', dur: 3,   ev: [[0, 'T>+Aup']],                          dif: 2, min: 2, max: 4, tags: ['viento', 'torre'], mec: 'viento' },
+  { id: 'viento-par',   dur: 4,   ev: [[0, 'C>'], [1.5, 'C<']],                 dif: 3, min: 2, max: 4, tags: ['viento', 'ritmo'], mec: 'viento', soloPico: true },
+  { id: 'viento-ritmo', dur: 4,   ev: [[0, 'C<'], [1.0, 'C<'], [2.2, 'C<']],    dif: 3, min: 2, max: 4, tags: ['viento', 'ritmo'], mec: 'viento', soloPico: true },
   // sorpresas (1 por tramo; se colocan aparte, ver §4)
   { id: 'regalo7',      dur: 4,   ev: [[0, 'T+Aup7'], [2, 'P5']],               dif: 1, min: 1, max: 1, tags: ['sorpresa', 'premio'] },
   { id: 'ambar',        dur: 4.5, ev: [[0, 'T+AupAmb'], [2.5, 'C.C']],          dif: 2, min: 2, max: 3, tags: ['sorpresa', 'premio'] },

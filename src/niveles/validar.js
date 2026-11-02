@@ -22,7 +22,12 @@ function box(type) {
 // force 'none' = bot pasivo (nunca salta): debe morir; pisar un trampolín no le alcanza para pasar una página.
 // ruta (trampolín): 'arriba' lo pisa y sobrevuela el nudo; 'abajo' lo salta con un toque y pasa el nudo a mano.
 // Al caer del vuelo, el siguiente obstáculo queda a >= C.tramp.caidaLibreSec (si no: cause 'caida').
-export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba') {
+// Viento: el salto que despega dentro de una zona avanza a speed * k; el bot apunta con airTravel(plan, speed, k).
+// opts.ciego: el bot apunta con k = 1 pero sufre el viento (prueba del instrumento: debe chocar con C< a 320 y 350).
+// Al aterrizar de un salto con k != 1, lo siguiente a >= C.viento.salidaSec (si no: cause 'viento-salida').
+export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba', opts = {}) {
+  const vientos = level.vientos || [];
+  const kAt = (d) => (vientos.find((z) => d >= z.D0 && d <= z.D1) || { k: 1 }).k;
   const obs = level.entities.filter((e) => e.kind === 'obs').map((e) => ({ ...e, box: box(e.type), handled: false }));
   const tramps = obs.filter((o) => o.type === 'tramp');
   const planDe = (q) => (q.type === 'tramp' ? (ruta === 'abajo' ? 'tap' : 'none') : q.plan);
@@ -55,6 +60,12 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
     if (jump) {
       const i = Math.round((t - jump.t0) * 240);
       if (i >= jump.pts.length - 1) {
+        if (jump.k !== 1) {
+          const sig = obs.find((q) => q.type !== 'tramp' && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
+          if (sig && (sig.D - (sig.box.half + pw / 2) - dist) / speed < C.viento.salidaSec - 1e-6) {
+            return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'viento-salida', D: Math.round(sig.D) };
+          }
+        }
         if (jump.vuelo) {
           const sig = obs.find((q) => q.type !== 'tramp' && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
           if (sig && (sig.D - (sig.box.half + pw / 2) - dist) / speed < C.tramp.caidaLibreSec - 1e-6) {
@@ -74,7 +85,7 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
       if (j) {
         j.used = true;
         j.handled = true;
-        jump = { t0: t, pts: simulateBounce().pts, vuelo: true };
+        jump = { t0: t, pts: simulateBounce().pts, vuelo: true, k: 1 };
         rise = 0;
       }
     }
@@ -84,7 +95,8 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
       if (o) {
         const pair = obs.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;
         const plan = force || planDe(o);
-        if (o.D - dist <= airTravel(plan, speed) / 2 - pair - (jitterMs / 1000) * speed) {
+        const k = kAt(dist);
+        if (o.D - dist <= airTravel(plan, speed, opts.ciego ? 1 : k) / 2 - pair - (jitterMs / 1000) * speed) {
           o.handled = true;
           // Pop-up: al despegar ya debe estar arriba y el aviso debe llevar >= reactSec en pantalla
           if (o.pop) {
@@ -93,7 +105,7 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
               return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'popup-tiempo', D: Math.round(o.D) };
             }
           }
-          jump = { t0: t, pts: simulateJump(HOLD_MS[plan]).pts };
+          jump = { t0: t, pts: simulateJump(HOLD_MS[plan]).pts, k };
         }
       }
     }
@@ -111,7 +123,7 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
       }
       minClear = Math.min(minClear, o.type === 'viga' ? o.box.lo - hi : lo - o.box.hi);
     }
-    dist += speed * DT;
+    dist += speed * (jump ? jump.k : 1) * DT;
     t += DT;
   }
   return { ok: true, sec: +t.toFixed(1), minClear: +minClear.toFixed(1) };

@@ -77,11 +77,12 @@ console.log({ gramatica: gram, apariciones: total, relleno: uso.relleno || 0, bl
 console.log('bloques (% de apariciones, sin relleno)', Object.fromEntries(pct));
 const gramMal = gram.dosDuros + gram.sinRespiroTras4 + gram.repetidoSeguido + gram.masDe2 + gram.filasSobre20;
 
-// Libre con trampolín (mecánica 'tramp'): las N semillas libres. Las dos rutas forzadas (pisar siempre / saltar
+// Libre con trampolín y viento (mecánicas 'tramp' y 'viento'): las N semillas libres. Las dos rutas forzadas (pisar siempre / saltar
 // siempre) terminan con ±40 ms y holgura >= 4 px; el pasivo (nunca salta), el de solo toque y el de solo mantener mueren.
 const tr = { niveles: 0, trampolines: 0, respaldoTramos: 0, rutaArribaFalla: 0, rutaAbajoFalla: 0, pasivoTermina: 0, tapTermina: 0, holdTermina: 0, causas: {} };
 for (let i = 0; i < N; i++) {
-  const L = generarNivel(String((i * 2654435761) >>> 0), 'libre', { mecanicas: ['tramp'] });
+  const L = generarNivel(String((i * 2654435761) >>> 0), 'libre', { mecanicas: ['tramp', 'viento'] });
+  tr.zonasViento = (tr.zonasViento || 0) + (L.vientos || []).length;
   tr.niveles++;
   tr.trampolines += L.entities.filter((e) => e.type === 'tramp').length;
   tr.respaldoTramos += L.fallbacks.length;

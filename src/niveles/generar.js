@@ -62,6 +62,8 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
     const cands = BLOQUES.filter((b) => {
       if (b.tags.includes('sorpresa')) return false; // G5
       if (b.mec && !ctx.mecanicas.includes(b.mec)) return false; // mecánica no destrabada (o Reto/Clásico)
+      if (b.soloPico && ctx.fase !== 'pico') return false; // viento-par y viento-ritmo: solo en el pico
+      if (b.mec === 'viento' && ctx.nViento >= 2) return false; // máx. 2 bloques de viento por página
       if (tramo < b.min || tramo > b.max) return false; // G1
       if (b.dur > rem - 0.75 + 1e-9) return false; // 0.75 = minGapSec: con fases cortas, los bloques dif 4 de 5.5-6.5 s ya no cabían con 1.5
       if (!isDescanso(b) && (b.dif < lo || b.dif > hi)) return false; // G6
@@ -96,6 +98,7 @@ function put(ctx, b) {
   if (b.id !== 'relleno') ctx.prevTema = tema(b);
   ctx.prev = b;
   ctx.ids.push(b.id);
+  if (b.mec === 'viento') ctx.nViento = (ctx.nViento || 0) + 1;
   ctx.fasesIds.push([ctx.fase || 'intro', b.id]); // regla (c): qué bloque cayó en qué fase
 }
 
@@ -108,26 +111,48 @@ const HUECO_MAX = 2.5;
 // J: el vuelo y los 0.75 s libres al caer (lo siguiente a >= 2.2 s del trampolín, con minGapSec de densificar)
 // Peso de los bloques de una mecánica destrabada: que salga de 2 a 4 veces por partida (F4 >= 20 % en Libre)
 const PESO_MEC = 5;
-const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec, J: 2.2 - C.minGapSec };
+// viento: aterrizar + C.viento.salidaSec libres (C< cae ~0.2 s tras la caja; C> y T> con salto mantenido, ~0.42 s)
+const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec, J: 2.2 - C.minGapSec, 'C<': 0.25, 'C>': 0.45, 'T>': 0.45 };
 // Decisiones fáciles por fase (RETO EN 4 FASES): calma, subida y respiro solo toque o pop-up; el pico pasa por debajo
 // (viga) o mantiene (torre, caja doble). Antes las vigas caían en calma y respiro: el pico salía más suave que ellas.
 const FACILES = { 1: ['C+A3', 'C'], 2: ['U', 'C+A3', 'C.C', 'C'], 3: ['U', 'C+A3', 'C.C', 'C'], 4: ['U', 'C+A3', 'C.C', 'C'] };
 const DE_PICO = { 1: FACILES[1], 2: ['CC', 'T', 'U', 'C.C'], 3: ['V', 'VC', 'C.V', 'T', 'CC'], 4: ['V', 'VC', 'C.V', 'T', 'CC'] };
 const DUROS = new Set(['T', 'V', 'VC', 'CC', 'T.C', 'T.V', 'C.V']);
-const esDuro = (b) => b.ev.some(([, c]) => DUROS.has(c.split('+')[0]));
 const principal = (code) => code.split('+')[0];
-function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
+const base = (code) => principal(code).replace(/[<>]$/, ''); // sin el viento (C> -> C)
+const esDuro = (b) => b.ev.some(([, c]) => DUROS.has(base(c)));
+
+// Viento que no se mezcla (NIVELES.md §3): de 0.7 s antes a 1.15 s después de cada obstáculo con viento no van vigas,
+// pop-ups, filas P5, trampolines ni OLA; ningún trampolín a menos de su vuelo + 0.75 s (2.2 s) antes de la zona.
+const NO_VIENTO = new Set(['V', 'VC', 'C.V', 'T.V', 'U', 'OLA', 'P5']);
+const ventanasViento = (script) => script.filter(([, c]) => /[<>]$/.test(principal(c))).map(([t]) => [t - C.viento.antesSec, t + C.viento.despuesSec + 1]);
+function vientoMezcla(script) {
+  const vs = ventanasViento(script);
+  if (!vs.length) return false;
+  return script.some(([t, c]) => {
+    const p = base(c);
+    const fin = p === 'OLA' ? t + 5 * C.waveGapSec : t;
+    if ((NO_VIENTO.has(p) || c.includes('+P5')) && vs.some(([a, b]) => fin >= a - 0.3 && t <= b)) return true;
+    return p === 'J' && vs.some(([a, b]) => t >= a - 2.2 && t <= b);
+  });
+}
+// estricto (con viento destrabado): un par de cajas no se mete si su segunda caja no deja minGapSec antes de lo
+// siguiente. Sin viento queda como antes, para que el Reto y el Libre de siempre no cambien.
+function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), estricto = false) {
   const ev = [...script].sort((a, b) => a[0] - b[0]);
   const filas = ev.filter(([, c]) => principal(c) === 'P5').map(([t]) => t);
+  const vientos = ventanasViento(script); // ahí no se meten vigas, pop-ups ni filas
   const dec = ev.filter(([, c]) => principal(c) !== 'P5');
   const vistos = new Set(dec.map(([, c]) => principal(c)));
   const desde = tramo === 1 ? 12 : 0;
   const nuevos = [];
   // nunca el mismo patrón que la decisión de antes o la de después (C C C C se leía como tramo repetido, F3b)
   // el pop-up pide C.popup.minGapBeforeSec tras el obstáculo anterior (popupFalla); si no cabe, otra decisión fácil
-  const pon = (t, antes, despues, previo) => {
-    const F = (t >= 14 && t < 24 ? DE_PICO : FACILES)[tramo].filter((c) => principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec);
-    const ok = [F.filter((c) => principal(c) !== antes && principal(c) !== despues), F.filter((c) => principal(c) !== antes), F].find((x) => x.length);
+  const pon = (t, antes, despues, previo, hasta = Infinity) => {
+    const enViento = vientos.some(([a, b]) => t >= a - 0.3 && t <= b);
+    const F = (t >= 14 && t < 24 ? DE_PICO : FACILES)[tramo].filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))));
+    const F2 = estricto ? F.filter((c) => hasta - t >= (FIN[principal(c)] || 0) + C.minGapSec) : F;
+    const ok = [F2.filter((c) => principal(c) !== antes && principal(c) !== despues), F2.filter((c) => principal(c) !== antes), F2, F].find((x) => x.length);
     // Rota (al azar dentro de cada escalón, para no repetir el mismo toque cada página: F3) y gasta poca novedad
     // (F6 pide un patrón nuevo cada <= 30 s en toda la partida; las novedades se dejan a los bloques):
     // 1) ya salió en la partida pero no en esta página ni en la anterior (F1), 2) no salió en esta página,
@@ -194,7 +219,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
       t = Math.min(28, Math.max(2, t));
       if (despues === 'U' && b - t < C.popup.minGapBeforeSec) t = b - C.popup.minGapBeforeSec; // el pop-up de después también pide su aire
       if (t - previo < C.minGapSec || (i < puntos.length && b - t < C.minGapSec)) continue;
-      antes = pon(t, antes, j === k ? despues : null, previo);
+      antes = pon(t, antes, j === k ? despues : null, previo, i < puntos.length ? b : Infinity);
       previo = t;
     }
   }
@@ -226,11 +251,14 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   fase(4, [1, 1], true); // la calma (2-4 s) es relleno que densificar llena con decisiones fáciles
   ctx.fase = 'subida';
   if (tramo === 3) put(ctx, BY_ID['viga-intro']); // la viga se enseña siempre igual, ahora al empezar la subida
+  const estrenaViento = tramo === 2 && ctx.mecanicas.includes('viento');
+  if (estrenaViento) put(ctx, BY_ID['viento-intro']); // la primera página con viento lo enseña al abrir la subida
   fase(14, [lo, Math.min(hi, lo + 1)]);
   // la sorpresa empieza entre 14 y 20 y termina antes del 24 (la ola de 6.5 s en el 14 dejaba el pico en relleno)
   const sMax = Math.max(14, Math.min(20, 24 - sorpresa.dur));
   const S = Math.max(ctx.pos, 14 + Math.floor(r() * ((sMax - 14) * 2 + 1)) / 2);
   ctx.fase = 'pico';
+  if (estrenaViento && ctx.pos <= S - 3) put(ctx, BY_ID['viento-contra']); // ...y el contrario en la misma página
   fase(S, pico);
   ctx.reserva = 0;
   put(ctx, sorpresa);
@@ -242,7 +270,7 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   // regla (c): alterna sin nudo (T2, T4) y con nudo suave (T3) para no repetir bloque en la misma fase
   if (ctx.mecanicas.includes('tramp') && tramo > 1 && ctx.pos <= 25 + 1e-9 && ctx.prevTema !== 'trampolin') put(ctx, BY_ID[tramo === 3 ? 'tramp-nudo' : 'tramp-intro']);
   if (ctx.pos < LEN - 1e-9) put(ctx, RELLENO(LEN - ctx.pos));
-  return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global), { ids: ctx.ids, fases: ctx.fasesIds });
+  return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global, ctx.mecanicas.includes('viento')), { ids: ctx.ids, fases: ctx.fasesIds });
 }
 
 // V4 legibilidad: entre obstáculos distintos >= minGapSec (mismo punto en VC; la segunda caja de CC no cuenta).
@@ -287,6 +315,7 @@ export function tramoValido(script, speed) {
   const level = buildLevel([{ speed, len: LEN, script }]);
   if (!legible(level) || !holdHold(level) || popupFalla(level) || filasPiezas(script) > TOPE_FILAS + 1e-9) return false;
   if (repetidoPegado(script)) return false;
+  if (vientoMezcla(script)) return false;
   // con trampolín, las dos rutas (pisarlo y saltarlo) se libran con ±40 ms
   const rutas = script.some(([, c]) => principal(c) === 'J') ? ['arriba', 'abajo'] : ['arriba'];
   return rutas.every((ruta) =>
@@ -342,7 +371,7 @@ const PARTES_FP = {
 export function fpPagina(script) {
   let pd = 0, pn = 0, sd = 0, sn = 0;
   for (const [t, c] of script) {
-    for (const [duro, at] of PARTES_FP[principal(c)] || []) {
+    for (const [duro, at] of PARTES_FP[base(c)] || []) {
       const x = t + at;
       if (x >= 14 && x < 24) (pn++, (pd += duro));
       else if (x < 4 || x >= 24) (sn++, (sd += duro));
@@ -368,11 +397,13 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
   let prevFases = new Set();
   const n = C.tramos.length;
   const tramos = C.tramos.map((tr, i) => {
+    // con viento hay 3 patrones nuevos que repartir: el tope baja a 22 s (vara F6 <= 24 en Libre con viento)
+    const novedadMax = mecanicas.includes('viento') ? 22 : NOVEDAD_MAX;
     // De los intentos válidos gana el primero que mantiene F6 (<= NOVEDAD_MAX s sin patrón nuevo, contando hasta
     // donde la página siguiente puede estrenar uno); si ninguno, el de hueco más corto.
     let t = null;
     let mejor = Infinity;
-    for (let k = 0; k < INTENTOS && mejor > NOVEDAD_MAX; k++) {
+    for (let k = 0; k < INTENTOS && mejor > novedadMax; k++) {
       const script = generarTramo(seed, i + 1, k, prev, global, mecanicas);
       if (!tramoValido(script, tr.speed)) continue;
       // repetir una secuencia larga de una página anterior cuenta como hueco de novedad perdido

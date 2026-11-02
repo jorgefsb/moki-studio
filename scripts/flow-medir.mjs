@@ -26,7 +26,7 @@ const { generarNivel } = await import('../src/niveles/generar.js');
 const { simulateJump, simulateBounce } = await import('../src/jumpmodel.js');
 
 const N_LIBRES = Number(process.argv[2]) || 10;
-const MEC = process.argv[3] ? [process.argv[3]] : [];
+const MEC = process.argv[3] ? process.argv[3].split(',') : []; // lista: tramp,viento
 const LIBRES = Array.from({ length: N_LIBRES }, (_, i) => String((i * 2654435761) >>> 0));
 const RETOS = Array.from({ length: 10 }, (_, i) => {
   const d = new Date(2026, 10, 1 + i);
@@ -127,15 +127,18 @@ function medir(L) {
     for (const [t, code] of tr.script) {
       const [main, reward] = code.split('+');
       if (main === 'P5') continue;
-      const partes = PARTES[main];
+      // viento (C>, C<, T>): el patrón conserva el sufijo (F1, F6); la física del modelo avanza a speed * k en el aire
+      const sopla = /[<>]$/.test(main) ? main.slice(-1) : null;
+      const kv = sopla === '>' ? C.viento.favor : sopla === '<' ? C.viento.contra : 1;
+      const partes = PARTES[sopla ? main.slice(0, -1) : main];
       if (!partes) throw new Error(`código sin parte: ${code}`);
       eventos.push({ t: t0 + t, patron: main });
       partes.forEach(([tipo, at], k) => {
-        const arco = k === 0 && reward && ARCS[reward] ? ARCS[reward] : null;
+        const arco = k === 0 && reward && ARCS[reward] ? { ...ARCS[reward], gap: ARCS[reward].gap * kv } : null;
         // trampolín: pisarlo (none) vuela y cobra el arco del vuelo; saltarlo (tap) no lo cobra. Ambos sobreviven
         // (el validador lo prueba con las dos rutas y ±40 ms).
-        const ev = tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed, arco);
-        decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo, patron: main, base: tipoBase(main, tipo), tramo: i, ...ev });
+        const ev = tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed * kv, arco);
+        decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo, patron: main, base: tipoBase(sopla ? main.slice(0, -1) : main, tipo), tramo: i, ...ev });
       });
     }
     t0 += tr.len;

@@ -51,12 +51,13 @@ export const PLANS = {
 export const planJump = (kind) => simulateJump(PLANS[kind].holdMs);
 
 // Distancia horizontal (px) del despegue al aterrizaje a velocidad v.
-export const airTravel = (kind, v) => planJump(kind).air * v;
+// k: viento (el salto avanza a v * k; la curva vertical no cambia)
+export const airTravel = (kind, v, k = 1) => planJump(kind).air * v * k;
 
 // Altura de Moki (pies) a x px del despegue, a velocidad v.
-export function riseAt(kind, v, xPx) {
+export function riseAt(kind, v, xPx, k = 1) {
   const p = planJump(kind);
-  const t = xPx / v;
+  const t = xPx / (v * k);
   if (t <= 0 || t >= p.air) return 0;
   const i = Math.min(p.pts.length - 1, Math.round(t * 240));
   return p.pts[i].rise;
