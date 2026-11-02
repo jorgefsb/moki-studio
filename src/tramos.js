@@ -13,7 +13,7 @@ import { simulateBounce } from './jumpmodel.js';
 
 // Moki pisa el trampolín cuando su centro llega a TRAMP_PISA px antes del centro del trampolín (juego y validador).
 export const TRAMP_PISA = 20;
-const VUELO_T = [0.25, 0.4, 0.55, 0.7, 0.85]; // s desde que pisa: piezas del arco Avu
+const VUELO_T = [0.12, 0.3, 0.5, 0.7, 0.85]; // s desde que pisa: piezas del arco Avu
 
 export const TRAMO_SPEEDS = C.tramos.map((t) => t.speed);
 
