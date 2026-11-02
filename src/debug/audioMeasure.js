@@ -669,7 +669,7 @@ export async function measureCrece2({ wav = false, cfg = C.audio } = {}) {
     Math.random = () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
   };
   const base = [[0, 'jump', {}], [0, 'pickup', { index: 4, tier: 2 }], [0.02, 'timbre', {}], [0.14, 'pickup', { index: 5, tier: 2 }], [0.28, 'pickup', { index: 6, tier: 2 }], [0.42, 'pickup', { index: 7, tier: 2 }], [0.56, 'pickup', { index: 8, tier: 2 }], [0.56, 'arc', {}]];
-  const nuevos = [[0.22, 'soplido', { favor: true, suave: true }], [0, 'festejo', { n: 4 }]];
+  const nuevos = [[0.22, 'soplido', { favor: true, suave: true }], [0, 'festejo', { n: 4, hc: true }]];
   const out = { pico: {}, wavs: {} };
   const pila = async (nivel, noche, evs) => {
     let max = -200;

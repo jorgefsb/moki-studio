@@ -67,13 +67,14 @@ export class Particles {
       s.angle += p.spin * dt;
       const u = p.age / p.life;
       s.setAlpha(u < p.fadeFrom ? 1 : Math.pow(1 - (u - p.fadeFrom) / (1 - p.fadeFrom), 3));
+      if (p.estela) s.setScale(2.4 - 1.2 * u);
     }
   }
 
   // Estela de papel (CRECE nivel 8): tope de vivas 3 en Poquito, 8 en Mucho, 12 en Hardcore. Solo toma lugares libres
   // del pool (nunca recicla): si falta lugar, gana el aterrizaje. Con movimiento reducido o Nada, nada.
-  // v: velocidad del mundo. El recorte la acompaña al 80 % para quedarse cerca de Moki (si no, a 375 px se va de cuadro
-  // en 0.3 s y nadie lo ve)
+  // v: velocidad del mundo. El recorte casi la iguala y se queda atrás 40-50 px/s: cinta de ~40 px que cabe a 375 (si
+  // no, se va de cuadro en 0.3 s). Adelgaza con la edad (x2.4 a x1.2): punta delgada
   estela(x, y, v = 0) {
     const L = C.juice;
     if (this.scene.reduced || L <= 0) return;
@@ -81,7 +82,7 @@ export class Particles {
     for (const q of this.items) if (q.alive && q.estela) n += 1;
     if (n >= [0, 3, 8, 12][L] || !this.items.some((q) => !q.alive)) return;
     this.k = (this.k || 0) + 1;
-    this.emit(['paper', 'kraft', 'orange'][this.k % 3], x + rand(-4, 4), y + rand(-10, 10), { vx: v * 0.8 - rand(10, 30), vy: rand(-12, 8), g: 70, life: rand(780, 940), spin: rand(90, 220), osc: 5, fadeFrom: 0.55, scale: 2.4, estela: true });
+    this.emit(['paper', 'kraft', 'orange'][this.k % 3], x + rand(-4, 4), y + rand(-3, 3), { vx: v - rand(...C.crece.estelaAtras), vy: rand(-4, 4), g: 30, life: rand(780, 940), spin: rand(90, 220), osc: 2, fadeFrom: 0.55, scale: 2.4, estela: true });
   }
 
   // Reglas por nivel de juice (ANIMACION.md §5). Con movimiento reducido no se emite nada.

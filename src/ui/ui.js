@@ -410,7 +410,7 @@ export function createUI() {
         m.setAttribute('aria-hidden', 'true');
         m.style.backgroundImage = `url(${festejoUrl})`;
         sube.prepend(m);
-        setTimeout(() => state.cuaderno === strip && ui.sfx && ui.sfx('festejo', { n: fx >= 2 ? 4 : 2 }), 700);
+        setTimeout(() => state.cuaderno === strip && ui.sfx && ui.sfx('festejo', { n: fx >= 2 ? 4 : 2, hc: fx === 3 }), 700);
       }
       const golpe = tira.nivel >= 6;
       const sello = strip.querySelector('.cu-stamp.new') || (golpe && tira.subio && strip.querySelector('.cu-subio'));

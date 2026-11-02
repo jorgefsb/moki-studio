@@ -1695,12 +1695,12 @@ export class RunScene extends Phaser.Scene {
     // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
     if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead || this.dist < this.pasoD) this.pasoD = this.dist;
     else if (this.dist - this.pasoD >= this.rig.debug.cyclePxFull) (this.pasoD = this.dist), audio.sfx('paso');
-    // Estela de papel (CRECE, Cuaderno nivel 8): un recorte cada 120 ms detrás de Moki a velocidad alta, sigue su
+    // Estela de papel (CRECE, Cuaderno nivel 8): un recorte cada 120 ms (80 en Hardcore) detrás de Moki a velocidad alta, sigue su
     // altura (en el salto se curva). Poquito: solo con racha x2 o más. El tope y el pool los cuida particles.js
     const E = C.crece;
-    if (this.estela && this.screen === 'play' && !this.dead && this.speed >= E.estelaV && this.t - (this.estelaAt || 0) >= E.estelaMs) {
+    if (this.estela && this.screen === 'play' && !this.dead && this.speed >= E.estelaV && this.t - (this.estelaAt || 0) >= (C.juice >= 3 ? E.estelaMsHC : E.estelaMs)) {
       const racha2 = this.t - this.lastPickAt <= C.combo.windowMs && C.combo.steps.some(([from, v]) => v >= 2 && this.combo >= from);
-      if (C.juice >= 2 || racha2) (this.estelaAt = this.t), this.particles.estela(this.px - 30, this.y - 58, this.speed);
+      if (C.juice >= 2 || racha2) (this.estelaAt = this.t), this.particles.estela(this.px - 22, this.y - 52, this.speed);
     }
 
     if (this.debugEl) {
