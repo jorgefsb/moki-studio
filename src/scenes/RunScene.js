@@ -1816,6 +1816,7 @@ export class RunScene extends Phaser.Scene {
     this.resetRun(this.level, cp.dist);
     this.screen = 'play';
     audio.setStreak(0);
+    audio.unlock(); // el reintento es un gesto: si hubo foco perdido en la tarjeta, la música vuelve aquí
     audio.setState('playing'); // reintento: la música vuelve a 100% en 600 ms
     const target = this.tramoSpeed(this.tramoIdx);
     this.speed = FIXED_SPEED || target * C.respawnSpeedMult;

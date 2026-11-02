@@ -205,8 +205,10 @@ const A = {
       this.ctx.suspend();
       return;
     }
-    if (this.ctx.state !== 'running') this.ctx.resume();
-    this.hidden = false;
+    // Cada partida (y cada reintento) pasa por aquí con un gesto: si antes hubo hide() (foco perdido: copiar,
+    // compartir, otra ventana), el master quedó en 0 y solo reanudar el contexto dejaba la música muda. Jorge,
+    // 1-nov: "Otra vez" sin música hasta tocar mute. show() reanuda y regresa el master; respeta el mute.
+    this.show();
   },
 
   // La pausa por foco perdido (hide) deja el contexto suspendido hasta que la persona pulsa "Seguir"
