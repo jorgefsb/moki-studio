@@ -822,9 +822,21 @@ export class RunScene extends Phaser.Scene {
     ray.lineBetween(-21, -12, -28, -16).lineBetween(0, -24, 0, -32).lineBetween(21, -12, 28, -16);
     this.tweens.add({ targets: ray, alpha: 0, duration: 320, onComplete: () => ray.destroy() });
     if (!this.reduced) this.tweens.add({ targets: o.sprite, angle: -14, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
+    o.sprite.setAlpha(0.55); // usado: más tenue, así no tapa a Moki al cruzarlo
     const tw = this.obstacles.find((q) => q.tid === o.tid && q !== o);
     if (tw) this.tumbar(tw);
-    for (const k of this.pickups) if (k.pie === o.tid || k.cae === o.tid) this.verPieza(k, k.cae === o.tid);
+    // el arco se va al sonar; las 5 de piso salen cuando la torre ya cayó (240 ms, con el golpe), escalonadas 30 ms,
+    // y brincan 7 px con un abanico de papel: la torre "suelta" las piezas (game-feel). En reducido, sin brinco.
+    const T0 = C.timbre.caidaSec * 800;
+    let n = 0;
+    for (const k of this.pickups) {
+      if (k.pie === o.tid) this.verPieza(k, false);
+      if (k.cae !== o.tid) continue;
+      const d = T0 + 30 * n;
+      k.revela = this.t + d; // por tiempo de juego (se pausa con la partida); lo revela placeEntities
+      k.abanico = !n++;
+      if (!this.reduced) this.tweens.add({ targets: k.sprite, y: k.y - 7, delay: d, duration: 90, yoyo: true, ease: 'Quad.easeOut' });
+    }
   }
 
   verPieza(k, on) {
@@ -847,7 +859,7 @@ export class RunScene extends Phaser.Scene {
       if (!ya) audio.sfx('land', { fall: 0.5 }), this.particles.burst('land', o.x + 76, C.world.groundY); // golpe de cartón
     };
     if (ya) return acostar();
-    o.sprite.setOrigin(1, 1).setAngle(this.reduced ? 0 : 4); // game-feel: se vence en el primer cuadro, sin espera
+    o.sprite.setOrigin(1, 1).setAngle(this.reduced ? 0 : -3); // tic de 3° hacia atrás al sonar (anticipación) y cae sin espera
     o.ox = 30; // medio ancho de la torre
     // con movimiento reducido no gira: espera lo mismo y aparece acostada
     this.tweens.add({ targets: o.sprite, angle: this.reduced ? 0 : 90, duration: C.timbre.caidaSec * 800, ease: 'Quad.easeIn', onComplete: acostar });
@@ -1289,6 +1301,11 @@ export class RunScene extends Phaser.Scene {
     }
     for (const k of this.pickups) {
       k.x = px + k.D - dist;
+      if (k.revela && this.t >= k.revela) {
+        k.revela = 0;
+        this.verPieza(k, true);
+        if (k.abanico) this.particles.burst('arc', k.x + 56, C.world.groundY - 40); // abanico de papel sobre las 5
+      }
       if (!k.taken) {
         k.sprite.x = k.x;
         k.shadow.x = k.x + 4;
