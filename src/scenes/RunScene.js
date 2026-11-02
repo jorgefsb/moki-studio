@@ -18,7 +18,7 @@ import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { GAME_LEVEL, buildDemo, TRAMP_PISA } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
-import { airTravel, riseAt, planJump } from '../jumpmodel.js';
+import { airTravel, riseAt, planJump, vientoPaso } from '../jumpmodel.js';
 import mokiLado from '../../assets/moki/moki-lado.webp';
 import mokiSaluda from '../../assets/moki/moki-saluda.webp';
 
@@ -151,7 +151,7 @@ export class RunScene extends Phaser.Scene {
     // Moki es un títere recortado (src/art/mokiRig.js). Nunca espejado: ni flipX ni escala negativa.
     this.rig = createMokiRig(this);
     this.vientoG = this.add.graphics().setDepth(9.6);
-    this.vientoK = 1;
+    this.vientoK = this.vientoV = 1; // vientoV: el que lleva el mundo (rampa hacia vientoK)
     this.rig.debugOn = ANIM_DEBUG;
     this.particles = new Particles(this);
     this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
@@ -427,7 +427,7 @@ export class RunScene extends Phaser.Scene {
     this.holding = false;
     this.jumping = false;
     this.vuelo = false;
-    this.vientoK = 1;
+    this.vientoK = this.vientoV = 1;
     this.jumpStartAt = 0;
     this.takeoffAt = -1e9;
     this.landAt = -1e9;
@@ -985,8 +985,10 @@ export class RunScene extends Phaser.Scene {
     const tutorial = this.tutorialTick(dtMs);
     if (!tutorial.frozen) this.controlSpeed(dt);
     const ramp = clamp(this.rampT / 600, 0, 1);
-    // viento: el salto que despegó dentro de una zona avanza a speed * k (vientoK vuelve a 1 al aterrizar)
-    const step = this.rewinding ? 0 : this.speed * dt * (tutorial.frozen ? 1 : ramp) * this.vientoK;
+    // viento: el salto que despegó dentro de una zona avanza a speed * k (vientoK vuelve a 1 al aterrizar); el mundo
+    // llega con rampa (vientoPaso, la misma del validador), sin tirón
+    this.vientoV = vientoPaso(this.vientoV, this.vientoK, dt);
+    const step = this.rewinding ? 0 : this.speed * dt * (tutorial.frozen ? 1 : ramp) * this.vientoV;
     this.dist += step;
     if (tutorial.shift) this.dist -= tutorial.shift;
 
@@ -1376,6 +1378,22 @@ export class RunScene extends Phaser.Scene {
           gr.strokePath();
         }
       }
+      // Ráfaga: tiras con punta de flecha sobre el suelo, que corren con el viento (a favor hacia adelante, en contra
+      // hacia Moki). Con movimiento reducido se quedan quietas: la punta ya dice la dirección.
+      const w = x1 - x0;
+      const v = this.reduced ? 0 : (this.t / 1000) * d * (this.speed + 120);
+      gr.lineStyle(2, this.ambient && this.ambient.nt > 0.5 ? 0xf4e8d5 : 0x22211f, 0.5);
+      for (let i = 0; i < w / 90; i++) {
+        const x = x0 + ((((i * 131 + v) % w) + w) % w);
+        if (Math.abs(x - 17 * d - this.px) < (this.reduced ? 64 : 45)) continue; // nunca encima de Moki; quieta, más lejos (la punta en la cabeza parecía dardo)
+        const yy = y - 46 - ((i * 53) % 120);
+        gr.lineBetween(x - 34 * d, yy, x, yy);
+        gr.beginPath();
+        gr.moveTo(x - 7 * d, yy - 5);
+        gr.lineTo(x, yy);
+        gr.lineTo(x - 7 * d, yy + 5);
+        gr.strokePath();
+      }
     }
   }
 
@@ -1536,8 +1554,10 @@ export class RunScene extends Phaser.Scene {
       },
       dtMs
     );
-    // viento: Moki se inclina 3° hacia adelante (a favor) o atrás (en contra) en el aire; nunca se espeja
-    if (!this.grounded && this.vientoK !== 1 && !this.reduced) this.rig.container.setAngle(this.vientoK > 1 ? 3 : -3);
+    // viento: Moki se inclina hasta 3° hacia adelante (a favor) o atrás (en contra), al paso de la rampa del mundo
+    // (entra y sale con vientoV, encima del ángulo que ya puso el títere); nunca se espeja
+    const V = this.vientoV - 1;
+    if (V && !this.reduced) this.rig.container.setAngle(this.rig.container.angle + (3 * V) / (V > 0 ? C.viento.favor - 1 : 1 - C.viento.contra));
 
     let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {
