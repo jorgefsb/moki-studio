@@ -32,5 +32,30 @@ for (const b of BLOQUES.filter((q) => q.mec === 'timbre')) {
     out.bloques[b.id][v] = r;
   }
 }
+// Vuelta rápida: el nivel se arma a la velocidad base (las D no cambian) y se corre a min(470, v x 1.12). Solo las
+// velocidades donde sale el timbre (<= vMax). Pantalla: a 375 se ven 389 px delante de Moki; la torre (D desde el
+// timbre + medio ancho 30) tiene que caber cuando Moki toca el timbre.
+out.vuelta = {};
+for (const b of BLOQUES.filter((q) => q.mec === 'timbre')) {
+  out.vuelta[b.id] = {};
+  for (const v of VEL.filter((x) => x <= T.vMax)) {
+    const L = buildLevel([{ speed: v, len: 8, script: b.ev.map(([t, c]) => [2 + t, c]) }]);
+    const R = { ...L, tramos: L.tramos.map((tr) => ({ ...tr, speed: Math.min(C.runSpeedMax, tr.speed * C.vuelta.speedMult) })) };
+    const tb = L.entities.find((e) => e.type === 'timbre');
+    const tw = L.entities.find((e) => e.type === 'torre' && e.tid === tb.tid);
+    const r = { corre: R.tramos[0].speed, torrePx: Math.round(tw.D - tb.D + 30), cabe: tw.D - tb.D + 30 <= 389 };
+    if (!r.cabe) fallos++;
+    for (const ruta of ['arriba', 'abajo']) {
+      r[ruta] = [-40, 0, 40].map((j) => {
+        const x = validateLevel(R, null, j, ruta);
+        if (!x.ok || x.minClear < 4) fallos++;
+        return x.ok ? Math.round(x.minClear) : x.cause;
+      }).join('/');
+    }
+    r.pasivo = validateLevel(R, 'none').ok ? 'TERMINA' : 'muere';
+    r.toque = validateLevel(R, 'tap').ok ? 'TERMINA' : validateLevel(R, 'tap').cause;
+    out.vuelta[b.id][v] = r;
+  }
+}
 out.fallos = fallos;
 console.log(JSON.stringify(out, null, 1));
