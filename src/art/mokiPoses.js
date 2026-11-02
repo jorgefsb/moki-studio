@@ -1,16 +1,18 @@
 // MOKI SE MUEVE (DECISIONES 1-nov 18:15): 4 poses de Moki Pixel (kit moki-pixel, vista derecha 128 px, CC BY-NC
-// "Moki por JorgeSuarez.com.mx"): zancada (ciclo de 7), salto (subida, 5), caída (5) y aterrizaje (6). Las tiras
+// "Moki por JorgeSuarez.com.mx"): zancada (ciclo de 7), salto (subida, 5), caída (1) y aterrizaje (6). La caída es el
+// cuadro 10 del clip 'jump' del kit: manos a 26° y 29° bajo el hombro (anclas del atlas). La tira 'jump_fall' abría
+// los dos brazos casi rectos a los lados, en T (director de arte, 2-nov). Las tiras
 // salen de la geometría 3D del kit con el parche ya en la oreja derecha: nunca se espejan (sin flipX, escala positiva).
 // Se importa en diferido desde RunScene (el JS inicial no carga estas imágenes). Solo lee el estado de la escena: no
 // toca física, hitbox ni azar. En calma (movimiento reducido o juice Nada), al chocar y en la meta queda el títere
 // recortado de siempre (src/art/mokiRig.js).
 import runUrl from '../../assets/moki/pixel/moki_run_right_strip7.png';
 import riseUrl from '../../assets/moki/pixel/moki_jump_rise_right_strip5.png';
-import fallUrl from '../../assets/moki/pixel/moki_jump_fall_right_strip5.png';
+import fallUrl from '../../assets/moki/pixel/moki_jump_fall_right_strip1.png';
 import landUrl from '../../assets/moki/pixel/moki_land_right_strip6.png';
 import { CONFIG as C } from '../config.js';
 
-const TIRAS = { 'pose-run': [runUrl, 7], 'pose-rise': [riseUrl, 5], 'pose-fall': [fallUrl, 5], 'pose-land': [landUrl, 6] };
+const TIRAS = { 'pose-run': [runUrl, 7], 'pose-rise': [riseUrl, 5], 'pose-fall': [fallUrl, 1], 'pose-land': [landUrl, 6] };
 // Caja opaca medida en las tiras: Moki ocupa y 21-123 de 128 y su centro está en x ~66. Escala para que mida lo mismo
 // que el títere (C.player.spriteHeight); origen en los pies.
 const ESCALA = C.player.spriteHeight / 102;
@@ -53,7 +55,7 @@ class MokiPoses {
     const ld = s.t - s.landAt;
     if (!s.grounded) {
       key = s.vy < 0 ? 'pose-rise' : 'pose-fall';
-      frame = Math.floor((s.t * FPS_AIRE) / 1000) % 5;
+      frame = Math.floor((s.t * FPS_AIRE) / 1000) % TIRAS[key][1];
     } else if (ld >= 0 && ld < LAND_MS) {
       key = 'pose-land';
       frame = Math.min(5, Math.floor((ld / LAND_MS) * 6));
