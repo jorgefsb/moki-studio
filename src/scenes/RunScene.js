@@ -1355,37 +1355,43 @@ export class RunScene extends Phaser.Scene {
   }
 
   // Viento: comillas de tinta sobre el suelo a lo largo de cada zona (»»» a favor, ««« en contra), 3 trazos cada 60 px.
-  // Son la mecánica: se quedan con movimiento reducido. De noche, en papel claro.
+  // Son la mecánica: se quedan con movimiento reducido, ahí más gruesas, más grandes y con una segunda fila quieta sobre
+  // la cabeza de Moki en el pico del salto (234 px sobre el suelo) en lugar de las tiras con flecha. De noche, en papel claro.
   drawViento() {
     const gr = this.vientoG;
     gr.clear();
     const zs = this.level.vientos || [];
     if (!zs.length) return;
-    gr.lineStyle(3, this.ambient && this.ambient.nt > 0.5 ? 0xf4e8d5 : 0x22211f, 0.85);
+    const R = this.reduced;
+    const s = R ? 10 : 6;
+    gr.lineStyle(R ? 5 : 3, this.ambient && this.ambient.nt > 0.5 ? 0xf4e8d5 : 0x22211f, R ? 1 : 0.85);
     const y = C.world.groundY + 16;
     for (const z of zs) {
       const x0 = this.px + z.D0 - this.dist;
       const x1 = this.px + z.D1 - this.dist;
       if (x1 < -40 || x0 > this.vw + 40) continue;
       const d = z.k > 1 ? 1 : -1;
-      for (let x = x0; x < x1 - 20; x += 60) {
-        for (let i = 0; i < 3; i++) {
-          const cx = x + i * 10 + (d > 0 ? 0 : 8);
-          gr.beginPath();
-          gr.moveTo(cx, y - 6);
-          gr.lineTo(cx + 7 * d, y);
-          gr.lineTo(cx, y + 6);
-          gr.strokePath();
+      for (const yy of R ? [y, y - 250] : [y]) {
+        for (let x = x0; x < x1 - 20; x += 60) {
+          for (let i = 0; i < 3; i++) {
+            const cx = x + i * (s + 4) + (d > 0 ? 0 : s + 2);
+            gr.beginPath();
+            gr.moveTo(cx, yy - s);
+            gr.lineTo(cx + (s + 1) * d, yy);
+            gr.lineTo(cx, yy + s);
+            gr.strokePath();
+          }
         }
       }
+      if (R) continue;
       // Ráfaga: tiras con punta de flecha sobre el suelo, que corren con el viento (a favor hacia adelante, en contra
-      // hacia Moki). Con movimiento reducido se quedan quietas: la punta ya dice la dirección.
+      // hacia Moki). Con movimiento reducido no van (quietas, la punta junto a Moki se leía como dardo).
       const w = x1 - x0;
-      const v = this.reduced ? 0 : (this.t / 1000) * d * (this.speed + 120);
+      const v = (this.t / 1000) * d * (this.speed + 120);
       gr.lineStyle(2, this.ambient && this.ambient.nt > 0.5 ? 0xf4e8d5 : 0x22211f, 0.5);
       for (let i = 0; i < w / 90; i++) {
         const x = x0 + ((((i * 131 + v) % w) + w) % w);
-        if (Math.abs(x - 17 * d - this.px) < (this.reduced ? 64 : 45)) continue; // nunca encima de Moki; quieta, más lejos (la punta en la cabeza parecía dardo)
+        if (Math.abs(x - 17 * d - this.px) < 45) continue; // nunca encima de Moki
         const yy = y - 46 - ((i * 53) % 120);
         gr.lineBetween(x - 34 * d, yy, x, yy);
         gr.beginPath();
