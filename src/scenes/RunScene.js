@@ -29,7 +29,7 @@ const START_TUT = Q.get('tut') === '2' ? 2 : 0; // ?tut=2 salta a la lección 2
 const START_SCREEN = Q.get('screen'); // ?screen=play salta el demo (pruebas)
 const SEED = Q.get('seed'); // ?seed=2026-10-29 | 123 fija el nivel; ?nivel=clasico usa los 4 tramos escritos a mano
 const CLASICO = Q.get('nivel') === 'clasico';
-const MEC = Q.get('mec'); // ?mec=tramp destraba el trampolín en Libre sin el nivel del Cuaderno (pruebas)
+const MEC = (Q.get('mec') || '').split(','); // ?mec=tramp,viento destraba mecánicas en Libre sin el nivel del Cuaderno (pruebas)
 // Vuelta rápida se abre con el sello Coleccionista (>=80% de las piezas al terminar; cuaderno.js)
 const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
 const GOD = Q.has('god') && (import.meta.env.DEV || Q.has('debug')); // sin choques, solo para pruebas
@@ -150,6 +150,8 @@ export class RunScene extends Phaser.Scene {
     this.mokiShadow = this.add.image(this.px, C.world.groundY, 'shadow').setDepth(9);
     // Moki es un títere recortado (src/art/mokiRig.js). Nunca espejado: ni flipX ni escala negativa.
     this.rig = createMokiRig(this);
+    this.vientoG = this.add.graphics().setDepth(9.6);
+    this.vientoK = 1;
     this.rig.debugOn = ANIM_DEBUG;
     this.particles = new Particles(this);
     this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
@@ -425,6 +427,7 @@ export class RunScene extends Phaser.Scene {
     this.holding = false;
     this.jumping = false;
     this.vuelo = false;
+    this.vientoK = 1;
     this.jumpStartAt = 0;
     this.takeoffAt = -1e9;
     this.landAt = -1e9;
@@ -525,7 +528,8 @@ export class RunScene extends Phaser.Scene {
     }
     const modo = this.modo;
     // Mecánicas (NIVELES.md flow): solo en Libre; el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno.
-    const mecanicas = modo === 'libre' && (MEC === 'tramp' || nivelDe(leerCuaderno()).nivel >= C.tramp.nivel) ? ['tramp'] : [];
+    const nv = nivelDe(leerCuaderno()).nivel;
+    const mecanicas = modo !== 'libre' ? [] : ['tramp', 'viento'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
 
@@ -981,7 +985,8 @@ export class RunScene extends Phaser.Scene {
     const tutorial = this.tutorialTick(dtMs);
     if (!tutorial.frozen) this.controlSpeed(dt);
     const ramp = clamp(this.rampT / 600, 0, 1);
-    const step = this.rewinding ? 0 : this.speed * dt * (tutorial.frozen ? 1 : ramp);
+    // viento: el salto que despegó dentro de una zona avanza a speed * k (vientoK vuelve a 1 al aterrizar)
+    const step = this.rewinding ? 0 : this.speed * dt * (tutorial.frozen ? 1 : ramp) * this.vientoK;
     this.dist += step;
     if (tutorial.shift) this.dist -= tutorial.shift;
 
@@ -1056,6 +1061,8 @@ export class RunScene extends Phaser.Scene {
       this.vy = -C.jumpVelocity;
       this.grounded = false;
       this.jumping = true;
+      this.vientoK = this.zonaK(this.dist);
+      if (this.vientoK !== 1) audio.sfx('soplido', { favor: this.vientoK > 1 });
       this.jumpStartAt = this.t;
       this.jumpKey = !!this.pressKey; // el tipo de entrada se fija al despegar y se apaga: bots y demo llaman press() sin marcarlo
       this.pressKey = false;
@@ -1078,6 +1085,7 @@ export class RunScene extends Phaser.Scene {
       if (!this.grounded) {
         this.lastGroundedAt = this.t;
         this.landAt = this.t;
+        this.vientoK = 1;
         if (this.vuelo) {
           this.vuelo = false;
           if (this.combo > 0) this.lastPickAt = this.t; // arriba el combo no se rompe: la ventana corre desde que cae
@@ -1189,6 +1197,7 @@ export class RunScene extends Phaser.Scene {
 
   // Todo lo que corre con el mundo: posición = punto de Moki + distancia que falta (el guion es por distancia).
   placeEntities() {
+    if (this.vientoG) this.drawViento();
     const px = this.px;
     const dist = this.dist;
     for (const o of this.obstacles) {
@@ -1324,6 +1333,7 @@ export class RunScene extends Phaser.Scene {
   // Trampolín: vy fija y gravedad flotada hasta caer (jumpmodel.simulateBounce). Moki no se espeja: solo se estira.
   lanzar(o) {
     o.used = true;
+    this.vientoK = 1;
     this.vy = -C.tramp.velocity;
     this.vuelo = true;
     this.grounded = false;
@@ -1335,6 +1345,38 @@ export class RunScene extends Phaser.Scene {
       this.tweens.add({ targets: o.sprite, scaleY: o.sprite.scaleY * 0.55, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
     }
     this.particles.burst('kick', this.px, C.world.groundY);
+  }
+
+  zonaK(d) {
+    const z = (this.level.vientos || []).find((q) => d >= q.D0 && d <= q.D1);
+    return z ? z.k : 1;
+  }
+
+  // Viento: comillas de tinta sobre el suelo a lo largo de cada zona (»»» a favor, ««« en contra), 3 trazos cada 60 px.
+  // Son la mecánica: se quedan con movimiento reducido. De noche, en papel claro.
+  drawViento() {
+    const gr = this.vientoG;
+    gr.clear();
+    const zs = this.level.vientos || [];
+    if (!zs.length) return;
+    gr.lineStyle(3, this.ambient && this.ambient.nt > 0.5 ? 0xf4e8d5 : 0x22211f, 0.85);
+    const y = C.world.groundY + 16;
+    for (const z of zs) {
+      const x0 = this.px + z.D0 - this.dist;
+      const x1 = this.px + z.D1 - this.dist;
+      if (x1 < -40 || x0 > this.vw + 40) continue;
+      const d = z.k > 1 ? 1 : -1;
+      for (let x = x0; x < x1 - 20; x += 60) {
+        for (let i = 0; i < 3; i++) {
+          const cx = x + i * 10 + (d > 0 ? 0 : 8);
+          gr.beginPath();
+          gr.moveTo(cx, y - 6);
+          gr.lineTo(cx + 7 * d, y);
+          gr.lineTo(cx, y + 6);
+          gr.strokePath();
+        }
+      }
+    }
   }
 
   // Caja de colisión de un obstáculo en coordenadas de mundo (la misma que usa el choque)
@@ -1494,6 +1536,8 @@ export class RunScene extends Phaser.Scene {
       },
       dtMs
     );
+    // viento: Moki se inclina 3° hacia adelante (a favor) o atrás (en contra) en el aire; nunca se espeja
+    if (!this.grounded && this.vientoK !== 1 && !this.reduced) this.rig.container.setAngle(this.vientoK > 1 ? 3 : -3);
 
     let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {

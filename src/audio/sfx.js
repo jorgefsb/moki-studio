@@ -267,5 +267,20 @@ export function boing(ctx, dest, t, o = {}) {
   }
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing };
+// Viento (placeholder para audio): ruido filtrado de 260 ms, el filtro sube a favor (800 -> 2000 Hz) y baja en contra
+// (2000 -> 700 Hz), 6 dB bajo el boing.
+export function soplido(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const nz = noise(ctx, t, 0.27);
+  const f = lp(ctx, o.favor ? 800 : 2000, 0.9);
+  f.frequency.setValueAtTime(o.favor ? 800 : 2000, t);
+  f.frequency.exponentialRampToValueAtTime(o.favor ? 2000 : 700, t + 0.24);
+  const g = ctx.createGain();
+  shape(g, t, Math.max(0.02, P.atkMin), 0.15 * P.pk * P.v, t + 0.26);
+  nz.connect(f);
+  f.connect(g);
+  g.connect(P.out);
+}
+
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

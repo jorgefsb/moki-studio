@@ -338,3 +338,8 @@ Los niveles 2, 4, 6 y 8 se quedan igual. La tarjeta de los niveles impares anunc
 - Justicia intacta: Clásico 78/78; bot ±40 termina 30 fechas y 30 semillas Libre **con las dos rutas forzadas** (siempre arriba y siempre abajo); el pasivo falla en todas; fallback 0% en 365 fechas y 500 semillas.
 - Con 3 a 5 personas: ninguna ruta pasa del 75% de los usos, y al menos 3 de 5 dicen sin pista que "hay dos caminos".
 - Invitado a ciegas: nombra el trampolín y las 4 fases en el video de una página. Peso ≤ +1.5 KB gzip. 375 px sin bajar de 55 fps en Hardcore.
+
+### 7. Viento: calibración medida (constructor, 2-nov; DECISIONES 2-nov 01:10)
+- `node scripts/viento-calibrar.mjs [contra]`: `C<`, `C>`, `T>` (y con `+Aup`) aislados a 320, 350, 385, 420 y 470 px/s.
+- Con `contra` 0.8, la ventana de despegue de `C<` a 320 mide 80 ms (de −45 a +35 ms sobre el centrado `air/2`): no aguanta ±40 con 4 px. Con 0.85 mide 110 ms y el bot con viento pasa a ±40 en las 5 velocidades. Queda **0.85** (opción A del director).
+- El bot ciego (apunta con `k = 1`) despega (1 − k) × 233 ms temprano: 35 ms con 0.85. Centrado libra `C<` por 11 px, así que la vara del instrumento queda relajada a **"−40 choca"**: a −40 ms choca a 320 y a 350 se queda con 1 px, bajo la holgura de 4 px de la justicia. El viento en contra quita el perdón de tocar temprano; no castiga el toque centrado.

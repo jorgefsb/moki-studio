@@ -8,6 +8,8 @@
 // Premios (con "+"): A3 arco corto de 3 · A3up arco alto de 3 · Aup arco alto de 5 · Adn arco bajo de 4 ·
 //   Aup7 arco regalo de 7 · AupAmb arco alto con pieza ámbar · Aup7Amb arco de 7 con ámbar · P5 fila bajo la viga ·
 //   Avu arco del vuelo del trampolín (5 piezas sobre la curva del lanzamiento).
+// Viento: sufijo > (a favor) o < (en contra) sobre un código de OBS (C>, C<, T>): mismo obstáculo y una zona
+//   { kind: 'viento', D0, D1, k } que estira o encoge el salto que despega dentro (arco con gap * k).
 import { CONFIG as C } from './config.js';
 import { simulateBounce } from './jumpmodel.js';
 
@@ -54,7 +56,10 @@ const OBS = {
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
 function expand(code, t, speed, tramo, arcSeq) {
   const out = [];
-  const [main, reward] = code.split('+');
+  const [main0, reward] = code.split('+');
+  const sopla = /[<>]$/.test(main0) ? main0.slice(-1) : null;
+  const main = sopla ? main0.slice(0, -1) : main0;
+  const k = sopla === '>' ? C.viento.favor : sopla === '<' ? C.viento.contra : 1;
   const base = speed * t;
   const hint = {};
   if (main === 'P5') {
@@ -91,9 +96,13 @@ function expand(code, t, speed, tramo, arcSeq) {
       const id = `${tramo}:${arcSeq.n++}`;
       const n = arc.h.length;
       for (let i = 0; i < n; i++) {
-        out.push({ kind: 'pick', D: hint.center + (i - (n - 1) / 2) * arc.gap, h: arc.h[i], arc: id, arcN: n, amber: arc.amber === i });
+        out.push({ kind: 'pick', D: hint.center + (i - (n - 1) / 2) * arc.gap * k, h: arc.h[i], arc: id, arcN: n, amber: arc.amber === i });
       }
     }
+  }
+  if (sopla) {
+    const obs = out.filter((e) => e.kind === 'obs').map((e) => e.D);
+    out.push({ kind: 'viento', D0: Math.min(...obs) - C.viento.antesSec * speed, D1: Math.max(...obs) + C.viento.despuesSec * speed, k });
   }
   return out;
 }
@@ -107,11 +116,20 @@ export function buildLevel(tramos) {
   tramos.forEach((tr, i) => {
     starts.push(acc);
     for (const [t, code] of tr.script) {
-      for (const e of expand(code, t, tr.speed, i, arcSeq)) entities.push({ ...e, D: e.D + acc });
+      for (const e of expand(code, t, tr.speed, i, arcSeq)) entities.push(e.kind === 'viento' ? { ...e, D: e.D0 + acc, D0: e.D0 + acc, D1: e.D1 + acc } : { ...e, D: e.D + acc });
     }
     acc += tr.len * tr.speed;
   });
   entities.sort((a, b) => a.D - b.D);
+  // Viento: dos zonas seguidas con el mismo k y a menos de 0.3 s se juntan en una
+  const zonas = [];
+  for (const z of entities.filter((e) => e.kind === 'viento')) {
+    const p = zonas[zonas.length - 1];
+    let tr = 0;
+    while (tr + 1 < starts.length && z.D0 >= starts[tr + 1]) tr++;
+    if (p && p.k === z.k && z.D0 - p.D1 < 0.3 * tramos[tr].speed) p.D1 = Math.max(p.D1, z.D1);
+    else zonas.push({ ...z });
+  }
   // Lo que pasa bajo el vuelo de un trampolín (el "nudo"): en la ruta de arriba no se salta, se sobrevuela.
   entities.forEach((j) => {
     if (j.kind !== 'obs' || j.type !== 'tramp') return;
@@ -125,7 +143,8 @@ export function buildLevel(tramos) {
     tramos,
     starts, // distancia global de inicio de cada tramo (checkpoint)
     end: acc, // meta
-    entities,
+    entities: entities.filter((e) => e.kind !== 'viento'),
+    vientos: zonas,
     pieceTotal: entities.filter((e) => e.kind === 'pick').length,
   };
 }
