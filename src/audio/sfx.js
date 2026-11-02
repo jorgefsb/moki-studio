@@ -282,5 +282,24 @@ export function soplido(ctx, dest, t, o = {}) {
   g.connect(P.out);
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido };
+// Paso de cartón (CRECE nivel 4): tic seco de suela, ±1 semitono al azar. Suena 1 de cada 2 pisadas (RunScene),
+// 6 dB debajo de la música: 5 tics por segundo cansaban. Cola 40 ms.
+export function paso(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const f = Math.pow(2, Math.round(Math.random() * 2 - 1) / 12);
+  gl(ctx, P.out, t, 'triangle', 260 * f, 110 * f, 30, 0.045 * P.pk * P.v, Math.max(0.002, P.atkMin), 0.04);
+  const nz = noise(ctx, t, 0.012);
+  const g = ctx.createGain();
+  shape(g, t, 0.001, 0.025 * P.pk, t + 0.012);
+  nz.connect(lp(ctx, 1800, 0.5)).connect(g).connect(P.out);
+}
+
+// Sello con golpe (CRECE nivel 6, tarjeta): tok grave de cartón y una campanita encima
+export function sello(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  tok(ctx, P.out, t, 0.34 * P.pk, { atkMin: P.atkMin });
+  campana(ctx, P.out, t + 0.02, 88, 0.1 * P.pk, { atkMin: P.atkMin, tail: 0.25 });
+}
+
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

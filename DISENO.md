@@ -217,15 +217,19 @@ Base: DECISIONES 1-nov 20:02, publicar/crece-audio-propuesta.md, src/feel.js, sr
 | Nv | Música (audio) | Efecto visual / micro | KB diferido | Suave (Poquito) / reducido | Hardcore | Tarjeta | Corte |
 |---|---|---|---|---|---|---|---|
 | 1 | Tema base de hoy | Lo de hoy | 0 | Igual que hoy | Igual que hoy | "Moki sale a jugar" | - |
-| 2 | Percusión de papel suave | **Confeti de recortes al ganar sello**: 10 recortes #FF6B35/#FFA500/#F4E8D5 caen detrás del sello en la tarjeta, 600 ms | 0.3 + 0.4 | Poquito: 4 recortes, 400 ms. Reducido o Nada: no hay confeti, el sello solo aparece | 16 recortes que giran un poco | "Ganas un sello y llueve papel" | 1 |
+| 2 | Percusión de papel suave | **Confeti de recortes al ganar sello (niveles 2 a 5; desde el 6 ya no, decisión del director 2-nov)**: 10 recortes #FF6B35/#FFA500/#F4E8D5 caen detrás del sello en la tarjeta, 600 ms | 0.3 + 0.4 | Poquito: 4 recortes, 400 ms. Reducido o Nada: no hay confeti, el sello solo aparece | 16 recortes que giran un poco | "Ganas un sello y llueve papel" | 1 |
 | 3 | Bajo triangular, una nota por compás | Nada nuevo (la música basta) | 0.2 | Bajo completo | Bajo completo | "Llega un bajito" | 1 |
 | 4 | Ninguna | **Pasos de cartón**: tic seco por paso, ±1 semitono al azar. Se ve: nada nuevo | 0.3 | Tic igual, a -20 dBFS | Tic igual y un polvito de 1 recorte cada 4 pasos (pool de partículas, tope 3 vivos) | "Tus pasos suenan a cartón" | 1 |
 | 5 | Contracanto en terceras, sección A | Nada nuevo | 0.6 | Completo | Completo | "La melodía tiene compañía" | 1 |
-| 6 | Ninguna | **Sello con golpe**: el sello entra a 1.15 y cae a 1.0 en 90 ms, con un tok grave y una campanita | 0.4 + 0.2 | Poquito: entra a 1.06, sin rebote. Reducido o Nada: aparece quieto; el tok suena igual | 1.2 y rebote, la tarjeta se mueve 2 px una vez (sin glow) | "Tus sellos se estampan" | 1 |
+| 6 | Ninguna | **Sello con golpe (solo golpe, sin confeti: así se lee distinto de “subiste”)**: el sello entra a 1.15 y cae a 1.0 en 90 ms, con un tok grave y una campanita | 0.4 + 0.2 | Poquito: entra a 1.06, sin rebote. Reducido o Nada: aparece quieto; el tok suena igual | 1.2 y rebote, la tarjeta se mueve 2 px una vez (sin glow) | "Tus sellos se estampan" | 1 |
 | 7 | Arpegio corto entre frases | Nada nuevo | 0.5 | Completo | Completo | "Se oyen chispitas de tinta" | 1 |
 | 8 | Ninguna | **Estela de papel al correr**: 1 recorte cada 120 ms detrás de Moki a vel. alta, tope 8 vivos; soplido suave al salto largo | 0.5 + 0.3 | Poquito: tope 3, solo en racha x2 o más. Reducido o Nada: sin estela; el soplido suena | Tope 12 y la estela se curva con el salto | "Tu carrera deja estela" | 2 |
 | 9 | Segunda voz en el estribillo | Nada nuevo | 0.4 | Completo | Completo | "El tema se hace coro" | 1 |
 | 10 | Campanas al compás 1 de cada vuelta | **Pose de festejo** al subir de nivel en la tarjeta + cadena de 4 notas | 0.5 + 0.3 | Poquito: pose fija, 2 notas. Reducido o Nada: pose fija, sin pasar por la animación; 2 notas | Pose con salto de 6 px y 4 notas | "Moki festeja contigo" | 2 |
+
+## Lo que hace el código hoy (Corte 1b, 2-nov)
+- Confeti y golpe cuelgan del sello nuevo de la tira del Cuaderno (`.cu-stamp.new`): del nivel 2 al 5 llueve papel (Poquito 4, Mucho 10, Hardcore 16); desde el 6 se estampa con golpe y sin confeti. Reducido o Nada: quieto, el tok suena igual.
+- Salvedad abierta: un nivel ganado desde el 6 SIN sello nuevo no muestra premio visible. Condición del director: que ninguno se quede sin premio (aunque sea el golpe chico); queda para una vuelta posterior, no frena la QA.
 
 ## Cortes
 - **Corte 1**: capas de música 2, 3, 5, 7, 9 + confeti de recortes (2), pasos de cartón (4) y sello con golpe (6). Elegí 2, 4 y 6 y no el festejo del 10 porque se alcanzan pronto y no dependen de las poses de MOKI SE MUEVE. Cambia el corte 1 de la propuesta de audio.
