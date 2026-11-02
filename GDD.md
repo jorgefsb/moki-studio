@@ -74,6 +74,8 @@ Base: AUDIO.md y el tema "Un saltito más" (96 BPM, Web Audio). Pico de sesión 
 - Celular vertical (390x844) como primera clase, sin cambiar el tiempo de reacción (389 unidades delante de Moki).
 - Modo embed (iframe) para portales.
 - Carga <3 s, 60 fps (p95 del cuadro ≤20 ms), 0 errores de consola, dist <20 MB (hoy ~1.5 MB).
+- Motor (decisión de Jorge, 1-nov): se escoge por juego, no uno para siempre. Juegos 2D o 2.5D van en Phaser 3. Juegos 3D (cámara en tercera persona que sigue a Moki, mundo con profundidad) van en Three.js. El video norte (skill video-norte) decide: si el video que escogemos se ve 3D, va Three.js.
+  - Por qué Un salto más va en Phaser 3: es de lado (2.5D con capas), se juega en celular vertical, carga en menos de 3 s, el paquete es chico y entra en portales por iframe. Three.js no le suma nada a una cámara lateral y sí le suma peso y riesgo de fps en celulares viejos.
 
 ## 8. Monetización posible (ideas; nada se implementa, cero dinero en el estudio)
 - **Pago único** del libro completo, o gratis con las primeras páginas.

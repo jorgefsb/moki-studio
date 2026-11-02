@@ -176,3 +176,70 @@ Demo (`buildDemo` y sus variantes), tutorial (UX §4, `tutorialTick`), checkpoin
 3. Curva por escalones: velocidad fija por tramo más ventana de dificultad con ±1; nunca dos duros seguidos, después de un 4 viene un descanso, máximo 4 patrones sin P5.
 4. Reto del día = FNV-1a de la fecha local con mulberry32 (`rng` que ya existe); Libre = semilla aleatoria por partida; semilla por tramo e intento, todo determinista.
 5. Validador puro con `jumpmodel` (sin saltos encimados, cada salto libra lo suyo, la viga no castiga, legibilidad, tutorial), 8 re-sorteos por tramo y luego el tramo clásico; los biomas solo tiñen el cielo y el plano lejano con la paleta de marca.
+
+## Flow y mecánicas (plan 1-nov)
+Invitado de niveles, para DECISIONES 1-nov 20:15. Diagnóstico en corto: cada obstáculo tiene **una sola respuesta** (caja = tocar, torre = mantener, viga = no saltar) y la dificultad sube **entre** páginas, pero es plana **dentro** de cada una (`fill()` sortea con los mismos pesos de 2 s a 30 s). Por eso se siente predecible. Lo que viene es papel, nada medido.
+
+### 1. Métrica de flow (función pura `medirFlow(level)` en `src/debug/flow.js`, la usan `bots.js` y `?debug=flow`)
+**Decisión** = obstáculo o arco de piezas donde algún plan de `{none, tap, hold}` (y `tramp` cuando exista) cambia el resultado. Cuentan C, T, V, U, VC (1 vez), CC (1 vez), cada caja de OLA y los arcos `A3/Aup`. Las filas `P5` en el suelo no cuentan. Tiempo = llegada a la x de Moki.
+**Patrón** = el código sin piezas (`C+A3` → `C`, `T.V`, `CC`, `U`…).
+| # | Métrica | Cómo se calcula |
+|---|---|---|
+| F1 | Patrones distintos por minuto | Ventanas de 60 s (0-60, 60-120): cuántos patrones distintos hay en cada una. Se reporta el promedio. Aparte: F1b = tipos base distintos (caja, torre, viga, pop-up, salto largo, trampolín…). |
+| F2 | Segundos sin decisión | F2a = hueco más largo entre dos decisiones seguidas, sin contar los 2 s después de cada checkpoint. F2b = % de la partida dentro de huecos de más de 2.5 s. |
+| F3 | Tramo idéntico más largo | Cada decisión es una ficha `patrón@hueco` (hueco con la anterior, redondeado a 0.25 s). Busca la secuencia de fichas más larga que sale 2 veces o más sin encimarse, en toda la partida. Reporta sus segundos. F3b = cuántas veces se repite una secuencia de 2 fichas o más **pegada** a sí misma (debe ser 0). |
+| F4 | Formas de pasar | Para cada decisión, prueba los planes con `jumpmodel` a ±40 ms. Elección real = 2 planes o más sobreviven **y** dan distinto resultado (piezas cobradas o combo). F4 = % de decisiones con elección real. F4b = promedio de planes que sobreviven (dato, no meta). |
+| F5 | Forma de la curva | Decisiones por cada 5 s dentro de cada página. Pasa si pico ≥ 1.6 × calma y respiro ≤ subida. |
+| F6 | Tiempo sin novedad | Segundos más largos sin un patrón que no había salido antes en esa partida. |
+Se reporta en Clásico, Reto y Libre (30 fechas y 30 semillas). La línea base es master; esa la mide el bot, no yo.
+
+### 2. Vara contra Alto's (estimada de DESARMADO.md §2.2, §3.9 y §3.11; nadie la midió)
+Alto's cambia de terreno sin parar, casi todo se puede pasar de 2 maneras (grind o saltar, voltereta o no) y cada bioma trae un elemento propio.
+| Métrica | Alto's (estimado) | Meta Moki | Hoy (mi estimado, lo confirma el bot) |
+|---|---|---|---|
+| F1 patrones/min | 6-8 | **≥ 7** | ~5 |
+| F2a hueco máximo | ~3-4 s | **≤ 4.5 s** (F2b ≤ 12%) | hasta 4.5 s en cada relleno |
+| F3 tramo repetido | ≤ 3 s | **≤ 4 s**, F3b = 0 | sin medir |
+| F4 elección real | 50-70% | **≥ 20%** desde el nivel 3 del Cuaderno | < 10% |
+| F6 sin novedad | ~60 s (bioma) | **≤ 30 s** (una novedad por página) | sin medir |
+
+### 3. Curva de flow por página (30 s)
+| Fase | Segundos | Dificultad | Qué va |
+|---|---|---|---|
+| Calma | 0-4 | 1 | descanso o premio, 1 o 2 decisiones; llega el checkpoint |
+| Subida | 4-14 | de `lo` a `lo+1` | el patrón de la página (viga en T3, mecánica nueva cuando la haya) en su forma fácil |
+| Pico | 14-24 | de `hi-1` a `hi` | ritmo y combinados; aquí va la sorpresa (ventana 14-20); un solo `dif 4` |
+| Respiro | 24-30 | 1 | arcos de premio, nada que mate después del segundo 28 |
+T1 conserva `T1_INTRO` (0-12 s = calma y subida). T3 conserva `viga-intro` como inicio de la subida.
+**No repetir:** (a) nunca dos bloques seguidos con el mismo tema (tema = primer tag que no sea `premio`); (b) el pico de una página no repite la **firma** (lista de temas del pico) del pico anterior; (c) un id no sale en la misma fase de dos páginas seguidas.
+**Dónde entra:** `src/niveles/generar.js`. `SORPRESA_EN` y `VENTANA` se cambian por `FASES[tramo] = [{ fase, desde, hasta, lo, hi }]`; `generarTramo` llama a `fill()` una vez por fase con su ventana; `ctx` guarda `prevTema` (regla a) y `generarNivel` pasa `firmaPrev` y los ids por fase de la página anterior (b y c). `validar.js` suma V8 = F5 y F3b; si falla, re-sortea dentro de los 8 intentos. Siguen intactos: tope de 20% de filas, G2, G3, el Clásico (78/78) y la justicia (bot ±40 pasa, pasivo falla). El Reto usa esta curva igual para todos.
+
+### 4. Mecánicas que se destraban (orden por impacto entre costo)
+| # | Mecánica | Qué cambia al jugar | Costo | Arte nuevo | Nivel |
+|---|---|---|---|---|---|
+| 1 | **Trampolín de cartón** (`J`) | Pisarlo te lanza alto sobre un nudo de obstáculos, con un arco de piezas. Si lo saltas con un toque, pasas el nudo a mano y sumas combo. Decides: piezas seguras arriba o combo abajo. | M | 1 sprite chico + sonido "boing" | 3 |
+| 2 | Viento (ráfaga de papel) | Una zona marcada alarga o acorta el salto; la misma caja pide tocar antes o después. Más variedad (F1, F6), pero no más formas de pasar. | S-M | partículas del pool actual | 5 |
+| 3 | Repisas de cartón (camino arriba y abajo) | Una repisa donde Moki sí cae: se sube con el trampolín o con un salto mantenido. Arriba, piezas y huecos; abajo, cajas. Dos caminos de verdad. | M-L (pisar superficies, el bot elige ruta) | repisa | 7 |
+| 4 | Timbre que se activa | Un timbre en el aire: si lo tocas con un salto mantenido, se cae la torre que sigue. Si no, la pasas a mano. | M | timbre + torre que cae | 9 |
+| 5 | Repisa de papel que se dobla | Se dobla 0.6 s después de pisarla: hay que saltar a tiempo. | L (necesita la #3) | doblez | 10 |
+| - | Rampa y deslizar | Deslizar pide un gesto nuevo, y aquí todo se juega con un dedo (como en Alto's, §3.1). La rampa sola es un trampolín sin elección. **Descartada.** Puede volver como dibujo distinto del trampolín. | - | - | - |
+**#1 = trampolín, recortado.** Mantengo la apuesta del director, pero el corte 1 **no lleva plataformas**: el "camino de arriba" es el vuelo del lanzamiento, no un piso. Por qué: (1) es lo único barato que sube F4 de casi 0 a ~20% (un nudo de 2 o 3 decisiones se vuelve elección); (2) da la misma pregunta que Alto's, "¿piezas seguras o alargo el combo?" (§2.2), y usa la cinta de combo que ya existe; (3) no pide gesto nuevo ni chocar contra superficies: para `jumpmodel` es un plan más (`tramp`, con su velocidad de subida fija); (4) las repisas (#3) se apoyan en el trampolín después. Moki no se espeja: solo se estira y se aplasta al despegar.
+Reglas del trampolín: nunca antes del segundo 12 de T1, ni en Clásico. Bajo el vuelo no puede haber vigas (V3). Al caer, 0.75 s libres como mínimo. Arriba no se suma combo, pero tampoco se rompe. 5 bloques: `tramp-intro` (sin nudo, enseña), `tramp-nudo` (`C.C` abajo), `tramp-torre` (`T.C`), `tramp-viga` (viga después de caer: castiga el salto mantenido por reflejo), `tramp-doble`.
+**Reto del día:** sigue igual para todos, así que no usa mecánicas destrabadas (dependen del nivel de cada quien). Las mecánicas salen en Libre. `generarNivel(seed, modo, { mecanicas })` filtra los bloques por su campo `mec`. Pregunta para el director: ¿el Reto suma el trampolín para todos cuando cumpla una semana? Recomiendo que sí.
+
+### 5. La tabla de DISENO.md se reacomoda (no se tira)
+Las mecánicas caen en niveles impares, que ya tienen su capa de música. Cada una trae además su sonido propio, chico y sintetizado. Los efectos visuales se quedan en los pares, como estaban.
+| Nv | Mundo | Música (se queda) | Sonido de la mecánica | Efecto (se queda) |
+|---|---|---|---|---|
+| 3 | Trampolín | bajo | boing de cartón | - |
+| 5 | Viento | contracanto | soplido (se pasa aquí desde la estela del 8) | - |
+| 7 | Repisas | arpegio | tok hueco al pisar | - |
+| 9 | Timbre | segunda voz | campanita del timbre | - |
+| 10 | Repisa que se dobla | campanas | crujido de doblez (el del choque) | festejo |
+Los niveles 2, 4, 6 y 8 se quedan igual. La tarjeta de los niveles impares anuncia la mecánica primero ("Ahora hay trampolines") y la música después.
+
+### 6. Trampolín: sabremos que estuvo bien si
+- F4 ≥ 20% en Libre con el nivel 3 o más (30 semillas), contra la línea base de master. F1 sube 1 o más.
+- Justicia intacta: Clásico 78/78; bot ±40 termina 30 fechas y 30 semillas Libre **con las dos rutas forzadas** (siempre arriba y siempre abajo); el pasivo falla en todas; fallback 0% en 365 fechas y 500 semillas.
+- Con 3 a 5 personas: ninguna ruta pasa del 75% de los usos, y al menos 3 de 5 dicen sin pista que "hay dos caminos".
+- Invitado a ciegas: nombra el trampolín y las 4 fases en el video de una página. Peso ≤ +1.5 KB gzip. 375 px sin bajar de 55 fps en Hardcore.

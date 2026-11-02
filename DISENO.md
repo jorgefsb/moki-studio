@@ -196,3 +196,51 @@ Se mantienen: `gravity` 2200, `jumpVelocity` 720, `jumpHoldMaxMs` 220, `jumpCutM
 5. El bot del demo cobra 27 de 27 piezas y los 2 arcos completos.
 6. Se quita pieceValueTotal de tramos.js.
 7. El probador registra los ms de mantén en cada choque con torre. Si más del 15% cae entre 100 y 120 ms, la torre baja a 92.
+
+## EL JUEGO CRECE CONTIGO: tabla nivel → qué se suma (1-nov 20:30, invitados de audio y game-feel; propuesta, nada medido)
+
+Fuente: publicar/crece-audio-propuesta.md (audio) y publicar/crece-tabla-final.md (unión). Corte 1 = música por capas (niveles 2,3,5,7,9) + confeti (N2), pasos de cartón (N4), sello con golpe (N6). Corte 2 = estela (N8) y festejo (N10, depende de las poses). Todo NO verificado hasta que lo mida el probador.
+
+### EL JUEGO CRECE CONTIGO: tabla final audio + feel (paso 1, game-feel)
+
+Estado: propuesta en papel. Nada probado en navegador. Todo peso y mezcla es estimación, NO verificado.
+Base: DECISIONES 1-nov 20:02, publicar/crece-audio-propuesta.md, src/feel.js, src/art/particles.js, src/cuaderno.js.
+
+## Decisiones de las 4 preguntas abiertas
+1. **Un nivel, una novedad que se oye o se siente.** Música en 2, 3, 5, 7 y 9. Efecto en 2, 4, 6, 8 y 10. Así 4, 6 y 8 no quedan vacíos: suman un efecto que suena y se ve.
+2. **"Suave" = Poquito** (el valor de fábrica, `juice: 1`). Mucho = efecto completo. Hardcore = completo más el extra. Nada = sin visual nuevo.
+3. **Nada deja las capas de música.** El juice es solo visual y háptico (regla de feel.js). La música y los sonidos nuevos solo los manda el botón de sonido. Cambio a la propuesta de audio: los pasos no suenan distinto según el juice.
+4. **Movimiento reducido** apaga todo lo visual nuevo, con cualquier juice. La música por capas y los sonidos siguen.
+
+## Tabla
+
+| Nv | Música (audio) | Efecto visual / micro | KB diferido | Suave (Poquito) / reducido | Hardcore | Tarjeta | Corte |
+|---|---|---|---|---|---|---|---|
+| 1 | Tema base de hoy | Lo de hoy | 0 | Igual que hoy | Igual que hoy | "Moki sale a jugar" | - |
+| 2 | Percusión de papel suave | **Confeti de recortes al ganar sello**: 10 recortes #FF6B35/#FFA500/#F4E8D5 caen detrás del sello en la tarjeta, 600 ms | 0.3 + 0.4 | Poquito: 4 recortes, 400 ms. Reducido o Nada: no hay confeti, el sello solo aparece | 16 recortes que giran un poco | "Ganas un sello y llueve papel" | 1 |
+| 3 | Bajo triangular, una nota por compás | Nada nuevo (la música basta) | 0.2 | Bajo completo | Bajo completo | "Llega un bajito" | 1 |
+| 4 | Ninguna | **Pasos de cartón**: tic seco por paso, ±1 semitono al azar. Se ve: nada nuevo | 0.3 | Tic igual, a -20 dBFS | Tic igual y un polvito de 1 recorte cada 4 pasos (pool de partículas, tope 3 vivos) | "Tus pasos suenan a cartón" | 1 |
+| 5 | Contracanto en terceras, sección A | Nada nuevo | 0.6 | Completo | Completo | "La melodía tiene compañía" | 1 |
+| 6 | Ninguna | **Sello con golpe**: el sello entra a 1.15 y cae a 1.0 en 90 ms, con un tok grave y una campanita | 0.4 + 0.2 | Poquito: entra a 1.06, sin rebote. Reducido o Nada: aparece quieto; el tok suena igual | 1.2 y rebote, la tarjeta se mueve 2 px una vez (sin glow) | "Tus sellos se estampan" | 1 |
+| 7 | Arpegio corto entre frases | Nada nuevo | 0.5 | Completo | Completo | "Se oyen chispitas de tinta" | 1 |
+| 8 | Ninguna | **Estela de papel al correr**: 1 recorte cada 120 ms detrás de Moki a vel. alta, tope 8 vivos; soplido suave al salto largo | 0.5 + 0.3 | Poquito: tope 3, solo en racha x2 o más. Reducido o Nada: sin estela; el soplido suena | Tope 12 y la estela se curva con el salto | "Tu carrera deja estela" | 2 |
+| 9 | Segunda voz en el estribillo | Nada nuevo | 0.4 | Completo | Completo | "El tema se hace coro" | 1 |
+| 10 | Campanas al compás 1 de cada vuelta | **Pose de festejo** al subir de nivel en la tarjeta + cadena de 4 notas | 0.5 + 0.3 | Poquito: pose fija, 2 notas. Reducido o Nada: pose fija, sin pasar por la animación; 2 notas | Pose con salto de 6 px y 4 notas | "Moki festeja contigo" | 2 |
+
+## Cortes
+- **Corte 1**: capas de música 2, 3, 5, 7, 9 + confeti de recortes (2), pasos de cartón (4) y sello con golpe (6). Elegí 2, 4 y 6 y no el festejo del 10 porque se alcanzan pronto y no dependen de las poses de MOKI SE MUEVE. Cambia el corte 1 de la propuesta de audio.
+- **Corte 2**: estela de papel (8), pose de festejo + cadena + campanas (10).
+
+## Reglas de feel
+- No duplicar: el confeti de recortes y la estela usan `particles.js` (pool de 90) o el mismo patrón CSS de la tarjeta. El confeti de meta/checkpoint de hoy no se toca. La estela pide como mucho 12 del pool; si falta lugar, gana el aterrizaje.
+- Lo nuevo de un nivel se estrena una vez con su tarjeta. Después queda fijo y en silencio de fondo: nunca tapa piezas, cajas ni el número.
+- Partículas siempre detrás del texto. Sin glow. Sin screenshake fuera de Hardcore.
+- Tarjeta y sonidos: nada suena antes del primer gesto. Todas las frases pasan por `legible.py` antes de salir.
+
+## Peso
+- JS inicial: tabla de 10 filas + `if (nivel > 1) import('crece.js')` + 3 enganches (paso, sello, estela) ≈ **+0.6 KB gzip**. Tope 1.5. NO verificado.
+- Diferido: audio ≈ 4.5 KB + visual ≈ 1.8 KB ≈ **6.3 KB**, carga tras el primer gesto. NO verificado.
+
+## Riesgos
+- Lo más arriesgado: la estela (8) en la laptop vieja con racha alta, aterrizajes y collect a la vez sobre el mismo pool. Hay que medir FPS en 375 px con Hardcore. NO verificado.
+- Mezcla del nivel 9 con E3 al tope (de audio). Pasos (4) a cada paso pueden cansar: oírlo 2 min antes de integrar.
