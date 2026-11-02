@@ -197,6 +197,18 @@ function medir(L) {
   }
   f6 = Math.max(f6, dur - ultimo);
 
+  // FP (fases, pedido 2-nov): por página 2-4, % de obstáculos duros (torre, viga, caja+viga, caja doble: mantener o
+  // pasar por debajo) en el pico (14-24 s) contra calma+respiro (0-4 y 24-30 s); contraste = pico - suave.
+  const DUROS = new Set(['torre', 'viga', 'vc', 'cc']);
+  const fp = [];
+  for (let p = 1; p < L.tramos.length; p++) {
+    const loc = decisiones.filter((d) => d.tramo === p).map((d) => ({ s: d.t - cps[p], duro: DUROS.has(d.tipo) }));
+    const pico = loc.filter((d) => d.s >= 14 && d.s < 24);
+    const suave = loc.filter((d) => d.s < 4 || d.s >= 24);
+    const pct = (a) => (a.length ? (100 * a.filter((d) => d.duro).length) / a.length : 0);
+    fp.push({ pagina: p + 1, duroPico: +pct(pico).toFixed(1), duroSuave: +pct(suave).toFixed(1), contraste: +(pct(pico) - pct(suave)).toFixed(1), decPico: pico.length, decSuave: suave.length });
+  }
+
   // F4 y chequeo del modelo contra el plan del nivel
   const conEleccion = decisiones.filter((d) => d.eleccion).length;
   const planNivel = (d) => (d.tipo === 'viga' ? 'none' : d.tipo === 'torre' || d.tipo === 'cc' ? 'hold' : 'tap');
@@ -225,6 +237,10 @@ function medir(L) {
     F4: +((100 * conEleccion) / decisiones.length).toFixed(1),
     F4b: prom(decisiones.map((d) => d.vivos.length)),
     F6: +f6.toFixed(2),
+    FP: fp.length ? prom(fp.map((x) => x.contraste)) : 0,
+    FPmin: fp.length ? Math.min(...fp.map((x) => x.contraste)) : 0,
+    duroPico: fp.length ? prom(fp.map((x) => x.duroPico)) : 0,
+    fases: fp,
     patrones: [...new Set(eventos.map((e) => e.patron))],
     formas,
     modeloCoincide: { decisiones: decisiones.length, desacuerdos: desacuerdos.length, ejemplos: desacuerdos.slice(0, 3).map((d) => ({ t: d.t, tipo: d.tipo, patron: d.patron, vivos: d.vivos })) },
@@ -235,7 +251,7 @@ function medir(L) {
 const resumen = (rs) => {
   const k = (f) => rs.map(f);
   const st = (a) => ({ min: Math.min(...a), prom: +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2), max: Math.max(...a) });
-  return { partidas: rs.length, F1: st(k((r) => r.F1)), F1b: st(k((r) => r.F1b)), F2a: st(k((r) => r.F2a)), F2b: st(k((r) => r.F2b)), F3s: st(k((r) => r.F3.s)), F3b: st(k((r) => r.F3b)), F4: st(k((r) => r.F4)), F4b: st(k((r) => r.F4b)), F6: st(k((r) => r.F6)), desacuerdosModelo: rs.reduce((s, r) => s + r.modeloCoincide.desacuerdos, 0) };
+  return { partidas: rs.length, F1: st(k((r) => r.F1)), F1b: st(k((r) => r.F1b)), F2a: st(k((r) => r.F2a)), F2b: st(k((r) => r.F2b)), F3s: st(k((r) => r.F3.s)), F3b: st(k((r) => r.F3b)), F4: st(k((r) => r.F4)), F4b: st(k((r) => r.F4b)), F6: st(k((r) => r.F6)), FP: st(k((r) => r.FP)), FPmin: st(k((r) => r.FPmin)), duroPico: st(k((r) => r.duroPico)), desacuerdosModelo: rs.reduce((s, r) => s + r.modeloCoincide.desacuerdos, 0) };
 };
 
 const clasico = medir(GAME_LEVEL);

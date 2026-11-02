@@ -68,6 +68,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (ctx.prev && ctx.prev.dif >= 4 && !isDescanso(b)) return false;
       if (ctx.prev && ctx.prev.id === b.id) return false; // G4
       if (ctx.prevTema && ctx.prevTema === tema(b)) return false; // flow (a): no dos temas iguales seguidos (el relleno no cuenta)
+      if (ctx.fase === 'suave' && esDuro(b)) return false; // calma y respiro sin torre ni viga
       if (b.dif >= 4 && ctx.dif4) return false; // flow: un solo dif 4 por página
       if (b.id !== 'respiro' && (ctx.used[b.id] || 0) >= 2) return false;
       if (ctx.filas + ctx.reserva + filasDe(b) > ctx.maxFilas) return false; // tope de filas de piezas por página
@@ -79,7 +80,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (rem < 4.5) return;
       continue;
     }
-    put(ctx, pick(r, cands.map((q) => [q, (isDescanso(q) ? 1 : PESO_DIF[tramo][q.dif] || 1) * (tramo === 3 && q.tags.includes('viga') ? 2 : 1) * (ctx.used[q.id] ? 0.5 : 1) * (nuevo(ctx, q) ? 2 : 1)])));
+    put(ctx, pick(r, cands.map((q) => [q, (isDescanso(q) ? 1 : PESO_DIF[tramo][q.dif] || 1) * (tramo === 3 && q.tags.includes('viga') ? 2 : 1) * (ctx.used[q.id] ? 0.5 : 1) * (nuevo(ctx, q) ? 2 : 1) * (ctx.fase === 'pico' && esDuro(q) ? 3 : 1)])));
   }
 }
 
@@ -103,7 +104,12 @@ function put(ctx, b) {
 // El validador de siempre (física real, ±40 ms) decide si la página queda; si no, se re-sortea.
 const HUECO_MAX = 2.5;
 const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec };
-const FACILES = { 1: ['C+A3', 'C'], 2: ['U', 'CC', 'C+A3', 'C.C', 'C'], 3: ['V', 'U', 'C.V', 'C+A3', 'VC', 'C.C', 'C'], 4: ['V', 'U', 'C.V', 'VC', 'C+A3', 'C.C', 'C'] };
+// Decisiones fáciles por fase (RETO EN 4 FASES): calma, subida y respiro solo toque o pop-up; el pico pasa por debajo
+// (viga) o mantiene (torre, caja doble). Antes las vigas caían en calma y respiro: el pico salía más suave que ellas.
+const FACILES = { 1: ['C+A3', 'C'], 2: ['U', 'C+A3', 'C.C', 'C'], 3: ['U', 'C+A3', 'C.C', 'C'], 4: ['U', 'C+A3', 'C.C', 'C'] };
+const DE_PICO = { 1: FACILES[1], 2: ['CC', 'T', 'U', 'C.C'], 3: ['V', 'VC', 'C.V', 'T', 'CC'], 4: ['V', 'VC', 'C.V', 'T', 'CC'] };
+const DUROS = new Set(['T', 'V', 'VC', 'CC', 'T.C', 'T.V', 'C.V']);
+const esDuro = (b) => b.ev.some(([, c]) => DUROS.has(c.split('+')[0]));
 const principal = (code) => code.split('+')[0];
 function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
   const ev = [...script].sort((a, b) => a[0] - b[0]);
@@ -115,7 +121,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
   // nunca el mismo patrón que la decisión de antes o la de después (C C C C se leía como tramo repetido, F3b)
   // el pop-up pide C.popup.minGapBeforeSec tras el obstáculo anterior (popupFalla); si no cabe, otra decisión fácil
   const pon = (t, antes, despues, previo) => {
-    const F = FACILES[tramo].filter((c) => principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec);
+    const F = (t >= 14 && t < 24 ? DE_PICO : FACILES)[tramo].filter((c) => principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec);
     const ok = [F.filter((c) => principal(c) !== antes && principal(c) !== despues), F.filter((c) => principal(c) !== antes), F].find((x) => x.length);
     // Rota (al azar dentro de cada escalón, para no repetir el mismo toque cada página: F3) y gasta poca novedad
     // (F6 pide un patrón nuevo cada <= 30 s en toda la partida; las novedades se dejan a los bloques):
@@ -176,8 +182,6 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
     ctx.script.push(...T1_INTRO); // el tutorial depende de este inicio
     ctx.filas = T1_INTRO.filter(([, c]) => hasP5(c)).length;
     ctx.pos = 12;
-  } else if (tramo === 3) {
-    put(ctx, BY_ID['viga-intro']); // la viga se enseña siempre igual
   }
   const sorpresa = BY_ID[pick(r, SORPRESAS[tramo])];
   ctx.reserva = filasDe(sorpresa); // la sorpresa aparta sus filas antes del sorteo
@@ -188,15 +192,24 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   const [lo, hi] = VENTANA[tramo];
   // una fase de menos de 3.5 s se junta con la siguiente (con 2 s solo cabía relleno: hueco sin decidir)
   const fase = (hasta, v, ultima) => ctx.pos < hasta - 1e-9 && (ultima || hasta - ctx.pos >= 3.5) && fill(r, hasta, ctx, tramo, v);
-  const pico = [Math.max(lo, hi - 1), hi];
+  // pico de hi-2 a hi: con hi-1 la regla G2 (nunca dos >= 3 seguidos) lo partía en 3, relleno, 3 y el relleno se
+  // llenaba de toques; ahora alterna 3 y 2, y los bloques con torre o viga pesan triple
+  const pico = [Math.max(lo, hi - 2), hi];
+  ctx.fase = 'suave';
   fase(4, [1, 1], true); // la calma (2-4 s) es relleno que densificar llena con decisiones fáciles
+  ctx.fase = 'subida';
+  if (tramo === 3) put(ctx, BY_ID['viga-intro']); // la viga se enseña siempre igual, ahora al empezar la subida
   fase(14, [lo, Math.min(hi, lo + 1)]);
   const S = Math.max(ctx.pos, 14 + Math.floor(r() * 13) / 2);
+  ctx.fase = 'pico';
   fase(S, pico);
   ctx.reserva = 0;
   put(ctx, sorpresa);
   fase(24, pico);
-  fase(LEN, [1, 1], true);
+  // respiro: sin bloques sorteados (los pocos bloques suaves pasaban del 8 % de uso); queda relleno y densificar lo
+  // llena con decisiones fáciles que rotan
+  ctx.fase = 'suave';
+  if (ctx.pos < LEN - 1e-9) put(ctx, RELLENO(LEN - ctx.pos));
   return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global), { ids: ctx.ids });
 }
 
@@ -251,6 +264,24 @@ export function tramoValido(script, speed) {
 // F6 por página: hueco más largo sin patrón nuevo desde ultimoNuevo (s de la partida), con los estrenos de esta
 // página (inicio en s0), hasta `hasta` (fin de partida, o el segundo 14 de la página siguiente: ahí ya puede estrenar).
 const NOVEDAD_MAX = 28;
+// F3 entre páginas: ¿la página trae una secuencia de 2-4 fichas patrón@hueco (0.25 s) de más de F3_MAX s que ya salió
+// antes en la partida? Mismo cálculo que scripts/flow-medir.mjs; 'antes' son los eventos [s de partida, patrón].
+const F3_MAX = 4;
+function repiteTramo(antes, script, s0) {
+  const ev = [...antes, ...script.filter(([, c]) => principal(c) !== 'P5').map(([s, c]) => [s0 + s, principal(c)]).sort((a, b) => a[0] - b[0])];
+  const f = ev.map(([t, p], i) => `${p}@${i ? (Math.round((t - ev[i - 1][0]) * 4) / 4).toFixed(2) : '0'}`);
+  const k0 = antes.length;
+  for (let len = 2; len <= 4; len++) {
+    const vistas = new Set();
+    for (let i = 0; i + len <= k0; i++) vistas.add(f.slice(i, i + len).join(' '));
+    for (let i = Math.max(1, k0 - len + 1); i + len <= ev.length; i++) {
+      if (ev[i + len - 1][0] - ev[i][0] <= F3_MAX) continue;
+      if (vistas.has(f.slice(i, i + len).join(' '))) return true;
+    }
+  }
+  return false;
+}
+
 function huecoNovedad(script, s0, ultimoNuevo, global, hasta) {
   const vistos = new Set(global);
   let u = ultimoNuevo;
@@ -271,6 +302,7 @@ export function generarNivel(seed, modo = 'reto') {
   let prev = new Set();
   const global = new Set();
   let ultimoNuevo = 0; // segundo de la partida del último patrón que no había salido (F6)
+  const eventos = []; // [s de partida, patrón] de las páginas ya puestas (F3 entre páginas)
   const n = C.tramos.length;
   const tramos = C.tramos.map((tr, i) => {
     // De los intentos válidos gana el primero que mantiene F6 (<= NOVEDAD_MAX s sin patrón nuevo, contando hasta
@@ -280,7 +312,8 @@ export function generarNivel(seed, modo = 'reto') {
     for (let k = 0; k < INTENTOS && mejor > NOVEDAD_MAX; k++) {
       const script = generarTramo(seed, i + 1, k, prev, global);
       if (!tramoValido(script, tr.speed)) continue;
-      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14);
+      // repetir una secuencia larga de una página anterior cuenta como hueco de novedad perdido
+      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0);
       if (h < mejor) {
         mejor = h;
         t = { speed: tr.speed, len: LEN, script, ids: script.ids };
@@ -296,6 +329,7 @@ export function generarNivel(seed, modo = 'reto') {
       global.add(p);
       ultimoNuevo = i * LEN + s;
     }
+    for (const [s, c] of [...t.script].sort((a, b) => a[0] - b[0])) if (principal(c) !== 'P5') eventos.push([i * LEN + s, principal(c)]);
     prev = new Set(t.script.map(([, c]) => principal(c)));
     return t;
   });
