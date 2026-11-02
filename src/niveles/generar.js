@@ -105,7 +105,7 @@ const HUECO_MAX = 2.5;
 const FIN = { 'C.C': C.pairGapSec, 'T.C': C.pairGapSec, 'C.V': C.pairGapSec, 'T.V': 1.0, OLA: 5 * C.waveGapSec };
 const FACILES = { 1: ['C+A3', 'C'], 2: ['U', 'CC', 'C+A3', 'C.C', 'C'], 3: ['V', 'U', 'C.V', 'C+A3', 'VC', 'C.C', 'C'], 4: ['V', 'U', 'C.V', 'VC', 'C+A3', 'C.C', 'C'] };
 const principal = (code) => code.split('+')[0];
-function densificar(script, tramo, r, antes0 = new Set()) {
+function densificar(script, tramo, r, antes0 = new Set(), global = new Set()) {
   const ev = [...script].sort((a, b) => a[0] - b[0]);
   const filas = ev.filter(([, c]) => principal(c) === 'P5').map(([t]) => t);
   const dec = ev.filter(([, c]) => principal(c) !== 'P5');
@@ -117,9 +117,20 @@ function densificar(script, tramo, r, antes0 = new Set()) {
   const pon = (t, antes, despues, previo) => {
     const F = FACILES[tramo].filter((c) => principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec);
     const ok = [F.filter((c) => principal(c) !== antes && principal(c) !== despues), F.filter((c) => principal(c) !== antes), F].find((x) => x.length);
-    // primero un patrón que no tenga ni esta página ni la anterior (la ventana de 60 s de F1 junta dos páginas)
-    const libres = [ok.filter((c) => !vistos.has(principal(c)) && !antes0.has(principal(c))), ok.filter((c) => !vistos.has(principal(c)))].find((x) => x.length);
-    const code = libres ? libres[0] : ok[Math.floor(r() * ok.length)];
+    // Rota (al azar dentro de cada escalón, para no repetir el mismo toque cada página: F3) y gasta poca novedad
+    // (F6 pide un patrón nuevo cada <= 30 s en toda la partida; las novedades se dejan a los bloques):
+    // 1) ya salió en la partida pero no en esta página ni en la anterior (F1), 2) no salió en esta página,
+    // 3) cualquiera menos la caja sola, 4) cualquiera.
+    const p = (c) => principal(c);
+    const escalones = [
+      ok.filter((c) => global.has(p(c)) && !vistos.has(p(c)) && !antes0.has(p(c))),
+      ok.filter((c) => global.has(p(c)) && !vistos.has(p(c))),
+      ok.filter((c) => !vistos.has(p(c))),
+      ok.filter((c) => p(c) !== 'C'),
+      ok,
+    ];
+    const libres = escalones.find((x) => x.length);
+    const code = libres[Math.floor(r() * libres.length)];
     vistos.add(principal(code));
     nuevos.push([+t.toFixed(2), code]);
     return principal(code);
@@ -158,7 +169,7 @@ function densificar(script, tramo, r, antes0 = new Set()) {
 }
 
 // Un tramo (1-4) como guion [[s, código]] de 30 s.
-export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set()) {
+export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set()) {
   const r = rng(hashSeed(`${seed}:${tramo}:${intento}`));
   const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev) };
   if (tramo === 1) {
@@ -186,7 +197,7 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set())
   put(ctx, sorpresa);
   fase(24, pico);
   fase(LEN, [1, 1], true);
-  return Object.assign(densificar(ctx.script, tramo, r, patronesPrev), { ids: ctx.ids });
+  return Object.assign(densificar(ctx.script, tramo, r, patronesPrev, global), { ids: ctx.ids });
 }
 
 // V4 legibilidad: entre obstáculos distintos >= minGapSec (mismo punto en VC; la segunda caja de CC no cuenta).
@@ -237,19 +248,53 @@ export function tramoValido(script, speed) {
   });
 }
 
+// F6 por página: hueco más largo sin patrón nuevo desde ultimoNuevo (s de la partida), con los estrenos de esta
+// página (inicio en s0), hasta `hasta` (fin de partida, o el segundo 14 de la página siguiente: ahí ya puede estrenar).
+const NOVEDAD_MAX = 28;
+function huecoNovedad(script, s0, ultimoNuevo, global, hasta) {
+  const vistos = new Set(global);
+  let u = ultimoNuevo;
+  let h = 0;
+  for (const [s, c] of [...script].sort((a, b) => a[0] - b[0])) {
+    const p = principal(c);
+    if (p === 'P5' || vistos.has(p)) continue;
+    vistos.add(p);
+    h = Math.max(h, s0 + s - u);
+    u = s0 + s;
+  }
+  return Math.max(h, hasta - u);
+}
+
 // seed: texto ("2026-10-29") o número. Devuelve el nivel de buildLevel más { seed, modo, biomas, fallbacks }.
 export function generarNivel(seed, modo = 'reto') {
   const fallbacks = [];
   let prev = new Set();
+  const global = new Set();
+  let ultimoNuevo = 0; // segundo de la partida del último patrón que no había salido (F6)
+  const n = C.tramos.length;
   const tramos = C.tramos.map((tr, i) => {
+    // De los intentos válidos gana el primero que mantiene F6 (<= NOVEDAD_MAX s sin patrón nuevo, contando hasta
+    // donde la página siguiente puede estrenar uno); si ninguno, el de hueco más corto.
     let t = null;
-    for (let k = 0; k < INTENTOS && !t; k++) {
-      const script = generarTramo(seed, i + 1, k, prev);
-      if (tramoValido(script, tr.speed)) t = { speed: tr.speed, len: LEN, script, ids: script.ids };
+    let mejor = Infinity;
+    for (let k = 0; k < INTENTOS && mejor > NOVEDAD_MAX; k++) {
+      const script = generarTramo(seed, i + 1, k, prev, global);
+      if (!tramoValido(script, tr.speed)) continue;
+      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14);
+      if (h < mejor) {
+        mejor = h;
+        t = { speed: tr.speed, len: LEN, script, ids: script.ids };
+      }
     }
     if (!t) {
       fallbacks.push(i + 1);
       t = { speed: tr.speed, len: LEN, script: SCRIPTS[i], ids: ['clasico'] };
+    }
+    for (const [s, c] of [...t.script].sort((a, b) => a[0] - b[0])) {
+      const p = principal(c);
+      if (p === 'P5' || global.has(p)) continue;
+      global.add(p);
+      ultimoNuevo = i * LEN + s;
     }
     prev = new Set(t.script.map(([, c]) => principal(c)));
     return t;
