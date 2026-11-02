@@ -254,11 +254,11 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   const estrenaViento = tramo === 2 && ctx.mecanicas.includes('viento');
   if (estrenaViento) put(ctx, BY_ID['viento-intro']); // la primera página con viento lo enseña al abrir la subida
   fase(14, [lo, Math.min(hi, lo + 1)]);
+  ctx.fase = 'pico';
+  if (estrenaViento) put(ctx, BY_ID['viento-contra']); // ...y el contrario abre el pico de esa misma página
   // la sorpresa empieza entre 14 y 20 y termina antes del 24 (la ola de 6.5 s en el 14 dejaba el pico en relleno)
   const sMax = Math.max(14, Math.min(20, 24 - sorpresa.dur));
   const S = Math.max(ctx.pos, 14 + Math.floor(r() * ((sMax - 14) * 2 + 1)) / 2);
-  ctx.fase = 'pico';
-  if (estrenaViento && ctx.pos <= S - 3) put(ctx, BY_ID['viento-contra']); // ...y el contrario en la misma página
   fase(S, pico);
   ctx.reserva = 0;
   put(ctx, sorpresa);

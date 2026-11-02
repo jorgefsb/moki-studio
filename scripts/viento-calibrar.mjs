@@ -28,7 +28,8 @@ for (const v of VEL) {
   const r = [-40, 0, 40].map((j) => validateLevel(L, null, j, 'arriba', { ciego: true }));
   out.ciego[v] = r.map((x) => (x.ok ? `libra ${Math.round(x.minClear)}` : `choca ${x.cause}`)).join(' / ');
 }
-const ciegoChoca = [320, 350].every((v) => out.ciego[v].split(' / ')[1].startsWith('choca'));
+// vara del director (2-nov 01:10): a -40 ms el ciego choca o queda bajo la holgura de 4 px, a 320 y 350
+const ciegoChoca = [320, 350].every((v) => { const m = out.ciego[v].split(' / ')[0]; return m.startsWith('choca') || Number(m.split(' ')[1]) < 4; });
 out.fallosConViento = fallos;
-out.ciegoChocaA320y350 = ciegoChoca;
+out.ciegoNoAguantaMenos40 = ciegoChoca;
 console.log(JSON.stringify(out, null, 1));

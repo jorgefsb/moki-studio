@@ -340,7 +340,8 @@ export function createUI() {
       if (!list.children.length) list.append(el('li', 'done', t('cu.todo')));
       strip.append(list);
       if (tira.subio) strip.append(el('p', 'cu-sellos cu-subio', t(tira.completo ? 'cu.completo' : 'cu.subio', { n: tira.nivel })));
-      if (tira.subio && tira.nivel === C.tramp.nivel) strip.append(el('p', 'cu-sellos cu-subio', t('cu.tramp'))); // mecánica nueva del nivel (NIVELES.md flow §5)
+      // mecánica nueva del nivel (NIVELES.md flow §5)
+      for (const m of ['tramp', 'viento']) if (tira.subio && tira.nivel === C[m].nivel) strip.append(el('p', 'cu-sellos cu-subio', t(`cu.${m}`)));
       // Día 4: qué sigue. Al cerrar un set de tres, el primer encargo del nivel nuevo (si no salió ya como renglón);
       // al llegar a la meta sin subir, cuántos encargos faltan para el siguiente nivel. En fallo sin subida, nada.
       let sigue = '';
