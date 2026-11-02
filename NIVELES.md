@@ -344,3 +344,39 @@ Los niveles 2, 4, 6 y 8 se quedan igual. La tarjeta de los niveles impares anunc
 - `node scripts/viento-calibrar.mjs [contra]`: `C<`, `C>`, `T>` (y con `+Aup`) aislados a 320, 350, 385, 420 y 470 px/s.
 - Con `contra` 0.8, la ventana de despegue de `C<` a 320 mide 80 ms (de −45 a +35 ms sobre el centrado `air/2`): no aguanta ±40 con 4 px. Con 0.85 mide 110 ms y el bot con viento pasa a ±40 en las 5 velocidades. Queda **0.85** (opción A del director).
 - El bot ciego (apunta con `k = 1`) despega (1 − k) × 233 ms temprano: 35 ms con 0.85. Centrado libra `C<` por 11 px, así que la vara del instrumento queda relajada a **"−40 choca"**: a −40 ms choca a 320 y a 350 se queda con 1 px, bajo la holgura de 4 px de la justicia. El viento en contra quita el perdón de tocar temprano; no castiga el toque centrado.
+
+### 8. Repisas, retoma: largo finito (2-nov)
+Invitado de niveles, sobre `v2/repisas` 7058eab. El arte reprobó porque la tabla de hoy (R2.1 = 672 a 987 px) es más ancha que lo que se ve a 375 px. En vertical se ven **460 px de mundo** (`portrait.visibleWidth`): 71 detrás de Moki y 389 delante. Ninguna orilla y ningún hilo suelto quedaban en pantalla. Los "≈" salen a mano (alto 196, caída √(2·196/2200) = 0.42 s, toque ≈0.49 s en el aire) y el constructor los confirma.
+
+**1. Largo en segundos, con tope en px.** La repisa aparece en Libre desde el nivel 7: tramos de 320, 350, 385 y 420, y la vuelta rápida llega hasta 470.
+- **R1 = 0.75 s** (de +0.45 a +1.20 desde el `J`): 240, 263, 289, 315 y 353 px. **Hueco** de 0.3 s (de +1.20 a +1.50). **R2 = 0.5 s** (de +1.50 a +2.00): 160 a 235 px.
+- **Las dos orillas se ven juntas** durante (460 − L)/v: R1 se ve completa 0.69 s a 320, 0.56 a 350, 0.44 a 385, 0.35 a 420 y 0.23 a 470. R2 se ve completa ≥ 0.48 s a cualquier velocidad. A 320 y 350, R1 entra entera antes del `J` (en t = 1.20 − 389/v ≤ 0.09 s).
+- **Regla para `tramos.js`:** ningún `R` pasa de 0.8 s, porque 0.8 × 470 = 376 deja ≥ 84 px de margen. Si alguien pide más, se afirma al armar el bloque: `seg·v ≤ 380`.
+- **Arriba sigue funcionando:** cae en R1 a ≈+0.83 y tiene ventana para saltar el hueco con despegue entre +1.01 y +1.29 (≈280 ms, más 90 ms de coyote). Cae en R2 a ≈+1.5–1.9 y se baja sola en +2.0, tocando suelo a ≈+2.47.
+
+**2. Piezas y cajas.** Las 3 cajas no caben bajo un techo de ≤ 0.8 s, porque cada caja pide 0.8 s de separación. Tampoco puede ir caja bajo R2: la ruta `cae` toca suelo a ≈+1.67 y la siguiente caja tendría que estar a ≥ +2.42. Por eso:
+- **Abajo:** queda **1 caja** bajo R1 (`C+A1` en +0.85) y 4 piezas de suelo `p` en +0.45, +1.25, +1.65 y +2.05, a 0.4 s una de otra: 5 piezas = 1+1+2+2+2 = **8**. El riesgo de mantener bajo el techo sigue en la caja de +0.85.
+- **Arriba:** `PR2` en +0.90 sobre R1 y `PR3` en +1.55 sobre R2 = **5**. Si cae por el hueco, pierde las 3 de R2 y entra abajo después de +1.67, con ≤ 2 piezas.
+- **Trato:** 5 contra 8 = **38/62** con combo en cero. Con combo ×3, 5 contra 15 = **75.0 %**, justo en el borde: se mide y no debe pasar de 75. Si pasa, la pieza de +0.45 sale y queda 5 contra 7 (42/58, con ×3 71 %).
+- **Bloques:** `hueco` = `[[0,'J'],[0.45,'R0.75'],[1.5,'R0.5'],[0.85,'C+A1'],[0.45,'p'],[1.25,'p'],[1.65,'p'],[2.05,'p'],[0.9,'PR2'],[1.55,'PR3']]`. `intro` = solo R1 (`R0.75`), con caja y piezas en +0.45, +0.85 y +1.25, y `PR2` (ahí 2 contra 4). Nada en el suelo de +1.4 a +2.4, porque arriba cae en ≈+1.66. `salida` = `hueco` + `[3.4,'T']`. Lo siguiente a todo bloque va en ≥ **+3.22** (2.47 + 0.75). `dur` baja de 5 a 4.
+
+**3. Orillas (≤ 100 B gzip).** Se **quitan los 2 hilos**. Cada punta lleva un corte de cartón (2 px de tinta `#22211F` que cierran la cara) y **escuadras de esquina**: una "L" de 8 px con trazo de 2 px en las 4 esquinas, dentro del grosor de 20 px. Nada cuelga bajo la cara de abajo, así que los 29 px libres sobre la cabeza no cambian. La sombra del 40 % se queda, y ahora se ve corta y con sus dos puntas. Va en un solo `for` sobre `[0, w]` × `[0, h]`.
+
+**4. Se re-mide** (Libre nivel ≥ 7, 30 semillas, contra el viento integrado, 9d4a97c):
+- Las 3 rutas (`arriba`, `abajo`, `cae`) con el bot ±40 a 320, 350, 385, 420 y 470: 0 fallos en 465 niveles.
+- El pasivo falla. El bot que mantiene bajo R1 muere con `cause: 'repisa'`. Al caer, 0.75 s libres en las dos caídas (orilla de R2 y hueco).
+- F1, F2a, F2b, F3 (F3b = 0) y F6 sin moverse respecto a 7058eab. F4 con la regla única y la vara aceptada (≥ 21.9 %). Clásico y Reto idénticos (78/78 y 2142).
+
+**5. Sabremos que estuvo bien si:**
+- Un **invitado de arte nuevo** da **≥ 4/5 en "se pisa"** y **≥ 4/5 en "techo"** viendo 5 capturas a 375×812: (a) arriba, (b) abajo bajo R1, (c) noche, (d) movimiento reducido y (e) trampolín y R1 juntos con las dos orillas en cuadro (a 350, t ≈ +0.05).
+- 0 fallos de justicia. Los 5 tiempos de "orillas juntas" del punto 1, medidos en pantalla, quedan a ±0.05 s.
+- ≥ 55 fps en Hardcore a 375.
+
+**6. Tope: 1.5 h** (bloques 0.3, orillas 0.3, re-medir 0.5, capturas e invitado 0.4). **Peso:** volver a **≤ +1.5 KB**. Hoy está en +1632.
+- Fuera los hilos y el `repisa-pop` muerto (≈−45).
+- Las afirmaciones de orilla de `tramos.js` van tras `import.meta.env.DEV` (≈−60).
+- `salida` se arma como `[...hueco.ev, [3.4,'T']]` (≈−40).
+- Bloques más cortos (≈−20).
+- Las orillas suman (≈+90).
+- Neto ≈ +1557. Si no baja de 1536, se quita la bajada de 2 px al pisar (se queda el tok, ≈−35). Si aun así no llega, vale el tope de 1.6 KB que ya está aceptado.
+- **Riesgos:** el trato queda en 75.0 % justo con ×3. Con una sola caja abajo hay menos tentación de mantener, y el "techo" se puede leer más débil. A 470, R1 completa solo se ve 0.23 s. F4 puede bajar un poco porque el bloque es más corto.
