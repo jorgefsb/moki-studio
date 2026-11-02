@@ -154,6 +154,19 @@ Libro de 4 páginas + papel del día + cuaderno + racha; poses nuevas de Moki di
 - **Vara de belleza y feel:** capturas oficiales de Alto's Odyssey (press kit en altosodyssey.com/press y thealtocollection.com/press), guardadas en `evidencia/referencia/` solo para uso interno.
 - **Por pieza** (feel, niveles, fondo, menús, audio): el constructor construye; un crítico distinto, con contexto nuevo, recibe dos capturas sin etiqueta (A/B al azar), dice cuál gana y nombra la brecha más grande. Sin elogios. Se repite hasta que el nuestro gane o hasta el congelado, y se anota en BITACORA.
 - **Criterios de "el nuestro gana" en captura fija:** luz legible con sombras coherentes; ≥5 planos con tono que aclara hacia el fondo; negro cercano y blanco cálido; un hito enorme con escala contra Moki; un elemento de atmósfera; un solo foco naranja; en vertical ningún tercio vacío.
+- **Vara de flow (variedad, no solo justicia):** la mide `node scripts/flow-medir.mjs` sin navegador. Las definiciones están en NIVELES.md, "Flow y mecánicas (plan 1-nov)". La vara contra Alto's es un estimado; nadie la midió. Línea base medida en master 9a946d6 (1-nov) en `evidencia/v2-flow-base.json`: Clásico, 10 Retos (1 a 10-nov) y 10 Libres. Formato: promedio (mín-máx).
+
+| Métrica | Vara | Clásico | Reto | Libre |
+|---|---|---|---|---|
+| F1 patrones distintos por minuto | ≥ 7 | 6.5 | 6.1 (5.5-7) | 6.3 (5.5-7) |
+| F2a hueco más largo sin decisión | ≤ 4.5 s | 5.0 s | 7.9 s (6.5-9) | 6.5 s (5.3-8.5) |
+| F2b % de la partida en huecos de más de 2.5 s | ≤ 12 % | 35.6 % | 46.9 % | 46.5 % |
+| F3 tramo idéntico más largo repetido | ≤ 4 s | 0 s | 0.8 s (0-4.5) | 1.2 s (0-2) |
+| F3b repeticiones pegadas | 0 | 0 | 0.1 (1 en 10) | 0 |
+| F4 % de obstáculos con elección real | ≥ 20 % | 5.8 % | 12.7 % (4.5-19.5) | 14.8 % (4.7-25) |
+| F6 segundos sin patrón nuevo | ≤ 30 s | 28.5 s | 28.2 s (24.5-32.7) | 30.7 s (24.5-43.7) |
+
+  F4 sale de un modelo: las ecuaciones del salto del juego contra cajas de choque aproximadas. En las 21 partidas, el plan que asigna el nivel sobrevive en el modelo 100 %. Lo más lejos de la vara son los huecos: casi la mitad de la partida pasa sin decidir nada.
 
 ## 12. Decisiones del equipo (Jorge califica después)
 1. Papeles nuevos y un color de noche fuera de los 8 tokens: **sí**, derivados de los tokens. Se juzgan en gauntlet a ciegas y Jorge califica en vivo. [decidido por el equipo, 1-nov]
