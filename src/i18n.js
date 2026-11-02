@@ -82,6 +82,7 @@ const ES = {
   'how.jorge.one': 'Jorge intervino {n} vez',
   'how.jorge.many': 'Jorge intervino {n} veces',
   'how.back': 'Volver',
+  'how.credito': 'Moki por JorgeSuarez.com.mx · Licencia CC BY-NC', // poses de Moki Pixel (licencia del arte)
   'pause.title': 'Pausa',
   'cu.title': 'Cuaderno de Moki',
   'cu.count': 'Sellos {n}/{de}',
@@ -156,6 +157,7 @@ const ES = {
 };
 
 const EN = {
+  'how.credito': 'Moki by JorgeSuarez.com.mx · CC BY-NC license',
   'title.demo.touch': 'Tap to play',
   'tut.ok': 'Nice!',
   'fail.go.touch': 'Tap to continue',

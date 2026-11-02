@@ -126,6 +126,7 @@
 .ui-asi .foot { box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 3px solid #b99168; background: #f4e8d5; }
 .ui-asi .foot .ui-link { margin: 0; font: 400 16px/22px Inter, sans-serif; }
 .ui-asi .foot .ui-btn { margin: 0; }
+.ui-asi .foot .credito { flex-basis: 100%; margin: 0; text-align: center; color: #22211f; font: 400 14px/20px Inter, sans-serif; }
 
 .ui-card.compact h2 { font-size: 28px; line-height: 32px; margin-bottom: 6px; }
 .ui-card.compact p { font-size: 16px; line-height: 22px; }
