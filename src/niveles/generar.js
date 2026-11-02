@@ -332,6 +332,26 @@ function huecoNovedad(script, s0, ultimoNuevo, global, hasta) {
   return Math.max(h, hasta - u);
 }
 
+// FP de una página (scripts/flow-medir.mjs): % de obstáculos duros (torre, viga, caja+viga, caja doble) en el pico
+// (14-24 s) menos el % en calma+respiro (0-4 y 24-30 s). Cada obstáculo de un par cuenta aparte, la ola son 6 cajas.
+const PARTES_FP = {
+  T: [[1, 0]], V: [[1, 0]], VC: [[1, 0]], CC: [[1, 0]], C: [[0, 0]], U: [[0, 0]], J: [[0, 0]],
+  'C.C': [[0, 0], [0, C.pairGapSec]], 'T.C': [[1, 0], [0, C.pairGapSec]], 'T.V': [[1, 0], [1, 1.0]], 'C.V': [[0, 0], [1, C.pairGapSec]],
+  OLA: Array.from({ length: 6 }, (_, i) => [0, i * C.waveGapSec]),
+};
+export function fpPagina(script) {
+  let pd = 0, pn = 0, sd = 0, sn = 0;
+  for (const [t, c] of script) {
+    for (const [duro, at] of PARTES_FP[principal(c)] || []) {
+      const x = t + at;
+      if (x >= 14 && x < 24) (pn++, (pd += duro));
+      else if (x < 4 || x >= 24) (sn++, (sd += duro));
+    }
+  }
+  return (pn ? (100 * pd) / pn : 0) - (sn ? (100 * sd) / sn : 0);
+}
+const FP_MIN = 10; // pico al menos 10 puntos más duro que calma y respiro (director, 1-nov 23:30)
+
 // Firma del pico (regla b): patrones de 14 a 24 s, sin filas de piezas
 const firmaPico = (script) => [...script].sort((a, b) => a[0] - b[0]).filter(([t, c]) => t >= 14 && t < 24 && principal(c) !== 'P5').map(([, c]) => principal(c)).join(' ');
 
@@ -360,7 +380,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
       // sale en la misma fase de dos páginas seguidas. Castigan como un hueco de novedad: se elige otro intento.
       const reglaB = !!prevPico && firmaPico(script) === prevPico;
       const reglaC = script.fases.some(([fa, id]) => id !== 'relleno' && prevFases.has(`${fa}:${id}`));
-      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0) + (reglaB || reglaC ? 50 : 0);
+      const h = huecoNovedad(script, i * LEN, ultimoNuevo, global, i === n - 1 ? n * LEN : (i + 1) * LEN + 14) + (repiteTramo(eventos, script, i * LEN) ? 100 : 0) + (reglaB || reglaC ? 50 : 0) + (i > 0 && fpPagina(script) < FP_MIN ? 100 : 0); // pico más suave que el respiro: otro intento
       if (h < mejor) {
         mejor = h;
         t = { speed: tr.speed, len: LEN, script, ids: script.ids, fases: script.fases };
