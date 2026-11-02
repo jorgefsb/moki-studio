@@ -12,7 +12,7 @@ const DEBUG = Q.get('audiodebug') === '1';
 // Cadena (AUDIO §3):
 //   música -> musicMix -> musicFilter -> duckGain -> musicBus ─┐
 //   efectos -> sfxMix -> sfxBus ───────────────────────────────┴-> master (0.125) -> compresor -> destino
-const REWARD = new Set(['pickup', 'amber', 'arc']);
+const REWARD = new Set(['pickup', 'amber', 'arc', 'timbre']);
 
 // Encime de efectos (T3g2). Los picos de sesión no salían de un sonido solo, sino de piezas con racha + arco, o salto + piezas + bip.
 // En vez de bajarlos todos: (1) el ping nuevo hace que el anterior ceda (baja a cfg.yield) y el arco completo reemplaza al último ping;
@@ -194,9 +194,11 @@ const A = {
       this.music = createMusic(this.ctx, this.bus, { reduced: this.reduced });
       this.bus.duckGain.gain.value = 0;
       if (this.papelName) this.setPapel(this.papelName); // papel elegido antes del gesto
+      this.setNivel(this.nivel);
       window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
         this.reduced = e.matches;
         if (this.music) this.music.setReduced(e.matches);
+        if (this.capas) this.capas.state.reduced = e.matches;
       });
       this.log('unlock', this.ctx.state, 'silenciado:', this.muted);
     }
@@ -335,7 +337,9 @@ const A = {
   // Efectos (AUDIO §5): suenan igual con cualquier juice; el juice solo agrega extras (racha, ámbar, arco)
   sfx(name, o = {}) {
     if (!this.running || this.muted || this.hidden) return;
-    const fn = SFX[name];
+    // timbre de bici (capas.js); si aún no cargó, la campanita de pieza más alta y se pide para el siguiente
+    if (name === 'timbre' && !this.capasMod) (o = { index: 11 }), (name = 'pickup'), this.loadCapas();
+    const fn = name === 'timbre' ? this.capasMod.timbre : SFX[name];
     if (!fn) return;
     if (name === 'popAviso') this.popTics = (this.popTics || 0) + 1; // para las pruebas: tics del pop-up que sí sonaron
     // El sonido va fuera del juice (decisión del líder): racha x2/x3, arco completo, ámbar y tarjeta suenan siempre.
@@ -396,6 +400,26 @@ const A = {
     if (this.papel) return this.papel.set(this.papelName);
     if (this.papelName) this.loadPapel().then(() => this.papel.set(this.papelName));
   },
+  // Capas del Cuaderno (AUDIO-CAPAS.md): capas.js se descarga solo con nivel >= 2 (o en el primer timbre), tras el gesto
+  // y con sonido. Sin nivel (clásico, demo) no se carga nada. nt: cuánto es de noche (RunScene pasa el del fondo).
+  nivel: 1,
+  nt: () => 0,
+  loadCapas() {
+    if (!this.capasLoading && this.ctx && !this.muted)
+      this.capasLoading = import('./capas.js').then((m) => {
+        this.capasMod = m;
+        this.capas = m.createCapas(this.ctx, this.bus, C.audio);
+        Object.assign(this.capas.state, { nt: () => this.nt(), reduced: this.reduced });
+        this.capas.set(this.nivel);
+        this.music.setCapas(this.capas);
+      });
+  },
+  setNivel(n) {
+    this.nivel = n;
+    if (this.capas) this.capas.set(n);
+    else if (n >= 2) this.loadCapas();
+  },
+
   // Pasar página (cruce de tramo con papel): sustituye al stinger de checkpoint, misma prioridad y ducking más corto
   pagina(name) {
     this.setPapel(name);
@@ -457,6 +481,7 @@ const A = {
         this.bus.master.gain.setValueAtTime(0, n);
         this.bus.master.gain.linearRampToValueAtTime(C.audio.master, n + 0.3);
         SFX.ui(this.ctx, this.bus.sfxMix, n + 0.31, { dir: 'up', reduced: this.reduced });
+        this.setNivel(this.nivel); // con el sonido apagado no se pidieron las capas
         if (this.state !== 'paused' && this.state !== 'finished') {
           this.startMusic(false, 0.3);
           this.setState(this.state);

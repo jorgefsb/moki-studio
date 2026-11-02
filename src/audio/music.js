@@ -21,6 +21,7 @@ export function createMusic(ctx, bus, opts = {}) {
     reduced: !!opts.reduced,
     fixed: opts.level !== undefined, // render offline: grados fijos desde el primer paso
     papel: opts.papel || null, // capa de papel (papel.js, carga diferida); null en el clásico
+    capas: opts.capas || null, // capas del Cuaderno (capas.js)
   };
   if (S.fixed) for (let k = 1; k <= 3; k++) S.layerOn[k] = S.target >= k;
   const rnd = (a) => (Math.random() * 2 - 1) * a;
@@ -36,7 +37,7 @@ export function createMusic(ctx, bus, opts = {}) {
       const g = bus.layer[k].gain;
       g.cancelScheduledValues(time);
       g.setValueAtTime(g.value, time);
-      g.linearRampToValueAtTime(want ? 1 : 0, time + rampSec());
+      g.linearRampToValueAtTime(want ? (k === 3 && S.capas ? S.capas.e3() : 1) : 0, time + rampSec());
       S.layerOn[k] = want;
       if (!want) S.layerOffUntil[k] = time + rampSec() + 0.2;
     }
@@ -110,6 +111,8 @@ export function createMusic(ctx, bus, opts = {}) {
       if (s === 6 || s === 14) tic(ctx, L, t, 0.1);
       if (s === 10) chord[2].slice(0, 3).forEach((n, i) => pulso(ctx, L, t + i * 0.014, n, 0.033 * MID));
     }
+    // --- capas del Cuaderno (capas.js, carga diferida; null sin nivel) ---
+    if (S.capas) S.capas.step(s, bar, chord, t);
   }
 
   function tick() {
@@ -132,6 +135,9 @@ export function createMusic(ctx, bus, opts = {}) {
     },
     setReduced(v) {
       S.reduced = v;
+    },
+    setCapas(c) {
+      S.capas = c;
     },
     // fromStart: arranca limpio en el paso 0 (primer salto, no a media frase); si no, sigue del mismo paso
     start(fromStart) {

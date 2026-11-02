@@ -156,6 +156,7 @@ export class RunScene extends Phaser.Scene {
     this.particles = new Particles(this);
     this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
     this.ambient = new Ambient(this, Number(Q.get('amb')) || C.ambient.seed); // ?amb=N cambia la semilla del fondo (prueba de determinismo)
+    audio.nt = () => this.ambient.nt || 0; // de noche las capas del Cuaderno cierran el filtro y dejan la escala abierta
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
       // Lectura de medición en el DOM (la cámara con zoom deformaría un texto del lienzo).
@@ -453,6 +454,7 @@ export class RunScene extends Phaser.Scene {
     if (this.ambient) this.ambient.biomas = this.demo ? null : level.biomas || null; // biomas de papel por tramo (NIVELES.md §8)
     if (this.ambient) this.ambient.setDay(this.demo ? 0 : this.tramoIdx, true);
     audio.setPapel(!this.demo && level.biomas ? level.biomas[this.tramoIdx] : null); // timbre del papel (clásico y demo: sin papel)
+    audio.setNivel(!this.demo && level.biomas ? nivelDe(leerCuaderno()).nivel : 1); // capas del Cuaderno (clásico y demo: solo la base)
   }
 
   showModo() {
@@ -817,7 +819,7 @@ export class RunScene extends Phaser.Scene {
   tocarTimbre(o) {
     o.sono = true;
     this.timbres.add(o.tid);
-    audio.sfx('pickup', { index: 11 }); // campanita: la pieza en su tono más alto (el sonido propio va a la fila de audio)
+    audio.sfx('timbre'); // timbre de bici (capas.js); si aún no carga, la campanita de pieza más alta
     if (!this.reduced) this.tweens.add({ targets: o.sprite, angle: -14, duration: 70, yoyo: true, ease: 'Quad.easeOut' });
     o.sprite.setAlpha(0.55); // usado: más tenue, así no tapa a Moki al cruzarlo
     const tw = this.obstacles.find((q) => q.tid === o.tid && q !== o);
