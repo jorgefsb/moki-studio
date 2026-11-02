@@ -263,6 +263,7 @@ Invitado de niveles. Los números con "≈" los calculé a mano con las perillas
 - **Pasa:** el bot con viento a −40, 0 y +40 ms, en las 4 velocidades de tramo y en vuelta rápida (×1.12, hasta 470). Siguen las dos rutas del trampolín, y el pasivo falla en todas.
 - **Prueba del instrumento** (en la prueba de `validar`, no en cada nivel): un bot **ciego al viento** (apunta con `k = 1` pero sufre la física) debe chocar con `C<` aislada a 320 y 350 px/s. Si la libra, el viento es pura decoración y la mecánica no pasa.
 - **Calibración primero:** con el centrado de `air/2`, `C<` a 320 queda justa (≈ ±44 a 52 ms). Si el bot con viento no pasa a ±40, sube `contra` a 0.85 y repite. Si con 0.85 el ciego ya no choca, ve al punto 6.
+  - **Resultado (2-nov, decisión A del director, DECISIONES 2-nov 01:10):** `contra` = 0.85. El bot con viento pasa ±40 en 320-470 px/s; el bot ciego centrado libra `C<` por 11 px, y a -40 ms choca a 320 y queda con 1 px a 350. Vara del ciego relajada a "-40 choca" (medido en `scripts/viento-calibrar.mjs`, `evidencia/v2-viento-calibracion.json`). La justicia ±40 manda sobre cualquier mecánica.
 
 **5. Sabremos que estuvo bien si** (Libre, nivel ≥ 5, 30 semillas, contra master `f068d24`):
 - F1 sube de ≈8.3 a **≥ 9.3** (son 4 patrones nuevos: `C>`, `C<`, `T>` y los pares). F6 baja de 28 a **≤ 24 s**.
