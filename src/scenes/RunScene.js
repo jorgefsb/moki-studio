@@ -431,6 +431,7 @@ export class RunScene extends Phaser.Scene {
     this.rig.reset();
     this.particles.clear();
     if (this.cinta) this.cinta.reset();
+    this.cpAt = -1e9;
     this.tutSetState('off');
     this.tutArc.setVisible(false);
     if (this.ambient) this.ambient.reset();
@@ -935,8 +936,8 @@ export class RunScene extends Phaser.Scene {
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
-  cobrarCinta(aviso) {
-    const mult = this.cinta.cobrar(aviso);
+  cobrarCinta(aviso, x2ok) {
+    const mult = this.cinta.cobrar(aviso, x2ok);
     const P = !this.demo && this.partida;
     if (P && mult >= 2) P.cintas2 += 1;
     if (P && mult >= 3) P.cintas3 += 1;
@@ -976,7 +977,7 @@ export class RunScene extends Phaser.Scene {
     }
     // La racha se acaba a los 0.9 s sin piezas
     if (this.combo > 0 && this.t - this.lastPickAt > C.combo.windowMs) {
-      this.cobrarCinta(true);
+      this.cobrarCinta(true, this.t - this.cpAt > C.art.checkpointLabelMs); // el x2 chico no pisa el checkpoint
       this.combo = 0;
       audio.setStreak(0);
       this.setPieceLabel(1);
@@ -1231,6 +1232,7 @@ export class RunScene extends Phaser.Scene {
       this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue };
       if (this.partida && !this.demo) this.partida.maxTramo = Math.max(this.partida.maxTramo, this.tramoIdx);
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
+      this.cpAt = this.t;
       // con papel, el cruce es pasar página: su stinger sustituye al de checkpoint (el clásico no cambia)
       if (!this.demo && this.level.biomas) audio.pagina(this.level.biomas[this.tramoIdx]);
       else audio.stinger('checkpoint');
@@ -1835,7 +1837,7 @@ export class RunScene extends Phaser.Scene {
     this.release();
     this.rig.startHop();
     if (!this.paseoRun) save('moki.done', '1'); // abre Hardcore (decisión del líder); un paseo no lo abre
-    this.cobrarCinta(true);
+    this.cobrarCinta(true, false); // meta: solo el x3; el x2 chico no pisa la meta ni la mejor marca
     if (this.partida) Object.assign(this.partida, { finished: true, pieceTotal: this.level.pieceTotal });
     // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
     const best = num(this.bestKey(), 0);

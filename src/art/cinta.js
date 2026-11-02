@@ -18,10 +18,7 @@ const K = {
   perPiece: 22, // lo que crece cada pieza
   max: 230,
   step: 6, // px por tramo del dibujo
-  turn: 26, // radio de la curva cuando ya no cabe hacia atrás
-  sway: 11, // vaivén en S del tramo que sube (una vuelta cada ~56 px)
   rollMs: 280,
-  avisoMs: 900,
 };
 
 export class Cinta {
@@ -58,21 +55,26 @@ export class Cinta {
   }
 
   // Se corta el combo. Devuelve el multiplicador cobrado (0 si no había cinta). aviso=false: choque (sin cartel).
-  cobrar(aviso) {
+  // Opción C (invitado game-feel, 2-nov): x3 = aviso completo "x3 +N" sobre Moki, 700 ms; x2 = solo "+N" a media
+  // escala junto a la punta de la cinta, 350 ms, y se calla si x2ok es falso (checkpoint o meta con mejor marca).
+  cobrar(aviso, x2ok) {
     if (!this.combo) return 0;
     const mult = this.mult;
-    if (aviso && mult > 1) this.showAviso(`x${mult} +${this.valor}`);
+    if (aviso && (mult > 2 || (mult > 1 && x2ok))) this.showAviso(mult > 2 ? `x${mult} +${this.valor}` : `+${this.valor}`, mult > 2);
     this.combo = 0;
     this.rollT = 0;
     this.rollFrom = this.len;
     return mult;
   }
 
-  showAviso(text) {
+  showAviso(text, grande) {
     this.etiqueta.set(text);
-    this.avisoText = text;
-    this.aviso.setPosition(0, 0);
-    this.avisoW = this.aviso.getBounds().width + 24; // getBounds solo mide el texto; +24 = relleno de la etiqueta
+    this.grande = grande;
+    // chico: mitad de escala, pero nunca menos de 12 px de letra en pantalla (a 375 la cámara aleja)
+    const s = grande ? 1 : Math.max(0.5, 12 / (22 * this.scene.cameras.main.zoom));
+    this.avisoAt = this.mid && this.mid[this.mid.length - 1]; // punta de la cinta al cobrar (draw crea puntos nuevos)
+    this.aviso.setScale(s).setPosition(0, 0);
+    this.avisoW = this.aviso.getBounds().width + 24 * s; // getBounds ya trae la escala pero solo mide el texto; +24 = relleno
     this.avisoT = 0;
     this.aviso.setVisible(true);
   }
@@ -97,11 +99,15 @@ export class Cinta {
 
     if (this.avisoT >= 0) {
       this.avisoT += dtMs;
-      const k = this.avisoT / K.avisoMs;
-      const top = y - C.player.spriteHeight - 28;
+      const k = this.avisoT / (this.grande ? 700 : 350);
+      const a = this.avisoAt;
+      const G = this.grande || !a;
+      // grande: sobre la cabeza y sube; chico: quieto, centrado arriba de la punta de la cinta
+      const ax = G ? x - 4 : a.x + this.avisoW / 2;
+      const ay = G ? y - C.player.spriteHeight - 28 - (calma ? 0 : 18 * k) : a.y - 12 - 40 * this.aviso.scaleY;
       // a 375 Moki queda cerca del borde: el aviso nunca sale de la pantalla (se recorre a la derecha)
       const borde = this.scene.cameras.main.worldView.x + 8 + this.avisoW;
-      this.aviso.setPosition(Math.max(x - 4, borde), top - (calma ? 0 : 18 * k)).setAlpha(k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3);
+      this.aviso.setPosition(Math.max(ax, borde), ay).setAlpha(k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3);
       if (k >= 1) {
         this.avisoT = -1;
         this.aviso.setVisible(false);
@@ -137,29 +143,18 @@ export class Cinta {
     const half = Math.max(m >= 3 ? 6 : m >= 2 ? 5 : 4, (m >= 3 ? 7 : m >= 2 ? 6 : 5) / cam.zoom);
     const lw = Math.max(2, 2 / cam.zoom); // trazos de 2 px en pantalla
     const x0 = x - K.back;
-    // Lo que cabe detrás de Moki en pantalla (a 375 la cámara lo deja cerca del borde): ahí la cinta deja de ir
-    // hacia atrás y sube en curva, como serpentina, en vez de salirse de la pantalla.
-    const room = x0 - (cam.worldView.x + 10 + half + K.sway);
-    const R = Math.max(0, Math.min(L, room - K.turn));
-    const xR = x0 - R;
-    let yR = 0;
+    // Solo hacia atrás y hasta 14 px de pantalla antes del borde. A 375 la cámara deja a Moki cerca del borde: la
+    // serpentina que subía se leía como gusano (probador, 2-nov); ahí la cinta es corta y crece en grosor, hilo y marcas.
+    // Solo hacia atrás y hasta 14 px de pantalla antes del borde. A 375 la cámara deja ~38 px detrás de Moki: ahí la
+    // cinta es corta. Subirla en S, inclinarla o curvarla se leyó como gusano, bastón o gancho (invitados, 1 y 2-nov).
+    const Lv = Math.min(L, x0 - cam.worldView.x - 14 / cam.zoom - half);
+    if (Lv < 2) return;
     const mid = [];
-    for (let s = 0; ; s = Math.min(L, s + K.step)) {
+    for (let s = 0; ; s = Math.min(Lv, s + K.step)) {
       const f = s / L;
       const wave = calma ? 0 : Math.sin(s / 34 - this.clock / 170) * 4 * f;
-      if (s <= R) {
-        const cy = this.yAt(d, s, y) - K.lift + 6 * f; // la punta cae un pelo
-        mid.push({ x: x0 - s, y: cy + wave });
-        yR = cy;
-      } else {
-        // al subir se mece en S (serpentina); en calma queda la S quieta. Sin la S se leía como popote (invitado).
-        const u = s - R;
-        const arc = (K.turn * Math.PI) / 2;
-        const phi = Math.min(u, arc) / K.turn;
-        const sway = Math.sin(u / 9 - (calma ? 0 : this.clock / 220)) * K.sway * Math.min(1, u / 16);
-        mid.push({ x: xR - K.turn * Math.sin(phi) + sway, y: yR - K.turn * (1 - Math.cos(phi)) - Math.max(0, u - arc), up: true });
-      }
-      if (s >= L) break;
+      mid.push({ x: x0 - s, y: this.yAt(d, s, y) - K.lift + 6 * f + wave }); // la punta cae un pelo
+      if (s >= Lv) break;
     }
     // Bordes con la normal del camino (el tramo que sube conserva el grosor)
     const top = [];
@@ -174,7 +169,6 @@ export class Cinta {
       bot.push({ x: p.x - p.nx, y: p.y - p.ny });
     });
     this.mid = mid; // centro del camino (las pruebas sacan de aquí la caja contra Moki y los obstáculos)
-    const tip = mid[mid.length - 1];
     // Sombra suave (tinta 18%) y cuerpo kraft con canto oscuro; punta recta
     const pts = [...top, ...bot.reverse()];
     const poly = (dy) => pts.map((p) => ({ x: p.x, y: p.y + dy }));
@@ -189,23 +183,13 @@ export class Cinta {
       g.lineStyle(lw * 1.5, PAPER, 1);
       g.strokePoints(mid.slice(0, -1), false);
     }
-    if (m >= 3) {
-      g.lineStyle(lw, INK, 0.45);
-      const n = Math.min(this.rollT >= 0 ? 0 : this.combo, Math.floor(L / 16));
-      for (let i = 1; i <= n; i++) {
-        const p = mid[Math.min(mid.length - 1, Math.round((i * 16) / K.step))];
-        if (!p.up) g.lineBetween(p.x + p.nx * 0.7, p.y + p.ny * 0.7, p.x - p.nx * 0.7, p.y - p.ny * 0.7);
+    // marcas de tinta de x3: casi opacas y de 3 px (al 45% no se veían, probador 2-nov)
+    if (m >= 3 && this.rollT < 0) {
+      g.lineStyle(lw * 1.5, INK, 0.85);
+      for (let i = 2; i < mid.length; i += 3) {
+        const p = mid[i];
+        g.lineBetween(p.x + p.nx * 0.8, p.y + p.ny * 0.8, p.x - p.nx * 0.8, p.y - p.ny * 0.8);
       }
-    }
-    // Al cobrarse la punta se vuelve un rollito de papel (canto y espiral) que llega a la espalda de Moki
-    if (this.rollT >= 0) {
-      const r = half + 3;
-      g.fillStyle(KRAFT, 1);
-      g.fillCircle(tip.x, tip.y, r);
-      g.lineStyle(lw, DARK, 1);
-      g.strokeCircle(tip.x, tip.y, r);
-      g.lineStyle(lw, PAPER, 1);
-      g.strokeCircle(tip.x, tip.y, r * 0.5);
     }
   }
 }
