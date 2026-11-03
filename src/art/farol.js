@@ -2,7 +2,6 @@
 // pantallas, con su mancha de luz SOBRE el suelo. Solo de noche (siguen al fundido nt); de día no se crean ni se dibujan.
 // Posición pura de la distancia (sin PRNG): no toca la física, el guion ni la semilla del fondo.
 import { CONFIG as C } from '../config.js';
-import { farolPoste, farolLuz } from './textures.js';
 
 const frac = (k) => {
   const v = Math.sin(k * 127.1 + 311.7) * 43758.5453;
@@ -12,13 +11,11 @@ const frac = (k) => {
 export class Faroles {
   constructor(scene) {
     this.scene = scene;
-    this.items = null; // se crean la primera vez que cae la noche
+    this.items = null; // se crean la primera vez que cae la noche (las texturas salen de la cola diferida de buildTextures)
   }
 
   make() {
     const s = this.scene;
-    if (!s.textures.exists('farolPoste')) s.textures.addCanvas('farolPoste', farolPoste());
-    if (!s.textures.exists('farolLuz')) s.textures.addCanvas('farolLuz', farolLuz());
     const F = C.atmosphere.night.farol;
     this.items = [0, 1, 2].map(() => ({
       // pie del poste escondido tras el canto de atrás del suelo (depth 4): el farol queda detrás del suelo
@@ -31,7 +28,10 @@ export class Faroles {
   update(dist, nt) {
     const F = C.atmosphere.night.farol;
     if (!F.on || (nt <= 0 && !this.items)) return;
-    if (!this.items) this.make();
+    if (!this.items) {
+      if (!this.scene.textures.exists('farolLuz')) return; // texturas diferidas (buildTextures): aún no listas
+      this.make();
+    }
     const s = this.scene;
     const g = C.world.groundY;
     const P = s.vw * F.cada;

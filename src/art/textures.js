@@ -151,7 +151,7 @@ function lightLayer(halo, vignette) {
 // SALTO NOCHE (pieza 2): farol de papel en poste de cartón, solo de noche. Canvas a 2x (se dibuja a escala 0.5).
 // El farol es papel crema plano, no emite: la luz solo cae sobre superficies (canto del poste aquí, el suelo en farolLuz).
 // Pie del poste abajo al centro del canto izquierdo (x 27); el farol cuelga del brazo en x 80.
-export function farolPoste() {
+function farolPoste() {
   const [c, x] = mk(128, 380);
   const r = rng(301);
   const lit = mix(PAL.paper, PAL.accent, 0.2);
@@ -195,7 +195,7 @@ export function farolPoste() {
 
 // Mancha de luz del farol sobre el suelo: media elipse (empieza en el canto de atrás del suelo y cae hacia adelante),
 // tono tibio derivado de tokens (papel con #FF6B35 al 20 %) y caída suave; sin nada por arriba del suelo.
-export function farolLuz() {
+function farolLuz() {
   const [c, x] = mk(256, 64);
   const g = x.createRadialGradient(128, 0, 0, 128, 0, 128);
   const lit = mix(PAL.paper, PAL.accent, 0.2);
@@ -1260,6 +1260,8 @@ export function buildTextures(scene) {
     return m.base;
   });
   defer('viga', () => viga());
+  defer('farolPoste', () => farolPoste()); // SALTO NOCHE: listos antes de la noche (crearlos al caer daba un cuadro de 100 ms)
+  defer('farolLuz', () => farolLuz());
   defer('caja_n', () => caja(0.7));
   defer('torre_n', () => torre(0.7));
   defer('viga_n', () => viga(C.atmosphere.night.vigaDim));
