@@ -35,3 +35,4 @@ Cómo usarla: para cada punto que toque tu pieza, corre la prueba y anota PASS o
 20. **Sobredibujo**: las capas transparentes de cielo, papel y niebla no se apilan de más. Prueba: a 375 px, menos de 4 capas a pantalla completa.
 21. **Atlas de texturas**: sprites de Moki y obstáculos en un atlas. Prueba: peticiones de imagen en la carga.
 22. **Repartir trabajo**: lo pesado (guardar, generar tramos) no cae todo en un cuadro. Prueba: sin picos de más de 33 ms en el perfil.
+23. **Nunca un bot síncrono dentro de una medida de fps**: `moki.bot('adjust', ...)` simula los 40 s en un `while` síncrono, congela el hilo 0.9-1.6 s y después se mide la pantalla de muerte, no el juego. Prueba: medir con `?debug&god` sin bot (o con un bot que pulse en tiempo real) y comparar con una página vacía de control. Evidencia: evidencia/tirones-acfb533/RESULTADO.md (con bot Clásico 50.4 fps y cuadros de 1650 ms; sin bot 59.1 fps y 0 cuadros >33 ms).
