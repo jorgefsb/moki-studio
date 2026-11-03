@@ -64,6 +64,7 @@ export class PrimerPlano {
   update(dist, nt) {
     const F = C.atmosphere.night.primerPlano;
     const s = this.scene;
+    if (!F.on) return this.items && this.items.forEach((im) => im.setVisible(false)); // apagado: ni texturas ni recortes
     if (this.falta.length) {
       const i = 3 - this.falta.length;
       const fn = this.falta.shift();
@@ -72,7 +73,6 @@ export class PrimerPlano {
     }
     // y se dibujan un cuadro fuera de pantalla para que la GPU ya los tenga antes de que se vean
     if (!this.items) return (this.items = [0, 1, 2, 3].map((i) => s.add.image(-2000, -2000, PP[i % 3]).setOrigin(0, 1).setDepth(20)));
-    if (!F.on) return this.items.forEach((im) => im.setVisible(false));
     const P = F.cada;
     const d = dist * F.speed;
     const k0 = Math.floor((d - 150) / P);
