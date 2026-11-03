@@ -27,13 +27,14 @@ export const TARDE = {
   cieloHorizonte: '#FFD27A', // franja clara y cálida pegada al horizonte (luz del sol bajo)
   bajoTop: 260, // el degradado llega a cieloBajo en y = groundY - bajoTop (por farS); abajo, plano
   lejana: '#F08A4E', // cordillera (0.15x): la más clara de las siluetas
-  media: '#C98552', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo
+  media: '#DE9050', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo; 1c: más clara y cálida que los cerros
   mediaTop: [236, 288], // y del mundo del canto de arriba de la colina media (lomas suaves; nunca baja de 290)
-  cercana: '#93451A', // capa lejana de siempre (cerros y casitas) teñida a este valor
+  cercana: '#7A3612', // capa lejana de siempre (cerros y casitas) teñida a este valor; 1c: un escalón más oscura (a 375 se fundía con la media)
   pinos: '#4A2614', // capa media (pinos, postes, arbustos): la más oscura, para que el obstáculo #6B4630 quede entre cerros y pinos
   obs: '#6B4630', // caja, torre y viga
   canto: { px: 4, alpha: 1, pie: 10 }, // canto claro #F4E8D5 del obstáculo; los 10 px de abajo sin él
-  suelo: { cantoPx: 4, tinte: 0xffe18d }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft cálido #CD9A4E
+  suelo: { cantoPx: 4, tinte: 0xffd8bc }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft rojizo #CD9468 (1c: #CD9A4E se leía caqui-oliva)
+  piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.5, 1.25], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
 };
@@ -276,6 +277,8 @@ export function montar(s) {
       });
     }
     s.folds.forEach((v) => v.setTint(lerp(0xffffff, TARDE.suelo.tinte, amb.st))); // los pliegues se rehacen al cambiar de tamaño
+    const pz = lerp(0xffffff, TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
+    s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.setTint(pz));
     o.canto.setPosition(0, g - 10).setSize(s.vw, TARDE.suelo.cantoPx); // labio sobre el suelo: el pie del obstáculo (y 436) asienta en kraft, no en el canto
   };
   s.events.on('postupdate', colocar);
@@ -307,7 +310,10 @@ export function montar(s) {
     s.skyGrad.setAlpha(1 - st); // applyDay no toca su alfa: se devuelve aquí también al salir de la tarde
     const suelo = lerp(0xffffff, TARDE.suelo.tinte, st); // suelo kraft cálido (los invitados lo leían como concreto)
     [s.surface, s.canto, s.front, ...s.folds].forEach((v) => v.setTint(suelo));
-    if (!on) return;
+    if (!on) {
+      s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.clearTint()); // colocar ya no corre con st = 0
+      return;
+    }
     const P = hex(PAL.paper);
     // cielo y velo de arriba: un solo valor plano (cielo alto); el bajo es la tira de atrás
     const alto = hex(TARDE.cieloAlto);
