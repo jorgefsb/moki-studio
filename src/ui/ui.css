@@ -111,6 +111,12 @@
 .ui-pause { position: relative; width: min(320px, calc(100vw - 48px)); padding: 18px 20px 20px; }
 .ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
 .ui-pause .ui-btn { margin: 0; width: 100%; }
+.ui-foto-btn { gap: 10px; }
+/* Cámara de tinta: cuerpo con borde, lente redonda y joroba del visor (sin color, se lee por la forma) */
+.ui-foto-btn i { position: relative; width: 22px; height: 15px; margin-top: 4px; border: 2.5px solid #22211f; border-radius: 4px; }
+.ui-foto-btn i::before { content: ''; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -6.5px 0 0 -6.5px; border: 2.5px solid #22211f; border-radius: 50%; }
+.ui-foto-btn i::after { content: ''; position: absolute; left: 5px; top: -7px; width: 8px; height: 4px; border: 2.5px solid #22211f; border-bottom: none; border-radius: 3px 3px 0 0; }
+#ui.foto > :not(.ui-foto) { visibility: hidden; }
 
 /* "Así lo hicimos": papel crema, tarjetas de cartón, texto en tinta; sin barra de scroll; fila fija abajo */
 .ui-asi { position: absolute; inset: 0; pointer-events: auto; background: #f4e8d5; color: #22211f; display: flex; flex-direction: column; }

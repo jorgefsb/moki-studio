@@ -56,6 +56,7 @@ export class RunScene extends Phaser.Scene {
     this.pedirZanja();
     this.paseo = load('moki.paseo') === '1'; // Modo Paseo (GDD §3): opción del jugador, no la bandera ?god de pruebas
     this.paseoRun = false; // Paseo activo en la partida en curso (el demo nunca lo usa)
+    this.zen = load('moki.zen') === '1'; // Paseo con pantalla limpia (MAPA-SISTEMAS #3): sin números arriba
     this.vuelta = load('moki.vuelta') === '1'; // Vuelta rápida (GDD §3): opción del jugador; solo cuenta con el sello Coleccionista
     this.vueltaOn = false; // pedida para la partida en curso; vueltaRun además exige Reto o Libre
     performance.mark('c0');
@@ -247,7 +248,8 @@ export class RunScene extends Phaser.Scene {
         // Esc, p y P reanudan la pausa aunque el foco esté en un botón (se revisan antes que el botón enfocado)
         if (this.screen === 'pause' && (e.key === 'Escape' || e.key === 'p' || e.key === 'P')) {
           e.preventDefault();
-          this.resumeGame();
+          if (this.fotoOn) this.cerrarFoto();
+          else this.resumeGame();
           return;
         }
         if (onButton) return; // el botón enfocado se activa solo con Espacio/Enter
@@ -578,7 +580,7 @@ export class RunScene extends Phaser.Scene {
     // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
     this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
-    this.ui.showSoundButton('hud');
+    this.ponZen(); // botón de sonido (sin él en Paseo con pantalla limpia)
     this.buzz(10); // "Jugar" se siente en la mano (feel.gestured lo pone el primer gesto real, ver feel.js)
     audio.unlock(); // el gesto que arranca la partida habilita el sonido
     audio.setTramo(0);
@@ -603,6 +605,7 @@ export class RunScene extends Phaser.Scene {
     this.porTachar = [];
     this.paseoRun = false;
     this.paseoTagC.setVisible(false);
+    [this.hudL, this.hudR, this.hudC].forEach((h) => h.setVisible(true));
     this.vueltaOn = false;
     this.vueltaTagC.setVisible(false);
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
@@ -757,15 +760,55 @@ export class RunScene extends Phaser.Scene {
 
   // ---------- Pausa ----------
 
-  pauseGame() {
+  pauseGame(deFoto) {
     if (this.screen !== 'play') return;
     this.pausedFrom = this.screen;
     this.screen = 'pause';
     this.release();
-    audio.setState('paused');
-    audio.sfx('pause');
-    this.tweens.pauseAll();
-    this.ui.showPause({ onResume: () => this.resumeGame(), onHome: () => this.goHome() });
+    if (!deFoto) {
+      audio.setState('paused');
+      audio.sfx('pause');
+      this.tweens.pauseAll();
+    }
+    this.ui.showPause({
+      onResume: () => this.resumeGame(),
+      onHome: () => this.goHome(),
+      onFoto: () => this.abrirFoto(),
+      zen: this.zen,
+      onZen: this.paseoRun &&
+        (() => {
+          this.zen = !this.zen;
+          save('moki.zen', this.zen ? '1' : '0');
+          this.ponZen();
+          return this.zen;
+        }),
+    });
+  }
+
+  // Zen (solo en Paseo): fuera metros, piezas, avisos y el botón de sonido; la pausa se queda para poder salir
+  ponZen() {
+    const v = !(this.paseoRun && this.zen);
+    [this.hudL, this.hudR, this.hudC].forEach((h) => h.setVisible(v));
+    this.ui.showSoundButton(v && 'hud');
+  }
+
+  // Modo foto: el juego ya está quieto en la pausa; src/foto.js (diferido) quita el HUD y guarda el PNG
+  abrirFoto() {
+    if (this.screen !== 'pause' || this.fotoOn) return;
+    this.fotoOn = true;
+    this.ui.hidePause();
+    import('../foto.js')
+      .then((m) => (this.fotoOn ? m.abrirFoto(this, () => this.cerrarFoto()) : null))
+      .catch(() => this.cerrarFoto());
+  }
+
+  cerrarFoto() {
+    if (!this.fotoOn) return;
+    this.fotoOn = false;
+    if (this.fotoFin) this.fotoFin();
+    this.fotoFin = null;
+    this.screen = 'play';
+    this.pauseGame(true);
   }
 
   resumeGame() {
