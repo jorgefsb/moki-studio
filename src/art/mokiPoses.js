@@ -40,6 +40,10 @@ class MokiPoses {
     this.s = scene;
     // image, no sprite: el paquete de Phaser no trae Sprite y setFrame basta
     this.sprite = scene.add.image(0, 0, 'pose-run', 0).setOrigin(...ORIGEN).setScale(ESCALA).setDepth(12).setVisible(false);
+    // SALTO NOCHE pieza 5: borde cálido. La misma pose, en el color de la luz del farol (variante K), detrás de Moki y
+    // corrida 2 px hacia el farol (a la izquierda); el alfa lo calcula Faroles en s.rimA. Las poses se ven y el títere
+    // se esconde, así que el borde del títere (setRim) nunca se dibujaba en juego.
+    this.rim = scene.add.image(0, 0, 'pose-run', 0).setOrigin(...ORIGEN).setScale(ESCALA).setDepth(11.99).setTintFill(0xeb946a).setAlpha(0);
     this.pose = null;
   }
 
@@ -49,6 +53,7 @@ class MokiPoses {
     const on = !s.calm && !s.dead && (s.screen === 'play' || s.screen === 'demo');
     this.sprite.setVisible(on);
     s.rig.setVisible(!on);
+    this.rim.setVisible(on && s.rimA > 0);
     if (!on) return false;
     let key = 'pose-run';
     let frame = 0;
@@ -69,6 +74,7 @@ class MokiPoses {
       this.pose = key;
     } else this.sprite.setFrame(frame);
     this.sprite.setPosition(s.px, s.y + 2);
+    this.rim.setTexture(key, frame).setPosition(s.px - 2, s.y + 2).setAlpha(s.rimA || 0);
     return true;
   }
 }

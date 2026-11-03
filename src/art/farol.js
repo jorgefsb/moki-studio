@@ -58,8 +58,10 @@ export class Faroles {
       const a = Math.min(1, Math.max(0, Math.min(x + 51, s.vw - x + 14) / 60));
       it.luz.setVisible(on && a > 0).setTexture(L.key).setDisplaySize(L.w, L.h).setAlpha(nt * a).setPosition(x + 26, g - 8);
     });
-    // SALTO NOCHE pieza 5: borde cálido en Moki al pasar por la luz. El borde del títere (setRim) asoma del lado izquierdo,
-    // así que solo se prende con el farol a la izquierda de Moki y se apaga con la distancia (rim.r px de mundo).
-    if (s.rig) s.rig.setRim(F.rim.alpha * nt * Math.max(0, ...xs.map((x) => 1 - Math.abs(s.px - x - 26 - F.rim.r / 2) / (F.rim.r / 2))));
+    // SALTO NOCHE pieza 5: borde cálido en Moki al pasar por la luz (s.rimA; lo dibuja mokiPoses). El borde asoma del lado izquierdo,
+    // así que solo se prende con el farol a la izquierda de Moki Y en pantalla (sin farol a la vista se leía como error, ciego p5),
+    // y se apaga con la distancia (rim.r px de mundo).
+    s.rimA = F.rim.alpha * nt * Math.max(0, ...xs.map((x) => (x + 26 > 0 ? 1 - Math.abs(s.px - x - 26 - F.rim.r / 2) / (F.rim.r / 2) : 0)));
+    if (s.rig) s.rig.setRim(s.rimA); // con ?titere
   }
 }
