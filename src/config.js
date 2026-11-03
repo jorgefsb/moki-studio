@@ -226,7 +226,7 @@ export const CONFIG = {
       // con el tono de farolLuz (papel + #FF6B35 25 %, día 1b: sin el kraft 15 % que lo apagaba).
       // luzV: la mancha en vertical (375), más alta y más opaca. clearPx: ningún poste de telégrafo de la capa media a menos
       // de esto (px de mundo) del farol; se desvanece con midClear.fadePx (regla de colocación del 31-oct).
-      farol: { on: true, cada: 1.5, jitter: 0.33, clearPx: 70, luz: { key: 'farolLuz', w: 380, h: 64 }, luzV: { key: 'farolLuzV', w: 440, h: 120 } },
+      farol: { on: true, cada: 1.5, jitter: 0.33, clearPx: 70, rim: { alpha: 0.8, r: 240 }, luz: { key: 'farolLuz', w: 380, h: 64 }, luzV: { key: 'farolLuzV', w: 440, h: 120 } },
       // SALTO NOCHE pieza 3: primer plano de tinta. speed: parallax (> 1, como el primer plano de día 1.3); cada: separación
       // en px de mundo (igual en 375 y 1280: relativa al ancho se encimaban en vertical); escala/escalaV: tamaño a 1280 y en vertical (tope: nunca arriba de groundY + libre px de mundo);
       // hunde: entre esas fracciones del ancho el recorte se hunde fuera de cuadro (queda abajo a la izquierda).
