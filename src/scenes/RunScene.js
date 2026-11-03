@@ -158,6 +158,9 @@ export class RunScene extends Phaser.Scene {
     this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
     this.ambient = new Ambient(this, Number(Q.get('amb')) || C.ambient.seed); // ?amb=N cambia la semilla del fondo (prueba de determinismo)
     this.faroles = new Faroles(this); // SALTO NOCHE: faroles de papel con su luz sobre el suelo (solo de noche)
+    // SALTO NOCHE pieza 3: recortes de tinta abajo a la izquierda (solo de noche), módulo diferido
+    this.primerPlano = null;
+    import('../art/primerPlano.js').then((m) => (this.primerPlano = new m.PrimerPlano(this))).catch(() => {});
     audio.nt = () => this.ambient.nt || 0; // de noche las capas del Cuaderno cierran el filtro y dejan la escala abierta
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
@@ -1219,7 +1222,9 @@ export class RunScene extends Phaser.Scene {
     this.front.tilePositionX = this.dist;
     this.groundFibers.tilePositionX = this.dist;
     this.folds.forEach((f) => (f.tilePositionX = this.dist));
-    if (this.faroles) this.faroles.update(this.dist, this.ambient ? this.ambient.nt || 0 : 0);
+    const nt = this.ambient ? this.ambient.nt || 0 : 0;
+    if (this.faroles) this.faroles.update(this.dist, nt);
+    if (this.primerPlano) this.primerPlano.update(this.dist, nt);
 
     // Profundidad con el salto: las capas lejanas bajan unos px cuando Moki sube (sin zoom de cámara).
     const V = C.art.vertical;
