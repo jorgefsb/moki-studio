@@ -11,8 +11,10 @@ const frac = (k) => {
 
 // SALTO NOCHE pieza 3: primer plano oscuro, recortes de tinta (2 matas y una rama) con canto rasgado, sin halo.
 // Canvas a 1x (a 2x tardaban de más en generarse: cuadros > 33 ms); el pie es el borde de abajo, que queda fuera de cuadro.
-// tinta hacia el ciruela del cielo (skyTo) al 60 % y fibras densas (30 a 1x = 120 a 2x): al 20 % con 30 fibras a 2x se leía negro puro, sin papel (ciego p3)
-const TINTA = mix(PAL.ink, '#41363E', 0.6);
+// Prueba B (director 3-nov 02:30): kraft oscuro desenfocado, como el pasto del día (groundPiece), en vez de tinta.
+// La tinta (ciruela al 60 %) se leía como "manchas negras planas" en dos ciegos.
+const TINTA = mix(PAL.kraft, PAL.ink, 0.46);
+const BLUR = 'blur(2px)';
 function ppMata(seed) {
   const [c, x] = mk(150, 85);
   const r = rng(seed);
@@ -26,6 +28,7 @@ function ppMata(seed) {
     }
     g.closePath();
   };
+  x.filter = BLUR;
   cut(x, path, { fill: TINTA, edgeW: 1.5, r, fiberCount: 30 });
   return c;
 }
@@ -45,6 +48,7 @@ function ppRama() {
       g.ellipse(lx + Math.cos(a - 1.2) * 11, ly + Math.sin(a - 1.2) * 11, 13, 5, a - 1.2, 0, TAU);
     }
   };
+  x.filter = BLUR;
   cut(x, path, { fill: TINTA, edgeW: 1.5, r, fiberCount: 30 });
   return c;
 }
