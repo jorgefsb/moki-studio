@@ -8,7 +8,8 @@ const DT = 1 / 60;
 const HOLD_MS = { tap: 16, hold: 400 };
 
 // Caja de colisión de un obstáculo en coordenadas de suelo (altura sobre el suelo, x relativa a su centro).
-function box(type) {
+function box(type, W) {
+  if (type === 'zanja') return { half: W / 2 - (C.player.width - 6) / 2, lo: 0, hi: 0 }; // sig: D - (half + pw/2) = H0
   if (type === 'timbre') return { half: C.timbre.ancho / 2, lo: C.timbre.lo, hi: C.timbre.hi };
   const s = C.obstacleSizes[type];
   const hs = type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink;
@@ -33,7 +34,7 @@ function box(type) {
 export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba', opts = {}) {
   const vientos = level.vientos || [];
   const kAt = (d) => (vientos.find((z) => d >= z.D0 && d <= z.D1) || { k: 1 }).k;
-  const obs = level.entities.filter((e) => e.kind === 'obs').map((e) => ({ ...e, box: box(e.type), handled: false }));
+  const obs = level.entities.filter((e) => e.kind === 'obs').map((e) => ({ ...e, box: box(e.type, e.W), handled: false }));
   const tramps = obs.filter((o) => o.type === 'tramp');
   const planDe = (q) => (q.type === 'tramp' ? (ruta === 'abajo' ? 'tap' : 'none') : q.plan);
   const salta = (q) => {
@@ -55,6 +56,8 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
   let t = 0;
   let minClear = Infinity;
   let next = 0;
+  const pie = C.zanja.pie;
+  const zanjas = level.zanjas || [];
   while (dist < level.end) {
     while (tramo + 1 < level.tramos.length && dist >= level.starts[tramo + 1]) tramo++;
     const target = level.tramos[tramo].speed;
@@ -68,10 +71,11 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
       const i = Math.round((t - jump.t0) * 240);
       if (i >= jump.pts.length - 1) {
         // lo siguiente que mata (el timbre y la torre acostada no)
-        const sig = obs.find((q) => q.type !== 'tramp' && q.type !== 'timbre' && !q.caida && q.plan !== 'skip' && q.D - dist > -(q.box.half + pw / 2));
+        const sig = obs.find((q) => q.type !== 'tramp' && q.type !== 'timbre' && !q.caida && q.plan !== 'skip' && (q.type === 'zanja' ? q.D + q.W / 2 - pie > dist : q.D - dist > -(q.box.half + pw / 2)));
         const libre = sig ? (sig.D - (sig.box.half + pw / 2) - dist) / speed : Infinity;
         if (jump.k !== 1 && libre < C.viento.salidaSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'viento-salida', D: Math.round(sig.D) };
         if (jump.vuelo && libre < C.tramp.caidaLibreSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'caida', D: Math.round(sig.D) };
+        if (jump.z && libre < C.zanja.libreSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'zanja-salida', D: Math.round(sig.D) };
         if (jump.sono && libre < C.timbre.libreSec - 1e-6) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'timbre-salida', D: Math.round(sig.D) };
         jump = null;
         cae = true;
@@ -80,6 +84,8 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
         cae = i > 0 && jump.pts[i].rise < jump.pts[i - 1].rise;
       }
     }
+    // V-zanja: en el suelo (sin salto o ya terminado), con los dos pies dentro de un hueco, cae (el bot no usa coyote)
+    if (rise === 0 && zanjas.some((z) => dist - pie >= z.H0 && dist + pie <= z.H1)) return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'zanja', D: Math.round(dist) };
     // Trampolín: en el suelo o cayendo, con los pies a su altura, al llegar a TRAMP_PISA antes de su centro
     if (cae && rise <= C.obstacleSizes.tramp.height) {
       const j = tramps.find((q) => !q.used && dist >= q.D - TRAMP_PISA && dist < q.D + q.box.half);
@@ -106,7 +112,7 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
               return { ok: false, sec: +t.toFixed(2), tramo: tramo + 1, cause: 'popup-tiempo', D: Math.round(o.D) };
             }
           }
-          jump = { t0: t, pts: simulateJump(HOLD_MS[plan]).pts, k };
+          jump = { t0: t, pts: simulateJump(HOLD_MS[plan]).pts, k, z: o.type === 'zanja' };
         }
       }
     }
@@ -114,7 +120,7 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
     while (next < obs.length && obs[next].D - dist < -80) next++;
     for (let k = next; k < obs.length && obs[k].D - dist < 120; k++) {
       const o = obs[k];
-      if (o.type === 'tramp' || o.caida) continue; // no choca: se pisa o se salta; la torre acostada es piso
+      if (o.type === 'tramp' || o.type === 'zanja' || o.caida) continue; // no choca: se pisa o se salta; la torre acostada es piso
       const dx = Math.abs(o.D - dist);
       if (dx >= o.box.half + pw / 2) continue;
       const lo = rise + 2;

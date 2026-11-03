@@ -83,6 +83,7 @@ export const BLOQUES = [
   { id: 'timbre-caja',  dur: 3,   ev: [[0, 'C+B'], [0.9, 'T+A3up']],            dif: 2, min: 2, max: 4, tags: ['timbre'], mec: 'timbre' },
   { id: 'timbre-tc',    dur: 4,   ev: [[0, 'C+B'], [0.9, 'T.C+A3up']],          dif: 3, min: 2, max: 4, tags: ['timbre', 'ritmo'], mec: 'timbre', soloPico: true },
   { id: 'timbre-viga',  dur: 4,   ev: [[0, 'C+B'], [0.9, 'T+A3up'], [2.1, 'V']], dif: 3, min: 2, max: 4, tags: ['timbre', 'viga'], mec: 'timbre', soloPico: true },
+  // zanja (mec 'zanja', NIVELES.md §10): sus bloques viven en src/zanja.js, que solo baja Libre
   // sorpresas (1 por tramo; se colocan aparte, ver §4)
   { id: 'regalo7',      dur: 4,   ev: [[0, 'T+Aup7'], [2, 'P5']],               dif: 1, min: 1, max: 1, tags: ['sorpresa', 'premio'] },
   { id: 'ambar',        dur: 4.5, ev: [[0, 'T+AupAmb'], [2.5, 'C.C']],          dif: 2, min: 2, max: 3, tags: ['sorpresa', 'premio'] },
