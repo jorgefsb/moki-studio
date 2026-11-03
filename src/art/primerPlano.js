@@ -1,4 +1,4 @@
-// SALTO NOCHE pieza 3, en su propio módulo diferido (RunScene lo importa al crear la escena): fuera del JS inicial.
+// SALTO NOCHE piezas 3 y 4, en su propio módulo diferido (RunScene lo importa al crear la escena): fuera del JS inicial.
 import { CONFIG as C } from '../config.js';
 import { PAL, mix, rng } from './palette.js';
 import { mk, cut } from './textures.js';
@@ -68,6 +68,7 @@ export class PrimerPlano {
   update(dist, nt) {
     const F = C.atmosphere.night.primerPlano;
     const s = this.scene;
+    this.cantos(nt);
     if (!F.on) return this.items && this.items.forEach((im) => im.setVisible(false)); // apagado: ni texturas ni recortes
     if (this.falta.length) {
       const i = 3 - this.falta.length;
@@ -91,4 +92,49 @@ export class PrimerPlano {
         .setVisible(nt > 0 && u < 1 && x > -im.width * sc);
     });
   }
+
+  // SALTO NOCHE pieza 4 (ESPEC-SALTO §4): cantos rasgados en las colinas. La máscara sale de la textura misma de la capa
+  // (su borde de arriba, px de grueso, con huecos al azar) pintada de papel; un mosaico gemelo encima copia posición, tamaño
+  // y desplazamiento de la capa cada cuadro. Solo de noche (alfa = nt); de día no se ve. Una textura por cuadro.
+  cantos(nt) {
+    const K = C.atmosphere.night.canto;
+    const s = this.scene;
+    if (!K.on || (nt <= 0 && !this.cv)) return;
+    this.cv = this.cv || [];
+    const capas = [[s.ridge, 'ridge', K.ridge, 1.91], [s.far, 'far', K.far, 2.06]];
+    for (const [L, src, a, d] of capas) {
+      const key = `canto-${src}`;
+      let t = this.cv.find((q) => q.key === key);
+      if (!t) {
+        // la textura real de la capa por su clave (L.texture de un TileSprite es su lienzo interno, vacío en WebGL)
+        if (!s.textures.exists(src)) return; // aún en la cola diferida
+        if (!s.textures.exists(key)) s.textures.addCanvas(key, canto(s.textures.get(src).getSourceImage(), K.px, src.length));
+        this.cv.push((t = { key, im: s.add.tileSprite(0, 0, 8, 8, key).setOrigin(0, 0).setDepth(d).setVisible(false) }));
+        return;
+      }
+      const im = t.im;
+      if (im.width !== L.width || im.height !== L.height) im.setSize(L.width, L.height);
+      im.setPosition(L.x, L.y).setTileScale(L.tileScaleX, L.tileScaleY).setAlpha(a * nt * L.alpha).setVisible(nt > 0);
+      im.tilePositionX = L.tilePositionX;
+    }
+  }
 }
+
+// Canto rasgado: el borde de arriba de la silueta (px de grueso) con huecos, en papel.
+function canto(src, px, seed) {
+  const [c, x] = mk(src.width, src.height);
+  const r = rng(500 + seed);
+  x.drawImage(src, 0, 0);
+  x.globalCompositeOperation = 'destination-out';
+  x.drawImage(src, 0, px);
+  for (let i = 0; i < src.width / 9; i++) {
+    x.beginPath();
+    x.ellipse(r() * src.width, r() * src.height, 2 + r() * 6, 1 + r() * 2, 0, 0, TAU);
+    x.fill();
+  }
+  x.globalCompositeOperation = 'source-in';
+  x.fillStyle = PAL.paper;
+  x.fillRect(0, 0, src.width, src.height);
+  return c;
+}
+

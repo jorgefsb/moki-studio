@@ -1224,7 +1224,6 @@ export class RunScene extends Phaser.Scene {
     this.folds.forEach((f) => (f.tilePositionX = this.dist));
     const nt = this.ambient ? this.ambient.nt || 0 : 0;
     if (this.faroles) this.faroles.update(this.dist, nt);
-    if (this.primerPlano) this.primerPlano.update(this.dist, nt);
 
     // Profundidad con el salto: las capas lejanas bajan unos px cuando Moki sube (sin zoom de cámara).
     const V = C.art.vertical;
@@ -1233,6 +1232,7 @@ export class RunScene extends Phaser.Scene {
     this.mid.y = this.base.mid + Math.min(V.maxPx, lift * V.mid);
     this.farVeil.y = this.far.y;
     this.midVeil.y = this.mid.y;
+    if (this.primerPlano) this.primerPlano.update(this.dist, nt); // después de bajar las capas: los cantos copian su y
     this.stepForeground(step);
   }
 
