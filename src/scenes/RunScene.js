@@ -1266,9 +1266,13 @@ export class RunScene extends Phaser.Scene {
   stepForeground(step) {
     const F = C.art.foreground;
     const g = C.world.groundY;
+    // SALTO NOCHE 1c: la decoración del suelo (1.0x) es cartón oscuro desenfocado; sobre el suelo claro de noche se leía
+    // como "manchas borrosas rectangulares" (invitado 1b, prueba de esconder 1c). De noche baja a decoNoche de alfa.
+    const da = 1 - (this.ambient ? this.ambient.nt || 0 : 0) * (1 - C.atmosphere.night.decoNoche);
     for (const f of this.fg) {
       f.x -= step * f.speed;
       f.sprite.x = f.x;
+      if (f.speed === 1) f.sprite.alpha = da;
     }
     this.fg = this.fg.filter((f) => (f.x < -90 ? (f.sprite.destroy(), false) : true));
     if (this.reduced || this.dead) return;

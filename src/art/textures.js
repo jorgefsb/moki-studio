@@ -149,7 +149,7 @@ function lightLayer(halo, vignette) {
 }
 
 // Tono de la luz del farol: tope del rango de ESPEC-SALTO, papel + #FF6B35 25 % (director 3-nov 01:25; sin kraft).
-const LUZ_FAROL = mix(PAL.paper, PAL.accent, 0.25);
+const LUZ_FAROL = mix(mix(PAL.paper, PAL.kraft, 0.5), PAL.accent, 0.2); // 1c variante K
 
 // SALTO NOCHE (pieza 2): farol de papel en poste de cartón, solo de noche. Canvas a 2x (se dibuja a escala 0.5).
 // El farol es papel crema plano, no emite: la luz solo cae sobre superficies (canto del poste aquí, el suelo en farolLuz).
