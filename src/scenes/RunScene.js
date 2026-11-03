@@ -1556,6 +1556,11 @@ export class RunScene extends Phaser.Scene {
       }
     }
     const fade = Math.max(1, M.fadePx / this.zoom);
+    // SALTO NOCHE 1b: de noche ningún poste de telégrafo cerca de un farol (se leía como poste sin farol). Farol: pie en fx,
+    // de fx - 14 a fx + 51 px de mundo.
+    const nt = this.ambient ? this.ambient.nt || 0 : 0;
+    const fxs = nt > 0 && this.faroles ? this.faroles.xs(this.dist) : [];
+    const fc = C.atmosphere.night.farol.clearPx;
     const pool = (this.midPool = this.midPool || []);
     const bodyTint = this.mid.tintTopLeft;
     const veilTint = this.midVeil.tintTopLeft;
@@ -1571,6 +1576,9 @@ export class RunScene extends Phaser.Scene {
         for (const b of boxes) {
           if (t >= b.b || foot <= b.t) continue;
           a = Math.min(a, Phaser.Math.Clamp(Math.max(b.l - r, l - b.r) / fade, 0, 1));
+        }
+        if (p.kind === 'poste') {
+          for (const fx of fxs) a = Math.min(a, Math.max(1 - nt, Phaser.Math.Clamp((Math.max(fx - 14 - r, l - fx - 51) - fc) / fade, 0, 1)));
         }
         if (!pool[n]) {
           pool[n] = {

@@ -20,8 +20,17 @@ export class Faroles {
     this.items = [0, 1, 2].map(() => ({
       // pie del poste escondido tras el canto de atrás del suelo (depth 4): el farol queda detrás del suelo
       poste: s.add.image(0, 0, 'farolPoste').setOrigin(27 / 128, 1).setScale(0.5).setDepth(3.9).setVisible(false),
-      luz: s.add.image(0, 0, 'farolLuz').setOrigin(0.5, 0).setDisplaySize(F.luz.w, F.luz.h).setDepth(4.7).setVisible(false),
+      luz: s.add.image(0, 0, 'farolLuz').setOrigin(0.5, 0).setDepth(4.7).setVisible(false),
     }));
+  }
+
+  // x en pantalla del pie de los 3 faroles que pueden verse (pura de la distancia; la usa también stepMidProps)
+  xs(dist) {
+    const F = C.atmosphere.night.farol;
+    const P = this.scene.vw * F.cada;
+    const k0 = Math.floor((dist - 200) / P);
+    // separación entre faroles de (1 - jitter) a (1 + jitter) * cada pantallas
+    return [k0, k0 + 1, k0 + 2].map((k) => k * P + P * F.jitter * frac(k) - dist);
   }
 
   // dist: distancia del mundo (la misma que corre el suelo); nt: cuánto es de noche
@@ -34,14 +43,14 @@ export class Faroles {
     }
     const s = this.scene;
     const g = C.world.groundY;
-    const P = s.vw * F.cada;
-    const k0 = Math.floor((dist - 200) / P);
+    // en vertical (375) la mancha es más alta y más opaca: a lo ancho ya llena casi la pantalla (ciego día 1)
+    const L = s.midS !== 1 ? F.luzV : F.luz;
+    const xs = this.xs(dist);
     this.items.forEach((it, i) => {
-      const k = k0 + i;
-      const x = k * P + P * F.jitter * frac(k) - dist; // separación entre faroles de (1 - jitter) a (1 + jitter) * cada pantallas
+      const x = xs[i];
       const on = nt > 0 && x > -150 && x < s.vw + 150;
       it.poste.setVisible(on).setAlpha(nt).setPosition(x, g - 6);
-      it.luz.setVisible(on).setAlpha(F.luz.alpha * nt).setPosition(x + 26, g - 8);
+      it.luz.setVisible(on).setTexture(L.key).setDisplaySize(L.w, L.h).setAlpha(nt).setPosition(x + 26, g - 8);
     });
   }
 }

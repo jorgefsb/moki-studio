@@ -219,9 +219,11 @@ export const CONFIG = {
       fibers: { on: true, alpha: 0.12 },
       // SALTO NOCHE pieza 2: farol de papel en poste de cartón detrás del suelo, cada (1 - jitter) a (1 + jitter) * cada
       // pantallas. luz: mancha sobre el suelo (w x h px de mundo, media elipse desde el canto de atrás), alfa a noche plena.
-      // 300 x 48 al 0.55 casi no se percibía (ciego día 1) y 0.85 normal tampoco (el suelo ya es claro); aditiva saturaba el rojo y quedaba lima (ciego 3). Normal al 0.95
-      // con el tono durazno de farolLuz (papel + #FF6B35 25 % + kraft 15 %), el mismo del farol.
-      farol: { on: true, cada: 1.5, jitter: 0.33, luz: { w: 380, h: 64, alpha: 1 } },
+      // 300 x 48 al 0.55 casi no se percibía (ciego día 1) y 0.85 normal tampoco (el suelo ya es claro); aditiva saturaba el rojo y quedaba lima (ciego 3). Normal al 1
+      // con el tono de farolLuz (papel + #FF6B35 25 %, día 1b: sin el kraft 15 % que lo apagaba).
+      // luzV: la mancha en vertical (375), más alta y más opaca. clearPx: ningún poste de telégrafo de la capa media a menos
+      // de esto (px de mundo) del farol; se desvanece con midClear.fadePx (regla de colocación del 31-oct).
+      farol: { on: true, cada: 1.5, jitter: 0.33, clearPx: 70, luz: { key: 'farolLuz', w: 380, h: 64 }, luzV: { key: 'farolLuzV', w: 440, h: 120 } },
       // band: banda clara del horizonte detrás de la cordillera en tiras planas de papel (ajuste 2 de arte, 30-oct: el
       // degradado glow 0.85 se leía como niebla). strips = [alto sobre el pie de la cordillera en px de mundo (× farS), alfa
       // a noche plena], de abajo (la más clara) hacia arriba. canto: filo claro arriba de cada tira; shadow: sombra de contacto

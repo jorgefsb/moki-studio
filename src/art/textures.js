@@ -148,8 +148,8 @@ function lightLayer(halo, vignette) {
   return c;
 }
 
-// Tono de la luz del farol (ESPEC-SALTO: papel + #FF6B35 15-25 %), con kraft para que tire a durazno y no a salmón.
-const LUZ_FAROL = mix(mix(PAL.paper, PAL.accent, 0.25), PAL.kraft, 0.15);
+// Tono de la luz del farol: tope del rango de ESPEC-SALTO, papel + #FF6B35 25 % (director 3-nov 01:25; sin kraft).
+const LUZ_FAROL = mix(PAL.paper, PAL.accent, 0.25);
 
 // SALTO NOCHE (pieza 2): farol de papel en poste de cartón, solo de noche. Canvas a 2x (se dibuja a escala 0.5).
 // El farol es papel crema plano, no emite: la luz solo cae sobre superficies (canto del poste aquí, el suelo en farolLuz).
@@ -205,13 +205,14 @@ function farolPoste() {
 
 // Mancha de luz del farol sobre el suelo: media elipse (empieza en el canto de atrás del suelo y cae hacia adelante),
 // tono tibio derivado de tokens (LUZ_FAROL) y caída suave; sin nada por arriba del suelo.
-function farolLuz() {
+// mid y edge: alfa al 45 % y al 75 % del radio (la de vertical, más opaca: a 375 apenas se veía).
+function farolLuz(mid, edge) {
   const [c, x] = mk(256, 64);
   const g = x.createRadialGradient(128, 0, 0, 128, 0, 128);
   const lit = LUZ_FAROL;
   g.addColorStop(0, rgba(lit, 1));
-  g.addColorStop(0.45, rgba(lit, 0.8));
-  g.addColorStop(0.75, rgba(lit, 0.25));
+  g.addColorStop(0.45, rgba(lit, mid));
+  g.addColorStop(0.75, rgba(lit, edge));
   g.addColorStop(1, rgba(lit, 0));
   x.setTransform(1, 0, 0, 0.5, 0, 0);
   x.fillStyle = g;
@@ -1279,7 +1280,8 @@ export function buildTextures(scene) {
   });
   defer('viga', () => viga());
   defer('farolPoste', () => farolPoste()); // SALTO NOCHE: listos antes de la noche (crearlos al caer daba un cuadro de 100 ms)
-  defer('farolLuz', () => farolLuz());
+  defer('farolLuz', () => farolLuz(0.8, 0.25));
+  defer('farolLuzV', () => farolLuz(0.95, 0.5));
   defer('caja_n', () => caja(0.7));
   defer('torre_n', () => torre(0.7));
   defer('viga_n', () => viga(C.atmosphere.night.vigaDim));
