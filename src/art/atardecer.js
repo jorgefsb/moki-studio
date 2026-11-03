@@ -30,10 +30,11 @@ export const TARDE = {
   media: '#DE9050', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo; 1c: más clara y cálida que los cerros
   mediaTop: [236, 288], // y del mundo del canto de arriba de la colina media (lomas suaves; nunca baja de 290)
   cercana: '#7A3612', // capa lejana de siempre (cerros y casitas) teñida a este valor; 1c: un escalón más oscura (a 375 se fundía con la media)
-  pinos: '#4A2614', // capa media (pinos, postes, arbustos): la más oscura, para que el obstáculo #6B4630 quede entre cerros y pinos
+  pinos: '#3A1A0B', // 1c v2: un escalón más oscuro (a 375 el velo los subía al café de los cerros); capa media (pinos, postes, arbustos): la más oscura, para que el obstáculo #6B4630 quede entre cerros y pinos
   obs: '#6B4630', // caja, torre y viga
   canto: { px: 4, alpha: 1, pie: 10 }, // canto claro #F4E8D5 del obstáculo; los 10 px de abajo sin él
   suelo: { cantoPx: 4, tinte: 0xffd8bc }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft rojizo #CD9468 (1c: #CD9A4E se leía caqui-oliva)
+  sombra: '#5A2410', // la sombra del suelo (groundShade, tinta neutra a 0.34) agrisaba el kraft: de tarde va en café rojizo
   piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.5, 1.25], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
@@ -310,6 +311,8 @@ export function montar(s) {
     s.skyGrad.setAlpha(1 - st); // applyDay no toca su alfa: se devuelve aquí también al salir de la tarde
     const suelo = lerp(0xffffff, TARDE.suelo.tinte, st); // suelo kraft cálido (los invitados lo leían como concreto)
     [s.surface, s.canto, s.front, ...s.folds].forEach((v) => v.setTint(suelo));
+    if (on) s.shade.setTintFill(lerp(hex(PAL.ink), hex(TARDE.sombra), st));
+    else s.shade.clearTint();
     if (!on) {
       s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.clearTint()); // colocar ya no corre con st = 0
       return;
