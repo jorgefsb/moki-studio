@@ -183,6 +183,8 @@ export const CONFIG = {
   atmosphere: {
     on: true, far: 0.2, mid: 0.12, near: 0.16,
     night: {
+      // SALTO NOCHE (3), perspectiva atmosférica de noche (GDD §5.2): cada capa más hacia el cielo ciruela mientras más
+      // lejos. Antes far 0.08 y mid 0.05.
       far: 0.08, mid: 0.05, near: 0.26, ridge: 0x3a342d,
       // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
       // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
@@ -190,6 +192,7 @@ export const CONFIG = {
       // Se queda #87755F y se aclara la banda del horizonte (horizon.band; antes glow). Oscurecerla a #77654F también daba 8.9 puntos,
       // pero bajaba la torre a 1280 D=540 a 2.18. Medidas en evidencia/v2-cordillera.md.
       // opción C (director, 30-oct): de vuelta a #625545. La #87755F perdió la masa oscura que daba profundidad a 1280.
+      // SALTO NOCHE (3): #625545 al 40 % hacia el ciruela del cielo #41363E (la cordillera es la capa más lejana)
       ridgeLight: { on: true, color: 0x625545 },
       // ajuste 2 de arte (30-oct): a 1280 el contorno de 3 px se fundía con una nube clara detrás (viga 2.19-2.21).
       // 4 px (ARTE §3: canto de 4 a 6 px) y una línea de tinta de 1 px por fuera, solo en la viga.
@@ -231,7 +234,8 @@ export const CONFIG = {
       decoNoche: 0.25,
       // SALTO NOCHE pieza 4: canto rasgado de papel en el borde de arriba de la cordillera y de las colinas lejanas (alfa a
       // noche plena; px de grueso). Va en el módulo diferido.
-      canto: { on: true, ridge: 0.35, far: 0.45, px: 3 },
+      // pxV: en vertical (375) la capa va escalada 1.8x y 3 px se leían como halo borroso de 6-8 px (ciego p4)
+      canto: { on: true, ridge: 0.35, far: 0.45, px: 3, pxV: 2 },
       primerPlano: { on: false, speed: 1.4, cada: 340, escala: 1, escalaV: 1.1, libre: 24, hunde: [0.3, 0.62] },
       // band: banda clara del horizonte detrás de la cordillera en tiras planas de papel (ajuste 2 de arte, 30-oct: el
       // degradado glow 0.85 se leía como niebla). strips = [alto sobre el pie de la cordillera en px de mundo (× farS), alfa

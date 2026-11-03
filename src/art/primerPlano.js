@@ -108,7 +108,7 @@ export class PrimerPlano {
       if (!t) {
         // la textura real de la capa por su clave (L.texture de un TileSprite es su lienzo interno, vacío en WebGL)
         if (!s.textures.exists(src)) return; // aún en la cola diferida
-        if (!s.textures.exists(key)) s.textures.addCanvas(key, canto(s.textures.get(src).getSourceImage(), K.px, src.length));
+        if (!s.textures.exists(key)) s.textures.addCanvas(key, canto(s.textures.get(src).getSourceImage(), s.midS !== 1 ? K.pxV : K.px, src.length));
         this.cv.push((t = { key, im: s.add.tileSprite(0, 0, 8, 8, key).setOrigin(0, 0).setDepth(d).setVisible(false) }));
         return;
       }
@@ -120,18 +120,21 @@ export class PrimerPlano {
   }
 }
 
-// Canto rasgado: el borde de arriba de la silueta (px de grueso) con huecos, en papel.
+// Canto rasgado: el borde de arriba de la silueta (px de grueso) con huecos a medio alfa, en papel.
 function canto(src, px, seed) {
   const [c, x] = mk(src.width, src.height);
   const r = rng(500 + seed);
   x.drawImage(src, 0, 0);
   x.globalCompositeOperation = 'destination-out';
   x.drawImage(src, 0, px);
+  // los huecos solo adelgazan el canto a la mitad: borrarlo entero dejaba ver el filo oscuro ("muescas oscuras", ciego p4)
+  x.globalAlpha = 0.5;
   for (let i = 0; i < src.width / 9; i++) {
     x.beginPath();
     x.ellipse(r() * src.width, r() * src.height, 2 + r() * 6, 1 + r() * 2, 0, 0, TAU);
     x.fill();
   }
+  x.globalAlpha = 1;
   x.globalCompositeOperation = 'source-in';
   x.fillStyle = PAL.paper;
   x.fillRect(0, 0, src.width, src.height);
