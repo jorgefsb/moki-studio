@@ -185,7 +185,7 @@ export const CONFIG = {
     night: {
       // SALTO NOCHE (3), perspectiva atmosférica de noche (GDD §5.2): cada capa más hacia el cielo ciruela mientras más
       // lejos. Antes far 0.08 y mid 0.05.
-      far: 0.08, mid: 0.05, near: 0.26, ridge: 0x3a342d,
+      far: 0.25, mid: 0.1, near: 0.26, ridge: 0x3a342d,
       // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
       // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
       // ajuste de arte (30-oct): a 375 la cordillera #87755F se fundía con el cielo de atrás (brecha medida 3.0 puntos de L).
@@ -193,7 +193,7 @@ export const CONFIG = {
       // pero bajaba la torre a 1280 D=540 a 2.18. Medidas en evidencia/v2-cordillera.md.
       // opción C (director, 30-oct): de vuelta a #625545. La #87755F perdió la masa oscura que daba profundidad a 1280.
       // SALTO NOCHE (3): #625545 al 40 % hacia el ciruela del cielo #41363E (la cordillera es la capa más lejana)
-      ridgeLight: { on: true, color: 0x625545 },
+      ridgeLight: { on: true, color: 0x554942 },
       // ajuste 2 de arte (30-oct): a 1280 el contorno de 3 px se fundía con una nube clara detrás (viga 2.19-2.21).
       // 4 px (ARTE §3: canto de 4 a 6 px) y una línea de tinta de 1 px por fuera, solo en la viga.
       vigaOutline: { on: true, alpha: 1, width: 4, ink: { color: '#22211F', px: 1 } },

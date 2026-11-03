@@ -146,8 +146,19 @@ export class Ambient {
       s.farVeil.setTintFill(sk);
       s.midVeil.setTintFill(sk);
       const A2 = C.atmosphere;
-      if (s.farVeil.texture.key === 'far') s.farVeil.setAlpha((A2.far + (NI.far - A2.far) * nt) * this.farAlpha());
-      if (s.midVeil.texture.key === 'mid') s.midVeil.setAlpha(A2.mid + (NI.mid - A2.mid) * nt);
+      // SALTO NOCHE: en un TileSprite .texture es su lienzo interno (clave UUID); la textura real es .displayTexture.
+      // Con .texture estas líneas nunca corrían y night.far / night.mid no hacían nada. Solo de noche: al entrar se guarda
+      // el alfa de día del velo (el que le dejó stepTextures) y al salir se devuelve tal cual, así el día no cambia.
+      [[s.farVeil, 'far', (A2.far + (NI.far - A2.far) * nt) * this.farAlpha()], [s.midVeil, 'mid', A2.mid + (NI.mid - A2.mid) * nt]].forEach(([v, k, a]) => {
+        if (v.displayTexture.key !== k) return;
+        if (nt > 0) {
+          v.diaA ??= v.alpha;
+          v.setAlpha(a);
+        } else if (v.diaA != null) {
+          v.setAlpha(v.diaA);
+          v.diaA = null;
+        }
+      });
       // suelo de noche: el velo cercano toma el tono de la cordillera (menos luz y menos saturado) en vez de tinta sola
       const G = NI.ground;
       s.nearVeil.setFillStyle(G.on ? lerpColor(hex(PAL.ink), lerpColor(G.color, 0, G.dim), nt) : hex(PAL.ink), 1);
