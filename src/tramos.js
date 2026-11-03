@@ -5,6 +5,7 @@
 //   VC caja bajo viga · T.V torre y viga 1.0 s después · C.V caja y viga 0.9 s después · T.C torre y caja 0.9 s después ·
 //   P5 fila de 5 piezas en el suelo · OLA 6 cajas cada 0.8 s con una pieza sobre cada una · U pop-up (caja que sale del suelo) ·
 //   J trampolín de cartón (pisarlo lanza; solo bloques del generador con mecánica 'tramp').
+//   Z zanja corta y ZZ zanja larga (hueco en el suelo, NIVELES.md §10; solo bloques con mecánica 'zanja', en Libre).
 // Premios (con "+"): A3 arco corto de 3 · A3up arco alto de 3 · Aup arco alto de 5 · Adn arco bajo de 4 ·
 //   Aup7 arco regalo de 7 · AupAmb arco alto con pieza ámbar · Aup7Amb arco de 7 con ámbar · P5 fila bajo la viga ·
 //   Avu arco del vuelo del trampolín (5 piezas sobre la curva del lanzamiento).
@@ -54,6 +55,8 @@ const OBS = {
   U: [{ type: 'caja', at: 0, plan: 'tap', pop: true }], // pop-up: caja que sale del suelo (solo en bloques del generador)
   J: [{ type: 'tramp', at: 0, plan: 'none' }], // trampolín: el bot de "arriba" lo pisa, el de "abajo" lo salta (tap)
   B: [{ type: 'timbre', at: 0, plan: 'hold' }], // timbre: el bot de "arriba" lo toca (mantener), el de "abajo" no
+  Z: [{ type: 'zanja', at: 0, plan: 'tap', ancho: 'corto' }], // zanja corta (NIVELES.md §10): cualquier salto la cruza
+  ZZ: [{ type: 'zanja', at: 0, plan: 'hold', ancho: 'largo' }], // zanja larga: pide el salto mantenido (ir lejos)
 };
 
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
@@ -79,7 +82,7 @@ function expand(code, t, speed, tramo, arcSeq) {
     const holdForArc = reward && reward.startsWith('Aup');
     for (const o of OBS[main]) {
       const D = base + (o.atPx !== undefined ? o.atPx : o.at * speed);
-      out.push({ kind: 'obs', type: o.type, D, plan: holdForArc && o.plan === 'tap' && first === null ? 'hold' : main === 'V' && reward === 'Adn' ? 'tap' : o.plan, ...(o.pop && { pop: true }) });
+      out.push({ kind: 'obs', type: o.type, D, plan: holdForArc && o.plan === 'tap' && first === null ? 'hold' : main === 'V' && reward === 'Adn' ? 'tap' : o.plan, ...(o.pop && { pop: true }), ...(o.ancho && { W: C.zanja[o.ancho] * speed }) });
       if (first === null) first = D;
     }
     hint.center = main === 'CC' ? base + C.cajaPegadaGapPx / 2 : base;
@@ -161,6 +164,7 @@ export function buildLevel(tramos) {
     starts, // distancia global de inicio de cada tramo (checkpoint)
     end: acc, // meta
     entities: entities.filter((e) => e.kind !== 'viento'),
+    zanjas: entities.filter((e) => e.type === 'zanja').map((e) => ({ H0: e.D - e.W / 2, H1: e.D + e.W / 2 })), // sin zanjas (Clásico, Reto): vacío
     vientos: zonas,
     pieceTotal: entities.filter((e) => e.kind === 'pick' && !e.cae).length + 2 * tid, // con timbre, la ruta que más da (5 contra 3)
   };

@@ -162,7 +162,7 @@ export class Ambient {
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
-    s.obstacles.forEach((o) => o.sprite && o.sprite.setTint(this.obsTint));
+    s.obstacles.forEach((o) => o.sprite && o.type !== 'zanja' && o.sprite.setTint(this.obsTint)); // la zanja es un Graphics
     this.setNight(d.to === 3 ? d.t >= 0.5 : d.from === 3 ? d.t < 0.5 : false);
     s.clouds.setTint(lerpColor(0xffffff, far, 0.6));
     // bandas de fibra (tarde y, más tenues, noche): capas de papel, no un degradado liso
@@ -216,7 +216,7 @@ export class Ambient {
     if (on === this.night) return;
     if (on && !s.textures.exists('caja_n')) return; // aún se genera: lo reintenta el siguiente cuadro
     this.night = on;
-    s.obstacles.forEach((o) => o.sprite && o.sprite.setTexture(this.obsKey(o.type)));
+    s.obstacles.forEach((o) => o.sprite && o.type !== 'zanja' && o.sprite.setTexture(this.obsKey(o.type)));
   }
   obsKey(type) {
     const k = this.night && this.scene.textures.exists(`${type}_n`) ? `${type}_n` : type;

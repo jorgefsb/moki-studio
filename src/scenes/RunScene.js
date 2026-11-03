@@ -536,6 +536,7 @@ export class RunScene extends Phaser.Scene {
     // Mecánicas (NIVELES.md flow): solo en Libre; el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno.
     const nv = nivelDe(leerCuaderno()).nivel;
     const mecanicas = modo !== 'libre' ? [] : ['tramp', 'viento', 'timbre'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
+    if (modo === 'libre' && C.zanja.on) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio (hoy solo Libre)
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
 
@@ -878,6 +879,7 @@ export class RunScene extends Phaser.Scene {
 
   spawnObstacle(e) {
     if (e.type === 'timbre') return this.spawnTimbre(e);
+    if (e.type === 'zanja') return this.spawnZanja(e);
     const g = C.world.groundY;
     const size = C.obstacleSizes[e.type];
     const x = this.px + e.D - this.dist;
@@ -924,6 +926,26 @@ export class RunScene extends Phaser.Scene {
       this.stepPopup(o);
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
+    this.obstacles.push(o);
+  }
+
+  // Zanja (NIVELES.md §10.1): corte en el carril con el cartón que ya existe, un Graphics que corre con el mundo,
+  // encima de la superficie (4-4.2) y debajo de Moki (10). Origen = H0 (orilla de cerca) en groundY - 8. Por el tope
+  // de JS inicial quedan el fondo que oscurece, la cara del corte de enfrente y el contorno claro de peligro (sin
+  // naranja); salieron la orilla rasgada con fibras y la solapa doblada (espec §10.7).
+  spawnZanja(e) {
+    const W = e.W;
+    const g = this.add.graphics({ y: C.world.groundY - 8 }).setDepth(4.7);
+    const hex = (c) => parseInt(c.slice(1), 16);
+    // Paseo: la superficie sigue debajo (la zanja está tapada); solo queda el contorno al 50 %
+    if (!this.paseoRun) {
+      for (let i = 0; i < 8; i++) g.fillStyle(hex(mix(TONE.kraftDark, PAL.ink, (i + 1) / 8)), 1).fillRect(0, i * 5, W, 5);
+      g.fillStyle(hex(PAL.ink), 0.9).fillRect(0, 40, W, 700).fillStyle(hex(TONE.kraftDark), 1).fillRect(W - 6, 0, 6, 700);
+    }
+    g.fillStyle(hex(PAL.paper), 0.7 * (this.paseoRun ? C.paseo.obstacleAlpha : 1));
+    [-3, W].forEach((x) => g.fillRect(x, 0, 3, 26).fillRect(x - 4, -3, 11, 3));
+    const o = { D: e.D, type: 'zanja', plan: e.plan, W, sprite: g, entered: true };
+    o.destroy = () => g.destroy();
     this.obstacles.push(o);
   }
 
@@ -1014,7 +1036,7 @@ export class RunScene extends Phaser.Scene {
       return;
     }
     // Paseo empezado antes de que llegara su cartón suave: las cajas ya en pantalla lo toman en cuanto existe
-    if (this.paseoRun && key.endsWith('_p')) this.obstacles.forEach((o) => o.sprite.setTexture(this.obsTex(o.type)));
+    if (this.paseoRun && key.endsWith('_p')) this.obstacles.forEach((o) => o.type !== 'zanja' && o.sprite.setTexture(this.obsTex(o.type)));
     const layer = { clouds: this.clouds, ridge: this.ridge, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);
@@ -1171,7 +1193,15 @@ export class RunScene extends Phaser.Scene {
     this.vy += C.gravity * (this.vuelo ? C.tramp.gravityK : 1) * dt;
     const impact = this.vy;
     this.y += this.vy * dt;
-    if (this.y >= C.world.groundY) {
+    // Zanja (NIVELES.md §10.1): sin suelo bajo los pies sigue cayendo; a caePx bajo el suelo, choque. Si llega a la
+    // orilla de enfrente hasta subePx abajo, se sube.
+    const Z = C.zanja;
+    const piso = this.y >= C.world.groundY && this.y <= C.world.groundY + Z.subePx && this.apoyado();
+    if (!piso && this.y >= C.world.groundY + Z.caePx && !this.dead) {
+      const z = this.obstacles.find((o) => o.type === 'zanja' && Math.abs(o.x - this.px) <= o.W / 2 + Z.pie);
+      return z ? this.crash(z) : void (this.y = C.world.groundY);
+    }
+    if (piso) {
       this.y = C.world.groundY;
       this.vy = 0;
       if (!this.grounded) {
@@ -1200,6 +1230,15 @@ export class RunScene extends Phaser.Scene {
       this.grounded = false;
     }
     if (this.vy > 0) this.jumping = false;
+  }
+
+  // ¿Moki tiene suelo bajo algún pie? Sin zanjas (Clásico, Reto) no hace cuentas; en Paseo y con god, siempre.
+  apoyado() {
+    const zs = this.level && this.level.zanjas;
+    if (!zs || !zs.length || this.paseoRun || this.god) return true;
+    const d = this.dist;
+    const pie = C.zanja.pie;
+    return !zs.some((z) => d - pie >= z.H0 && d + pie <= z.H1);
   }
 
   stepWorld(step) {
@@ -1295,6 +1334,10 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       o.x = px + o.D - dist;
       o.sprite.x = o.x + (o.ox || 0); // la torre que cae gira sobre su pie delantero
+      if (o.type === 'zanja') {
+        o.sprite.x = o.x - o.W / 2;
+        continue;
+      }
       if (o.lamina) o.lamina.x = o.x + 30;
       o.shadow.x = o.x + (o.type === 'viga' ? 6 : 9);
       if (o.pop) this.stepPopup(o);
@@ -1433,6 +1476,7 @@ export class RunScene extends Phaser.Scene {
         if (!o.sono && pl < o.x + T.ancho / 2 && pl + pw > o.x - T.ancho / 2 && pt < g - T.lo && pb > g - T.hi) this.tocarTimbre(o);
         continue;
       }
+      if (o.type === 'zanja') continue; // la zanja no choca: se cae (stepJump)
       if (o.caida || this.rewinding || this.god || this.paseoRun || (o.pop && !o.up)) continue; // la torre acostada es piso
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
@@ -1547,7 +1591,7 @@ export class RunScene extends Phaser.Scene {
       const lo = this.dist - this.px - 300;
       const hi = this.dist - this.px + this.vw + 300;
       for (const e of this.level.entities) {
-        if (e.kind !== 'obs' || e.type === 'timbre' || e.D < lo || e.D > hi) continue;
+        if (e.kind !== 'obs' || e.type === 'timbre' || e.type === 'zanja' || e.D < lo || e.D > hi) continue;
         const b = this.obsBox(e.type, this.px + e.D - this.dist);
         boxes.push({ l: b.l - mg, r: b.r + mg, t: b.t - mg, b: b.b + mg });
       }
@@ -1690,7 +1734,7 @@ export class RunScene extends Phaser.Scene {
     this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.12), 22 * (0.6 + 0.4 * f));
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
-    this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f));
+    this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f) * (this.apoyado() || this.paseoRun ? 1 : 0)); // sobre la zanja no hay sombra
     // Pasos de cartón (CRECE, Cuaderno nivel 4): uno por ciclo de la carrera normal (1 de cada 2 pisadas), contado por
     // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
     if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead || this.dist < this.pasoD) this.pasoD = this.dist;
@@ -1948,7 +1992,7 @@ export class RunScene extends Phaser.Scene {
     }
     // Al impacto el mundo se detiene en el punto exacto del contacto: se descuenta lo que el cuadro de choque ya
     // penetró en esa vuelta (hasta speed*dt), para que el traslape visible sea solo el de la hitbox.
-    if (o.type !== 'viga') {
+    if (o.type !== 'viga' && o.type !== 'zanja') {
       const front = this.px + (C.player.width - 6) / 2;
       const hit = o.x - o.size.width / 2 + (o.type === 'caja' ? C.hitboxShrinkCaja : C.hitboxShrink).x;
       const pen = front - hit;
@@ -1975,7 +2019,7 @@ export class RunScene extends Phaser.Scene {
     this.buzz(25); // golpe suave, nada que regañe
     this.shake(2, 120);
     // El obstáculo se arruga 2% (papel apachurrado) y se queda así; al reintentar se crea liso de nuevo
-    if (!this.calm && o.sprite) this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
+    if (!this.calm && o.sprite && o.type !== 'zanja') this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
     // La mejor marca se guarda también al fallar (no en el demo)
     const prevBest = num(this.bestKey(), 0);
     const isNew = !this.demo && !this.paseoRun && this.score > prevBest;
