@@ -141,3 +141,4 @@ function canto(src, px, seed) {
   return c;
 }
 
+export { montar as montarTarde } from './atardecer.js'; // SALTO ATARDECER: viaja en este chunk diferido

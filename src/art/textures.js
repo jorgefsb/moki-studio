@@ -513,7 +513,7 @@ function midLayer() {
 
 // ---------- Piezas del plano de juego ----------
 
-function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0, soft = 1, ink = 1 }) {
+export function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0, soft = 1, ink = 1 }) {
   // dim: variante de noche (T3g): el cartón se oscurece hacia la tinta y la cinta/franjas conservan #FF6B35
   // soft: variante de Paseo: contorno, perfil de tinta y cinta bajan con el cartón para que la caja atenuada no parezca vidrio
   // ink: multiplica el perfil y el canto de tinta (Paseo de día: que la caja fantasma conserve borde y no se lea como sombra)

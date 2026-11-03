@@ -160,7 +160,8 @@ export class RunScene extends Phaser.Scene {
     this.faroles = new Faroles(this); // SALTO NOCHE: faroles de papel con su luz sobre el suelo (solo de noche)
     // SALTO NOCHE pieza 3: recortes de tinta abajo a la izquierda (solo de noche), módulo diferido
     this.primerPlano = null;
-    import('../art/primerPlano.js').then((m) => (this.primerPlano = new m.PrimerPlano(this))).catch(() => {});
+    // SALTO ATARDECER: la tarde viaja en el mismo chunk diferido (un import dinámico más partía config del chunk inicial)
+    import('../art/primerPlano.js').then((m) => (this.primerPlano = new m.PrimerPlano(this), m.montarTarde(this))).catch(() => {});
     audio.nt = () => this.ambient.nt || 0; // de noche las capas del Cuaderno cierran el filtro y dejan la escala abierta
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
