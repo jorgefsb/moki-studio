@@ -158,6 +158,9 @@ const ES = {
   'share.clasico': 'Clásico',
   'pause.resume': 'Seguir',
   'pause.home': 'Inicio',
+  'pause.foto': 'Tomar foto',
+  'pause.zen.on': 'Pantalla limpia: Sí',
+  'pause.zen.off': 'Pantalla limpia: No',
 };
 
 const EN = {

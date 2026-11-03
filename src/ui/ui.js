@@ -84,7 +84,7 @@ export function createUI() {
     soundBtnEl: null,
     onSound: null,
     get modalOpen() {
-      return !!(state.fail || state.final || state.asi || state.pause);
+      return !!(state.fail || state.final || state.asi || state.pause || state.foto);
     },
     // Gesto "seguir" (Espacio, Enter, ↑) con una tarjeta abierta.
     primary() {
@@ -595,7 +595,7 @@ export function createUI() {
     },
 
     // Pausa (UX §6)
-    showPause({ onResume, onHome }) {
+    showPause({ onResume, onHome, onFoto, zen, onZen }) {
       ui.hidePause();
       const scrim = el('div', 'ui-scrim pause');
       const card = el('div', 'ui-card ui-pause');
@@ -623,9 +623,28 @@ export function createUI() {
         jz.textContent = juiceText();
         feel.buzz(12, 2);
       });
+      // Modo foto (MAPA-SISTEMAS #3): cámara de tinta dibujada en CSS (ui.css); el cuadro limpio vive en src/foto.js (diferido)
+      const foto = el('button', 'ui-btn secondary ui-foto-btn');
+      foto.type = 'button';
+      foto.append(el('i'));
+      foto.append(t('pause.foto'));
+      foto.addEventListener('click', onFoto);
       resume.addEventListener('click', onResume);
       home.addEventListener('click', onHome);
-      stack.append(resume, snd, jz, home);
+      stack.append(resume, foto, snd, jz);
+      // Paseo: pantalla limpia (Zen) sin números arriba; se queda puesta mientras paseas
+      if (onZen) {
+        const zb = el('button', 'ui-btn secondary', t(zen ? 'pause.zen.on' : 'pause.zen.off'));
+        zb.type = 'button';
+        zb.setAttribute('aria-pressed', String(zen));
+        zb.addEventListener('click', () => {
+          zen = onZen();
+          zb.textContent = t(zen ? 'pause.zen.on' : 'pause.zen.off');
+          zb.setAttribute('aria-pressed', String(zen));
+        });
+        stack.append(zb);
+      }
+      stack.append(home);
       card.append(stack);
       scrim.append(card);
       root.appendChild(scrim);
