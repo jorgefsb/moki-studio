@@ -16,7 +16,7 @@ import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, 
 import { registrarDia, saludo, leerRacha } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
-import { GAME_LEVEL, buildDemo, TRAMP_PISA } from '../tramos.js';
+import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump, vientoPaso } from '../jumpmodel.js';
 import mokiLado from '../../assets/moki/moki-lado.webp';
@@ -53,6 +53,7 @@ export class RunScene extends Phaser.Scene {
 
   create() {
     this.modo = load('moki.modo') === 'libre' ? 'libre' : 'reto'; // Reto del día por defecto (NIVELES.md §7)
+    this.pedirZanja();
     this.paseo = load('moki.paseo') === '1'; // Modo Paseo (GDD §3): opción del jugador, no la bandera ?god de pruebas
     this.paseoRun = false; // Paseo activo en la partida en curso (el demo nunca lo usa)
     this.vuelta = load('moki.vuelta') === '1'; // Vuelta rápida (GDD §3): opción del jugador; solo cuenta con el sello Coleccionista
@@ -464,6 +465,7 @@ export class RunScene extends Phaser.Scene {
     this.ui.showModo(this.modo, () => {
       this.modo = this.modo === 'libre' ? 'reto' : 'libre';
       save('moki.modo', this.modo);
+      this.pedirZanja();
       this.showModo();
       this.saludar();
     }, this.paseo, () => {
@@ -525,6 +527,11 @@ export class RunScene extends Phaser.Scene {
 
   // Nivel de la partida (NIVELES.md §7): Reto del día = fecha local; Libre = semilla nueva por partida.
   // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
+  // La zanja (src/zanja.js) baja solo en Libre: se pide al elegir el modo, mucho antes de su página 2
+  pedirZanja() {
+    if (this.modo === 'libre' && C.zanja.on) this.zanjaLista = this.zanjaLista || import('../zanja.js').catch(() => {});
+  }
+
   makeLevel(seed) {
     if (CLASICO) return GAME_LEVEL;
     // La primera partida de la vida es la clásica (director): el tutorial y la primera impresión, siempre iguales
@@ -536,7 +543,7 @@ export class RunScene extends Phaser.Scene {
     // Mecánicas (NIVELES.md flow): solo en Libre; el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno.
     const nv = nivelDe(leerCuaderno()).nivel;
     const mecanicas = modo !== 'libre' ? [] : ['tramp', 'viento', 'timbre'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
-    if (modo === 'libre' && C.zanja.on) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio (hoy solo Libre)
+    if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
 
@@ -879,7 +886,7 @@ export class RunScene extends Phaser.Scene {
 
   spawnObstacle(e) {
     if (e.type === 'timbre') return this.spawnTimbre(e);
-    if (e.type === 'zanja') return this.spawnZanja(e);
+    if (e.type === 'zanja') return EXT.z.spawn(this, e);
     const g = C.world.groundY;
     const size = C.obstacleSizes[e.type];
     const x = this.px + e.D - this.dist;
@@ -926,26 +933,6 @@ export class RunScene extends Phaser.Scene {
       this.stepPopup(o);
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
-    this.obstacles.push(o);
-  }
-
-  // Zanja (NIVELES.md §10.1): corte en el carril con el cartón que ya existe, un Graphics que corre con el mundo,
-  // encima de la superficie (4-4.2) y debajo de Moki (10). Origen = H0 (orilla de cerca) en groundY - 8. Por el tope
-  // de JS inicial quedan el fondo que oscurece, la cara del corte de enfrente y el contorno claro de peligro (sin
-  // naranja); salieron la orilla rasgada con fibras y la solapa doblada (espec §10.7).
-  spawnZanja(e) {
-    const W = e.W;
-    const g = this.add.graphics({ y: C.world.groundY - 8 }).setDepth(4.7);
-    const hex = (c) => parseInt(c.slice(1), 16);
-    // Paseo: la superficie sigue debajo (la zanja está tapada); solo queda el contorno al 50 %
-    if (!this.paseoRun) {
-      for (let i = 0; i < 8; i++) g.fillStyle(hex(mix(TONE.kraftDark, PAL.ink, (i + 1) / 8)), 1).fillRect(0, i * 5, W, 5);
-      g.fillStyle(hex(PAL.ink), 0.9).fillRect(0, 40, W, 700).fillStyle(hex(TONE.kraftDark), 1).fillRect(W - 6, 0, 6, 700);
-    }
-    g.fillStyle(hex(PAL.paper), 0.7 * (this.paseoRun ? C.paseo.obstacleAlpha : 1));
-    [-3, W].forEach((x) => g.fillRect(x, 0, 3, 26).fillRect(x - 4, -3, 11, 3));
-    const o = { D: e.D, type: 'zanja', plan: e.plan, W, sprite: g, entered: true };
-    o.destroy = () => g.destroy();
     this.obstacles.push(o);
   }
 
@@ -1036,7 +1023,7 @@ export class RunScene extends Phaser.Scene {
       return;
     }
     // Paseo empezado antes de que llegara su cartón suave: las cajas ya en pantalla lo toman en cuanto existe
-    if (this.paseoRun && key.endsWith('_p')) this.obstacles.forEach((o) => o.type !== 'zanja' && o.sprite.setTexture(this.obsTex(o.type)));
+    if (this.paseoRun && key.endsWith('_p')) this.obstacles.forEach((o) => o.sprite.setTexture(this.obsTex(o.type)));
     const layer = { clouds: this.clouds, ridge: this.ridge, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);

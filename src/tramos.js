@@ -42,7 +42,9 @@ const ARCS = {
   Aup7Amb: { h: [100, 120, 146, 164, 146, 120, 100], gap: 30, amber: 3 },
 };
 
-const OBS = {
+// EXT: mecánicas diferidas (EXT.z, src/zanja.js, solo Libre) registran aquí sus patrones y reglas
+export const EXT = {};
+export const OBS = {
   C: [{ type: 'caja', at: 0, plan: 'tap' }],
   T: [{ type: 'torre', at: 0, plan: 'hold' }],
   CC: [{ type: 'caja', at: 0, plan: 'hold' }, { type: 'caja', atPx: C.cajaPegadaGapPx, plan: 'skip' }],
@@ -55,8 +57,6 @@ const OBS = {
   U: [{ type: 'caja', at: 0, plan: 'tap', pop: true }], // pop-up: caja que sale del suelo (solo en bloques del generador)
   J: [{ type: 'tramp', at: 0, plan: 'none' }], // trampolín: el bot de "arriba" lo pisa, el de "abajo" lo salta (tap)
   B: [{ type: 'timbre', at: 0, plan: 'hold' }], // timbre: el bot de "arriba" lo toca (mantener), el de "abajo" no
-  Z: [{ type: 'zanja', at: 0, plan: 'tap', ancho: 'corto' }], // zanja corta (NIVELES.md §10): cualquier salto la cruza
-  ZZ: [{ type: 'zanja', at: 0, plan: 'hold', ancho: 'largo' }], // zanja larga: pide el salto mantenido (ir lejos)
 };
 
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
@@ -82,7 +82,7 @@ function expand(code, t, speed, tramo, arcSeq) {
     const holdForArc = reward && reward.startsWith('Aup');
     for (const o of OBS[main]) {
       const D = base + (o.atPx !== undefined ? o.atPx : o.at * speed);
-      out.push({ kind: 'obs', type: o.type, D, plan: holdForArc && o.plan === 'tap' && first === null ? 'hold' : main === 'V' && reward === 'Adn' ? 'tap' : o.plan, ...(o.pop && { pop: true }), ...(o.ancho && { W: C.zanja[o.ancho] * speed }) });
+      out.push({ kind: 'obs', type: o.type, D, plan: holdForArc && o.plan === 'tap' && first === null ? 'hold' : main === 'V' && reward === 'Adn' ? 'tap' : o.plan, ...(o.pop && { pop: true }), ...(o.W && { W: o.W * speed }) });
       if (first === null) first = D;
     }
     hint.center = main === 'CC' ? base + C.cajaPegadaGapPx / 2 : base;
