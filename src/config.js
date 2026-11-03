@@ -212,12 +212,16 @@ export const CONFIG = {
       // la clave N2). skyTo: el cielo baja hacia ciruela oscuro de papel (no hay token ciruela: tinta→borde 30 % con un
       // toque violeta) en vez de tinta sola. Antes: sky 0.22 hacia tinta, ground #625545 0.7 dim 0.08, mid 0.24, fibras 0.09.
       sky: 0.96, skyTo: 0x41363e,
-      ground: { on: true, color: 0xcfb291, alpha: 0.85, dim: 0 },
-      planes: { on: true, far: 0.06, mid: 0 },
+      // ciego día 1 (4 vistazos): con el suelo a 60 la luz del farol no se veía. Suelo un paso abajo (#CBAB89, kraft→papel
+      // 30 %, al 0.8) y pino un paso abajo (mid 0.12): 24.5 / 31.8 / 40.8 / 47.5 / 57.3 a 1280, la mancha tiene de dónde subir.
+      ground: { on: true, color: 0xcbab89, alpha: 0.8, dim: 0 },
+      planes: { on: true, far: 0.06, mid: 0.12 },
       fibers: { on: true, alpha: 0.12 },
       // SALTO NOCHE pieza 2: farol de papel en poste de cartón detrás del suelo, cada (1 - jitter) a (1 + jitter) * cada
       // pantallas. luz: mancha sobre el suelo (w x h px de mundo, media elipse desde el canto de atrás), alfa a noche plena.
-      farol: { on: true, cada: 1.5, jitter: 0.33, luz: { w: 300, h: 48, alpha: 0.55 } },
+      // 300 x 48 al 0.55 casi no se percibía (ciego día 1) y 0.85 normal tampoco (el suelo ya es claro); aditiva saturaba el rojo y quedaba lima (ciego 3). Normal al 0.95
+      // con el tono durazno de farolLuz (papel + #FF6B35 25 % + kraft 15 %), el mismo del farol.
+      farol: { on: true, cada: 1.5, jitter: 0.33, luz: { w: 380, h: 64, alpha: 1 } },
       // band: banda clara del horizonte detrás de la cordillera en tiras planas de papel (ajuste 2 de arte, 30-oct: el
       // degradado glow 0.85 se leía como niebla). strips = [alto sobre el pie de la cordillera en px de mundo (× farS), alfa
       // a noche plena], de abajo (la más clara) hacia arriba. canto: filo claro arriba de cada tira; shadow: sombra de contacto

@@ -148,13 +148,16 @@ function lightLayer(halo, vignette) {
   return c;
 }
 
+// Tono de la luz del farol (ESPEC-SALTO: papel + #FF6B35 15-25 %), con kraft para que tire a durazno y no a salmón.
+const LUZ_FAROL = mix(mix(PAL.paper, PAL.accent, 0.25), PAL.kraft, 0.15);
+
 // SALTO NOCHE (pieza 2): farol de papel en poste de cartón, solo de noche. Canvas a 2x (se dibuja a escala 0.5).
 // El farol es papel crema plano, no emite: la luz solo cae sobre superficies (canto del poste aquí, el suelo en farolLuz).
 // Pie del poste abajo al centro del canto izquierdo (x 27); el farol cuelga del brazo en x 80.
 function farolPoste() {
   const [c, x] = mk(128, 380);
   const r = rng(301);
-  const lit = mix(PAL.paper, PAL.accent, 0.2);
+  const lit = LUZ_FAROL;
   cut(x, (g) => g.rect(20, 36, 14, 344), { fill: mix(PAL.kraft, PAL.ink, 0.5), edgeW: 1.5, r, fiberCount: 30 });
   cut(x, (g) => g.rect(20, 36, 66, 12), { fill: mix(PAL.kraft, PAL.ink, 0.45), edgeW: 1.5, r, fiberCount: 10 });
   // canto del poste que mira al farol: la luz cae de arriba y se apaga hacia el pie
@@ -165,7 +168,8 @@ function farolPoste() {
   x.fillRect(29, 48, 5, 202);
   x.fillStyle = rgba(PAL.ink, 0.7);
   x.fillRect(79, 48, 2, 22);
-  // farol: óvalo de papel con borde rasgado, costillas de kraft y tapas de cartón
+  // farol: óvalo de papel naranja tibio (papel + #FF6B35 50 %; al 10-38 % se leía apagado, ciegos 1-4) con borde rasgado,
+  // costillas de kraft y tapas de cartón. Color plano, sin halo.
   const lamp = (g) => {
     for (let i = 0; i <= 40; i++) {
       const a = (i / 40) * TAU;
@@ -174,7 +178,7 @@ function farolPoste() {
     }
     g.closePath();
   };
-  cut(x, lamp, { fill: mix(PAL.paper, PAL.accent, 0.1), edgeW: 2, shadow: { alpha: 0.25, blur: 4, dx: 2, dy: 3 }, r, fiberCount: 40 });
+  cut(x, lamp, { fill: mix(PAL.paper, PAL.accent, 0.5), edgeW: 2, shadow: { alpha: 0.25, blur: 4, dx: 2, dy: 3 }, r, fiberCount: 40 });
   x.save();
   x.beginPath();
   lamp(x);
@@ -186,6 +190,12 @@ function farolPoste() {
     x.ellipse(80, 112 + dy, 28, 5, 0, 0, Math.PI);
     x.stroke();
   }
+  // el papel del farol más claro al centro (luz por dentro del papel, no en el aire): papel puro al centro
+  const inn = x.createRadialGradient(80, 116, 0, 80, 116, 30);
+  inn.addColorStop(0, rgba(PAL.paper, 0.95));
+  inn.addColorStop(1, rgba(PAL.paper, 0));
+  x.fillStyle = inn;
+  x.fillRect(50, 72, 60, 80);
   x.restore();
   x.fillStyle = mix(PAL.kraft, PAL.ink, 0.5);
   x.fillRect(66, 70, 28, 7);
@@ -194,18 +204,26 @@ function farolPoste() {
 }
 
 // Mancha de luz del farol sobre el suelo: media elipse (empieza en el canto de atrás del suelo y cae hacia adelante),
-// tono tibio derivado de tokens (papel con #FF6B35 al 20 %) y caída suave; sin nada por arriba del suelo.
+// tono tibio derivado de tokens (LUZ_FAROL) y caída suave; sin nada por arriba del suelo.
 function farolLuz() {
   const [c, x] = mk(256, 64);
   const g = x.createRadialGradient(128, 0, 0, 128, 0, 128);
-  const lit = mix(PAL.paper, PAL.accent, 0.2);
+  const lit = LUZ_FAROL;
   g.addColorStop(0, rgba(lit, 1));
   g.addColorStop(0.45, rgba(lit, 0.8));
-  g.addColorStop(0.75, rgba(lit, 0.3));
+  g.addColorStop(0.75, rgba(lit, 0.25));
   g.addColorStop(1, rgba(lit, 0));
   x.setTransform(1, 0, 0, 0.5, 0, 0);
   x.fillStyle = g;
   x.fillRect(0, 0, 256, 128);
+  // el canto de arriba entra suave (10 px): un corte recto en la línea del suelo se leía calcomanía (ciego 3)
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalCompositeOperation = 'destination-in';
+  const top = x.createLinearGradient(0, 0, 0, 10);
+  top.addColorStop(0, 'rgba(0,0,0,0.25)');
+  top.addColorStop(1, 'rgba(0,0,0,1)');
+  x.fillStyle = top;
+  x.fillRect(0, 0, 256, 64);
   return c;
 }
 
