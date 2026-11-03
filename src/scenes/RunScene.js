@@ -1023,12 +1023,16 @@ export class RunScene extends Phaser.Scene {
     const layer = { clouds: this.clouds, ridge: this.ridge, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);
-      this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut' });
+      // SALTO NOCHE vuelta final: al terminar el fundido de entrada se vuelve a aplicar la hora. Si la noche llegó mientras la
+      // capa entraba, el fundido la dejaba con los alfas de la mañana (casitas y cerros al 0.78, velos de día, sin faldón):
+      // translúcidos de noche.
+      const fin = () => this.ambient && this.ambient.applyDay(0);
+      this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut', onComplete: fin });
       const veil = { far: this.farVeil, mid: this.midVeil }[key];
       if (veil) {
         veil.setTexture(key);
         const k = C.atmosphere[key] * (key === 'far' && this.ambient ? this.ambient.farAlpha() : 1);
-        this.tweens.add({ targets: veil, alpha: k, duration: 320, ease: 'Sine.easeOut' });
+        this.tweens.add({ targets: veil, alpha: k, duration: 320, ease: 'Sine.easeOut', onComplete: fin });
       }
     }
   }

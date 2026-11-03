@@ -218,7 +218,9 @@ export const CONFIG = {
       // ciego día 1 (4 vistazos): con el suelo a 60 la luz del farol no se veía. Suelo un paso abajo (#CBAB89, kraft→papel
       // 30 %, al 0.8) y pino un paso abajo (mid 0.12): 24.5 / 31.8 / 40.8 / 47.5 / 57.3 a 1280, la mancha tiene de dónde subir.
       ground: { on: true, color: 0xcbab89, alpha: 0.8, dim: 0 },
-      planes: { on: true, far: 0.06, mid: 0.12 },
+      // SALTO NOCHE vuelta final: mid 0.12 -> 0. A 375 el pino quedaba casi del valor de la casita y el cerro de atrás
+      // (L 47.9 contra 45.8, opaco.mjs) y solo se leía su contorno, "de alambre", como si fuera translúcido.
+      planes: { on: true, far: 0.06, mid: 0 },
       fibers: { on: true, alpha: 0.12 },
       // SALTO NOCHE pieza 2: farol de papel en poste de cartón detrás del suelo, cada (1 - jitter) a (1 + jitter) * cada
       // pantallas. luz: mancha sobre el suelo (w x h px de mundo, media elipse desde el canto de atrás), alfa a noche plena.
