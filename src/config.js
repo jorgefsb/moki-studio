@@ -183,7 +183,7 @@ export const CONFIG = {
   atmosphere: {
     on: true, far: 0.2, mid: 0.12, near: 0.16,
     night: {
-      far: 0.08, mid: 0.05, near: 0.26, sky: 0.22, ridge: 0x3a342d,
+      far: 0.08, mid: 0.05, near: 0.26, ridge: 0x3a342d,
       // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
       // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
       // ajuste de arte (30-oct): a 375 la cordillera #87755F se fundía con el cielo de atrás (brecha medida 3.0 puntos de L).
@@ -206,9 +206,18 @@ export const CONFIG = {
       // ground.color se queda en el tono viejo de la cordillera (#625545) y dim 0.18 (escalera de valores): el suelo y el
       // canto de juego quedan más oscuros que cualquier plano de atrás.
       // opción C (director, 30-oct): dim de vuelta a 0.08 como la base d321e3b.
-      ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.08 },
-      planes: { on: true, far: 0.06, mid: 0.24 },
-      fibers: { on: true, alpha: 0.09 },
+      // SALTO NOCHE pieza 1 (ESPEC-SALTO, 3-nov): escala de valores de noche de oscuro a claro, cielo < cordillera <
+      // lejano < medio < suelo; el suelo es la capa más clara. Base técnica v2/fondo-luz 2c25198 (sky 0.7, mid 0, fibras
+      // 0.12), pero el suelo ya no es el #CCBA9C gris de ahí: kraft cálido levantado hacia papel (kraft→papel 30 %, el de
+      // la clave N2). skyTo: el cielo baja hacia ciruela oscuro de papel (no hay token ciruela: tinta→borde 30 % con un
+      // toque violeta) en vez de tinta sola. Antes: sky 0.22 hacia tinta, ground #625545 0.7 dim 0.08, mid 0.24, fibras 0.09.
+      sky: 0.96, skyTo: 0x41363e,
+      ground: { on: true, color: 0xcfb291, alpha: 0.85, dim: 0 },
+      planes: { on: true, far: 0.06, mid: 0 },
+      fibers: { on: true, alpha: 0.12 },
+      // SALTO NOCHE pieza 2: farol de papel en poste de cartón detrás del suelo, cada (1 - jitter) a (1 + jitter) * cada
+      // pantallas. luz: mancha sobre el suelo (w x h px de mundo, media elipse desde el canto de atrás), alfa a noche plena.
+      farol: { on: true, cada: 1.5, jitter: 0.33, luz: { w: 300, h: 48, alpha: 0.55 } },
       // band: banda clara del horizonte detrás de la cordillera en tiras planas de papel (ajuste 2 de arte, 30-oct: el
       // degradado glow 0.85 se leía como niebla). strips = [alto sobre el pie de la cordillera en px de mundo (× farS), alfa
       // a noche plena], de abajo (la más clara) hacia arriba. canto: filo claro arriba de cada tira; shadow: sombra de contacto

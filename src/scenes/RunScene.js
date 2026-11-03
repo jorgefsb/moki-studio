@@ -6,6 +6,7 @@ import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
 import { Cinta } from '../art/cinta.js';
 import { Ambient } from '../art/ambient.js';
+import { Faroles } from '../art/farol.js';
 import { MID_PROPS, MID_WRAP, MID_H } from '../art/textures.js';
 import { createUI } from '../ui/ui.js';
 import { audio } from '../audio/audio.js';
@@ -156,6 +157,7 @@ export class RunScene extends Phaser.Scene {
     this.particles = new Particles(this);
     this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
     this.ambient = new Ambient(this, Number(Q.get('amb')) || C.ambient.seed); // ?amb=N cambia la semilla del fondo (prueba de determinismo)
+    this.faroles = new Faroles(this); // SALTO NOCHE: faroles de papel con su luz sobre el suelo (solo de noche)
     audio.nt = () => this.ambient.nt || 0; // de noche las capas del Cuaderno cierran el filtro y dejan la escala abierta
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
@@ -1217,6 +1219,7 @@ export class RunScene extends Phaser.Scene {
     this.front.tilePositionX = this.dist;
     this.groundFibers.tilePositionX = this.dist;
     this.folds.forEach((f) => (f.tilePositionX = this.dist));
+    if (this.faroles) this.faroles.update(this.dist, this.ambient ? this.ambient.nt || 0 : 0);
 
     // Profundidad con el salto: las capas lejanas bajan unos px cuando Moki sube (sin zoom de cámara).
     const V = C.art.vertical;
