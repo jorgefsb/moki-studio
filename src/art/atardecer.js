@@ -23,17 +23,18 @@ const tintTo = (src, dst) => {
 export const TARDE = {
   cieloAlto: '#F79E52', // arriba, un paso más naranja
   cieloMedio: '#FBA956',
-  cieloBajo: '#FCB646', // pegado al horizonte
+  cieloBajo: '#FCB646',
+  cieloHorizonte: '#FFD27A', // franja clara y cálida pegada al horizonte (luz del sol bajo)
   bajoTop: 260, // el degradado llega a cieloBajo en y = groundY - bajoTop (por farS); abajo, plano
   lejana: '#F08A4E', // cordillera (0.15x): la más clara de las siluetas
-  media: '#B86E3C', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo
+  media: '#C98552', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo
   mediaTop: [236, 288], // y del mundo del canto de arriba de la colina media (lomas suaves; nunca baja de 290)
   cercana: '#93451A', // capa lejana de siempre (cerros y casitas) teñida a este valor
   pinos: '#4A2614', // capa media (pinos, postes, arbustos): la más oscura, para que el obstáculo #6B4630 quede entre cerros y pinos
   obs: '#6B4630', // caja, torre y viga
   canto: { px: 4, alpha: 1, pie: 10 }, // canto claro #F4E8D5 del obstáculo; los 10 px de abajo sin él
-  suelo: { cantoPx: 4, tinte: 0xffe9b1 }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft cálido #CDA062
-  sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.75, 1.35], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
+  suelo: { cantoPx: 4, tinte: 0xffe18d }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft cálido #CD9A4E
+  sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.5, 1.25], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
 };
 
@@ -64,7 +65,7 @@ function bandaMedia() {
   cut(x, path, { fill: TARDE.media, edgeW: 0, shadow: { alpha: 0.18, blur: 10, dx: 0, dy: -3 }, r, fiberCount: 160 });
   // canto rasgado: filo de papel claro de 2-3 px que sigue el borde, con mordidas
   x.save();
-  x.strokeStyle = rgba(PAL.paper, 0.35); // con 0.55 se leía como filo despegado
+  x.strokeStyle = rgba(PAL.paper, 0.2); // con 0.35 cruzaba el sol como cresta transparente
   x.lineJoin = 'round';
   for (let i = 1; i < pts.length; i++) {
     x.lineWidth = 2 + r();
@@ -87,7 +88,8 @@ function cieloBajo() {
   const g = x.createLinearGradient(0, 0, 0, 256);
   g.addColorStop(0, TARDE.cieloAlto);
   g.addColorStop(0.5, TARDE.cieloMedio);
-  g.addColorStop(1, TARDE.cieloBajo);
+  g.addColorStop(0.75, TARDE.cieloBajo);
+  g.addColorStop(1, TARDE.cieloHorizonte);
   x.fillStyle = g;
   x.fillRect(0, 0, 4, 256);
   return c;
