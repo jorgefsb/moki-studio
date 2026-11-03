@@ -149,7 +149,8 @@ function lightLayer(halo, vignette) {
 }
 
 // Tono de la luz del farol: tope del rango de ESPEC-SALTO, papel + #FF6B35 25 % (director 3-nov 01:25; sin kraft).
-const LUZ_FAROL = mix(mix(PAL.paper, PAL.kraft, 0.5), PAL.accent, 0.2); // 1c variante K
+const BASE_K = mix(PAL.paper, PAL.kraft, 0.5); // 1c variante K: base mitad papel, mitad kraft
+const LUZ_FAROL = mix(BASE_K, PAL.accent, 0.2);
 
 // SALTO NOCHE (pieza 2): farol de papel en poste de cartón, solo de noche. Canvas a 2x (se dibuja a escala 0.5).
 // El farol es papel crema plano, no emite: la luz solo cae sobre superficies (canto del poste aquí, el suelo en farolLuz).
@@ -168,7 +169,7 @@ function farolPoste() {
   x.fillRect(29, 48, 5, 202);
   x.fillStyle = rgba(PAL.ink, 0.7);
   x.fillRect(79, 48, 2, 22);
-  // farol: óvalo de papel naranja tibio (papel + #FF6B35 50 %; al 10-38 % se leía apagado, ciegos 1-4) con borde rasgado,
+  // farol: óvalo de papel naranja tibio (base K + #FF6B35 50 %, para que empate con su luz; al 10-38 % se leía apagado) con borde rasgado,
   // costillas de kraft y tapas de cartón. Color plano, sin halo.
   const lamp = (g) => {
     for (let i = 0; i <= 40; i++) {
@@ -178,7 +179,7 @@ function farolPoste() {
     }
     g.closePath();
   };
-  cut(x, lamp, { fill: mix(PAL.paper, PAL.accent, 0.5), edgeW: 2, shadow: { alpha: 0.25, blur: 4, dx: 2, dy: 3 }, r, fiberCount: 40 });
+  cut(x, lamp, { fill: mix(BASE_K, PAL.accent, 0.5), edgeW: 2, shadow: { alpha: 0.25, blur: 4, dx: 2, dy: 3 }, r, fiberCount: 40 });
   x.save();
   x.beginPath();
   lamp(x);

@@ -38,8 +38,11 @@ export class Faroles {
     const F = C.atmosphere.night.farol;
     if (!F.on || (nt <= 0 && !this.items)) return;
     if (!this.items) {
-      if (!this.scene.textures.exists('farolLuz')) return; // texturas diferidas (buildTextures): aún no listas
+      if (!this.scene.textures.exists('farolLuzV')) return; // texturas diferidas (buildTextures): aún no listas
       this.make();
+      // un cuadro con las dos manchas fuera de pantalla para que la GPU ya las tenga (al nacer con su poste daban 4-7 cuadros > 33 ms)
+      this.items.forEach((it, i) => it.luz.setTexture(i ? 'farolLuzV' : 'farolLuz').setPosition(-2000, 0).setVisible(true));
+      return;
     }
     const s = this.scene;
     const g = C.world.groundY;
@@ -50,7 +53,10 @@ export class Faroles {
       const x = xs[i];
       const on = nt > 0 && x > -150 && x < s.vw + 150;
       it.poste.setVisible(on).setAlpha(nt).setPosition(x, g - 6);
-      it.luz.setVisible(on).setTexture(L.key).setDisplaySize(L.w, L.h).setAlpha(nt).setPosition(x + 26, g - 8);
+      // la mancha nace y muere con su poste: solo con el poste en pantalla (de x - 14 a x + 51), con rampa de 60 px en los
+      // bordes; antes asomaba sin poste a la vista (luz sin fuente, ciego 1c)
+      const a = Math.min(1, Math.max(0, Math.min(x + 51, s.vw - x + 14) / 60));
+      it.luz.setVisible(on && a > 0).setTexture(L.key).setDisplaySize(L.w, L.h).setAlpha(nt * a).setPosition(x + 26, g - 8);
     });
   }
 }
