@@ -380,7 +380,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
       agrega(nombre, () => gemela(fotoTile(s, L, key, z, extra), seed, T.detalle[nombre]), L.x, L.y, depth, win, seed);
     };
     agrega('cielo', () => hoja(Math.ceil(s.vw * z), Math.ceil(s.vh * z), (g - s.top) * z), 0, s.top, 1.7, T.frente, 311);
-    // SALTO CAPAS: el dibujo a lápiz sale de las capas pintadas. El sol ya viene en la pintura del cielo.
+    // SALTO CAPAS: el dibujo a lápiz sale de las capas pintadas. El sol va aparte (capas.js), debajo de esta hoja, como el cielo pintado.
     if (s.capas && s.capas.activa) {
       s.capas.colocar(g, amb.st);
       deMosaico(s.capas.lejos, 'capa_lejos', 'capaLejos', 2.08, T.frente, 315);
