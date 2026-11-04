@@ -8,6 +8,7 @@ import { mk, cut, block } from './textures.js';
 import { DAY } from './ambient.js';
 import { leerCuaderno, nivelDe } from '../cuaderno.js';
 import { montarBoceto } from './boceto.js';
+import { montarBokeh } from './bokeh.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
 const lerp = (a, b, k) => {
@@ -96,6 +97,10 @@ function cieloBajo() {
   g.addColorStop(1, TARDE.cieloHorizonte);
   x.fillStyle = g;
   x.fillRect(0, 0, 4, 256);
+  // 4x256 es potencia de 2: el filtro repite la textura y mezclaba la fila de abajo (clara) con la de arriba: la recta de y = 240.
+  // Las 2 filas de abajo van detrás del suelo.
+  x.fillStyle = TARDE.cieloAlto;
+  x.fillRect(0, 254, 4, 2);
   return c;
 }
 
@@ -367,4 +372,5 @@ export function montar(s) {
   amb.applyDay(0);
   if (fija() && s.screen === 'play') sd.call(amb, 2); // el chunk llegó con la partida ya corriendo: fundido, sin transición
   montarBoceto(s, o, colocar, TARDE.sol.r);
+  montarBokeh(s);
 }
