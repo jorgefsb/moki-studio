@@ -32,18 +32,20 @@ export const TARDE = {
   cieloHorizonte: '#FFD27A', // franja clara y cálida pegada al horizonte (luz del sol bajo)
   bajoTop: 260, // el degradado llega a cieloBajo en y = groundY - bajoTop (por farS); abajo, plano
   lejana: '#F08A4E', // cordillera (0.15x): la más clara de las siluetas
-  media: '#DE9050', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo; 1c: más clara y cálida que los cerros
+  // Moki contra el naranja (4-nov): el traje #FF6B35 cae en valor sobre estas capas. Oscurecerlas resta al cuerpo del obstáculo y aclararlas a su canto
+  // (también en la colina media, a 1280): conservan su luminancia y se separan del traje por color, en kraft.
+  media: '#C59A6E', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo; 1c: más clara y cálida que los cerros
   mediaTop: [236, 288], // y del mundo del canto de arriba de la colina media (lomas suaves; nunca baja de 290)
   // Separar valores (ciego 4-nov): el obstáculo es lo más oscuro del paisaje. Toda capa detrás de él cae entre L 0.20 (cuerpo #6B4630 contra fondo 2.0)
   // y L 0.38 (su canto de papel contra fondo 2.0). Escalones hacia adelante: colina media 0.36, cerros 0.29, pinos 0.24.
-  cercana: '#CE8048', // capa lejana de siempre (cerros y casitas); en #7A3612 tenía el mismo valor que la caja
-  pinos: '#C2713A', // capa media (pinos, postes, arbustos): la silueta más oscura, pero ya no más que el obstáculo
+  cercana: '#B28C64', // capa lejana de siempre (cerros y casitas); en #7A3612 tenía el mismo valor que la caja
+  pinos: '#A27F5B', // capa media (pinos, postes, arbustos): la silueta más oscura, pero ya no más que el obstáculo
   obs: '#6B4630', // caja, torre y viga
   canto: { px: 4, alpha: 1, pie: 10 }, // canto claro #F4E8D5 del obstáculo; los 10 px de abajo sin él
   suelo: { cantoPx: 4, tinte: 0xffd8bc }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft rojizo #CD9468 (1c: #CD9A4E se leía caqui-oliva)
   sombra: '#5A2410', // la sombra del suelo (groundShade, tinta neutra a 0.34) agrisaba el kraft: de tarde va en café rojizo
   piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
-  sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.5, 1.25], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
+  sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A' }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
   piezasTorn: 0.2, // las losas de cartón del suelo se leían como obstáculo o bache: quedan como mancha del propio kraft
   // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468; oscura se leía como anillo de peligro. Cara dorada de la luz del sol (ningún color
@@ -53,10 +55,10 @@ export const TARDE = {
   // como línea blanca. px: su grueso en px de textura. Sombra: alfa máximo sobre la capa de atrás, ramp: cuándo entra en la transición.
   papel: {
     ridge: { labio: '#F6AE7C', px: 3, seed: 81 },
-    media: { labio: '#EFB483', px: 3, seed: 82 },
+    media: { labio: '#E8C49C', px: 3, seed: 82 },
     // en las capas oscuras la fibra normal no se ve: va más fuerte, y el labio más grueso y más claro
-    far: { labio: mix('#CE8048', PAL.paper, 0.4), px: 4, seed: 83, fibraK: 1.1, rasgado: 2.5 },
-    mid: { labio: mix('#C2713A', PAL.paper, 0.35), px: 3.5, seed: 84, fibraK: 1.1, rasgado: 2.5 },
+    far: { labio: mix('#B28C64', PAL.paper, 0.4), px: 4, seed: 83, fibraK: 1.1, rasgado: 2.5 },
+    mid: { labio: mix('#A27F5B', PAL.paper, 0.35), px: 3.5, seed: 84, fibraK: 1.1, rasgado: 2.5 },
     // café y no tinta: la tinta neutra agrisaba el naranja (1c). Por eso el alfa llega más alto que el 12-28 % de la tabla: oscurece lo mismo.
     sombra: { ridge: 0.22, media: 0.3, far: 0.42, mid: 0.42, suelo: 0.34, sueloPx: 14, ramp: [900, 1400] },
     cieloFibra: 0.4,
@@ -124,11 +126,10 @@ function cieloAlto() {
   return c;
 }
 
-// Sol de papel cálido: disco #FFD56B con canto rasgado más naranja y dos aros de halo plano (papel encimado, sin brillo)
+// Sol de papel cálido: disco #FFD56B con canto rasgado más naranja. Sin aros: los críticos los leían como halo (ESPEC §6)
 function sol(R) {
   const T = TARDE.sol;
-  const RH = R * T.haloK[0];
-  const S = Math.ceil(RH * 2 + 8);
+  const S = Math.ceil(R * 2 + 8);
   const [c, x] = mk(S, S);
   const r = rng(78);
   const disco = (rad, jit) => (g) => {
@@ -139,14 +140,6 @@ function sol(R) {
     }
     g.closePath();
   };
-  T.haloK.forEach((k, i) => {
-    x.globalAlpha = T.haloA[i];
-    x.fillStyle = T.halo;
-    x.beginPath();
-    disco(R * k, 5)(x); // el halo rasgado: con filo limpio se leía como anillos gráficos
-    x.fill();
-  });
-  x.globalAlpha = 1;
   cut(x, disco(R, 2.5), { fill: T.canto, edgeW: 0, shadow: null, r, fiberCount: 0 });
   cut(x, disco(R - 3, 1), { fill: T.fill, edgeW: 0, shadow: null, r, fiberCount: 30 });
   return c;
