@@ -34,8 +34,10 @@ export const TARDE = {
   lejana: '#F08A4E', // cordillera (0.15x): la más clara de las siluetas
   media: '#DE9050', // colina media plana (0.3x), su borde de arriba nunca baja de y = 290 del mundo; 1c: más clara y cálida que los cerros
   mediaTop: [236, 288], // y del mundo del canto de arriba de la colina media (lomas suaves; nunca baja de 290)
-  cercana: '#7A3612', // capa lejana de siempre (cerros y casitas) teñida a este valor; 1c: un escalón más oscura (a 375 se fundía con la media)
-  pinos: '#3A1A0B', // 1c v2: un escalón más oscuro (a 375 el velo los subía al café de los cerros); capa media (pinos, postes, arbustos): la más oscura, para que el obstáculo #6B4630 quede entre cerros y pinos
+  // Separar valores (ciego 4-nov): el obstáculo es lo más oscuro del paisaje. Toda capa detrás de él cae entre L 0.20 (cuerpo #6B4630 contra fondo 2.0)
+  // y L 0.38 (su canto de papel contra fondo 2.0). Escalones hacia adelante: colina media 0.36, cerros 0.29, pinos 0.24.
+  cercana: '#CE8048', // capa lejana de siempre (cerros y casitas); en #7A3612 tenía el mismo valor que la caja
+  pinos: '#C2713A', // capa media (pinos, postes, arbustos): la silueta más oscura, pero ya no más que el obstáculo
   obs: '#6B4630', // caja, torre y viga
   canto: { px: 4, alpha: 1, pie: 10 }, // canto claro #F4E8D5 del obstáculo; los 10 px de abajo sin él
   suelo: { cantoPx: 4, tinte: 0xffd8bc }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft rojizo #CD9468 (1c: #CD9A4E se leía caqui-oliva)
@@ -43,17 +45,18 @@ export const TARDE = {
   piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.5, 1.25], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
-  // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468. Cuerpo naranja de marca hundido en tinta (contraste >= 3 contra
-  // el suelo, nunca más claro: el suelo ya está a media luz) y aro de papel, que es el que se lee contra cerros y pinos oscuros.
-  ficha: { cara: mix(PAL.accent, PAL.ink, 0.82), canto: mix(PAL.accent, PAL.ink, 0.92), aro: PAL.paper },
+  piezasTorn: 0.2, // las losas de cartón del suelo se leían como obstáculo o bache: quedan como mancha del propio kraft
+  // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468; oscura se leía como anillo de peligro. Cara dorada de la luz del sol (ningún color
+  // claro llega a 3.0 contra el suelo) y filo oscuro, que es el que da el contraste contra el suelo y contra el cielo.
+  ficha: { cara: '#FFD56B', filo: mix(PAL.accent, PAL.ink, 0.82), canto: mix(PAL.accent, PAL.ink, 0.92), marca: mix('#FFD56B', PAL.accent, 0.55) },
   // Canto de papel (ESPEC §2). labio: el filo rasgado de cada capa; el de la colina media no pasa de la claridad del sol, para no cruzarlo
   // como línea blanca. px: su grueso en px de textura. Sombra: alfa máximo sobre la capa de atrás, ramp: cuándo entra en la transición.
   papel: {
     ridge: { labio: '#F6AE7C', px: 3, seed: 81 },
     media: { labio: '#EFB483', px: 3, seed: 82 },
     // en las capas oscuras la fibra normal no se ve: va más fuerte, y el labio más grueso y más claro
-    far: { labio: mix('#7A3612', PAL.paper, 0.5), px: 4, seed: 83, fibraK: 1.7, rasgado: 2.5 },
-    mid: { labio: mix('#3A1A0B', PAL.paper, 0.55), px: 3.5, seed: 84, fibraK: 1.9, rasgado: 2.5 },
+    far: { labio: mix('#CE8048', PAL.paper, 0.4), px: 4, seed: 83, fibraK: 1.1, rasgado: 2.5 },
+    mid: { labio: mix('#C2713A', PAL.paper, 0.35), px: 3.5, seed: 84, fibraK: 1.1, rasgado: 2.5 },
     // café y no tinta: la tinta neutra agrisaba el naranja (1c). Por eso el alfa llega más alto que el 12-28 % de la tabla: oscurece lo mismo.
     sombra: { ridge: 0.22, media: 0.3, far: 0.42, mid: 0.42, suelo: 0.34, sueloPx: 14, ramp: [900, 1400] },
     cieloFibra: 0.4,
@@ -177,14 +180,18 @@ function ficha() {
   x.beginPath();
   x.arc(18, 21, 15, 0, Math.PI * 2);
   x.fill();
-  x.fillStyle = F.cara;
+  x.fillStyle = F.filo;
   x.beginPath();
   x.arc(18, 18, 15, 0, Math.PI * 2);
   x.fill();
-  x.strokeStyle = F.aro;
-  x.lineWidth = 3;
+  x.fillStyle = F.cara;
   x.beginPath();
-  x.arc(18, 18, 11.5, 0, Math.PI * 2);
+  x.arc(18, 18, 12.5, 0, Math.PI * 2);
+  x.fill();
+  x.strokeStyle = F.marca;
+  x.lineWidth = 2;
+  x.beginPath();
+  x.arc(18, 18, 8.5, 0, Math.PI * 2);
   x.stroke();
   return c; // sin el arco de token(): sobre la cara oscura los invitados lo leían como carita triste o señal de prohibido
 }
@@ -426,7 +433,12 @@ export function montar(s) {
     // los pliegues se rehacen al cambiar de tamaño. En el atardecer se van: sobre papel recortado eran rectas de regla
     s.folds.forEach((v) => v.setTint(lerp(0xffffff, TARDE.suelo.tinte, amb.st)).setAlpha(1 - amb.st));
     const pz = lerp(0xffffff, TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
-    s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.setTint(pz));
+    const aTorn = 1 - amb.st * (1 - TARDE.piezasTorn);
+    s.fg.forEach((f) => {
+      const k = f.sprite.texture.key;
+      if (k.startsWith('gp-')) f.sprite.setTint(pz);
+      if (k.startsWith('gp-torn')) f.sprite.setAlpha(aTorn);
+    });
     o.canto.setPosition(0, g - 11).setSize(s.vw, TARDE.suelo.cantoPx + 6); // labio sobre el suelo: el pie del obstáculo (y 436) asienta en kraft, no en el canto
     o.canto.tilePositionX = s.dist;
   };
@@ -474,7 +486,11 @@ export function montar(s) {
     if (on) s.shade.setTintFill(lerp(hex(PAL.ink), hex(TARDE.sombra), st));
     else s.shade.clearTint();
     if (!on) {
-      s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.clearTint()); // colocar ya no corre con st = 0
+      s.fg.forEach((f) => {
+        if (!f.sprite.texture.key.startsWith('gp-')) return;
+        f.sprite.clearTint(); // colocar ya no corre con st = 0
+        if (f.sprite.texture.key.startsWith('gp-torn')) f.sprite.setAlpha(1);
+      });
       s.ridge.setVisible(capasV.ridge);
       s.far.setVisible(true);
       s.farVeil.setVisible(capasV.farVeil);
