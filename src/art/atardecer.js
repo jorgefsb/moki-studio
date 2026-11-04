@@ -7,6 +7,7 @@ import { PAL, mix, rgba, rng } from './palette.js';
 import { mk, cut, block } from './textures.js';
 import { DAY } from './ambient.js';
 import { leerCuaderno, nivelDe } from '../cuaderno.js';
+import { montarBoceto } from './boceto.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
 const lerp = (a, b, k) => {
@@ -21,6 +22,7 @@ const tintTo = (src, dst) => {
 
 // Perillas (ESPEC §1). Hex del video C (study.json); día 1b abre los escalones: lejos claro, cerca oscuro.
 export const TARDE = {
+  horaFija: true, // nivel 1 = atardecer toda la partida (DECISIONES 3-nov 19:13); en false vuelve el ciclo de horas
   cieloAlto: '#F79E52', // arriba, un paso más naranja
   cieloMedio: '#FBA956',
   cieloBajo: '#FCB646',
@@ -207,10 +209,37 @@ export function montar(s) {
   // de siempre, sin tocar DAY.
   const nivel1 = () => nivelDe(leerCuaderno()).nivel === 1;
   amb.n1 = nivel1();
+  // La hora fija solo la pide el juego. Los medidores siguen pudiendo poner cualquier hora con setDay(i, true).
+  const fija = () => TARDE.horaFija && amb.n1 && !s.demo;
+  const sd = amb.setDay;
+  amb.setDay = function (i, instant) {
+    if (!instant && fija()) return; // checkpoint: la hora no cambia
+    sd.call(this, i, instant);
+  };
+  // Del atardecer a la hora del nivel 2: el fundido de siempre, al empezar la primera partida ya sin nivel 1
+  amb.desdeTarde = () => {
+    const d = amb.day;
+    const a = d.to;
+    d.from = 2;
+    d.to = a;
+    d.t = 0;
+    d.dur = s.reduced ? 150 : 6000;
+    amb.saliendo = true;
+    amb.applyDay(0);
+  };
   const rr = s.resetRun;
   s.resetRun = function (...a) {
-    amb.n1 = nivel1();
-    return rr.apply(this, a);
+    // El nivel se lee al empezar: caer y reintentar es la misma partida, aunque esa caída haya sellado el nivel 2
+    if (this.demo || !this.partidaEmpezada) amb.n1 = nivel1();
+    this.partidaEmpezada = !this.demo;
+    const r = rr.apply(this, a);
+    if (fija()) sd.call(amb, 2, true);
+    return r;
+  };
+  const sgN = s.startGame;
+  s.startGame = function (...a) {
+    this.partidaEmpezada = false;
+    return sgN.apply(this, a);
   };
   const dia2 = { shadowK: DAY[2].shadowK, bands: DAY[2].bands };
   const tarde2 = { shadowK: TARDE.shadowK, bands: 0 }; // sin bandas de fibra: el cielo es papel plano
@@ -260,7 +289,7 @@ export function montar(s) {
     o.banda.setPosition(0, g + 12 - bandH * fs + lift).setSize(s.vw, bandH * fs).setTileScale(fs);
     o.banda.tilePositionX = s.far.tilePositionX * 0.8; // entre la cordillera (0.15x) y la capa lejana (0.3x)
     [[o.far, s.far, 'far', TARDE.cercana], [o.mid, s.mid, 'mid', TARDE.pinos]].forEach(([T, L, key, color]) => {
-      if (T.texture.key !== `${key}_t`) {
+      if (T.displayTexture.key !== `${key}_t`) { // en un TileSprite, .texture es su canvas interno
         const k = plano(key, color);
         if (!k) return T.setVisible(false);
         T.setTexture(k);
@@ -299,7 +328,8 @@ export function montar(s) {
 
   function pintar() {
     const d = amb.day;
-    const st = !amb.n1 ? 0 : d.to === 2 ? d.t : d.from === 2 ? 1 - d.t : 0;
+    if (d.t >= 1) amb.saliendo = false;
+    const st = !amb.n1 && !amb.saliendo ? 0 : d.to === 2 ? d.t : d.from === 2 ? 1 - d.t : 0;
     amb.st = st;
     const on = st > 0;
     all.forEach((v) => v.setVisible(on).setAlpha(st));
@@ -335,4 +365,6 @@ export function montar(s) {
     colocar();
   }
   amb.applyDay(0);
+  if (fija() && s.screen === 'play') sd.call(amb, 2); // el chunk llegó con la partida ya corriendo: fundido, sin transición
+  montarBoceto(s, o, colocar, TARDE.sol.r);
 }
