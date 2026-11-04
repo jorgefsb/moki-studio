@@ -40,6 +40,7 @@ const ES = {
   'fail.hint.caja': 'La caja se libra con un toque.',
   'fail.hint.torre': 'La torre pide mantener un poquito más.',
   'fail.hint.viga': 'La viga pide un salto bajito.',
+  'fail.hint.zanja': 'Brinca antes de la orilla. Si es ancho, mantén.',
   'fail.cp': 'Sigues desde el checkpoint',
   'fail.start': 'Empiezas de nuevo',
   'fail.pct': 'Llegaste al {n}%',
@@ -157,6 +158,9 @@ const ES = {
   'share.clasico': 'Clásico',
   'pause.resume': 'Seguir',
   'pause.home': 'Inicio',
+  'pause.foto': 'Tomar foto',
+  'pause.zen.on': 'Pantalla limpia: Sí',
+  'pause.zen.off': 'Pantalla limpia: No',
 };
 
 const EN = {

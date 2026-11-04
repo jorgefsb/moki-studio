@@ -2,7 +2,7 @@
 // sorteados con su propia semilla; el validador lo corre con la física real y, si no pasa, se re-sortea (8 veces)
 // y al final se usa el guion clásico. Todo determinista: misma semilla, mismo nivel.
 import { CONFIG as C } from '../config.js';
-import { buildLevel, SCRIPTS } from '../tramos.js';
+import { buildLevel, SCRIPTS, EXT } from '../tramos.js';
 import { BLOQUES, T1_INTRO, SORPRESAS } from './bloques.js';
 
 // Respiro sin nada (antes una fila de 5 piezas): con fila, las páginas pasaban de 35% de filas de piezas (tope 20%)
@@ -64,6 +64,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (b.mec && !ctx.mecanicas.includes(b.mec)) return false; // mecánica no destrabada (o Reto/Clásico)
       if (b.soloPico && ctx.fase !== 'pico') return false; // viento-par y viento-ritmo: solo en el pico
       if (b.mec === 'viento' && ctx.nViento >= 2) return false; // máx. 2 bloques de viento por página
+      if (b.cabe && !b.cabe(ctx, b)) return false; // reglas propias de una mecánica diferida (zanja)
       if (b.mec === 'timbre' && (ctx.nTimbre || b.soloEstreno || C.tramos[tramo - 1].speed > C.timbre.vMax || ctx.fase !== 'pico' && ctx.fase !== 'subida')) return false; // timbre: máx. 1 por página, nunca en calma ni respiro; la intro no se sortea
       if (tramo < b.min || tramo > b.max) return false; // G1
       if (b.dur > rem - 0.75 + 1e-9) return false; // 0.75 = minGapSec: con fases cortas, los bloques dif 4 de 5.5-6.5 s ya no cabían con 1.5
@@ -84,7 +85,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (rem < 4.5) return;
       continue;
     }
-    put(ctx, pick(r, cands.map((q) => [q, (isDescanso(q) ? 1 : PESO_DIF[tramo][q.dif] || 1) * (tramo === 3 && q.tags.includes('viga') ? 2 : 1) * (ctx.used[q.id] ? 0.5 : 1) * (nuevo(ctx, q) ? 2 : 1) * (ctx.fase === 'pico' && esDuro(q) ? 3 : 1) * (q.mec ? PESO_MEC : 1)])));
+    put(ctx, pick(r, cands.map((q) => [q, (isDescanso(q) ? 1 : PESO_DIF[tramo][q.dif] || 1) * (tramo === 3 && q.tags.includes('viga') ? 2 : 1) * (ctx.used[q.id] ? 0.5 : 1) * (nuevo(ctx, q) ? 2 : 1) * (ctx.fase === 'pico' && esDuro(q) ? 3 : 1) * (q.mec ? q.peso || PESO_MEC : 1)])));
   }
 }
 
@@ -101,6 +102,7 @@ function put(ctx, b) {
   ctx.ids.push(b.id);
   if (b.mec === 'viento') ctx.nViento = (ctx.nViento || 0) + 1;
   if (b.mec === 'timbre') ctx.nTimbre = 1;
+  if (b.put) b.put(ctx, b);
   ctx.fasesIds.push([ctx.fase || 'intro', b.id]); // regla (c): qué bloque cayó en qué fase
 }
 
@@ -241,7 +243,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
 // Un tramo (1-4) como guion [[s, código]] de 30 s.
 export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set(), mecanicas = []) {
   const r = rng(hashSeed(`${seed}:${tramo}:${intento}`));
-  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas, fasesIds: [] };
+  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas, fasesIds: [], global };
   if (tramo === 1) {
     ctx.script.push(...T1_INTRO); // el tutorial depende de este inicio
     ctx.filas = T1_INTRO.filter(([, c]) => hasP5(c)).length;
@@ -267,6 +269,7 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   if (estrenaViento) put(ctx, BY_ID['viento-intro']); // la primera página con viento lo enseña al abrir la subida
   // el timbre se estrena al abrir la subida de la primera página libre de estrenos (la 2 si no hay viento, si no la 3)
   if (ctx.mecanicas.includes('timbre') && tramo === (ctx.mecanicas.includes('viento') ? 3 : 2)) put(ctx, BY_ID['timbre-intro']);
+  if (EXT.z) EXT.z.estreno(ctx, tramo, global, put); // la zanja (src/zanja.js) se estrena al abrir la subida
   fase(14, [lo, Math.min(hi, lo + 1)]);
   ctx.fase = 'pico';
   if (estrenaViento) put(ctx, BY_ID['viento-contra']); // ...y el contrario abre el pico de esa misma página
@@ -329,7 +332,7 @@ export function tramoValido(script, speed) {
   const level = buildLevel([{ speed, len: LEN, script }]);
   if (!legible(level) || !holdHold(level) || popupFalla(level) || filasPiezas(script) > TOPE_FILAS + 1e-9) return false;
   if (repetidoPegado(script)) return false;
-  if (vientoMezcla(script) || timbreMezcla(script)) return false;
+  if (vientoMezcla(script) || timbreMezcla(script) || EXT.z && EXT.z.mezcla(script)) return false;
   // con trampolín, las dos rutas (pisarlo y saltarlo) se libran con ±40 ms
   const rutas = script.some(([, c]) => principal(c) === 'J' || esTimbre(c)) ? ['arriba', 'abajo'] : ['arriba']; // y con timbre: tocarlo y a mano
   return rutas.every((ruta) =>

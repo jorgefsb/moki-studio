@@ -97,6 +97,9 @@ export const CONFIG = {
   // vuelta A (director, 2-nov 05:10): x1.3 con choque igual al dibujo (aro 46 x 1.3 = 60), torre a 0.9 s (a 385 queda
   // entera en los 389 px que se ven delante de Moki a 375: 346 + 30) y solo en tramos de <= vMax px/s
   timbre: { lo: 190, hi: 214, ancho: 60, escala: 1.3, torreSec: 0.9, vMax: 385, caidaSec: 0.3, libreSec: 0.75, nivel: 9 },
+  // Zanja (NIVELES.md §10): hueco en el suelo, solo en Libre. Anchos en s (W = ancho * velocidad del tramo); pie: medio
+  // apoyo de Moki; cae a caePx bajo el suelo = choque; sube si va <= subePx abajo; libreSec tras aterrizar de cruzarla
+  zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true },
   hitboxShrink: { x: 18, top: 16 }, // torre y viga (la lección de Mantén no se toca)
   hitboxShrinkCaja: { x: 22, top: 20 }, // la caja perdona más (T3f): ventana de despegue de 109 a 156 ms y de dos cajas de 94 a ~134 ms a 320 px/s
   pickupSize: 30,
