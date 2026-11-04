@@ -2,7 +2,7 @@
 // webp solo se piden si el jugador está en el nivel 1; si no cargan, se queda el fondo de código. Encima siguen obstáculos, fichas, Moki, hojas y bokeh.
 // Las sale de evidencia/salto-capas/herramientas/hacer-capas.py: solo fondo. Moki nunca pasa por ahí.
 import cieloUrl from '../../assets/capas/capa-cielo.webp';
-import lejosUrl from '../../assets/capas/capa-lejos.webp';
+import lejosUrl from '../../assets/capas/capa-lejos.webp'; // interruptor de los cerros: capa-lejos.webp (cálidos) o capa-lejos-malva.webp (0c94591)
 import medioUrl from '../../assets/capas/capa-medio.webp';
 import sueloUrl from '../../assets/capas/capa-suelo.webp';
 
@@ -14,7 +14,9 @@ const CAPAS = {
   medio: { url: medioUrl, depth: 3.06, ancho: 1100, alto: 261, par: 0.6, pie: 22 },
   suelo: { url: sueloUrl, depth: 4.62, ancho: 1147, alto: 236, par: 1 }, // debajo de la gemela de lápiz del suelo (4.7)
 };
-const SOL = { x: 945, en: 0.8, sube: 110 }; // x del mundo donde cae el sol pintado en el mosaico del cielo; en: parte del ancho de pantalla donde se ve al empezar; sube: px del mundo que el cielo va arriba, para que el sol asome sobre los cerros
+// El sol no va en el mosaico: repetía cada 1139 px y salían dos (CAPAS: CERROS, PINOS Y SOL). Es uno solo y baja de 'en' a 'hasta' del ancho de pantalla en todo el nivel 1 (fin); en Libre, más allá de fin, se queda.
+// r: radio en px del mundo. y: parte del cielo, con sube, donde cae su centro. sube: px del mundo que el cielo va arriba, para que el sol asome sobre los cerros.
+const SOL = { en: 0.8, hasta: 0.2, fin: 44254, r: 59, y: 0.665, sube: 110, color: '#FFEEC4', depth: 1.59 };
 const SUELO_ARRIBA = 12; // px del mundo que el canto del suelo pintado queda arriba de groundY: Moki pisa la franja crema
 const SUELO_MARGEN = 6; // px de la textura, ya en el mundo, entre el borde de la textura y ese canto
 
@@ -36,8 +38,11 @@ export function montarCapas(s) {
     const d = (n) => (quieto ? 0 : s.dist * CAPAS[n].par);
     const anchoCielo = CAPAS.cielo.ancho * ms;
     const hCielo = g + 12 - s.top;
-    pon(c.cielo, 0, s.top, s.vw, hCielo, anchoCielo / TEX.w, (hCielo + SOL.sube) / TEX.h, SOL.x * ms - s.vw * SOL.en + d('cielo'));
+    pon(c.cielo, 0, s.top, s.vw, hCielo, anchoCielo / TEX.w, (hCielo + SOL.sube) / TEX.h, d('cielo'));
     c.cielo.tilePositionY = SOL.sube / c.cielo.tileScaleY;
+    const avance = quieto ? 0 : Math.min(s.dist / SOL.fin, 1);
+    c.sol.setPosition(s.vw * (SOL.en + (SOL.hasta - SOL.en) * avance), s.top + SOL.y * (hCielo + SOL.sube) - SOL.sube).setScale(ms);
+    c.sol.setVisible(st > 0).setAlpha(st);
     const plano = (L, n, esc, baja) => {
       const P = CAPAS[n];
       const alto = P.alto * esc;
@@ -58,6 +63,16 @@ export function montarCapas(s) {
     nombres.forEach((n) => {
       c[n] = s.add.tileSprite(0, 0, 10, 10, llave(n)).setOrigin(0, 0).setDepth(CAPAS[n].depth).setVisible(false);
     });
+    if (!s.textures.exists('capa_sol')) {
+      const t = s.textures.createCanvas('capa_sol', SOL.r * 2 + 2, SOL.r * 2 + 2);
+      const x = t.getContext();
+      x.fillStyle = SOL.color;
+      x.beginPath();
+      x.arc(SOL.r + 1, SOL.r + 1, SOL.r, 0, Math.PI * 2);
+      x.fill();
+      t.refresh();
+    }
+    c.sol = s.add.image(0, 0, 'capa_sol').setDepth(SOL.depth).setVisible(false);
     c.cargadas = true;
     // Con una transición ya corriendo no se cambia el dibujo a medias: colocar la activa al terminar
     if (!s.boceto) c.activa = true;
