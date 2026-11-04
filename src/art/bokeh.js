@@ -18,6 +18,7 @@ const ENTRA = [1200, 1500]; // sube a su alfa en esta parte de la transición (E
 const ENTRA_MS = 300; // si no hubo transición o se saltó con un toque
 const PAPEL = 0xf4e8d5;
 const CALIDO = 0xf8cf8d;
+const ABAJO_K = 0.5; // CAPAS: UNIR Y PISOS: los de abajo, sobre el suelo oscuro, se leían como óvalos en el subsuelo; arriba no cambian
 // d: diámetro en px de pantalla; x: lugar inicial, parte del ancho; y: 0 = lejos de la banda, 1 = pegado a ella; a: alfa; T: periodo del vaivén en s
 const V = (z, d, x, y, c, a, T, f) => ({ z, d, x, y, c, a, T, f });
 const ANCHO = [
@@ -107,7 +108,7 @@ export function montarBokeh(s) {
       q.wx -= avance;
       if (q.wx < -q.r) q.wx += ancho + azar() * (FUERA / z); // reaparece fuera de pantalla, sin salto; el azar evita que el mismo dibujo se repita
       const vaiven = (VAIVEN / z) * Math.sin((tiempo * Math.PI * 2) / q.T + q.f);
-      q.im.setPosition(q.wx, y + vaiven).setAlpha(q.a * st * entra);
+      q.im.setPosition(q.wx, y + vaiven).setAlpha(q.a * (arriba ? 1 : ABAJO_K) * st * entra);
     }
     return undefined;
   };

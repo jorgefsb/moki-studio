@@ -1,13 +1,94 @@
 // SALTO NOCHE piezas 3 y 4, en su propio módulo diferido (RunScene lo importa al crear la escena): fuera del JS inicial.
-import { CONFIG as C } from '../config.js';
-import { PAL, mix, rng } from './palette.js';
+import { PAL, mix, rgba, rng } from './palette.js';
 import { mk, cut } from './textures.js';
 
+let C; // la config llega de RunScene: importarla aquí, junto con zanja.js, parte config en otro chunk y sube el JS inicial
 const TAU = Math.PI * 2;
 const frac = (k) => {
   const v = Math.sin(k * 127.1 + 311.7) * 43758.5453;
   return v - Math.floor(v);
 };
+
+// Tono de la luz del farol: tope del rango de ESPEC-SALTO, papel + #FF6B35 25 % (director 3-nov 01:25; sin kraft).
+const BASE_K = mix(PAL.paper, PAL.kraft, 0.5); // 1c variante K: base mitad papel, mitad kraft
+const LUZ_FAROL = mix(BASE_K, PAL.accent, 0.2);
+
+// SALTO NOCHE (pieza 2): farol de papel en poste de cartón, solo de noche. Canvas a 2x (se dibuja a escala 0.5).
+// El farol es papel crema plano, no emite: la luz solo cae sobre superficies (canto del poste aquí, el suelo en farolLuz).
+// Pie del poste abajo al centro del canto izquierdo (x 27); el farol cuelga del brazo en x 80.
+function farolPoste() {
+  const [c, x] = mk(128, 380);
+  const r = rng(301);
+  const lit = LUZ_FAROL;
+  cut(x, (g) => g.rect(20, 36, 14, 344), { fill: mix(PAL.kraft, PAL.ink, 0.5), edgeW: 1.5, r, fiberCount: 30 });
+  cut(x, (g) => g.rect(20, 36, 66, 12), { fill: mix(PAL.kraft, PAL.ink, 0.45), edgeW: 1.5, r, fiberCount: 10 });
+  // canto del poste que mira al farol: la luz cae de arriba y se apaga hacia el pie
+  const gl = x.createLinearGradient(0, 48, 0, 250);
+  gl.addColorStop(0, rgba(lit, 0.7));
+  gl.addColorStop(1, rgba(lit, 0));
+  x.fillStyle = gl;
+  x.fillRect(29, 48, 5, 202);
+  x.fillStyle = rgba(PAL.ink, 0.7);
+  x.fillRect(79, 48, 2, 22);
+  // farol: óvalo de papel naranja tibio (base K + #FF6B35 50 %, para que empate con su luz; al 10-38 % se leía apagado) con borde rasgado,
+  // costillas de kraft y tapas de cartón. Color plano, sin halo.
+  const lamp = (g) => {
+    for (let i = 0; i <= 40; i++) {
+      const a = (i / 40) * TAU;
+      const k = 1 + 0.025 * Math.sin(a * 9 + 1) + (r() - 0.5) * 0.02;
+      g.lineTo(80 + Math.cos(a) * 26 * k, 112 + Math.sin(a) * 38 * k);
+    }
+    g.closePath();
+  };
+  cut(x, lamp, { fill: mix(BASE_K, PAL.accent, 0.5), edgeW: 2, shadow: { alpha: 0.25, blur: 4, dx: 2, dy: 3 }, r, fiberCount: 40 });
+  x.save();
+  x.beginPath();
+  lamp(x);
+  x.clip();
+  x.strokeStyle = rgba(PAL.kraft, 0.55);
+  x.lineWidth = 1.5;
+  for (const dy of [-22, 0, 22]) {
+    x.beginPath();
+    x.ellipse(80, 112 + dy, 28, 5, 0, 0, Math.PI);
+    x.stroke();
+  }
+  // el papel del farol más claro al centro (luz por dentro del papel, no en el aire): papel puro al centro
+  const inn = x.createRadialGradient(80, 116, 0, 80, 116, 30);
+  inn.addColorStop(0, rgba(PAL.paper, 0.95));
+  inn.addColorStop(1, rgba(PAL.paper, 0));
+  x.fillStyle = inn;
+  x.fillRect(50, 72, 60, 80);
+  x.restore();
+  x.fillStyle = mix(PAL.kraft, PAL.ink, 0.5);
+  x.fillRect(66, 70, 28, 7);
+  x.fillRect(68, 147, 24, 6);
+  return c;
+}
+
+// Mancha de luz del farol sobre el suelo: media elipse (empieza en el canto de atrás del suelo y cae hacia adelante),
+// tono tibio derivado de tokens (LUZ_FAROL) y caída suave; sin nada por arriba del suelo.
+// mid y edge: alfa al 45 % y al 75 % del radio (la de vertical, más opaca: a 375 apenas se veía).
+function farolLuz(mid, edge) {
+  const [c, x] = mk(256, 64);
+  const g = x.createRadialGradient(128, 0, 0, 128, 0, 128);
+  const lit = LUZ_FAROL;
+  g.addColorStop(0, rgba(lit, 1));
+  g.addColorStop(0.45, rgba(lit, mid));
+  g.addColorStop(0.75, rgba(lit, edge));
+  g.addColorStop(1, rgba(lit, 0));
+  x.setTransform(1, 0, 0, 0.5, 0, 0);
+  x.fillStyle = g;
+  x.fillRect(0, 0, 256, 128);
+  // el canto de arriba entra suave (10 px): un corte recto en la línea del suelo se leía calcomanía (ciego 3)
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  x.globalCompositeOperation = 'destination-in';
+  const top = x.createLinearGradient(0, 0, 0, 10);
+  top.addColorStop(0, 'rgba(0,0,0,0.25)');
+  top.addColorStop(1, 'rgba(0,0,0,1)');
+  x.fillStyle = top;
+  x.fillRect(0, 0, 256, 64);
+  return c;
+}
 
 // SALTO NOCHE pieza 3: primer plano oscuro, recortes de tinta (2 matas y una rama) con canto rasgado, sin halo.
 // Canvas a 1x (a 2x tardaban de más en generarse: cuadros > 33 ms); el pie es el borde de abajo, que queda fuera de cuadro.
@@ -58,16 +139,21 @@ function ppRama() {
 // hunden fuera de cuadro entre hunde[0] y hunde[1] del ancho: la composición queda abajo a la izquierda. Solo de noche.
 const PP = ['ppMata0', 'ppRama', 'ppMata1'];
 export class PrimerPlano {
-  constructor(scene) {
+  constructor(scene, config) {
+    C = config;
     this.scene = scene;
     // texturas una por cuadro (todas juntas al cargar el módulo daban 2-8 cuadros > 33 ms en la primera partida)
     this.falta = [() => ppMata(401), ppRama, () => ppMata(402)];
+    // texturas del farol: aquí y no en el chunk inicial (CAPAS: UNIR Y PISOS, tope de JS). Una por cuadro, antes de la noche; Faroles las espera
+    this.luces = [['farolPoste', farolPoste], ['farolLuz', () => farolLuz(0.8, 0.25)], ['farolLuzV', () => farolLuz(0.95, 0.5)]];
     this.items = null;
   }
 
   update(dist, nt) {
     const F = C.atmosphere.night.primerPlano;
     const s = this.scene;
+    const luz = this.luces.shift();
+    if (luz) s.textures.exists(luz[0]) || s.textures.addCanvas(luz[0], luz[1]());
     this.cantos(nt);
     if (!F.on) return this.items && this.items.forEach((im) => im.setVisible(false)); // apagado: ni texturas ni recortes
     if (this.falta.length) {
