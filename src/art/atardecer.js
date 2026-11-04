@@ -10,6 +10,7 @@ import { leerCuaderno, nivelDe } from '../cuaderno.js';
 import { montarBoceto } from './boceto.js';
 import { montarBokeh } from './bokeh.js';
 import { montarHojas } from './hojas.js';
+import { montarCapas } from './capas.js';
 import { SOMBRA_K, conFibra, conSombra, hornear, sombra, labioSuelo, sombraSuelo } from './cantoPapel.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
@@ -26,6 +27,8 @@ const tintTo = (src, dst) => {
 // Perillas (ESPEC §1). Hex del video C (study.json); día 1b abre los escalones: lejos claro, cerca oscuro.
 export const TARDE = {
   horaFija: true, // nivel 1 = atardecer toda la partida (DECISIONES 3-nov 19:13); en false vuelve el ciclo de horas
+  capas: true, // SALTO CAPAS: fondo en capas pintadas; en false vuelve el de código
+  bokeh: true, // dirección C de Jorge (ESPEC §3), fuera de la banda de juego; en false no se crea ni un círculo
   cieloAlto: '#F79E52', // arriba, un paso más naranja
   cieloMedio: '#FBA956',
   cieloBajo: '#FCB646',
@@ -40,10 +43,11 @@ export const TARDE = {
   // y L 0.38 (su canto de papel contra fondo 2.0). Escalones hacia adelante: colina media 0.36, cerros 0.29, pinos 0.24.
   cercana: '#B28C64', // capa lejana de siempre (cerros y casitas); en #7A3612 tenía el mismo valor que la caja
   pinos: '#A27F5B', // capa media (pinos, postes, arbustos): la silueta más oscura, pero ya no más que el obstáculo
-  obs: '#6B4630', // caja, torre y viga
-  canto: { px: 4, alpha: 1, pie: 10 }, // canto claro #F4E8D5 del obstáculo; los 10 px de abajo sin él
+  obs: '#452B1C', // caja, torre y viga. SALTO CAPAS: del fondo pintado, los pinos cercanos son oscuros; el obstáculo sigue siendo lo más oscuro (era #6B4630)
+  canto: { px: 4, alpha: 1, pie: 10, color: '#E9D2AE' }, // canto claro del obstáculo, cálido para que no se lea calcomanía; los 10 px de abajo sin él
   suelo: { cantoPx: 4, tinte: 0xffd8bc }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft rojizo #CD9468 (1c: #CD9A4E se leía caqui-oliva)
   sombra: '#5A2410', // la sombra del suelo (groundShade, tinta neutra a 0.34) agrisaba el kraft: de tarde va en café rojizo
+  piezasOscuras: 0x6e3f26,
   piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A' }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
@@ -152,7 +156,7 @@ function pieza(x, ox, oy, w, h, seed, tape, body = TARDE.obs) {
 // El canto claro llega hasta el filo de afuera (tapa el perfil de tinta del bloque): contra la colina oscura, lo primero
 // que se ve del obstáculo es papel. p px por dentro de la caja de juego + los 2 px del margen. El pie (pieSin px de abajo)
 // se queda con su canto de tinta: sobre el suelo kraft claro el borde que se lee es el oscuro (sonda @suelo, y = 436).
-function canto(x, ox, oy, w, h, pieSin = TARDE.canto.pie, color = PAL.paper) {
+function canto(x, ox, oy, w, h, pieSin = TARDE.canto.pie, color = TARDE.canto.color) {
   const p = TARDE.canto.px;
   x.save();
   x.beginPath();
@@ -322,8 +326,9 @@ export function montar(s) {
     return true;
   };
   const enReposo = window.requestIdleCallback || ((fn) => setTimeout(fn, 60));
+  const pintadas = TARDE.capas && amb.n1 ? montarCapas(s) : null; // solo el nivel 1 pide los webp
   const calienta = (cola) => {
-    if (!cola.length || !amb.n1 || s.esc || s.screen !== 'demo') return;
+    if (!cola.length || !amb.n1 || s.esc || s.screen !== 'demo' || (pintadas && (pintadas.cargando || pintadas.cargadas))) return;
     if (s.texQueue) return void s.time.delayedCall(250, () => calienta(cola));
     cola[0]();
     enReposo(() => calienta(cola.slice(1)), { timeout: 500 });
@@ -369,6 +374,23 @@ export function montar(s) {
     return amb.st * Math.min(1, Math.max(0, (B.t - a) / (b - a)));
   };
 
+  // Lo que el fondo pintado tapa: con la tarde completa no se dibuja (menos sobredibujo). Se guarda cómo estaba para regresarlo al salir del nivel 1.
+  let tapado = null;
+  const tapar = (si) => {
+    if (si && !tapado) {
+      tapado = [s.sky, s.clouds, s.topFade, s.surface, s.canto, s.front, s.shade, s.ridge, s.far, s.farVeil, s.mid, s.midVeil, s.ridgeSkirt, s.sun].map((v) => [v, v.visible]);
+    }
+    if (si) {
+      tapado.forEach(([v]) => v.setVisible(false));
+      s.folds.forEach((v) => v.setVisible(false));
+      if (s.midPool) s.midPool.forEach((q) => (q.body.setVisible(false), q.veil.setVisible(false)));
+    } else if (tapado) {
+      tapado.forEach(([v, a]) => v.setVisible(a));
+      s.folds.forEach((v) => v.setVisible(true));
+      tapado = null;
+    }
+  };
+
   // posición: cada cuadro, después del update de la escena (capas, salto y tamaño ya resueltos)
   const colocar = () => {
     if (!amb.st) return;
@@ -376,6 +398,15 @@ export function montar(s) {
     const fs = s.farS || 1;
     const g = gy();
     const aS = alfaSombra();
+    if (pintadas && pintadas.cargadas && !s.boceto) pintadas.activa = true;
+    if (pintadas && pintadas.activa) {
+      pintadas.colocar(g, amb.st);
+      Object.values(o).forEach((v) => v.setVisible(false));
+      Object.values(sb).forEach((v) => v.setVisible(false));
+      tapar(amb.st >= 1);
+      piezas();
+      return;
+    }
     o.cielo.setPosition(0, s.top).setSize(s.vw, g - s.top);
     o.tapa.setPosition(0, s.far.y - 2).setSize(s.vw, 4);
     const bajoH = TARDE.bajoTop * fs + 12;
@@ -425,15 +456,19 @@ export function montar(s) {
     }
     // los pliegues se rehacen al cambiar de tamaño. En el atardecer se van: sobre papel recortado eran rectas de regla
     s.folds.forEach((v) => v.setTint(lerp(0xffffff, TARDE.suelo.tinte, amb.st)).setAlpha(1 - amb.st));
-    const pz = lerp(0xffffff, TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
+    piezas();
+    o.canto.setPosition(0, g - 11).setSize(s.vw, TARDE.suelo.cantoPx + 6); // labio sobre el suelo: el pie del obstáculo (y 436) asienta en kraft, no en el canto
+    o.canto.tilePositionX = s.dist;
+  };
+  const piezas = () => {
+    // con el fondo pintado, las de abajo a 1.3x son el primer plano oscuro
+    const pz = lerp(0xffffff, pintadas && pintadas.activa ? TARDE.piezasOscuras : TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
     const aTorn = 1 - amb.st * (1 - TARDE.piezasTorn);
     s.fg.forEach((f) => {
       const k = f.sprite.texture.key;
       if (k.startsWith('gp-')) f.sprite.setTint(pz);
       if (k.startsWith('gp-torn')) f.sprite.setAlpha(aTorn);
     });
-    o.canto.setPosition(0, g - 11).setSize(s.vw, TARDE.suelo.cantoPx + 6); // labio sobre el suelo: el pie del obstáculo (y 436) asienta en kraft, no en el canto
-    o.canto.tilePositionX = s.dist;
   };
   s.events.on('postupdate', colocar);
   s.events.once('shutdown', () => s.events.off('postupdate', colocar));
@@ -479,6 +514,8 @@ export function montar(s) {
     if (on) s.shade.setTintFill(lerp(hex(PAL.ink), hex(TARDE.sombra), st));
     else s.shade.clearTint();
     if (!on) {
+      tapar(false);
+      if (pintadas && pintadas.cargadas) pintadas.colocar(gy(), 0);
       s.fg.forEach((f) => {
         if (!f.sprite.texture.key.startsWith('gp-')) return;
         f.sprite.clearTint(); // colocar ya no corre con st = 0
@@ -511,6 +548,6 @@ export function montar(s) {
   if (fija() && s.screen === 'play') sd.call(amb, 2); // el chunk llegó con la partida ya corriendo: fundido, sin transición
   calienta([hornoBanda, () => hornoCapa('ridge'), () => hornoCapa('far'), () => hornoCapa('mid')]);
   montarBoceto(s, o, colocar, TARDE.sol.r);
-  montarBokeh(s);
+  if (TARDE.bokeh) montarBokeh(s);
   montarHojas(s);
 }

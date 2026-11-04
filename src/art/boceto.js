@@ -22,7 +22,7 @@ const T = {
   lapizSeQueda: 280, // el lápiz sigue encima del color recién pintado y se va en un segundo frente, detrás del primero: es lo que se lee como pintar sobre un dibujo
   lapizTiraPx: 8, // el segundo frente corta líneas sueltas, no un relleno: no necesita tiras finas
   trote: 0.75, // zancada respecto a la de la partida: a 1x se lee carrera sobre caminadora
-  detalle: { lejana: 0, media: 0, cercana: 0.16, pinos: 0 }, // gris del dibujo real dentro de la capa: las oscuras se leían rellenas
+  detalle: { lejana: 0, media: 0, cercana: 0.16, pinos: 0, capaLejos: 0.16, capaMedio: 0.16 }, // gris del dibujo real dentro de la capa: las oscuras se leían rellenas
 };
 const clamp01 = (k) => Math.min(1, Math.max(0, k));
 // ESPEC §5. Las hojas mueren antes de que acabe la transición: nada de ella queda corriendo al jugar (va por encima de la
@@ -347,7 +347,7 @@ function fotoTile(s, L, key, z, extra) {
   const k = L.tileScaleX * z;
   const tw = src.width * k;
   // al entrar al nivel la distancia es 0 y el mosaico está en su origen, venga de donde venga
-  for (let px = 0; px < W; px += tw) x.drawImage(src, px, 0, tw, src.height * k);
+  for (let px = 0; px < W; px += tw) x.drawImage(src, px, 0, tw, src.height * L.tileScaleY * z);
   if (extra) extra(x, L, z);
   return c;
 }
@@ -380,6 +380,15 @@ export function montarBoceto(s, o, colocar, radioSol) {
       agrega(nombre, () => gemela(fotoTile(s, L, key, z, extra), seed, T.detalle[nombre]), L.x, L.y, depth, win, seed);
     };
     agrega('cielo', () => hoja(Math.ceil(s.vw * z), Math.ceil(s.vh * z), (g - s.top) * z), 0, s.top, 1.7, T.frente, 311);
+    // SALTO CAPAS: el dibujo a lápiz sale de las capas pintadas. El sol ya viene en la pintura del cielo.
+    if (s.capas && s.capas.activa) {
+      s.capas.colocar(g, amb.st);
+      deMosaico(s.capas.lejos, 'capa_lejos', 'capaLejos', 2.08, T.frente, 315);
+      deMosaico(s.capas.medio, 'capa_medio', 'capaMedio', 3.08, T.frente, 316);
+      const y1 = g - 12;
+      agrega('suelo', () => pisoAlLapiz(Math.ceil(s.vw * z), Math.ceil((s.bottom - y1) * z)), 0, y1, 4.7, T.frente, 317);
+      return lista;
+    }
     const tarde = preparar || amb.st >= 0.5;
     const so = tarde ? o.sol : s.sun;
     if (so && (preparar || so.visible)) {
@@ -427,7 +436,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
     uno();
   }
   const espera = () => {
-    if (s.texQueue) return s.time.delayedCall(250, espera);
+    if (s.texQueue || (s.capas && s.capas.cargando)) return s.time.delayedCall(250, espera);
     preparar();
     return undefined;
   };
