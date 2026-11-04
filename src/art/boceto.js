@@ -3,7 +3,8 @@
 // Cada capa del fondo lleva encima una gemela de papel con trazo, hecha al vuelo con la misma textura de la capa (no pesa
 // nada de arte) y cortada en tiras que se recortan de izquierda a derecha: al irse la gemela queda la capa real, en color.
 // Moki y su sombra van por encima de todas las gemelas: nunca se dibujan a lápiz. Mientras dura, la partida no corre: ni
-// distancia, ni tiempo de juego, ni azar. Todo va por cuadro (sin tweens); al terminar no queda nada.
+// distancia, ni tiempo de juego, ni azar; Moki trota en su sitio (s.trote, solo lo lee mokiPoses). Todo va por cuadro (sin
+// tweens); al terminar no queda nada.
 import { PAL, rgba, rng } from './palette.js';
 import { mk } from './textures.js';
 
@@ -11,18 +12,16 @@ const T = {
   dur: 1500,
   salto: 150, // un toque rellena todo en 150 ms
   fundido: 150, // movimiento reducido
-  tiraPx: 4, // alto de tira en px de pantalla; el frente de pintura es la orilla de todas
+  tiraPx: 2, // alto de tira en px de pantalla; el frente de pintura es la orilla de todas. Con 4 se leían escalones
   retraso: 0.2, // parte de la ventana de cada capa que se reparte a lo alto: da la forma del frente
-  // Mismo orden y mismos finales que la tabla de ESPEC §4, con los inicios adelantados: la vara A2 manda en movimiento (un
-  // solo frente vertical cruza todo el cuadro). Con la tabla tal cual, 2 invitados veían franjas horizontales que se llenan.
-  cielo: [0.06, 0.75], // un respiro de 60 ms: el primer cuadro es todo lápiz
-  sol: [0.06, 0.75],
-  lejana: [0.12, 0.85],
-  media: [0.2, 0.95],
-  cercana: [0.3, 1.05],
-  suelo: [0.42, 1.2],
+  // La vara A2 manda en movimiento: un solo frente vertical cruza todo el cuadro. Todas las capas comparten esta ventana (la
+  // tabla de ESPEC §4 solo deja su final): con ventanas separadas, 20 ms de desfase ya eran ~30 px, la capa de enfrente aún de
+  // papel recortaba a la de atrás ya pintada y salían la cuña café, la franja de montaña en polígono y orillas que no empatan.
+  frente: [0.06, 1.2], // un respiro de 60 ms: el primer cuadro es todo lápiz
   trazo: 0.55, // alfa de la tinta
-  lapizSeQueda: 200, // el lápiz sigue encima del color recién pintado y se va después: es lo que se lee como pintar sobre un dibujo
+  lapizSeQueda: 280, // el lápiz sigue encima del color recién pintado y se va en un segundo frente, detrás del primero: es lo que se lee como pintar sobre un dibujo
+  lapizTiraPx: 8, // el segundo frente corta líneas sueltas, no un relleno: no necesita tiras finas
+  trote: 0.75, // zancada respecto a la de la partida: a 1x se lee carrera sobre caminadora
   detalle: { lejana: 0, media: 0, cercana: 0.16, pinos: 0 }, // gris del dibujo real dentro de la capa: las oscuras se leían rellenas
 };
 const clamp01 = (k) => Math.min(1, Math.max(0, k));
@@ -30,11 +29,13 @@ const clamp01 = (k) => Math.min(1, Math.max(0, k));
 // vida de 1.2-2 s de la espec, que se recorta a lo que falte).
 const HOJAS = { n375: 12, n1280: 20, de: 300, a: 900, vida: [1200, 2000], colores: ['#B99168', PAL.paper, '#974717', PAL.accent] };
 const POP = { max: 6, de: 1000, paso: 60, ms: 220 };
+// Polvo de los pies: lo único que se mueve en el suelo, para que el trote no parezca caminadora. No toca el mundo.
+const POLVO = { n: 7, cadaMs: 130, vida: 340, vx: -120, vy: -16 };
 const easeOut = (k) => 1 - (1 - k) ** 3;
-const easeFrente = (k) => 1 - (1 - k) ** 2; // el frente se alcanza a ver cruzar: con el cúbico el cielo se llenaba de golpe
-// Forma del frente, de 0 a 1: diagonal (arriba va primero) y ondulada, igual en todas las capas para que sea una sola orilla,
-// con un ruido de pocos px. Con tiras altas y ruido grande, los invitados a ciegas leían escalones de glitch.
-const onda = (yn, y, r) => clamp01(0.08 + yn * 0.62 + 0.09 * Math.sin(y * 0.021 + 1.1) + 0.05 * Math.sin(y * 0.067) + (r() - 0.5) * 0.025);
+const easeFrente = (k) => 1 - (1 - k) ** 1.5; // el frente se alcanza a ver cruzar, sin rebaba que tarde en irse al final
+// Forma del frente, de 0 a 1: diagonal (arriba va primero) y ondulada, igual en todas las capas para que sea una sola orilla.
+// Sin ruido por fila y con la pendiente acotada: si entre dos tiras el frente brinca varios px, se leen dientes de sierra.
+const onda = (yn, y) => clamp01(0.08 + yn * 0.62 + 0.045 * Math.sin(y * 0.021 + 1.1) + 0.008 * Math.sin(y * 0.067) + 0.002 * Math.sin(y * 0.19 + 0.4));
 
 // Grano de lápiz: se le quita a la línea para que no parezca vector
 function grano(r) {
@@ -266,6 +267,38 @@ function pasoHojas(lista, t) {
   }
 }
 
+function nacerPolvo(s) {
+  const key = 'bocetoPolvo';
+  const [c, x] = mk(16, 10);
+  x.fillStyle = rgba(PAL.kraft, 0.55);
+  x.beginPath();
+  x.ellipse(8, 5, 7, 4, 0, 0, Math.PI * 2);
+  x.fill();
+  s.textures.addCanvas(key, c);
+  const lista = [];
+  for (let i = 0; i < POLVO.n; i++) lista.push({ im: s.add.image(0, 0, key).setDepth(11.9).setVisible(false), k: 1 });
+  return { key, lista, sig: 0, i: 0 };
+}
+
+function pasoPolvo(s, P, dt) {
+  P.sig -= dt;
+  if (P.sig <= 0) {
+    P.sig += POLVO.cadaMs;
+    const q = P.lista[P.i++ % POLVO.n];
+    q.k = 0;
+    q.im.setPosition(s.px - 14, s.y - 3).setVisible(true);
+  }
+  for (const q of P.lista) {
+    if (q.k >= 1) continue;
+    q.k += dt / POLVO.vida;
+    if (q.k >= 1) {
+      q.im.setVisible(false);
+      continue;
+    }
+    q.im.setPosition(q.im.x + (POLVO.vx * dt) / 1000, q.im.y + (POLVO.vy * dt) / 1000).setScale(0.6 + q.k * 0.8).setAlpha(0.8 * (1 - q.k));
+  }
+}
+
 // §5: hasta 6 piezas de cartón sueltas (pinos y postes) entran con pop, escalonadas, cuando su capa ya está pintada. Casita y
 // cajas de fondo no son piezas aparte: van dibujadas en el mosaico de los cerros.
 function prepararPop(s, r) {
@@ -312,6 +345,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
 
   // Lienzos ya dibujados, por capa y tamaño: se preparan durante el título y sirven a toda entrada a ese tamaño.
   const memo = new Map();
+  s.bocetoLienzos = memo; // solo lectura, para medir la memoria que pesan
   const capas = (z, preparar = false) => {
     const g = s.base.far - 12 + 300 * (s.farS || 1);
     const lista = [];
@@ -331,17 +365,17 @@ export function montarBoceto(s, o, colocar, radioSol) {
       if (L.displayTexture.key !== key) return; // capa aún sin textura: entra sola con su fundido
       agrega(nombre, () => gemela(fotoTile(s, L, key, z, extra), seed, T.detalle[nombre]), L.x, L.y, depth, win, seed);
     };
-    agrega('cielo', () => hoja(Math.ceil(s.vw * z), Math.ceil(s.vh * z), (g - s.top) * z), 0, s.top, 1.7, T.cielo, 311);
+    agrega('cielo', () => hoja(Math.ceil(s.vw * z), Math.ceil(s.vh * z), (g - s.top) * z), 0, s.top, 1.7, T.frente, 311);
     const tarde = preparar || amb.st >= 0.5;
     const so = tarde ? o.sol : s.sun;
     if (so && (preparar || so.visible)) {
       const R = (tarde ? radioSol * (s.farS || 1) : so.displayWidth / 2.4) * z;
       const Rf = (so.displayWidth / 2) * z;
       const S = Math.ceil(Rf * 2 + 8);
-      agrega('sol', () => discoSol(R, Rf, S), so.x - S / (2 * z), so.y - S / (2 * z), tarde ? 1.925 : 1.85, T.sol, 312);
+      agrega('sol', () => discoSol(R, Rf, S), so.x - S / (2 * z), so.y - S / (2 * z), tarde ? 1.925 : 1.85, T.frente, 312);
     }
-    deMosaico(s.ridge, 'ridge', 'lejana', 1.91, T.lejana, 313);
-    if (tarde) deMosaico(o.banda, 'tardeBanda', 'media', 1.955, T.media, 314);
+    deMosaico(s.ridge, 'ridge', 'lejana', 1.91, T.frente, 313);
+    if (tarde) deMosaico(o.banda, 'tardeBanda', 'media', 1.955, T.frente, 314);
     if (preparar || o.tapa.visible) {
       // la tapa de 4 px del mosaico (2.07) va en color encima de las gemelas de atrás: su propia tira de papel, con el cielo
       agrega('tapa', () => {
@@ -349,10 +383,10 @@ export function montarBoceto(s, o, colocar, radioSol) {
         x.fillStyle = PAL.paper;
         x.fillRect(0, 0, cv.width, cv.height);
         return [cv, null];
-      }, 0, o.tapa.y - 0.5, 2.075, T.cielo, 318);
+      }, 0, o.tapa.y - 0.5, 2.075, T.frente, 318);
     }
-    deMosaico(s.far, 'far', 'cercana', 2.08, T.cercana, 315);
-    deMosaico(s.mid, 'mid', 'pinos', 3.08, T.cercana, 316, (x, L, zz) => {
+    deMosaico(s.far, 'far', 'cercana', 2.08, T.frente, 315);
+    deMosaico(s.mid, 'mid', 'pinos', 3.08, T.frente, 316, (x, L, zz) => {
       // pinos y postes sueltos: viven aparte del mosaico, por debajo de la gemela, y su silueta va en ella
       (s.midPool || []).forEach((q) => {
         if (!q.body.visible) return;
@@ -362,7 +396,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
       });
     });
     const y0 = g - 12;
-    agrega('suelo', () => pisoAlLapiz(Math.ceil(s.vw * z), Math.ceil((s.bottom - y0) * z)), 0, y0, 4.7, T.suelo, 317);
+    agrega('suelo', () => pisoAlLapiz(Math.ceil(s.vw * z), Math.ceil((s.bottom - y0) * z)), 0, y0, 4.7, T.frente, 317);
     return lista;
   };
 
@@ -388,20 +422,37 @@ export function montarBoceto(s, o, colocar, radioSol) {
     s.stepWorld(0); // las capas todavía vienen con el mosaico del demo
     s.stepMidProps();
     colocar();
-    s.landAt = s.t - 250; // en pie: el último cuadro del aterrizaje, quieto porque el tiempo de juego no corre
+    s.landAt = s.calm ? s.t - 250 : -1e9; // calma: en pie, el último cuadro del aterrizaje. Si no, la zancada
     const velo = s.add.rectangle(0, s.top, s.vw, s.vh, parseInt(PAL.paper.slice(1), 16), 1).setOrigin(0, 0).setDepth(8.9);
     if (s.reduced) {
-      V = { t: 0, fin: T.fundido, velo, listo: true, pend: [], tiras: [], lapices: [], claves: [] };
+      V = { t: 0, fin: T.fundido, velo, listo: true, pend: [], tiras: [], claves: [] };
       s.boceto = V;
       return;
     }
     // La hoja en blanco responde al toque desde el primer cuadro; debajo se arma el dibujo, y el reloj corre al quitarla
-    V = { t: 0, fin: T.dur, salto: -1, blanca: velo, listo: false, pend: capas(s.zoom), i: 0, tiras: [], lapices: [], claves: [], hojas: [], pop: [] };
+    V = { t: 0, fin: T.dur, salto: -1, blanca: velo, listo: false, pend: capas(s.zoom), i: 0, tiras: [], claves: [], hojas: [], pop: [] };
     s.boceto = V;
+    if (s.calm) return;
+    V.polvo = nacerPolvo(s);
+    V.claves.push(V.polvo.key);
+  }
+
+  function cortar(key, cv, c, depth, tiraPx, a, b) {
+    const z = s.zoom;
+    const W = cv.width;
+    const H = cv.height;
+    const n = Math.max(3, Math.round(H / tiraPx));
+    for (let k = 0; k < n; k++) {
+      const y = Math.round((H * k) / n);
+      const h = Math.round((H * (k + 1)) / n) - y;
+      const im = s.add.image(c.x, c.y, key).setOrigin(0, 0).setScale(1 / z).setDepth(depth);
+      im.setCrop(0, y, W, h);
+      // el frente corre en px de pantalla: el disco del sol se pinta cuando el frente le llega, no por su cuenta
+      V.tiras.push({ im, y, h, W, x0: c.x * z, ancho: s.vw * z, a, b, d: onda((c.y + y / z - s.top) / s.vh, c.y + y / z) * T.retraso, p: 0 });
+    }
   }
 
   function armarCapa(c) {
-    const z = s.zoom;
     const [cv, lapiz] = c.hacer();
     const key = `boceto${V.i++}`;
     s.textures.addCanvas(key, cv);
@@ -409,22 +460,12 @@ export function montarBoceto(s, o, colocar, radioSol) {
     if (lapiz) {
       s.textures.addCanvas(`${key}l`, lapiz);
       V.claves.push(`${key}l`);
-      const im = s.add.image(c.x, c.y, `${key}l`).setOrigin(0, 0).setScale(1 / z).setDepth(c.depth + 0.002);
-      // los pinos entran con pop y se mueven: su lápiz se va antes, si no queda un contorno fantasma al lado
-      V.lapices.push({ im, b: c.nombre === 'pinos' ? POP.de - T.lapizSeQueda : c.b, a: 1 });
+      // Los pinos sin espera: detrás del frente el poste real aún no entra (va con pop) y su lápiz se leía como un poste
+      // transparente sobre la colina.
+      const queda = c.nombre === 'pinos' ? 0 : T.lapizSeQueda;
+      cortar(`${key}l`, lapiz, c, c.depth + 0.002, T.lapizTiraPx, c.a + queda, c.b + queda);
     }
-    const W = cv.width;
-    const H = cv.height;
-    const r = rng(c.seed);
-    const n = Math.max(3, Math.round(H / T.tiraPx));
-    for (let k = 0; k < n; k++) {
-      const y = Math.round((H * k) / n);
-      const h = Math.round((H * (k + 1)) / n) - y;
-      const im = s.add.image(c.x, c.y, key).setOrigin(0, 0).setScale(1 / z).setDepth(c.depth);
-      im.setCrop(0, y, W, h);
-      // el frente corre en px de pantalla: el disco del sol se pinta cuando el frente le llega, no por su cuenta
-      V.tiras.push({ im, y, h, W, x0: c.x * z, ancho: s.vw * z, a: c.a, b: c.b, d: onda((c.y + y / z - s.top) / s.vh, c.y + y / z, r) * T.retraso, p: 0 });
-    }
+    cortar(key, cv, c, c.depth, T.tiraPx, c.a, c.b);
   }
 
   function dibujoListo() {
@@ -441,11 +482,11 @@ export function montarBoceto(s, o, colocar, radioSol) {
   function acabar() {
     if (!V) return;
     V.tiras.forEach((q) => q.im.destroy());
-    V.lapices.forEach((q) => q.im.destroy());
     if (V.velo) V.velo.destroy();
     if (V.blanca) V.blanca.destroy();
     (V.hojas || []).forEach((h) => h.im.destroy());
     (V.pop || []).forEach((p) => p.b.setOrigin(0, 0).setAngle(0)); // stepMidProps las regresa a su lugar, escala y alfa
+    if (V.polvo) V.polvo.lista.forEach((q) => q.im.destroy());
     V.claves.forEach((k) => s.textures.remove(k));
     const conPop = V.pop && V.pop.length;
     V = null;
@@ -455,6 +496,8 @@ export function montarBoceto(s, o, colocar, radioSol) {
   }
 
   function paso(dt) {
+    if (!s.calm) s.trote = (s.trote || 0) + (T.trote * s.speed * dt) / 1000; // solo la fase de la zancada; s.dist no se mueve
+    if (V.polvo) pasoPolvo(s, V.polvo, dt);
     if (!V.listo) {
       const v0 = s.speed;
       s.speed = 0;
@@ -479,17 +522,15 @@ export function montarBoceto(s, o, colocar, radioSol) {
     const saltando = V.salto >= 0;
     const ks = saltando ? easeOut(clamp01((V.t - V.salto) / T.salto)) : 0;
     for (const q of V.tiras) {
+      if (q.p >= 1) continue;
       const ventana = q.b - q.a;
       const p = saltando ? q.p + (1 - q.p) * ks : easeFrente(clamp01((V.t - q.a - q.d * ventana) / (ventana * (1 - T.retraso))));
       if (!saltando) q.p = p;
       const x = Math.max(0, Math.floor(p * q.ancho - q.x0));
-      if (x >= q.W || p >= 1) q.im.setVisible(false);
-      else q.im.setCrop(x, q.y, q.W - x, q.h);
-    }
-    for (const q of V.lapices) {
-      const a = saltando ? q.a * (1 - ks) : 1 - clamp01((V.t - q.b) / T.lapizSeQueda);
-      if (!saltando) q.a = a;
-      q.im.setAlpha(a);
+      if (x >= q.W || p >= 1) {
+        q.im.setVisible(false);
+        q.p = 1;
+      } else q.im.setCrop(x, q.y, q.W - x, q.h);
     }
     if (V.hojas) pasoHojas(V.hojas, V.t);
     if (V.pop) pasoPop(V.pop, saltando ? V.t + 1e4 : V.t);

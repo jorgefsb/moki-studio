@@ -72,7 +72,8 @@ class MokiPoses {
     } else {
       // zancada por distancia: un ciclo de 7 cuadros cada lo que mide el paso del títere (los pies no patinan)
       const ciclo = (s.rig.debug && s.rig.debug.cyclePx) || 120;
-      frame = ((Math.floor((s.dist / ciclo) * 7) % 7) + 7) % 7; // el rebobinado del tutorial baja dist
+      // s.trote: la zancada de la transición de entrada (boceto.js), con la partida parada; se queda de fase y no hay salto de pose
+      frame = ((Math.floor(((s.dist + (s.trote || 0)) / ciclo) * 7) % 7) + 7) % 7; // el rebobinado del tutorial baja dist
     }
     if (key !== this.pose) {
       this.sprite.setTexture(key, frame);
