@@ -9,6 +9,7 @@ import { DAY } from './ambient.js';
 import { leerCuaderno, nivelDe } from '../cuaderno.js';
 import { montarBoceto } from './boceto.js';
 import { montarBokeh } from './bokeh.js';
+import { montarHojas } from './hojas.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
 const lerp = (a, b, k) => {
@@ -41,6 +42,9 @@ export const TARDE = {
   piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A', halo: '#FFE08A', haloK: [1.5, 1.25], haloA: [0.28, 0.45] }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
+  // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468. Cuerpo naranja de marca hundido en tinta (contraste >= 3 contra
+  // el suelo, nunca más claro: el suelo ya está a media luz) y aro de papel, que es el que se lee contra cerros y pinos oscuros.
+  ficha: { cara: mix(PAL.accent, PAL.ink, 0.82), canto: mix(PAL.accent, PAL.ink, 0.92), aro: PAL.paper },
 };
 
 const BANDA_TOP = 220; // y del mundo donde empieza la textura de la colina media (arriba de la loma más alta)
@@ -152,6 +156,32 @@ function canto(x, ox, oy, w, h, pieSin = TARDE.canto.pie, color = PAL.paper) {
   x.stroke();
   x.restore();
 }
+// Misma medida y mismos círculos que token() de textures.js: la ficha no cambia de lugar ni de tamaño
+function ficha() {
+  const F = TARDE.ficha;
+  const [c, x] = mk(36, 40);
+  x.fillStyle = F.canto;
+  x.beginPath();
+  x.arc(18, 21, 15, 0, Math.PI * 2);
+  x.fill();
+  x.fillStyle = F.cara;
+  x.beginPath();
+  x.arc(18, 18, 15, 0, Math.PI * 2);
+  x.fill();
+  x.strokeStyle = F.aro;
+  x.lineWidth = 3;
+  x.beginPath();
+  x.arc(18, 18, 11.5, 0, Math.PI * 2);
+  x.stroke();
+  x.strokeStyle = rgba(PAL.paper, 0.6);
+  x.lineWidth = 1.5;
+  x.beginPath();
+  x.moveTo(11, 21);
+  x.quadraticCurveTo(18, 14, 25, 21);
+  x.stroke();
+  return c;
+}
+
 const OBS = {
   caja() {
     const [c, x] = mk(64, 60);
@@ -210,6 +240,7 @@ export function montar(s) {
   add('tardeSol', sol(TARDE.sol.r));
   add('tardeCielo', cieloBajo());
   Object.entries(OBS).forEach(([k, fn]) => add(`${k}_t`, fn()));
+  add('token_t', ficha());
   // El atardecer es SOLO del nivel 1 del Cuaderno (DECISIONES 3-nov 10:34, duda 1). En los demás niveles st queda en 0: la tarde
   // de siempre, sin tocar DAY.
   const nivel1 = () => nivelDe(leerCuaderno()).nivel === 1;
@@ -249,7 +280,7 @@ export function montar(s) {
   const dia2 = { shadowK: DAY[2].shadowK, bands: DAY[2].bands };
   const tarde2 = { shadowK: TARDE.shadowK, bands: 0 }; // sin bandas de fibra: el cielo es papel plano
   // silueta plana de una textura del juego: mismo alfa (canvas source-in), un solo color
-  const plano = (key, color) => {
+  const plano = (key, color, sinPie) => {
     const k = `${key}_t`;
     if (!s.textures.exists(k) && s.textures.exists(key)) {
       const src = s.textures.get(key).getSourceImage();
@@ -258,6 +289,7 @@ export function montar(s) {
       x.globalCompositeOperation = 'source-in';
       x.fillStyle = color;
       x.fillRect(0, 0, c.width, c.height);
+      if (sinPie) x.clearRect(0, c.height - 2, c.width, 2);
       s.textures.addCanvas(k, c);
     }
     return s.textures.exists(k) ? k : null;
@@ -295,7 +327,9 @@ export function montar(s) {
     o.banda.tilePositionX = s.far.tilePositionX * 0.8; // entre la cordillera (0.15x) y la capa lejana (0.3x)
     [[o.far, s.far, 'far', TARDE.cercana], [o.mid, s.mid, 'mid', TARDE.pinos]].forEach(([T, L, key, color]) => {
       if (T.displayTexture.key !== `${key}_t`) { // en un TileSprite, .texture es su canvas interno
-        const k = plano(key, color);
+        // mid: el mosaico repite en vertical y el filtro mezcla su fila de abajo (va detrás del suelo) con la de arriba: segmentos
+        // oscuros sueltos en el cielo, a y=124 a 1280, donde abajo hay un pino o un poste. La capa lejana ya lo resuelve con la tapa.
+        const k = plano(key, color, key === 'mid');
         if (!k) return T.setVisible(false);
         T.setTexture(k);
       }
@@ -330,6 +364,13 @@ export function montar(s) {
     if (this.tarde && !s.paseoRun && s.textures.exists(`${type}_t`)) return `${type}_t`;
     return okey.call(this, type);
   };
+  const veloVisible = s.midVeil.visible;
+  const fichaKey = () => (amb.tarde && !s.paseoRun ? 'token_t' : 'token');
+  const sp = s.spawnPickup;
+  s.spawnPickup = function (e) {
+    sp.call(this, e);
+    if (!e.amber) this.pickups[this.pickups.length - 1].sprite.setTexture(fichaKey()); // solo la imagen: mismo lugar, mismo choque
+  };
 
   function pintar() {
     const d = amb.day;
@@ -338,10 +379,14 @@ export function montar(s) {
     amb.st = st;
     const on = st > 0;
     all.forEach((v) => v.setVisible(on).setAlpha(st));
+    // Con la tarde completa la silueta plana tapa la capa media de siempre y su velo, pero la misma línea del mosaico asomaría de ellos
+    s.mid.setVisible(st < 1);
+    s.midVeil.setVisible(st < 1 && veloVisible);
     const tarde = st >= 0.5;
     if (tarde !== !!amb.tarde) {
       amb.tarde = tarde;
       s.obstacles.forEach((q) => q.sprite && q.sprite.setTexture(amb.obsKey(q.type)));
+      (s.pickups || []).forEach((k) => k.amber || k.sprite.setTexture(fichaKey()));
     }
     s.skyGrad.setAlpha(1 - st); // applyDay no toca su alfa: se devuelve aquí también al salir de la tarde
     const suelo = lerp(0xffffff, TARDE.suelo.tinte, st); // suelo kraft cálido (los invitados lo leían como concreto)
@@ -373,4 +418,5 @@ export function montar(s) {
   if (fija() && s.screen === 'play') sd.call(amb, 2); // el chunk llegó con la partida ya corriendo: fundido, sin transición
   montarBoceto(s, o, colocar, TARDE.sol.r);
   montarBokeh(s);
+  montarHojas(s);
 }

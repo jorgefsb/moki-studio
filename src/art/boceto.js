@@ -314,14 +314,28 @@ function prepararPop(s, r) {
   });
 }
 
+// 0.85 a 1.04 en la primera mitad, a 1.00 en la segunda
+const curvaPop = (k) => (k < 0.6 ? 0.85 + 0.19 * easeOut(k / 0.6) : 1.04 - 0.04 * easeOut((k - 0.6) / 0.4));
+
 function pasoPop(lista, t) {
   for (const p of lista) {
     const k = clamp01((t - p.de) / POP.ms);
     if (t < p.de) continue;
-    // 0.85 a 1.04 en la primera mitad, a 1.00 en la segunda; balanceo que muere
-    const m = k < 0.6 ? 0.85 + 0.19 * easeOut(k / 0.6) : 1.04 - 0.04 * easeOut((k - 0.6) / 0.4);
-    p.b.setAlpha(p.alfa).setScale(p.e * m).setAngle(p.gira * (1 - k));
+    // balanceo que muere
+    p.b.setAlpha(p.alfa).setScale(p.e * curvaPop(k)).setAngle(p.gira * (1 - k));
   }
+}
+
+// §5: al acabar la transición el mundo arranca y lo que ya cabe en pantalla (la ficha y la primera caja, a 1280) saldría de un cuadro
+// a otro. Entra con pop. Solo la imagen: ni su lugar ni su choque leen la escala del sprite.
+function popDelMundo(s) {
+  const lista = [...s.obstacles, ...s.pickups].map((q) => q.sprite).filter((b) => b && b.visible && b.x < s.vw + b.displayWidth).sort((a, b) => a.x - b.x);
+  lista.forEach((b, i) => {
+    const e = b.scaleX;
+    const alfa = b.alpha;
+    b.setAlpha(0);
+    s.tweens.addCounter({ from: 0, to: 1, delay: i * POP.paso, duration: POP.ms, onUpdate: (tw) => b.setAlpha(alfa).setScale(e * curvaPop(tw.getValue())) });
+  });
 }
 
 // Una capa de mosaico tal como se ve ahora en pantalla, en px de pantalla
@@ -401,6 +415,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
   };
 
   // Durante el título, si este jugador va a entrar al nivel 1: una capa cada vez que el navegador tenga un hueco
+  let popMundo = false;
   function preparar() {
     if (s.reduced || !amb.n1 || s.esc || s.screen !== 'demo' || s.texQueue) return;
     const cola = capas(s.zoom, true).filter((c) => c.fija);
@@ -491,6 +506,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
     const conPop = V.pop && V.pop.length;
     V = null;
     s.boceto = null;
+    popMundo = !s.calm;
     s.landAt = -1e9;
     if (conPop) s.stepMidProps();
   }
@@ -554,7 +570,14 @@ export function montarBoceto(s, o, colocar, radioSol) {
   };
   const ur = s.updateRun;
   s.updateRun = function (dt) {
-    if (!V) return ur.call(this, dt);
+    if (!V) {
+      const r = ur.call(this, dt);
+      if (popMundo) {
+        popMundo = false;
+        popDelMundo(this);
+      }
+      return r;
+    }
     paso(dt);
     return undefined;
   };

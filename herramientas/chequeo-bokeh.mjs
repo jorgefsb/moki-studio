@@ -1,5 +1,5 @@
-// Chequeo de la banda prohibida del bokeh (ESPEC-SALTO §3). Uso: node herramientas/chequeo-bokeh.mjs <puerto> <salida.json> [--mete]
-// Por captura, sobre el build, a 375x667 y 1280x720: congela la escena y toma la imagen con círculos, sin ellos y con ellos otra
+// Chequeo de la banda prohibida del bokeh (ESPEC-SALTO §3). Uso: node herramientas/chequeo-bokeh.mjs <puerto> <salida.json> [--mete] [--clave=hojaAmb]
+// --clave cambia qué objetos se revisan, por el inicio del nombre de su textura; por defecto, el bokeh. Por captura, sobre el build, a 375x667 y 1280x720: congela la escena y toma la imagen con círculos, sin ellos y con ellos otra
 // vez. Bokeh es lo que cambia al quitarlos y regresa igual al ponerlos; lo que no regresa igual no lo movieron los círculos y se
 // reporta aparte como ruido, con su caja. Falla si un píxel de bokeh cae dentro de la banda, si el borde exterior de un círculo la
 // toca, si tras 4 intentos sigue habiendo ruido en la banda (no se puede descartar) o si no encontró bokeh (un chequeo ciego no pasa).
@@ -8,8 +8,9 @@ import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
 const require = createRequire('/home/jorgefsb/.local/share/mise/installs/npm-playwright/latest/node_modules/');
 const { chromium } = require('playwright');
-const [port, outPath, opcion] = process.argv.slice(2);
-const mete = opcion === '--mete';
+const [port, outPath, ...opciones] = process.argv.slice(2);
+const mete = opciones.includes('--mete');
+const clave = (opciones.find((o) => o.startsWith('--clave=')) || '--clave=bokeh').slice(8);
 const BANDA = [120, 490];
 const MUESTRAS = 6;
 const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new', '--use-angle=vulkan', '--enable-gpu', '--ignore-gpu-blocklist'] });
@@ -35,15 +36,15 @@ for (const [width, height] of [[375, 667], [1280, 720]]) {
   const fila = { tam: `${width}x${height}`, muestras: [] };
   for (let i = 0; i < MUESTRAS; i++) {
     await page.waitForTimeout(2500);
-    const geo = await page.evaluate(([meter, banda]) => new Promise((res) => {
+    const geo = await page.evaluate(([meter, banda, cl]) => new Promise((res) => {
       const s = window.__moki.scene.scenes[0];
       s.scene.pause();
-      const bk = s.children.list.filter((o) => o.texture && o.texture.key === 'bokeh');
+      const bk = s.children.list.filter((o) => o.texture && o.texture.key.startsWith(cl));
       if (meter && bk[0]) bk[0].setPosition(s.vw / 2, 300);
       const z = s.zoom;
-      const dentro = bk.filter((o) => o.y + o.displayHeight / 2 > banda[0] && o.y - o.displayHeight / 2 < banda[1]).length;
+      const dentro = bk.filter((o) => { const b = o.getBounds(); return b.bottom > banda[0] && b.top < banda[1]; }).length;
       requestAnimationFrame(() => requestAnimationFrame(() => res({ objetos: bk.length, dentro, top: s.top, z, diametrosPx: bk.map((o) => Math.round(o.displayWidth * z)) })));
-    }), [mete, BANDA]);
+    }), [mete, BANDA, clave]);
     // Mismo cuadro congelado: si algo fuera de la escena se estaba animando en la banda, se le da tiempo de asentarse y se repite.
     let con;
     let px;
@@ -53,15 +54,15 @@ for (const [width, height] of [[375, 667], [1280, 720]]) {
       if (intentos) await page.waitForTimeout(1500);
       intentos++;
       con = await page.screenshot();
-      await page.evaluate(() => new Promise((res) => {
-        window.__moki.scene.scenes[0].children.list.filter((o) => o.texture && o.texture.key === 'bokeh').forEach((o) => o.setVisible(false));
+      await page.evaluate((cl) => new Promise((res) => {
+        window.__moki.scene.scenes[0].children.list.filter((o) => o.texture && o.texture.key.startsWith(cl)).forEach((o) => o.setVisible(false));
         requestAnimationFrame(() => requestAnimationFrame(res));
-      }));
+      }), clave);
       const sin = await page.screenshot();
-      await page.evaluate(() => new Promise((res) => {
-        window.__moki.scene.scenes[0].children.list.filter((o) => o.texture && o.texture.key === 'bokeh').forEach((o) => o.setVisible(true));
+      await page.evaluate((cl) => new Promise((res) => {
+        window.__moki.scene.scenes[0].children.list.filter((o) => o.texture && o.texture.key.startsWith(cl)).forEach((o) => o.setVisible(true));
         requestAnimationFrame(() => requestAnimationFrame(res));
-      }));
+      }), clave);
       const otra = await page.screenshot();
       px = await page.evaluate(async ([a, b, c, top, z, banda]) => {
         const lee = async (b64) => {
@@ -110,7 +111,7 @@ for (const [width, height] of [[375, 667], [1280, 720]]) {
         queEs = await page.evaluate(([x, y]) => document.elementsFromPoint(x, y).slice(0, 4).map((e) => `${e.tagName}#${e.id}.${e.className}: ${(e.textContent || '').trim().slice(0, 50)}`), [(x0 + x1) / 2, (y0 + y1) / 2]);
       }
     } while (px.ruidoEnBanda > 0 && intentos < 4);
-    if (opcion !== '--mete' && i === 0) writeFileSync(outPath.replace('.json', `-${width}.png`), con);
+    if (!mete && i === 0) writeFileSync(outPath.replace('.json', `-${width}.png`), con);
     await page.evaluate(() => {
       const s = window.__moki.scene.scenes[0];
       s.scene.resume();
