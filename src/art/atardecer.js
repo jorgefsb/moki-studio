@@ -52,7 +52,7 @@ export const TARDE = {
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A' }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
   piezasTorn: 0.2, // las losas de cartón del suelo se leían como obstáculo o bache: quedan como mancha del propio kraft
-  piedra: { tinte: 0xd8a878, alfa: 0.4 }, // CAPAS: UNIR Y PISOS: las piedras de primer plano, 3 de 3 críticos las nombran como peligro; quedan como mancha del suelo
+  piedra: { tinte: 0xd8a878, alfa: 0.2 }, // CAPAS: UNIR Y PISOS: las piedras de primer plano, 3 de 3 críticos las nombran como peligro; quedan como mancha del suelo
   cartel: false, // el cartel de lección en su poste (fondo vivo, no mecánica): 2 de 3 leen el poste como obstáculo y tapa el aire donde se decide el salto
   // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468; oscura se leía como anillo de peligro. Cara dorada de la luz del sol (ningún color
   // claro llega a 3.0 contra el suelo) y filo oscuro, que es el que da el contraste contra el suelo y contra el cielo.
