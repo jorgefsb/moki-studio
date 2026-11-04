@@ -137,6 +137,7 @@ async function run(s, type, days, probe) {
     s.nextEnt = 1e9;
     const rs = [];
     const es = []; // borde: el píxel del contorno de la silueta contra el fondo 6 px afuera
+    const pie = []; // solo sonda 'suelo': cuerpo contra el suelo bajo el pie (informativo)
     const porD = []; // borde promedio en cada posición, para ver el rango
     used = positions(s);
     for (const D of used) {
@@ -179,6 +180,22 @@ async function run(s, type, days, probe) {
         continue;
       }
       const e0 = es.length;
+      // probe 'suelo' (fondo con luz, 2-nov): borde obstáculo/suelo. La superficie de cartón empieza en groundY - 8 y el
+      // obstáculo se para en groundY, así que sus lados bajos se recortan contra el suelo. Sonda a 4 px sobre groundY: el
+      // píxel más oscuro del canto contra el suelo 9 px afuera, en los dos lados; porD es el peor de los dos. 'pie' (cuerpo
+      // contra el suelo 6 px debajo) va aparte y no cuenta: ahí está la sombra de contacto del obstáculo (alfa 0.3-0.4).
+      if (probe === 'suelo') {
+        const gy = 440 - 4;
+        for (const [edge, sg] of [[L, -1], [R, 1]]) {
+          let dark = 9;
+          for (let k = -3.5; k <= 0.5; k += 0.5) dark = Math.min(dark, lum(px(sx(edge + sg * k), sy(gy))));
+          es.push(ratio(lum(px(sx(edge + sg * 9), sy(gy))), dark));
+        }
+        for (const dx of [-20, 20]) pie.push(ratio(lum(px(sx(o.x + dx), sy(gy))), lum(px(sx(o.x + dx), sy(440 + 6)))));
+        porD.push(+Math.min(...es.slice(e0)).toFixed(2));
+        for (const dx of [-62, 62]) rs.push(ratio(lum(px(sx(o.x + dx), sy(gy))), Lb));
+        continue;
+      }
       // viga (sonda aceptada por arte, 30-oct): el píxel más claro del contorno de papel contra el fondo 9 px afuera, en
       // el punto medio de los lados rectos (>= 10 px de las esquinas redondeadas). Torre y caja siguen igual que en 80fd671.
       const oneEdge = type === 'viga' && probe === 'lados';
@@ -199,7 +216,7 @@ async function run(s, type, days, probe) {
       porD.push(+(es.slice(e0).reduce((a, b) => a + b, 0) / (es.length - e0)).toFixed(2));
       for (const dy of type === 'viga' ? [hang + h * 0.5 - 24, hang + h * 0.5, hang + h * 0.5 + 24, hang + h * 0.5 + 48] : [20, 45, 70, 95]) for (const dx of [-62, 62]) rs.push(ratio(lum(px(sx(o.x + dx), sy(440 - dy))), Lb));
     }
-    out[['manana', 'mediodia', 'tarde', 'noche'][day]] = { min: +Math.min(...rs).toFixed(2), mean: +(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2), borde: +(es.reduce((a, b) => a + b, 0) / es.length).toFixed(2), porD };
+    out[['manana', 'mediodia', 'tarde', 'noche'][day]] = { min: +Math.min(...rs).toFixed(2), mean: +(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2), borde: +(es.reduce((a, b) => a + b, 0) / es.length).toFixed(2), porD, ...(probe === 'suelo' && { bordeMin: +Math.min(...es).toFixed(2), pieMin: +Math.min(...pie).toFixed(2) }) };
   }
   out.posiciones = { D: used, fuera: [...new Set(skipped)], ancho: Math.round(s.vw), moki: s.px };
   out.fases = { prep: Math.round(tm.prep), foto: Math.round(tm.foto) };

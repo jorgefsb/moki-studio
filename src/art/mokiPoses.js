@@ -19,6 +19,11 @@ const ESCALA = C.player.spriteHeight / 102;
 const ORIGEN = [66 / 128, 123 / 128];
 const LAND_MS = 260; // los 6 cuadros del aterrizaje
 const FPS_AIRE = 12; // como exporta el kit
+// SALTO NOCHE pieza 5, vuelta final (ciego p5): el filo cálido solo de la cadera para arriba (fila 92 de 128; antes bajaba
+// hasta la suela), 1 px en vez de 2 (con 2 se leía como contorno de calcomanía y dejaba 3-4 px sueltos en el pecho y el
+// brazo) y solo en ancho: en vertical (375) sin farol a la vista se leía como error.
+const RIM_Y = 92;
+const RIM_PX = 1;
 
 export function montar(scene) {
   // El paquete de Phaser del estudio no trae el cargador de spritesheet: cada tira entra como imagen y los cuadros
@@ -40,6 +45,10 @@ class MokiPoses {
     this.s = scene;
     // image, no sprite: el paquete de Phaser no trae Sprite y setFrame basta
     this.sprite = scene.add.image(0, 0, 'pose-run', 0).setOrigin(...ORIGEN).setScale(ESCALA).setDepth(12).setVisible(false);
+    // SALTO NOCHE pieza 5: borde cálido. La misma pose, en el color de la luz del farol (variante K), detrás de Moki y
+    // corrida RIM_PX hacia el farol (a la izquierda); el alfa lo calcula Faroles en s.rimA. Las poses se ven y el títere
+    // se esconde, así que el borde del títere (setRim) nunca se dibujaba en juego.
+    this.rim = scene.add.image(0, 0, 'pose-run', 0).setOrigin(...ORIGEN).setScale(ESCALA).setDepth(11.99).setTintFill(0xeb946a).setAlpha(0);
     this.pose = null;
   }
 
@@ -49,6 +58,7 @@ class MokiPoses {
     const on = !s.calm && !s.dead && (s.screen === 'play' || s.screen === 'demo');
     this.sprite.setVisible(on);
     s.rig.setVisible(!on);
+    this.rim.setVisible(on && s.rimA > 0 && s.scale.width / s.scale.height > C.portrait.maxAspect);
     if (!on) return false;
     let key = 'pose-run';
     let frame = 0;
@@ -62,13 +72,15 @@ class MokiPoses {
     } else {
       // zancada por distancia: un ciclo de 7 cuadros cada lo que mide el paso del títere (los pies no patinan)
       const ciclo = (s.rig.debug && s.rig.debug.cyclePx) || 120;
-      frame = ((Math.floor((s.dist / ciclo) * 7) % 7) + 7) % 7; // el rebobinado del tutorial baja dist
+      // s.trote: la zancada de la transición de entrada (boceto.js), con la partida parada; se queda de fase y no hay salto de pose
+      frame = ((Math.floor(((s.dist + (s.trote || 0)) / ciclo) * 7) % 7) + 7) % 7; // el rebobinado del tutorial baja dist
     }
     if (key !== this.pose) {
       this.sprite.setTexture(key, frame);
       this.pose = key;
     } else this.sprite.setFrame(frame);
     this.sprite.setPosition(s.px, s.y + 2);
+    this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAlpha(s.rimA || 0);
     return true;
   }
 }

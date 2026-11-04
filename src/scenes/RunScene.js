@@ -6,6 +6,7 @@ import { buildMokiPieces, createMokiRig } from '../art/mokiRig.js';
 import { Particles } from '../art/particles.js';
 import { Cinta } from '../art/cinta.js';
 import { Ambient } from '../art/ambient.js';
+import { Faroles } from '../art/farol.js';
 import { MID_PROPS, MID_WRAP, MID_H } from '../art/textures.js';
 import { createUI } from '../ui/ui.js';
 import { audio } from '../audio/audio.js';
@@ -158,6 +159,11 @@ export class RunScene extends Phaser.Scene {
     this.particles = new Particles(this);
     this.cinta = new Cinta(this); // cinta de combo detrás de Moki (solo lee el combo)
     this.ambient = new Ambient(this, Number(Q.get('amb')) || C.ambient.seed); // ?amb=N cambia la semilla del fondo (prueba de determinismo)
+    this.faroles = new Faroles(this); // SALTO NOCHE: faroles de papel con su luz sobre el suelo (solo de noche)
+    // SALTO NOCHE pieza 3: recortes de tinta abajo a la izquierda (solo de noche), módulo diferido
+    this.primerPlano = null;
+    // SALTO ATARDECER: la tarde viaja en el mismo chunk diferido (un import dinámico más partía config del chunk inicial)
+    import('../art/primerPlano.js').then((m) => (this.primerPlano = new m.PrimerPlano(this, C), m.montarTarde(this))).catch(() => {});
     audio.nt = () => this.ambient.nt || 0; // de noche las capas del Cuaderno cierran el filtro y dejan la escala abierta
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
@@ -1070,12 +1076,16 @@ export class RunScene extends Phaser.Scene {
     const layer = { clouds: this.clouds, ridge: this.ridge, far: this.far, mid: this.mid }[key];
     if (layer) {
       layer.setTexture(key);
-      this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut' });
+      // SALTO NOCHE vuelta final: al terminar el fundido de entrada se vuelve a aplicar la hora. Si la noche llegó mientras la
+      // capa entraba, el fundido la dejaba con los alfas de la mañana (casitas y cerros al 0.78, velos de día, sin faldón):
+      // translúcidos de noche.
+      const fin = () => this.ambient && this.ambient.applyDay(0);
+      this.tweens.add({ targets: layer, alpha: layer === this.far && this.ambient ? this.ambient.farAlpha() : 1, duration: 320, ease: 'Sine.easeOut', onComplete: fin });
       const veil = { far: this.farVeil, mid: this.midVeil }[key];
       if (veil) {
         veil.setTexture(key);
         const k = C.atmosphere[key] * (key === 'far' && this.ambient ? this.ambient.farAlpha() : 1);
-        this.tweens.add({ targets: veil, alpha: k, duration: 320, ease: 'Sine.easeOut' });
+        this.tweens.add({ targets: veil, alpha: k, duration: 320, ease: 'Sine.easeOut', onComplete: fin });
       }
     }
   }
@@ -1286,6 +1296,8 @@ export class RunScene extends Phaser.Scene {
     this.front.tilePositionX = this.dist;
     this.groundFibers.tilePositionX = this.dist;
     this.folds.forEach((f) => (f.tilePositionX = this.dist));
+    const nt = this.ambient ? this.ambient.nt || 0 : 0;
+    if (this.faroles) this.faroles.update(this.dist, nt);
 
     // Profundidad con el salto: las capas lejanas bajan unos px cuando Moki sube (sin zoom de cámara).
     const V = C.art.vertical;
@@ -1294,6 +1306,7 @@ export class RunScene extends Phaser.Scene {
     this.mid.y = this.base.mid + Math.min(V.maxPx, lift * V.mid);
     this.farVeil.y = this.far.y;
     this.midVeil.y = this.mid.y;
+    if (this.primerPlano) this.primerPlano.update(this.dist, nt); // después de bajar las capas: los cantos copian su y
     this.stepForeground(step);
   }
 
@@ -1327,9 +1340,13 @@ export class RunScene extends Phaser.Scene {
   stepForeground(step) {
     const F = C.art.foreground;
     const g = C.world.groundY;
+    // SALTO NOCHE 1c: la decoración del suelo (1.0x) es cartón oscuro desenfocado; sobre el suelo claro de noche se leía
+    // como "manchas borrosas rectangulares" (invitado 1b, prueba de esconder 1c). De noche baja a decoNoche de alfa.
+    const da = 1 - (this.ambient ? this.ambient.nt || 0 : 0) * (1 - C.atmosphere.night.decoNoche);
     for (const f of this.fg) {
       f.x -= step * f.speed;
       f.sprite.x = f.x;
+      if (f.speed === 1) f.sprite.alpha = da;
     }
     this.fg = this.fg.filter((f) => (f.x < -90 ? (f.sprite.destroy(), false) : true));
     if (this.reduced || this.dead) return;
@@ -1627,6 +1644,11 @@ export class RunScene extends Phaser.Scene {
       }
     }
     const fade = Math.max(1, M.fadePx / this.zoom);
+    // SALTO NOCHE 1b: de noche ningún poste de telégrafo cerca de un farol (se leía como poste sin farol). Farol: pie en fx,
+    // de fx - 14 a fx + 51 px de mundo.
+    const nt = this.ambient ? this.ambient.nt || 0 : 0;
+    const fxs = nt > 0 && this.faroles ? this.faroles.xs(this.dist) : [];
+    const fc = C.atmosphere.night.farol.clearPx;
     const pool = (this.midPool = this.midPool || []);
     const bodyTint = this.mid.tintTopLeft;
     const veilTint = this.midVeil.tintTopLeft;
@@ -1642,6 +1664,9 @@ export class RunScene extends Phaser.Scene {
         for (const b of boxes) {
           if (t >= b.b || foot <= b.t) continue;
           a = Math.min(a, Phaser.Math.Clamp(Math.max(b.l - r, l - b.r) / fade, 0, 1));
+        }
+        if (p.kind === 'poste') {
+          for (const fx of fxs) a = Math.min(a, Math.max(1 - nt, Phaser.Math.Clamp((Math.max(fx - 14 - r, l - fx - 51) - fc) / fade, 0, 1)));
         }
         if (!pool[n]) {
           pool[n] = {

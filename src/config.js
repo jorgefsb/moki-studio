@@ -186,14 +186,17 @@ export const CONFIG = {
   atmosphere: {
     on: true, far: 0.2, mid: 0.12, near: 0.16,
     night: {
-      far: 0.08, mid: 0.05, near: 0.26, sky: 0.22, ridge: 0x3a342d,
+      // SALTO NOCHE (3), perspectiva atmosférica de noche (GDD §5.2): cada capa más hacia el cielo ciruela mientras más
+      // lejos. Antes far 0.08 y mid 0.05.
+      far: 0.25, mid: 0.1, near: 0.26, ridge: 0x3a342d,
       // escalera de valores (gauntlet R3, 30-oct): #625545 -> #87755F, +12 puntos de luminosidad HSL (32.7% -> 44.7%), mismo
       // tono; sigue más oscura que el horizonte #B7B3AD. Torre a 1280 subió de 1.91-2.05 a 2.24 de mínimo en la misma página.
       // ajuste de arte (30-oct): a 375 la cordillera #87755F se fundía con el cielo de atrás (brecha medida 3.0 puntos de L).
       // Se queda #87755F y se aclara la banda del horizonte (horizon.band; antes glow). Oscurecerla a #77654F también daba 8.9 puntos,
       // pero bajaba la torre a 1280 D=540 a 2.18. Medidas en evidencia/v2-cordillera.md.
       // opción C (director, 30-oct): de vuelta a #625545. La #87755F perdió la masa oscura que daba profundidad a 1280.
-      ridgeLight: { on: true, color: 0x625545 },
+      // SALTO NOCHE (3): #625545 al 40 % hacia el ciruela del cielo #41363E (la cordillera es la capa más lejana)
+      ridgeLight: { on: true, color: 0x554942 },
       // ajuste 2 de arte (30-oct): a 1280 el contorno de 3 px se fundía con una nube clara detrás (viga 2.19-2.21).
       // 4 px (ARTE §3: canto de 4 a 6 px) y una línea de tinta de 1 px por fuera, solo en la viga.
       vigaOutline: { on: true, alpha: 1, width: 4, ink: { color: '#22211F', px: 1 } },
@@ -209,9 +212,36 @@ export const CONFIG = {
       // ground.color se queda en el tono viejo de la cordillera (#625545) y dim 0.18 (escalera de valores): el suelo y el
       // canto de juego quedan más oscuros que cualquier plano de atrás.
       // opción C (director, 30-oct): dim de vuelta a 0.08 como la base d321e3b.
-      ground: { on: true, color: 0x625545, alpha: 0.7, dim: 0.08 },
-      planes: { on: true, far: 0.06, mid: 0.24 },
-      fibers: { on: true, alpha: 0.09 },
+      // SALTO NOCHE pieza 1 (ESPEC-SALTO, 3-nov): escala de valores de noche de oscuro a claro, cielo < cordillera <
+      // lejano < medio < suelo; el suelo es la capa más clara. Base técnica v2/fondo-luz 2c25198 (sky 0.7, mid 0, fibras
+      // 0.12), pero el suelo ya no es el #CCBA9C gris de ahí: kraft cálido levantado hacia papel (kraft→papel 30 %, el de
+      // la clave N2). skyTo: el cielo baja hacia ciruela oscuro de papel (no hay token ciruela: tinta→borde 30 % con un
+      // toque violeta) en vez de tinta sola. Antes: sky 0.22 hacia tinta, ground #625545 0.7 dim 0.08, mid 0.24, fibras 0.09.
+      sky: 0.96, skyTo: 0x41363e,
+      // ciego día 1 (4 vistazos): con el suelo a 60 la luz del farol no se veía. Suelo un paso abajo (#CBAB89, kraft→papel
+      // 30 %, al 0.8) y pino un paso abajo (mid 0.12): 24.5 / 31.8 / 40.8 / 47.5 / 57.3 a 1280, la mancha tiene de dónde subir.
+      ground: { on: true, color: 0xcbab89, alpha: 0.8, dim: 0 },
+      // SALTO NOCHE vuelta final: mid 0.12 -> 0. A 375 el pino quedaba casi del valor de la casita y el cerro de atrás
+      // (L 47.9 contra 45.8, opaco.mjs) y solo se leía su contorno, "de alambre", como si fuera translúcido.
+      planes: { on: true, far: 0.06, mid: 0 },
+      fibers: { on: true, alpha: 0.12 },
+      // SALTO NOCHE pieza 2: farol de papel en poste de cartón detrás del suelo, cada (1 - jitter) a (1 + jitter) * cada
+      // pantallas. luz: mancha sobre el suelo (w x h px de mundo, media elipse desde el canto de atrás), alfa a noche plena.
+      // 300 x 48 al 0.55 casi no se percibía (ciego día 1) y 0.85 normal tampoco (el suelo ya es claro); aditiva saturaba el rojo y quedaba lima (ciego 3). Normal al 1
+      // con el tono de farolLuz (papel + #FF6B35 25 %, día 1b: sin el kraft 15 % que lo apagaba).
+      // luzV: la mancha en vertical (375), más alta y más opaca. clearPx: ningún poste de telégrafo de la capa media a menos
+      // de esto (px de mundo) del farol; se desvanece con midClear.fadePx (regla de colocación del 31-oct).
+      farol: { on: true, cada: 1.5, jitter: 0.33, clearPx: 70, rim: { alpha: 1, r: 240 }, luz: { key: 'farolLuz', w: 380, h: 64 }, luzV: { key: 'farolLuzV', w: 440, h: 120 } },
+      // SALTO NOCHE pieza 3: primer plano de tinta. speed: parallax (> 1, como el primer plano de día 1.3); cada: separación
+      // en px de mundo (igual en 375 y 1280: relativa al ancho se encimaban en vertical); escala/escalaV: tamaño a 1280 y en vertical (tope: nunca arriba de groundY + libre px de mundo);
+      // hunde: entre esas fracciones del ancho el recorte se hunde fuera de cuadro (queda abajo a la izquierda).
+      // decoNoche: alfa de la decoración del suelo (gp-* a 1.0x) a noche plena (1c: se leía como manchas borrosas)
+      decoNoche: 0.25,
+      // SALTO NOCHE pieza 4: canto rasgado de papel en el borde de arriba de la cordillera y de las colinas lejanas (alfa a
+      // noche plena; px de grueso). Va en el módulo diferido.
+      // pxV: en vertical (375) la capa va escalada 1.8x y 3 px se leían como halo borroso de 6-8 px (ciego p4)
+      canto: { on: true, ridge: 0.35, far: 0.45, px: 3, pxV: 2 },
+      primerPlano: { on: false, speed: 1.4, cada: 340, escala: 1, escalaV: 1.1, libre: 24, hunde: [0.3, 0.62] },
       // band: banda clara del horizonte detrás de la cordillera en tiras planas de papel (ajuste 2 de arte, 30-oct: el
       // degradado glow 0.85 se leía como niebla). strips = [alto sobre el pie de la cordillera en px de mundo (× farS), alfa
       // a noche plena], de abajo (la más clara) hacia arriba. canto: filo claro arriba de cada tira; shadow: sombra de contacto

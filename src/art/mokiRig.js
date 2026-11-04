@@ -266,7 +266,7 @@ export function createMokiRig(scene) {
 
   // Borde de luna (solo de noche, C.atmosphere.night.moonRim): cuerpo y mochila en papel, corridos a la izquierda,
   // detrás de todo el títere; asoman como un filo claro del lado de la lámpara. El alfa lo pone Ambient con setRim.
-  const rimTint = (p) => p.setTintFill(0xf4e8d5).setAlpha(0); // papel #F4E8D5
+  const rimTint = (p) => p.setTintFill(0xdfac89).setAlpha(0); // luz del farol (variante K); antes papel #F4E8D5 (borde de luna, apagado)
   const rimBody = rimTint(piece('moki-body', ...bodyPivot));
   const rimPack = rimTint(piece('moki-pack', ...packPivot));
 

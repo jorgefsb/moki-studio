@@ -5,7 +5,7 @@ import { CONFIG as C } from '../config.js';
 
 const TAU = Math.PI * 2;
 
-function mk(w, h) {
+export function mk(w, h) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -43,7 +43,7 @@ function specks(x, w, h, r, count, color, alpha) {
 }
 
 // Recorte de papel: sombra de contacto suave, relleno con fibras y canto del mismo tono, más oscuro.
-function cut(x, path, { fill, edgeW, shadow, r, fiberCount = 60 }) {
+export function cut(x, path, { fill, edgeW, shadow, r, fiberCount = 60 }) {
   const w = x.canvas.width;
   const h = x.canvas.height;
   x.save();
@@ -432,7 +432,7 @@ function midLayer() {
 
 // ---------- Piezas del plano de juego ----------
 
-function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0, soft = 1, ink = 1 }) {
+export function block(x, ox, oy, w, h, { body: body0, tape, seed, dim = 0, soft = 1, ink = 1 }) {
   // dim: variante de noche (T3g): el cartón se oscurece hacia la tinta y la cinta/franjas conservan #FF6B35
   // soft: variante de Paseo: contorno, perfil de tinta y cinta bajan con el cartón para que la caja atenuada no parezca vidrio
   // ink: multiplica el perfil y el canto de tinta (Paseo de día: que la caja fantasma conserve borde y no se lea como sombra)
