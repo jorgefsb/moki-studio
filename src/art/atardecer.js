@@ -54,6 +54,10 @@ export const TARDE = {
   piezasTorn: 0.2, // las losas de cartón del suelo se leían como obstáculo o bache: quedan como mancha del propio kraft
   piedra: { tinte: 0xd8a878, alfa: 0.2 }, // CAPAS: UNIR Y PISOS: las piedras de primer plano, 3 de 3 críticos las nombran como peligro; quedan como mancha del suelo
   cartel: false, // el cartel de lección en su poste (fondo vivo, no mecánica): 2 de 3 leen el poste como obstáculo y tapa el aire donde se decide el salto
+  // CAPAS: ÚLTIMOS PISOS, fondo vivo que los críticos nombran como peligro. Nada de esto toca azar de juego: ni un Math.random menos.
+  hojas: false, // hojas que caen: 2 de 3 a 375 y 3 de 3 a 1280; en true regresan
+  vuelan: false, // avión y pájaros en la zona alta del salto ("avión de papel", "triángulos"), solo jugando; el título los conserva
+  primerPlano: 0, // alfa de pasto y piedras de primer plano con el fondo pintado: las "manchas oscuras en el camino" a 1280
   // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468; oscura se leía como anillo de peligro. Cara dorada de la luz del sol (ningún color
   // claro llega a 3.0 contra el suelo) y filo oscuro, que es el que da el contraste contra el suelo y contra el cielo.
   ficha: { cara: '#FFD56B', filo: mix(PAL.accent, PAL.ink, 0.82), canto: mix(PAL.accent, PAL.ink, 0.92), marca: mix('#FFD56B', PAL.accent, 0.55) },
@@ -467,12 +471,14 @@ export function montar(s) {
     const pz = lerp(0xffffff, pintadas && pintadas.activa ? TARDE.piezasOscuras : TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
     const aTorn = pintadas && pintadas.activa ? 0 : 1 - amb.st * (1 - TARDE.piezasTorn); // con fondo pintado, la losa rasgada se leía como rectángulo
     const pzPiedra = lerp(0xffffff, TARDE.piedra.tinte, amb.st);
-    const aPiedra = 1 - amb.st * (1 - TARDE.piedra.alfa);
+    const conCapas = pintadas && pintadas.activa;
+    const aPiedra = conCapas ? TARDE.primerPlano : 1 - amb.st * (1 - TARDE.piedra.alfa);
     s.fg.forEach((f) => {
       const k = f.sprite.texture.key;
       if (k.startsWith('gp-')) f.sprite.setTint(pz);
       if (k.startsWith('gp-torn')) f.sprite.setAlpha(aTorn);
       if (k.startsWith('gp-stone')) f.sprite.setTint(pzPiedra).setAlpha(aPiedra);
+      if (conCapas && k.startsWith('gp-grass')) f.sprite.setAlpha(TARDE.primerPlano);
     });
   };
   s.events.on('postupdate', colocar);
@@ -492,6 +498,7 @@ export function montar(s) {
   const puede = amb.can;
   amb.can = function (kind, tramo) {
     if (kind === 'sign' && !TARDE.cartel && amb.n1) return false;
+    if ((kind === 'plane' || kind === 'birds') && !TARDE.vuelan && amb.n1 && !s.demo) return false;
     return puede.call(this, kind, tramo);
   };
   const veloVisible = s.midVeil.visible;
@@ -529,7 +536,7 @@ export function montar(s) {
       s.fg.forEach((f) => {
         if (!f.sprite.texture.key.startsWith('gp-')) return;
         f.sprite.clearTint(); // colocar ya no corre con st = 0
-        if (f.sprite.texture.key.startsWith('gp-torn') || f.sprite.texture.key.startsWith('gp-stone')) f.sprite.setAlpha(1);
+        if (f.speed !== 1) f.sprite.setAlpha(1); // a las de 1x, stepForeground les pone su alfa cada cuadro
       });
       s.ridge.setVisible(capasV.ridge);
       s.far.setVisible(true);
@@ -559,5 +566,5 @@ export function montar(s) {
   calienta([hornoBanda, () => hornoCapa('ridge'), () => hornoCapa('far'), () => hornoCapa('mid')]);
   montarBoceto(s, o, colocar, TARDE.sol.r);
   if (TARDE.bokeh) montarBokeh(s);
-  montarHojas(s);
+  if (TARDE.hojas) montarHojas(s);
 }
