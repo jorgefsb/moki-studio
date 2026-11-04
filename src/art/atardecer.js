@@ -47,7 +47,7 @@ export const TARDE = {
   canto: { px: 4, alpha: 1, pie: 10, color: '#E9D2AE' }, // canto claro del obstáculo, cálido para que no se lea calcomanía; los 10 px de abajo sin él
   suelo: { cantoPx: 4, tinte: 0xffd8bc }, // canto de papel arriba del suelo; tinte lleva el papel del suelo (#CDAF8D) a kraft rojizo #CD9468 (1c: #CD9A4E se leía caqui-oliva)
   sombra: '#5A2410', // la sombra del suelo (groundShade, tinta neutra a 0.34) agrisaba el kraft: de tarde va en café rojizo
-  piezasOscuras: 0x6e3f26,
+  piezasOscuras: 0xa06a48,
   piezas: 0xffcca0, // pasto, piedras y cartón del suelo (gris-café) multiplicados hacia café cálido
   sol: { x: 0.84, y: 262, r: 54, depth: 1.92, fill: '#FFD56B', canto: '#F7B24A' }, // bajo a la derecha, medio tapado por la colina media
   shadowK: 0.7, // sombras cortas
@@ -463,7 +463,7 @@ export function montar(s) {
   const piezas = () => {
     // con el fondo pintado, las de abajo a 1.3x son el primer plano oscuro
     const pz = lerp(0xffffff, pintadas && pintadas.activa ? TARDE.piezasOscuras : TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
-    const aTorn = 1 - amb.st * (1 - TARDE.piezasTorn);
+    const aTorn = pintadas && pintadas.activa ? 0 : 1 - amb.st * (1 - TARDE.piezasTorn); // con fondo pintado, la losa rasgada se leía como rectángulo
     s.fg.forEach((f) => {
       const k = f.sprite.texture.key;
       if (k.startsWith('gp-')) f.sprite.setTint(pz);
