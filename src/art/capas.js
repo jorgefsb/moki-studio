@@ -16,7 +16,8 @@ const CAPAS = {
 };
 // El sol no va en el mosaico: repetía cada 1139 px y salían dos (CAPAS: CERROS, PINOS Y SOL). Es uno solo y baja de 'en' a 'hasta' del ancho de pantalla en todo el nivel 1 (fin); en Libre, más allá de fin, se queda.
 // r: radio en px del mundo. y: parte del cielo, con sube, donde cae su centro. sube: px del mundo que el cielo va arriba, para que el sol asome sobre los cerros.
-const SOL = { en: 0.8, hasta: 0.2, fin: 44254, r: 59, y: 0.665, sube: 110, color: '#FFEEC4', depth: 1.59 };
+// Mancha pintada que se funde con el cielo, no disco: a 375 se leía como ficha gigante. rgb: Y 0.688, debajo de la cara de la ficha (0.699); el horizonte del cielo ya da 0.711, por eso y sube a donde el cielo es más oscuro.
+const SOL = { en: 0.8, hasta: 0.2, fin: 44254, r: 85, y: 0.57, sube: 110, rgb: '254,210,133', depth: 1.59 };
 const SUELO_ARRIBA = 12; // px del mundo que el canto del suelo pintado queda arriba de groundY: Moki pisa la franja crema
 const SUELO_MARGEN = 6; // px de la textura, ya en el mundo, entre el borde de la textura y ese canto
 
@@ -66,10 +67,13 @@ export function montarCapas(s) {
     if (!s.textures.exists('capa_sol')) {
       const t = s.textures.createCanvas('capa_sol', SOL.r * 2 + 2, SOL.r * 2 + 2);
       const x = t.getContext();
-      x.fillStyle = SOL.color;
-      x.beginPath();
-      x.arc(SOL.r + 1, SOL.r + 1, SOL.r, 0, Math.PI * 2);
-      x.fill();
+      const g = x.createRadialGradient(SOL.r + 1, SOL.r + 1, 0, SOL.r + 1, SOL.r + 1, SOL.r);
+      for (let i = 0; i <= 12; i++) {
+        const q = i / 12;
+        g.addColorStop(i / 12, `rgba(${SOL.rgb},${1 - q * q * (3 - 2 * q)})`); // caída suave: sin borde ni aros
+      }
+      x.fillStyle = g;
+      x.fillRect(0, 0, SOL.r * 2 + 2, SOL.r * 2 + 2);
       t.refresh();
     }
     c.sol = s.add.image(0, 0, 'capa_sol').setDepth(SOL.depth).setVisible(false);
