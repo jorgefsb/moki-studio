@@ -17,6 +17,7 @@ import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, 
 import { registrarDia, saludo, leerRacha } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
+import { abrirIntento, cerrarIntento } from '../contador.js';
 import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump, vientoPaso } from '../jumpmodel.js';
@@ -595,6 +596,12 @@ export class RunScene extends Phaser.Scene {
     this.distLabel.set(`0 ${t('hud.m')}`);
     this.pieceLabel.set('0');
     this.lastM = 0;
+    this.abreIntento();
+  }
+
+  // Contador anónimo: cada intento (Jugar, Otra vez o reintento) cuenta una vez; el demo no cuenta
+  abreIntento() {
+    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel);
   }
 
   startDemo() {
@@ -829,6 +836,7 @@ export class RunScene extends Phaser.Scene {
   }
 
   goHome() {
+    cerrarIntento('otro'); // dejó el intento desde la pausa sin salir de la página
     this.tweens.resumeAll();
     this.startDemo();
   }
@@ -2058,6 +2066,7 @@ export class RunScene extends Phaser.Scene {
       }
     }
     this.cobrarCinta(false); // al chocar la cinta se enrolla sin cartel; lo juntado ya contó
+    cerrarIntento(o.type === 'zanja' ? 'zanja' : 'choque');
     this.dead = true;
     this.screen = 'dead';
     this.deadFor = 0;
@@ -2157,6 +2166,7 @@ export class RunScene extends Phaser.Scene {
     this.pieceValue = cp.pieceValue;
     this.resetRun(this.level, cp.dist);
     this.screen = 'play';
+    this.abreIntento();
     audio.setStreak(0);
     audio.unlock(); // el reintento es un gesto: si hubo foco perdido en la tarjeta, la música vuelve aquí
     audio.setState('playing'); // reintento: la música vuelve a 100% en 600 ms
@@ -2172,6 +2182,7 @@ export class RunScene extends Phaser.Scene {
   // ---------- Final ----------
 
   finish() {
+    cerrarIntento('gana');
     this.screen = 'final';
     this.finalShown = false;
     this.finalT = 0;
