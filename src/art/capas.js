@@ -2,7 +2,7 @@
 // webp solo se piden si el jugador está en el nivel 1; si no cargan, se queda el fondo de código. Encima siguen obstáculos, fichas, Moki, hojas y bokeh.
 // Las sale de evidencia/salto-capas/herramientas/hacer-capas.py: solo fondo. Moki nunca pasa por ahí.
 import cieloUrl from '../../assets/capas/capa-cielo.webp';
-import lejosUrl from '../../assets/capas/capa-lejos.webp'; // interruptor de los cerros: capa-lejos.webp (cálidos) o capa-lejos-malva.webp (0c94591)
+import lejosUrl from '../../assets/capas/capa-lejos-malva.webp'; // interruptor de los cerros: capa-lejos.webp (cálidos) o capa-lejos-malva.webp (0c94591)
 import medioUrl from '../../assets/capas/capa-medio.webp';
 import sueloUrl from '../../assets/capas/capa-suelo.webp';
 
