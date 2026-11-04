@@ -10,6 +10,7 @@ import { leerCuaderno, nivelDe } from '../cuaderno.js';
 import { montarBoceto } from './boceto.js';
 import { montarBokeh } from './bokeh.js';
 import { montarHojas } from './hojas.js';
+import { SOMBRA_K, conFibra, conSombra, hornear, sombra, labioSuelo, sombraSuelo } from './cantoPapel.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
 const lerp = (a, b, k) => {
@@ -45,6 +46,18 @@ export const TARDE = {
   // Ficha: la de siempre es kraft y se pierde contra el suelo #CD9468. Cuerpo naranja de marca hundido en tinta (contraste >= 3 contra
   // el suelo, nunca más claro: el suelo ya está a media luz) y aro de papel, que es el que se lee contra cerros y pinos oscuros.
   ficha: { cara: mix(PAL.accent, PAL.ink, 0.82), canto: mix(PAL.accent, PAL.ink, 0.92), aro: PAL.paper },
+  // Canto de papel (ESPEC §2). labio: el filo rasgado de cada capa; el de la colina media no pasa de la claridad del sol, para no cruzarlo
+  // como línea blanca. px: su grueso en px de textura. Sombra: alfa máximo sobre la capa de atrás, ramp: cuándo entra en la transición.
+  papel: {
+    ridge: { labio: '#F6AE7C', px: 3, seed: 81 },
+    media: { labio: '#EFB483', px: 3, seed: 82 },
+    // en las capas oscuras la fibra normal no se ve: va más fuerte, y el labio más grueso y más claro
+    far: { labio: mix('#7A3612', PAL.paper, 0.5), px: 4, seed: 83, fibraK: 1.7, rasgado: 2.5 },
+    mid: { labio: mix('#3A1A0B', PAL.paper, 0.55), px: 3.5, seed: 84, fibraK: 1.9, rasgado: 2.5 },
+    // café y no tinta: la tinta neutra agrisaba el naranja (1c). Por eso el alfa llega más alto que el 12-28 % de la tabla: oscurece lo mismo.
+    sombra: { ridge: 0.22, media: 0.3, far: 0.42, mid: 0.42, suelo: 0.34, sueloPx: 14, ramp: [900, 1400] },
+    cieloFibra: 0.4,
+  },
 };
 
 const BANDA_TOP = 220; // y del mundo donde empieza la textura de la colina media (arriba de la loma más alta)
@@ -71,40 +84,40 @@ function bandaMedia() {
     g.lineTo(W + 4, H + 4);
     g.closePath();
   };
-  cut(x, path, { fill: TARDE.media, edgeW: 0, shadow: { alpha: 0.18, blur: 10, dx: 0, dy: -3 }, r, fiberCount: 160 });
-  // canto rasgado: filo de papel claro de 2-3 px que sigue el borde, con mordidas
-  x.save();
-  x.strokeStyle = rgba(PAL.paper, 0.2); // con 0.35 cruzaba el sol como cresta transparente
-  x.lineJoin = 'round';
-  for (let i = 1; i < pts.length; i++) {
-    x.lineWidth = 2 + r();
-    x.beginPath();
-    x.moveTo(pts[i - 1][0], pts[i - 1][1] + 1);
-    x.lineTo(pts[i][0], pts[i][1] + 1);
-    x.stroke();
-  }
-  x.restore();
+  x.fillStyle = TARDE.media;
+  x.beginPath();
+  path(x);
+  x.fill();
   // el mosaico repite en vertical y el filtro mezcla la fila de abajo (opaca) con la de arriba: recta de 1 px en el cielo.
   // Las 2 filas de abajo quedan vacías (van detrás del suelo).
-  x.clearRect(0, H - 2, W, 2);
-  return c;
+  return hornear(c, { color: TARDE.media, sinPie: true, ...TARDE.papel.media });
 }
 
 // Cielo bajo: degradado vertical sin bordes de cieloAlto (arriba, igual que el plano de atrás) a cieloBajo en el horizonte.
 // Las tiras con canto (papel multiplicado, tira ondulada, nubes) se leían como rectas finas.
 function cieloBajo() {
-  const [c, x] = mk(4, 256);
+  const [c, x] = mk(480, 256);
   const g = x.createLinearGradient(0, 0, 0, 256);
   g.addColorStop(0, TARDE.cieloAlto);
   g.addColorStop(0.5, TARDE.cieloMedio);
   g.addColorStop(0.75, TARDE.cieloBajo);
   g.addColorStop(1, TARDE.cieloHorizonte);
   x.fillStyle = g;
-  x.fillRect(0, 0, 4, 256);
-  // 4x256 es potencia de 2: el filtro repite la textura y mezclaba la fila de abajo (clara) con la de arriba: la recta de y = 240.
+  x.fillRect(0, 0, 480, 256);
+  conFibra(x, 480, 256, TARDE.papel.cieloFibra);
+  // Alto de potencia de 2: el filtro repite la textura y mezclaba la fila de abajo (clara) con la de arriba: la recta de y = 240.
   // Las 2 filas de abajo van detrás del suelo.
   x.fillStyle = TARDE.cieloAlto;
-  x.fillRect(0, 254, 4, 2);
+  x.fillRect(0, 254, 480, 2);
+  return c;
+}
+
+// Lo de arriba del cielo: un valor plano, con la misma fibra
+function cieloAlto() {
+  const [c, x] = mk(480, 240);
+  x.fillStyle = TARDE.cieloAlto;
+  x.fillRect(0, 0, 480, 240);
+  conFibra(x, 480, 240, TARDE.papel.cieloFibra);
   return c;
 }
 
@@ -127,11 +140,11 @@ function sol(R) {
     x.globalAlpha = T.haloA[i];
     x.fillStyle = T.halo;
     x.beginPath();
-    disco(R * k, 2)(x);
+    disco(R * k, 5)(x); // el halo rasgado: con filo limpio se leía como anillos gráficos
     x.fill();
   });
   x.globalAlpha = 1;
-  cut(x, disco(R, 1.2), { fill: T.canto, edgeW: 0, shadow: null, r, fiberCount: 0 });
+  cut(x, disco(R, 2.5), { fill: T.canto, edgeW: 0, shadow: null, r, fiberCount: 0 });
   cut(x, disco(R - 3, 1), { fill: T.fill, edgeW: 0, shadow: null, r, fiberCount: 30 });
   return c;
 }
@@ -230,9 +243,12 @@ export function montar(s) {
   if (!amb || amb.tardeMontada) return;
   amb.tardeMontada = true;
   const add = (k, cv) => s.textures.exists(k) || s.textures.addCanvas(k, cv);
-  add('tardeBanda', bandaMedia());
+  const Pa = TARDE.papel;
   add('tardeSol', sol(TARDE.sol.r));
   add('tardeCielo', cieloBajo());
+  add('tardeCieloAlto', cieloAlto());
+  add('tardeLabio', labioSuelo(TARDE.suelo.cantoPx));
+  add('tardeSombraSuelo', sombraSuelo(TARDE.sombra, Pa.sombra.suelo));
   Object.entries(OBS).forEach(([k, fn]) => add(`${k}_t`, fn()));
   add('token_t', ficha());
   // El atardecer es SOLO del nivel 1 del Cuaderno (DECISIONES 3-nov 10:34, duda 1). En los demás niveles st queda en 0: la tarde
@@ -273,63 +289,131 @@ export function montar(s) {
   };
   const dia2 = { shadowK: DAY[2].shadowK, bands: DAY[2].bands };
   const tarde2 = { shadowK: TARDE.shadowK, bands: 0 }; // sin bandas de fibra: el cielo es papel plano
-  // silueta plana de una textura del juego: mismo alfa (canvas source-in), un solo color
-  const plano = (key, color, sinPie) => {
+  // Recorte suelto de papel (pino, poste): mismo alfa, un solo color, canto, fibra y su sombra dentro del lienzo
+  const plano = (key, color) => {
     const k = `${key}_t`;
     if (!s.textures.exists(k) && s.textures.exists(key)) {
-      const src = s.textures.get(key).getSourceImage();
-      const [c, x] = mk(src.width, src.height);
-      x.drawImage(src, 0, 0);
-      x.globalCompositeOperation = 'source-in';
-      x.fillStyle = color;
-      x.fillRect(0, 0, c.width, c.height);
-      if (sinPie) x.clearRect(0, c.height - 2, c.width, 2);
-      s.textures.addCanvas(k, c);
+      s.textures.addCanvas(k, conSombra(hornear(s.textures.get(key).getSourceImage(), { color, ...Pa.mid }), { color: TARDE.sombra, alpha: Pa.sombra.mid }));
     }
     return s.textures.exists(k) ? k : null;
+  };
+  // Mosaicos grandes: de a uno, en los ratos libres del título. Si la partida llega antes, de a uno por cuadro (hornoLibre). Solo se hornean
+  // para quien va a ver atardecer: en los demás niveles nunca corre. El tercero: el mosaico repite en vertical y el filtro mezcla su fila
+  // de abajo con la de arriba, así que va sin pie; la capa lejana ya lo resuelve con la tapa.
+  const CAPAS = {
+    ridge: [TARDE.lejana, Pa.ridge, true, Pa.sombra.ridge],
+    far: [TARDE.cercana, Pa.far, false, Pa.sombra.far],
+    mid: [TARDE.pinos, Pa.mid, true, Pa.sombra.mid],
+  };
+  let hornoLibre = true;
+  const conSu = (key, cv, alfa) => {
+    s.textures.addCanvas(`${key}_t`, cv);
+    s.textures.addCanvas(`${key}_s`, sombra(cv, { color: TARDE.sombra, alpha: alfa }));
+  };
+  const hornoCapa = (key) => {
+    if (s.textures.exists(`${key}_t`)) return true;
+    if (!s.textures.exists(key)) return false;
+    const [color, P, sinPie, alfa] = CAPAS[key];
+    conSu(key, hornear(s.textures.get(key).getSourceImage(), { color, sinPie, ...P }), alfa);
+    return true;
+  };
+  const hornoBanda = () => {
+    if (!s.textures.exists('tardeBanda_t')) conSu('tardeBanda', bandaMedia(), Pa.sombra.media);
+    return true;
+  };
+  const enReposo = window.requestIdleCallback || ((fn) => setTimeout(fn, 60));
+  const calienta = (cola) => {
+    if (!cola.length || !amb.n1 || s.esc || s.screen !== 'demo') return;
+    if (s.texQueue) return void s.time.delayedCall(250, () => calienta(cola));
+    cola[0]();
+    enReposo(() => calienta(cola.slice(1)), { timeout: 500 });
   };
   const gy = () => s.base.far - 12 + 300 * (s.farS || 1); // groundY sin importar config (si no, el build parte config del chunk inicial)
   const o = {
     // cielo encima de nubes, velo de arriba y bandas (1-1.5): nada con canto asoma; aviones y pájaros (1.6) sí pasan
-    cielo: s.add.rectangle(0, 0, 10, 10, hex(TARDE.cieloAlto), 1).setOrigin(0, 0).setDepth(1.55),
-    bajo: s.add.image(0, 0, 'tardeCielo').setOrigin(0, 0).setDepth(1.56),
+    cielo: s.add.tileSprite(0, 0, 10, 10, 'tardeCieloAlto').setOrigin(0, 0).setDepth(1.55),
+    bajo: s.add.tileSprite(0, 0, 10, 10, 'tardeCielo').setOrigin(0, 0).setDepth(1.56),
     sol: s.add.image(0, 0, 'tardeSol').setDepth(TARDE.sol.depth),
-    banda: s.add.tileSprite(0, 0, 10, 10, 'tardeBanda').setOrigin(0, 0).setDepth(1.95),
+    banda: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(1.95),
     // tapa del borde de arriba de la capa lejana: el mosaico mezcla su fila de abajo con la de arriba (recta de 1 px)
     tapa: s.add.rectangle(0, 0, 10, 10, hex(TARDE.cieloAlto), 1).setOrigin(0, 0).setDepth(2.07),
-    canto: s.add.rectangle(0, 0, 10, 10, hex(PAL.paper), 1).setOrigin(0, 0).setDepth(4.05),
-    // capa lejana y media en recorte plano: siluetas propias (encima de sus velos) en vez de setTintFill, que en el borde
-    // antialiaseado de Phaser deja un filo MÁS CLARO que el relleno (los invitados lo leían como contorno hueco)
+    canto: s.add.tileSprite(0, 0, 10, 10, 'tardeLabio').setOrigin(0, 0).setDepth(4.05),
+    // cordillera, capa lejana y media en recorte plano: siluetas propias en vez de setTintFill, que en el borde antialiaseado de
+    // Phaser deja un filo MÁS CLARO que el relleno (los invitados lo leían como contorno hueco). Las de abajo se esconden al estar listas.
+    ridge: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(1.905),
     far: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(2.06),
     mid: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(3.06),
   };
-  const all = Object.values(o);
+  // Sombras de contacto, justo debajo de la capa que las proyecta
+  const sb = {
+    ridge: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(1.902),
+    banda: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(1.945),
+    far: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(2.055),
+    mid: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(3.055),
+    suelo: s.add.image(0, 0, 'tardeSombraSuelo').setOrigin(0, 0).setDepth(3.95),
+  };
+  const all = [...Object.values(o), ...Object.values(sb)];
   all.forEach((v) => v.setAlpha(0).setVisible(false));
+  const capasV = { ridge: s.ridge.visible, farVeil: s.farVeil.visible };
+  // Copia posición, tamaño y corrimiento de la capa. La textura es 1/4: la escala sube y el corrimiento baja lo mismo.
+  const sigue = (sh, L) => {
+    sh.setPosition(L.x, L.y).setSize(L.width, L.height).setTileScale(L.tileScaleX * SOMBRA_K, L.tileScaleY * SOMBRA_K);
+    sh.tilePositionX = L.tilePositionX / SOMBRA_K;
+  };
+  // Las sombras no existen en el dibujo a lápiz: entran cuando la pintura ya casi acaba
+  const alfaSombra = () => {
+    const B = s.boceto;
+    if (!B) return amb.st;
+    if (!B.listo) return 0;
+    const [a, b] = Pa.sombra.ramp;
+    return amb.st * Math.min(1, Math.max(0, (B.t - a) / (b - a)));
+  };
 
   // posición: cada cuadro, después del update de la escena (capas, salto y tamaño ya resueltos)
   const colocar = () => {
     if (!amb.st) return;
+    hornoLibre = true;
     const fs = s.farS || 1;
     const g = gy();
+    const aS = alfaSombra();
     o.cielo.setPosition(0, s.top).setSize(s.vw, g - s.top);
     o.tapa.setPosition(0, s.far.y - 2).setSize(s.vw, 4);
-    o.bajo.setPosition(0, g - TARDE.bajoTop * fs).setDisplaySize(s.vw, TARDE.bajoTop * fs + 12);
+    const bajoH = TARDE.bajoTop * fs + 12;
+    o.bajo.setPosition(0, g - TARDE.bajoTop * fs).setSize(s.vw, bajoH).setTileScale(1, bajoH / 256);
     o.sol.setPosition(s.vw * TARDE.sol.x, g - (g - TARDE.sol.y) * fs).setScale(fs);
     const bandH = 452 - BANDA_TOP;
     const lift = s.far.y - s.base.far; // la colina media baja con el salto como la capa lejana
-    o.banda.setPosition(0, g + 12 - bandH * fs + lift).setSize(s.vw, bandH * fs).setTileScale(fs);
+    // Una capa aún sin hornear no se ve, ni ella ni su sombra; la de siempre sigue debajo
+    const lista = (T, sh, tex, hazla) => {
+      if (T.displayTexture.key === `${tex}_t`) return true; // en un TileSprite, .texture es su canvas interno
+      const hay = s.textures.exists(`${tex}_t`);
+      if (!hay && !hornoLibre) return false;
+      if (!hay) hornoLibre = false;
+      if (!hazla()) return false;
+      T.setTexture(`${tex}_t`);
+      sh.setTexture(`${tex}_s`);
+      return true;
+    };
+    const banda = lista(o.banda, sb.banda, 'tardeBanda', hornoBanda);
+    o.banda.setVisible(banda).setPosition(0, g + 12 - bandH * fs + lift).setSize(s.vw, bandH * fs).setTileScale(fs);
     o.banda.tilePositionX = s.far.tilePositionX * 0.8; // entre la cordillera (0.15x) y la capa lejana (0.3x)
-    [[o.far, s.far, 'far', TARDE.cercana], [o.mid, s.mid, 'mid', TARDE.pinos]].forEach(([T, L, key, color]) => {
-      if (T.displayTexture.key !== `${key}_t`) { // en un TileSprite, .texture es su canvas interno
-        // mid: el mosaico repite en vertical y el filtro mezcla su fila de abajo (va detrás del suelo) con la de arriba: segmentos
-        // oscuros sueltos en el cielo, a y=124 a 1280, donde abajo hay un pino o un poste. La capa lejana ya lo resuelve con la tapa.
-        const k = plano(key, color, key === 'mid');
-        if (!k) return T.setVisible(false);
-        T.setTexture(k);
+    sigue(sb.banda, o.banda);
+    sb.banda.setVisible(banda).setAlpha(aS);
+    [[o.ridge, s.ridge, 'ridge', sb.ridge, [s.ridge]],
+      [o.far, s.far, 'far', sb.far, [s.far, s.farVeil]],
+      [o.mid, s.mid, 'mid', sb.mid, []]].forEach(([T, L, key, sh, abajo]) => {
+      if (!lista(T, sh, key, () => hornoCapa(key))) {
+        sh.setVisible(false);
+        return T.setVisible(false);
       }
       T.setVisible(true).setPosition(L.x, L.y).setSize(L.width, L.height).setTileScale(L.tileScaleX, L.tileScaleY);
       T.tilePositionX = L.tilePositionX;
+      sigue(sh, T);
+      sh.setVisible(true).setAlpha(aS);
+      // el canto muerde la silueta: lo de debajo no debe asomar por las mordidas
+      abajo.forEach((v) => v.setVisible(amb.st < 1));
     });
+    sb.suelo.setPosition(0, g - 10 - Pa.sombra.sueloPx).setDisplaySize(s.vw, Pa.sombra.sueloPx).setAlpha(aS);
     // pinos y postes sueltos: RunScene.stepMidProps les pone su textura y tinte cada cuadro; aquí, su silueta plana
     if (s.midPool) {
       s.midPool.forEach((q) => {
@@ -339,10 +423,12 @@ export function montar(s) {
         q.veil.setAlpha(0);
       });
     }
-    s.folds.forEach((v) => v.setTint(lerp(0xffffff, TARDE.suelo.tinte, amb.st))); // los pliegues se rehacen al cambiar de tamaño
+    // los pliegues se rehacen al cambiar de tamaño. En el atardecer se van: sobre papel recortado eran rectas de regla
+    s.folds.forEach((v) => v.setTint(lerp(0xffffff, TARDE.suelo.tinte, amb.st)).setAlpha(1 - amb.st));
     const pz = lerp(0xffffff, TARDE.piezas, amb.st); // las piezas nacen sin tinte: se les pone cada cuadro
     s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.setTint(pz));
-    o.canto.setPosition(0, g - 10).setSize(s.vw, TARDE.suelo.cantoPx); // labio sobre el suelo: el pie del obstáculo (y 436) asienta en kraft, no en el canto
+    o.canto.setPosition(0, g - 11).setSize(s.vw, TARDE.suelo.cantoPx + 6); // labio sobre el suelo: el pie del obstáculo (y 436) asienta en kraft, no en el canto
+    o.canto.tilePositionX = s.dist;
   };
   s.events.on('postupdate', colocar);
   s.events.once('shutdown', () => s.events.off('postupdate', colocar));
@@ -389,6 +475,10 @@ export function montar(s) {
     else s.shade.clearTint();
     if (!on) {
       s.fg.forEach((f) => f.sprite.texture.key.startsWith('gp-') && f.sprite.clearTint()); // colocar ya no corre con st = 0
+      s.ridge.setVisible(capasV.ridge);
+      s.far.setVisible(true);
+      s.farVeil.setVisible(capasV.farVeil);
+      s.folds.forEach((v) => v.setAlpha(1));
       return;
     }
     const P = hex(PAL.paper);
@@ -410,6 +500,7 @@ export function montar(s) {
   }
   amb.applyDay(0);
   if (fija() && s.screen === 'play') sd.call(amb, 2); // el chunk llegó con la partida ya corriendo: fundido, sin transición
+  calienta([hornoBanda, () => hornoCapa('ridge'), () => hornoCapa('far'), () => hornoCapa('mid')]);
   montarBoceto(s, o, colocar, TARDE.sol.r);
   montarBokeh(s);
   montarHojas(s);

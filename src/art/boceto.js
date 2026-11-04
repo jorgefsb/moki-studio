@@ -389,7 +389,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
       agrega('sol', () => discoSol(R, Rf, S), so.x - S / (2 * z), so.y - S / (2 * z), tarde ? 1.925 : 1.85, T.frente, 312);
     }
     deMosaico(s.ridge, 'ridge', 'lejana', 1.91, T.frente, 313);
-    if (tarde) deMosaico(o.banda, 'tardeBanda', 'media', 1.955, T.frente, 314);
+    if (tarde) deMosaico(o.banda, 'tardeBanda_t', 'media', 1.955, T.frente, 314);
     if (preparar || o.tapa.visible) {
       // la tapa de 4 px del mosaico (2.07) va en color encima de las gemelas de atrás: su propia tira de papel, con el cielo
       agrega('tapa', () => {
@@ -404,7 +404,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
       // pinos y postes sueltos: viven aparte del mosaico, por debajo de la gemela, y su silueta va en ella
       (s.midPool || []).forEach((q) => {
         if (!q.body.visible) return;
-        const src = q.body.texture.getSourceImage();
+        const src = s.textures.get(q.prop.key).getSourceImage(); // la original: la de papel trae mordidas y el lápiz las seguiría
         const k = q.body.scaleX * zz;
         x.drawImage(src, (q.body.x - L.x) * zz, (q.body.y - L.y) * zz, src.width * k, src.height * k);
       });
