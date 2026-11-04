@@ -11,7 +11,7 @@ const MAX_DT = 50;
 const TEX_W = 32;
 const COLORES = ['#FF6B35', '#974717']; // 60 % y 40 % (DECISIONES 3-nov 21:50)
 const CUALES = [0, 1, 0, 0, 1]; // a 375 salen 2 y 1; a 1280, 3 y 2
-const ANCHO = [10, 16]; // px del mundo
+const ANCHO = [12, 16]; // px del mundo; §5 pide 10-16, pero a 10 se perdían contra el cielo
 const VX = [70, 120]; // px del mundo por s, hacia la izquierda
 const VY_MAX = 60;
 const BAL_X = 6; // balanceo, px del mundo
@@ -31,6 +31,9 @@ function texturas(s) {
     x.quadraticCurveTo(14, -3, 31, 10);
     x.quadraticCurveTo(14, 23, 1, 10);
     x.fill();
+    x.strokeStyle = rgba(PAL.ink, 0.7); // contorno: el naranja casi no se separa del cielo oro por sí solo
+    x.lineWidth = 2;
+    x.stroke();
     x.strokeStyle = rgba(PAL.ink, 0.35);
     x.lineWidth = 1.5;
     x.beginPath();

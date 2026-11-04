@@ -173,13 +173,7 @@ function ficha() {
   x.beginPath();
   x.arc(18, 18, 11.5, 0, Math.PI * 2);
   x.stroke();
-  x.strokeStyle = rgba(PAL.paper, 0.6);
-  x.lineWidth = 1.5;
-  x.beginPath();
-  x.moveTo(11, 21);
-  x.quadraticCurveTo(18, 14, 25, 21);
-  x.stroke();
-  return c;
+  return c; // sin el arco de token(): sobre la cara oscura los invitados lo leían como carita triste o señal de prohibido
 }
 
 const OBS = {
