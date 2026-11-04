@@ -62,6 +62,7 @@ const ES = {
   'end.again': 'Otra vez',
   'end.how': 'Así lo hicimos',
   'end.link': 'jorgesuarez.com.mx',
+  'contador.nota': 'Contamos partidas sin datos tuyos',
   'how.title': 'Así lo hicimos',
   'how.sub': 'Un equipo de agentes, un juego',
   'how.lider': 'Líder',

@@ -541,6 +541,7 @@ export function createUI() {
         link.rel = 'noopener';
         card.append(el('br'), link);
       }
+      card.append(el('p', 'meta', t('contador.nota')));
       scrim.append(card);
       root.appendChild(scrim);
       again.addEventListener('click', onAgain);
@@ -646,6 +647,7 @@ export function createUI() {
       }
       stack.append(home);
       card.append(stack);
+      if (!onZen) card.append(el('p', 'meta', t('contador.nota'))); // en Paseo el menú ya llena 390 px de alto; ahí la línea queda en la tarjeta final
       scrim.append(card);
       root.appendChild(scrim);
       primary = onResume;
