@@ -9,7 +9,7 @@ import { BLOQUES, T1_INTRO, SORPRESAS } from './bloques.js';
 const RELLENO = (dur) => ({ id: 'relleno', dur, ev: [], dif: 1, tags: ['descanso'] });
 import { rng, hashSeed, todayKey } from './rng.js';
 import { validateLevel, popupFalla } from './validar.js';
-import { formasActivas, formasDePartida, fasesDeForma } from './formas.js';
+import { formasActivas, formasDePartida, fasesDeForma, TANDA } from './formas.js';
 
 const LEN = 30;
 const BY_ID = Object.fromEntries(BLOQUES.map((b) => [b.id, b]));
@@ -68,6 +68,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
       if (b.cabe && !b.cabe(ctx, b)) return false; // reglas propias de una mecánica diferida (zanja)
       if (b.mec === 'timbre' && (ctx.nTimbre || b.soloEstreno || C.tramos[tramo - 1].speed > C.timbre.vMax || ctx.fase !== 'pico' && ctx.fase !== 'subida')) return false; // timbre: máx. 1 por página, nunca en calma ni respiro; la intro no se sortea
       if (tramo < b.min || tramo > b.max) return false; // G1
+      if (ctx.tanda && conCompas(b)) return false; // en una tanda no entra el compás de 2 a 2.5 s de los bloques
       if (b.dur > rem - 0.75 + 1e-9) return false; // 0.75 = minGapSec: con fases cortas, los bloques dif 4 de 5.5-6.5 s ya no cabían con 1.5
       if (!isDescanso(b) && (b.dif < lo || b.dif > hi)) return false; // G6
       if (ctx.prev && ctx.prev.dif >= 3 && b.dif >= 3) return false; // G2
@@ -128,6 +129,9 @@ const base = (code) => principal(code).replace(/[<>]$/, ''); // sin el viento (C
 const patronDe = (code) => (code.endsWith('+B') ? `${principal(code)}B` : principal(code)); // C+B es su propio patrón (CB), como en flow-medir
 const esDuro = (b) => b.ev.some(([, c]) => DUROS.has(base(c)));
 const enZona = (zonas, t) => zonas.some(([a, b]) => t >= a && t < b);
+// Tanda: solo jugadas de un golpe (un par no cabe en 1.2 a 1.6 s); la caja sola deja que no todo sea duro
+const DE_TANDA = Object.fromEntries([2, 3, 4].map((tr) => [tr, [...DE_PICO[tr], 'C'].filter((c) => !FIN[principal(c)])]));
+const conCompas = (b) => b.ev.filter(([, c]) => principal(c) !== 'P5').some(([t], i, ev) => i && t - ev[i - 1][0] > TANDA.max && t - ev[i - 1][0] <= HUECO_MAX);
 
 // Viento que no se mezcla (NIVELES.md §3): de 0.7 s antes a 1.15 s después de cada obstáculo con viento no van vigas,
 // pop-ups, filas P5, trampolines ni OLA; ningún trampolín a menos de su vuelo + 0.75 s (2.2 s) antes de la zona.
@@ -166,11 +170,13 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
   const vistos = new Set(dec.map(([, c]) => principal(c)));
   const desde = tramo === 1 ? 12 : 0;
   const nuevos = [];
+  // con forma: de la decisión a su última caja, para contar bien el aire que pide un pop-up después (la caja pegada de CC también)
+  const cola = (p) => (p === 'CC' ? C.cajaPegadaGapPx / C.tramos[tramo - 1].speed : FIN[p] || 0);
   // nunca el mismo patrón que la decisión de antes o la de después (C C C C se leía como tramo repetido, F3b)
   // el pop-up pide C.popup.minGapBeforeSec tras el obstáculo anterior (popupFalla); si no cabe, otra decisión fácil
   const pon = (t, antes, despues, previo, hasta = Infinity) => {
     const enViento = vientos.some(([a, b]) => t >= a - 0.3 && t <= b);
-    const F = (enZona(picos, t) ? DE_PICO : FACILES)[tramo].filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))));
+    const F = (zonas && enZona(zonas.tandas, t) ? DE_TANDA : enZona(picos, t) ? DE_PICO : FACILES)[tramo].filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))));
     const F2 = estricto ? F.filter((c) => hasta - t >= (FIN[principal(c)] || 0) + C.minGapSec) : F;
     const ok = [F2.filter((c) => principal(c) !== antes && principal(c) !== despues), F2.filter((c) => principal(c) !== antes), F2, F].find((x) => x.length);
     // Rota (al azar dentro de cada escalón, para no repetir el mismo toque cada página: F3) y gasta poca novedad
@@ -192,13 +198,14 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
     nuevos.push([+t.toFixed(2), code]);
     return principal(code);
   };
-  // El aire se mide de decisión a decisión: cada orilla lleva una, salvo que ya haya otra a menos de minGapSec
-  for (const [x, y] of zonas ? zonas.aires : []) {
+  // El aire se mide de decisión a decisión: cada orilla lleva una, salvo que ya haya otra a menos de minGapSec.
+  // Las tandas también: así ningún hueco queda mitad dentro y mitad fuera.
+  for (const [x, y] of zonas ? [...zonas.aires, ...zonas.tandas] : []) {
     for (const t of [x, y]) {
       const a = dec.filter(([s]) => s <= t).reduce((m, d) => (!m || d[0] > m[0] ? d : m), null);
       const b = dec.filter(([s]) => s > t).reduce((m, d) => (!m || d[0] < m[0] ? d : m), null);
       if ((a && t - a[0] < C.minGapSec) || (b && b[0] - t < C.minGapSec)) continue;
-      pon(t, a ? principal(a[1]) : null, b ? principal(b[1]) : null, a ? a[0] : -Infinity, b ? b[0] : Infinity);
+      pon(t, a ? principal(a[1]) : null, b ? principal(b[1]) : null, a ? a[0] + cola(principal(a[1])) : -Infinity, b ? b[0] : Infinity);
       dec.push(nuevos[nuevos.length - 1]);
     }
   }
@@ -228,7 +235,8 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
       if (b - a > HUECO_MAX && b - desde >= C.minGapSec) antes = pon(desde, antes, despues, a);
       a = desde;
     }
-    if (b - a <= HUECO_MAX) continue;
+    const enTanda = zonas && enZona(zonas.tandas, (a + b) / 2);
+    if (b - a <= (enTanda ? TANDA.deja : HUECO_MAX)) continue;
     // tras un trampolín: la primera decisión va en cuanto se puede (vuelo + caída libre); lo demás se reparte igual
     if (i && puntos[i - 1].libre > a) {
       const t1 = puntos[i - 1].libre + C.minGapSec;
@@ -240,9 +248,11 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
       if (b - a <= HUECO_MAX) continue;
     }
     let previo = i ? a : -Infinity; // último obstáculo antes del que se mete (FIN ya cuenta la segunda caja de un par)
-    const k = Math.ceil((b - a) / HUECO_MAX) - 1;
+    if (zonas && antes === 'CC') previo += cola('CC');
+    const k = enTanda ? Math.max(1, Math.floor((b - a) / TANDA.min) - 1) : Math.ceil((b - a) / HUECO_MAX) - 1;
     for (let j = 1; j <= k; j++) {
       let t = a + ((b - a) * j) / (k + 1);
+      if (enTanda) t += (r() - 0.5) * 0.2; // sin esto, una tanda es otro metrónomo
       // lejos de una fila de piezas en el suelo (la caja la taparía)
       const fila = filas.find((f) => Math.abs(f - t) < 0.5);
       if (fila !== undefined) t = fila + (t >= fila ? 0.5 : -0.5);
@@ -252,7 +262,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
       if (despues === 'U' && b - t < C.popup.minGapBeforeSec) t = b - C.popup.minGapBeforeSec; // el pop-up de después también pide su aire
       if (t - previo < C.minGapSec || (i < puntos.length && b - t < C.minGapSec)) continue;
       antes = pon(t, antes, j === k ? despues : null, previo, i < puntos.length ? b : Infinity);
-      previo = t;
+      previo = zonas ? t + cola(antes) : t;
     }
   }
   return [...ev, ...nuevos].sort((x, y) => x[0] - y[0]);
@@ -263,8 +273,8 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
 function armarForma(r, ctx, tramo, segs, sorpresa, estrenos, abrePico) {
   const [lo, hi] = VENTANA[tramo];
   const V = { suave: [1, 1], subida: [lo, Math.min(hi, lo + 1)], pico: [Math.max(lo, hi - 2), hi] };
-  const zonas = { picos: [], suaves: [], aires: [], respiro: LEN };
-  const rangos = segs.map(([f, hasta], i) => [f, i ? segs[i - 1][1] : ctx.pos, hasta]);
+  const zonas = { picos: [], suaves: [], aires: [], tandas: [], respiro: LEN };
+  const rangos = segs.map(([f, hasta, tanda], i) => [f, i ? segs[i - 1][1] : ctx.pos, hasta, tanda]);
   // la sorpresa va en el primer pico donde cabe; si no cabe en ninguno (la ola en Ráfagas), se sortea otra que sí
   const dondeCabe = (b) => rangos.findIndex(([f, a, z]) => f === 'pico' && z - a >= b.dur);
   const ok = SORPRESAS[tramo].filter(([id]) => dondeCabe(BY_ID[id]) >= 0);
@@ -274,8 +284,9 @@ function armarForma(r, ctx, tramo, segs, sorpresa, estrenos, abrePico) {
   ctx.maxFilas = sorp.id === 'ola' ? 1 : MAX_FILAS;
   let ySubida = false;
   let yPico = false;
-  rangos.forEach(([f, a, z], i) => {
+  rangos.forEach(([f, a, z, tanda], i) => {
     ctx.fase = f;
+    ctx.tanda = tanda;
     const ini = ctx.pos;
     if (f === 'aire') {
       put(ctx, RELLENO(z - a));
@@ -303,6 +314,7 @@ function armarForma(r, ctx, tramo, segs, sorpresa, estrenos, abrePico) {
       if (ctx.pos < LEN - 1e-9) put(ctx, RELLENO(LEN - ctx.pos));
     } else if (ctx.pos < z - 1e-9) fill(r, z, ctx, tramo, V[f]);
     if (f === 'pico') zonas.picos.push([ini, ctx.pos]);
+    if (tanda) zonas.tandas.push([ini, ctx.pos]);
     if (f === 'suave') zonas.suaves.push([i ? ini : 0, ctx.pos]);
   });
   return zonas;

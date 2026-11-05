@@ -10,24 +10,27 @@ export const formasActivas = (seed, modo) => (modo === 'libre' ? INTERRUPTOR.lib
 // Un valor al azar de a a b en pasos de 0.25 s
 const c = (r, a, b) => a + Math.floor(r() * ((b - a) * 4 + 1)) / 4;
 const TOPE_PICO = 25; // el trampolín del respiro pide empezar a más tardar en el 25
+// Tanda (corte 1a2): huecos de min a max s entre decisiones. Un hueco de hasta deja s se queda como está (partirlo daría < 1 s)
+export const TANDA = { min: 1.2, max: 1.6, deja: 2 };
 
-// Cada forma da [fase, hasta] en s de la página. El aire no lleva decisiones entre sus dos orillas.
+// Cada forma da [fase, hasta, tanda] en s de la página. El aire no lleva decisiones entre sus dos orillas.
 const FORMAS = {
-  // la de hoy: una sola subida y un solo pico, sin aire
+  // tarde: nada apretado hasta la tanda larga del final
   cuesta(r) {
-    const pico = c(r, 12, 16);
-    return [['suave', c(r, 3, 5)], ['subida', pico], ['pico', Math.min(TOPE_PICO, pico + c(r, 9, 10))], ['suave', 30]];
+    const pico = c(r, 15, 17);
+    return [['suave', c(r, 4, 6)], ['subida', pico], ['pico', Math.min(TOPE_PICO, pico + c(r, 7, 8)), true], ['suave', 30]];
   },
-  // aire real en medio: un pico corto, 4 s de aire y el pico largo
+  // temprano: tanda corta, 4.25 s de aire y un segundo pico sin apretar
   dosPicos(r) {
-    const aire = c(r, 11.5, 14);
-    return [['suave', c(r, 3, 4.5)], ['subida', aire - c(r, 4, 5)], ['pico', aire], ['aire', aire + 4], ['pico', Math.min(TOPE_PICO, aire + 4 + c(r, 6.5, 7.5))], ['suave', 30]];
+    const ini = c(r, 5, 6.5);
+    const aire = ini + c(r, 5, 6);
+    return [['suave', c(r, 2.5, 3.5)], ['subida', ini], ['pico', aire, true], ['aire', aire + 4.25], ['pico', Math.min(TOPE_PICO, aire + 4.25 + c(r, 5, 6.5))], ['suave', 30]];
   },
   // 3 tandas cortas con 3 s de aire entre ellas
   rafagas(r) {
-    const a1 = c(r, 7.5, 9.5);
-    const t2 = a1 + 3 + c(r, 4.5, 5.5);
-    return [['suave', c(r, 2.5, 3.5)], ['subida', a1], ['aire', a1 + 3], ['pico', t2], ['aire', t2 + 3], ['pico', Math.min(TOPE_PICO, t2 + 3 + c(r, 4, 5))], ['suave', 30]];
+    const a1 = c(r, 8, 9.5);
+    const t2 = a1 + 3 + c(r, 4, 5);
+    return [['suave', c(r, 2.5, 3.5)], ['subida', a1, true], ['aire', a1 + 3], ['pico', t2, true], ['aire', t2 + 3], ['pico', Math.min(TOPE_PICO, t2 + 3 + c(r, 4, 5)), true], ['suave', 30]];
   },
 };
 // T1 conserva sus 12 s de tutorial y sortea entre 2 finales, sin aire: el aire va en 2 o 3 páginas, de T2 a T4
