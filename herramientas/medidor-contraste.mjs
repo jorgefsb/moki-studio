@@ -108,6 +108,8 @@ const enPagina = async ({ type, days, probe, fijo, seed }) => {
       if (fijo) step(DT);
       else s.update(0, DT);
     }
+    // La transición de boceto (1500 ms) sigue viva tras startGame y tapa el arte final: medir hasta que acabe (5-nov, gauntlet final)
+    for (let i = 0; fijo && s.boceto && i < 900; i++) step(DT);
     s.obstacles.forEach((o) => o.destroy());
     s.obstacles = [];
     s.nextEnt = 1e9;
