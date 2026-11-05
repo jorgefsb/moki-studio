@@ -144,6 +144,9 @@ export const CONFIG = {
     hopPx: 14,
     hitStopMs: 60,
     recoilPx: 28, // Moki retrocede esto tras el choque (Cubic.out, 220 ms): la hitbox es 18 px más chica que el dibujo, con 12 se veía atravesar la caja
+    // Golpe de Moki con sus poses Pixel (mokiPoses.js), solo visual: aplastado al contacto, sale en arco y se asienta agachado. En calma o sin poses, el tropiezo de siempre.
+    // recoilPx: con 28 seguía pegado a la caja (paso 0 del CHOQUE)
+    choque: { recoilPx: 56, aplastado: [0.82, 1.1], arcoMs: 200, saltoPx: 22, giroDeg: -9, asientaMs: 140, asentado: [1.12, 0.86] },
     packLagHz: 11,
     reducedTheta0: 20,
     parallax: { clouds: 0.1, far: 0.3, mid: 0.6 },

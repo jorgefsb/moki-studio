@@ -124,9 +124,10 @@ export class Particles {
         this.emit(['amber', 'paper', 'kraft', 'orange'][i % 4], x, y, { vx: rand(-60, 120), vy: -rand(180, 300), g: 380, life: 900, spin: 360, osc: 12, fadeFrom: 0.67 });
       }
     } else if (type === 'crash') {
-      const n = L === 1 ? 3 : L === 2 ? 6 : 10;
+      // Del punto de contacto hacia arriba y adelante, con fuerza desde el primer cuadro: hacia atrás le pasaban por la cara a Moki
+      const n = L === 1 ? 4 : L === 2 ? 8 : 12;
       for (let i = 0; i < n; i++) {
-        this.emit(mixColor(i), x, y, { vx: rand(-40, 140), vy: -rand(80, 200), g: 520, life: 420, spin: 270 });
+        this.emit(mixColor(i), x, y, { vx: rand(20, 170), vy: -rand(200, 360), g: 760, life: 460, spin: 420, scale: rand(1.4, 2.2) });
       }
     }
   }

@@ -55,11 +55,14 @@ class MokiPoses {
   // Llamar después de rig.update. Devuelve true si la pose se ve (y el títere se esconde).
   update() {
     const s = this.s;
-    const on = !s.calm && !s.dead && (s.screen === 'play' || s.screen === 'demo');
+    const on = !s.calm && (s.dead ? s.screen === 'dead' && s.cause !== 'zanja' : s.screen === 'play' || s.screen === 'demo'); // en la zanja, el títere
     this.sprite.setVisible(on);
     s.rig.setVisible(!on);
-    this.rim.setVisible(on && s.rimA > 0 && s.scale.width / s.scale.height > C.portrait.maxAspect);
+    this.rim.setVisible(on && !s.dead && s.rimA > 0 && s.scale.width / s.scale.height > C.portrait.maxAspect);
     if (!on) return false;
+    if (s.dead) return this.golpe();
+    this.y0 = null;
+    this.sprite.setScale(ESCALA).setAngle(0);
     let key = 'pose-run';
     let frame = 0;
     const ld = s.t - s.landAt;
@@ -81,6 +84,46 @@ class MokiPoses {
     } else this.sprite.setFrame(frame);
     this.sprite.setPosition(s.px, s.y + 2);
     this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAlpha(s.rimA || 0);
+    return true;
+  }
+
+  // CHOQUE: Moki sigue siendo el mismo dibujo. Se aplasta contra el obstáculo en el hit-stop y sale en arco con los brazos
+  // recogidos (cuadro de carrera) mientras el mundo retrocede; ya lejos se asienta agachado (primer cuadro del aterrizaje).
+  // La caída del kit y ese cuadro agachado estiran un brazo: contra el obstáculo se leyeron como puñetazo en la ronda a
+  // ciegas ("fallar no castiga", ARTE). Solo visual: s.y no cambia.
+  golpe() {
+    const s = this.s;
+    const K = C.art.choque;
+    const g = C.world.groundY - (s.sobre ? s.sobre.size.height : 0);
+    if (this.y0 === null || this.y0 === undefined) {
+      this.y0 = s.y;
+      this.polvo = false;
+    }
+    const t = s.deadFor - C.art.hitStopMs;
+    if (t < 0) return this.dibuja('pose-run', 0, this.y0, -2, K.aplastado[0], K.aplastado[1]);
+    const sube = s.sobre ? this.y0 - g : 0; // cajas pegadas: rebota hacia arriba y cae encima de la que ya pasó
+    const dur = K.arcoMs + Math.min(300, (sube || g - this.y0) * 0.7); // desde el aire tarda más en bajar
+    const u = t / dur;
+    if (u < 1) {
+      const k = Math.min(1, u / 0.3);
+      const sx = K.aplastado[0] + (1 - K.aplastado[0]) * k;
+      const sy = K.aplastado[1] + (1 - K.aplastado[1]) * k;
+      return this.dibuja('pose-run', 0, this.y0 + (g - this.y0) * u * u - (K.saltoPx + sube / 2) * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
+    }
+    if (!this.polvo) {
+      this.polvo = true;
+      s.particles.burst('land', s.px, g);
+    }
+    const v = 1 - Math.pow(1 - Math.min(1, (t - dur) / K.asientaMs), 3);
+    return this.dibuja('pose-land', 0, g, 0, K.asentado[0] + (1 - K.asentado[0]) * v, K.asentado[1] + (1 - K.asentado[1]) * v);
+  }
+
+  dibuja(key, frame, y, ang, sx, sy) {
+    if (key !== this.pose) {
+      this.sprite.setTexture(key, frame);
+      this.pose = key;
+    } else this.sprite.setFrame(frame);
+    this.sprite.setPosition(this.s.px, y + 2).setAngle(ang).setScale(ESCALA * sx, ESCALA * sy); // escala siempre positiva: nunca espejado
     return true;
   }
 }
