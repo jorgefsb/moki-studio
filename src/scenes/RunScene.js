@@ -304,7 +304,7 @@ export class RunScene extends Phaser.Scene {
     const lose = () => {
       this.release();
       audio.hide();
-      if (this.screen === 'play') this.pauseGame();
+      if (this.screen === 'play' && !this.esc) this.pauseGame(); // el escaparate se mira y no se toca: pausado, nadie lo reanuda
     };
     window.addEventListener('blur', lose);
     // Hueco D (probador, 1-nov): si el foco se pierde en una tarjeta (final, fallo) o en el título y la persona no
