@@ -2071,7 +2071,7 @@ export class RunScene extends Phaser.Scene {
     // Cajas pegadas: entre las dos Moki no cabe y el retroceso lo dejaba parado dentro de la que ya pasó. Con poses el
     // rebote termina encima de esa caja, con el mismo retroceso; sin poses (no hay arco) se queda donde chocó.
     const conPoses = this.poses && !this.calm;
-    this.retroceso = conPoses ? C.art.choque.recoilPx : C.art.recoilPx;
+    this.retroceso = conPoses && o.type !== 'zanja' ? C.art.choque.recoilPx : C.art.recoilPx; // en la zanja, igual que master: con 56 terminaba casi sobre tierra firme
     const atras = this.obstacles.find((q) => q.type === 'caja' && q.x < o.x && Math.abs(q.x + this.retroceso - this.px) < 49); // (caja 60 + Moki 38) / 2
     this.sobre = conPoses && atras;
     if (atras && !conPoses) this.retroceso = 0;
