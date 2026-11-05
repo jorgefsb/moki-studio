@@ -1,10 +1,9 @@
 {
-  "fecha": "2026-11-02",
-  "titulo": "Lo nuevo de hoy",
+  "fecha": "2026-11-05",
+  "titulo": "Lo nuevo en el modo Libre",
   "lineas": [
-    "Al terminar, el Cuaderno te dice qué sigue.",
-    "Ahora Moki corre, salta y cae con sus propios cuadros.",
-    "Si recoges piezas seguidas, una cinta de papel crece detrás de Moki."
-  ],
-  "ir_a": "cuaderno"
+    "Pisa un trampolín y Moki sale volando.",
+    "El viento empuja tu salto. Si tocas la campana, la torre cae.",
+    "Hay zanjas en el suelo: si no saltas, Moki cae."
+  ]
 }

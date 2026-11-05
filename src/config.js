@@ -61,10 +61,10 @@ export const CONFIG = {
   tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
   // leadTap/leadHold: px extra respecto de la mitad del recorrido aéreo al despegar (se calibra contra la física real, sin god)
   demo: { idleReturnMs: 20000, stripMs: 400, leadTap: 0, leadHold: 0 },
-  // ?escaparate (guion en bucle para la pantalla de Jorge): título con saludo, tropiezo en la página 2, Paseo en la tarde
+  // ?escaparate (guion en bucle para la pantalla de Jorge): título con saludo, tropiezo en la página 2
   // tituloMs: título con el saludo de racha; tropiezoSec: segundos dentro de la página 2 antes de buscar la caja del
-  // tropiezo; falloMs: tarjeta de fallo visible; paseoCajas: cajas fantasma que Moki cruza sin saltar; finalMs: tarjeta final
-  escaparate: { tituloMs: 5000, tropiezoSec: 4, falloMs: 10000, paseoCajas: 2, finalMs: 6000, rachaAyer: 3 },
+  // tropiezo; falloMs: tarjeta de fallo visible; finalMs: tarjeta final
+  escaparate: { tituloMs: 5000, tropiezoSec: 4, falloMs: 10000, finalMs: 6000, rachaAyer: 3 },
 
   // Moki
   squashMax: 0.03,

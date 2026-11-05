@@ -1,15 +1,12 @@
 // Escaparate que enseña lo nuevo (DECISIONES 1-nov 19:00). Solo se importa con ?escaparate (import dinámico desde
 // escaparate.js): el juego normal ni baja este archivo ni pide public/novedades.json.
-// novedades.json lo llena el cronista al integrar: { fecha, titulo, lineas: [1 a 3], ir_a }. ir_a = la pieza a la que
-// va el guion en los primeros 30 s (hoy 'cuaderno'; 'encargos' es lo mismo). Si el json falta o viene roto, no pasa
-// nada: el escaparate sigue con su guion de siempre.
-const PIEZAS = new Set(['cuaderno', 'encargos']);
-
+// novedades.json lo llena el cronista al integrar: { fecha, titulo, lineas: [1 a 3] }. Si el json falta o viene roto, no
+// pasa nada: el escaparate sigue con su guion de siempre.
 export async function cargar() {
   const r = await fetch(`${import.meta.env.BASE_URL}novedades.json`, { cache: 'no-store' });
   const d = await r.json();
   const lineas = Array.isArray(d.lineas) ? d.lineas.filter((x) => typeof x === 'string' && x.trim()).slice(0, 3) : [];
-  return { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo : 'Lo nuevo de hoy', lineas, ir_a: PIEZAS.has(d.ir_a) ? d.ir_a : null };
+  return { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo : 'Lo nuevo de hoy', lineas };
 }
 
 let cartel = null;
