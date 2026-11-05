@@ -1,6 +1,6 @@
 // MEDIR FLOW (NIVELES.md "Flow y mecánicas (plan 1-nov)", punto 1): cuánta variedad tiene una partida, sin navegador.
-//   node scripts/flow-medir.mjs [semillas libres=10] [mecánica: tramp] > evidencia/v2-flow-base.json
-//   (con mecánica, Libre se genera con ella destrabada; Clásico y Reto nunca la llevan)
+//   node scripts/flow-medir.mjs [semillas libres=10] [mecánica: tramp] [regla-vieja o -] [AAAA-MM-DD:N] > evidencia/v2-flow-base.json
+//   (con mecánica, Libre se genera con ella destrabada; el Clásico nunca la lleva y el Reto solo por fecha, con el último argumento)
 // Instrumento fuera del paquete del juego (como scripts/inventario-encargos.mjs): lee el nivel que arma el juego
 // (GAME_LEVEL y generarNivel) y su guion por tramo [segundo, código]; no cambia nada del juego. Determinista: misma
 // semilla, mismo número.
