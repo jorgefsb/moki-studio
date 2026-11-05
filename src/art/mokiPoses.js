@@ -87,9 +87,10 @@ class MokiPoses {
     return true;
   }
 
-  // CHOQUE: Moki sigue siendo el mismo dibujo, encogido todo el golpe (primer cuadro del aterrizaje): se aplasta contra el
-  // obstáculo en el hit-stop, sale en arco mientras el mundo retrocede y se asienta. La caída del kit estira el brazo y en
-  // la ronda a ciegas se leyó como puñetazo ("fallar no castiga", ARTE). Solo visual: s.y no cambia.
+  // CHOQUE: Moki sigue siendo el mismo dibujo. Se aplasta contra el obstáculo en el hit-stop y sale en arco con los brazos
+  // recogidos (cuadro de carrera) mientras el mundo retrocede; ya lejos se asienta agachado (primer cuadro del aterrizaje).
+  // La caída del kit y ese cuadro agachado estiran un brazo: contra el obstáculo se leyeron como puñetazo en la ronda a
+  // ciegas ("fallar no castiga", ARTE). Solo visual: s.y no cambia.
   golpe() {
     const s = this.s;
     const K = C.art.choque;
@@ -100,14 +101,14 @@ class MokiPoses {
     }
     if (s.cause === 'zanja') return this.dibuja('pose-fall', 0, s.y, 0, 1, 1);
     const t = s.deadFor - C.art.hitStopMs;
-    if (t < 0) return this.dibuja('pose-land', 0, this.y0, -2, K.aplastado[0], K.aplastado[1]);
+    if (t < 0) return this.dibuja('pose-run', 0, this.y0, -2, K.aplastado[0], K.aplastado[1]);
     const dur = K.arcoMs + Math.min(300, (g - this.y0) * 0.7); // desde el aire tarda más en bajar
     const u = t / dur;
     if (u < 1) {
       const k = Math.min(1, u / 0.3);
       const sx = K.aplastado[0] + (1 - K.aplastado[0]) * k;
       const sy = K.aplastado[1] + (1 - K.aplastado[1]) * k;
-      return this.dibuja('pose-land', 0, this.y0 + (g - this.y0) * u * u - K.saltoPx * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
+      return this.dibuja('pose-run', 0, this.y0 + (g - this.y0) * u * u - K.saltoPx * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
     }
     if (!this.polvo) {
       this.polvo = true;
