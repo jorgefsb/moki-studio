@@ -35,7 +35,9 @@ const gramMec = gramNueva();
 const usoMec = {};
 // Con mecánicas, tramp-intro cuenta como respiro (dif 1, pisarlo es descansar; DECISIONES 5-nov 09:35), pero puede salir
 // sorteado: se cuenta aparte. Las fechas son fijas, así que este número solo sube si cambia el generador.
-const TOPE_DIF4_TRAMP_INTRO = 16;
+// Era 16 con trampolín y viento. Se movió a 21 DESPUÉS de ver 21 con viento.reto = null (DECISIONES 5-nov, director): es alarma de
+// que el generador cambió, no juicio de que 21 esté bien. Cualquier otro valor regresa al director.
+const TOPE_DIF4_TRAMP_INTRO = 21;
 let dif4TrampIntro = 0;
 const justicia = { fechas: 0, corridas: 0, trampolines: 0, zonasViento: 0, fechasConFallo: [] };
 for (const s of seeds) {

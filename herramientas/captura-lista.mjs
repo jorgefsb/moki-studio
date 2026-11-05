@@ -4,6 +4,9 @@
 //   node herramientas/captura-lista.mjs <carpeta del build> <semilla> <carpeta de salida> [--vp 375x667] [--en 3000,5200j] [--sin-tarde]
 // --en: distancias del nivel (px); con j, Moki va en el aire al tomar. Sin --en lista dónde hay trampolines y viento y no captura.
 // --sin-tarde: para cuando el jugador sembrado no está en el nivel 1 del Cuaderno (ahí no aplica el atardecer).
+// --q "escaparate": abre ?debug&escaparate en lugar de la partida por semilla (la semilla se ignora; usa -). --en auto: tomas
+// calculadas del nivel que salió: antes de la primera zona de viento, del primer timbre y de la primera zanja, y antes y sobre
+// el primer trampolín (sirve con Libre, que sortea su semilla).
 // Headless, un navegador, se cierra al terminar. Escribe estado.json con la prueba de cada toma.
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
@@ -17,7 +20,8 @@ const opcion = (n) => { const i = args.indexOf(n); return i < 0 ? null : args[i 
 const [dir, seed, out] = args;
 if (!dir || !seed || !out) throw new Error('uso: <build> <semilla> <salida> [--vp 375x667] [--en d,dj] [--sin-tarde]');
 const [w, h] = (opcion('--vp') || '375x667').split('x').map(Number);
-const TOMAS = opcion('--en') ? opcion('--en').split(',') : null;
+let TOMAS = opcion('--en') ? opcion('--en').split(',') : null;
+const QUERY = opcion('--q');
 const conTarde = !args.includes('--sin-tarde');
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
@@ -54,7 +58,7 @@ const leerEstado = (conTarde) => {
 };
 
 let codigo = 0;
-const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new'] });
+const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new', '--use-angle=vulkan', '--enable-gpu', '--ignore-gpu-blocklist'] }); // sin GPU, ?escaparate no llega a la partida en 60 s
 const reporte = { build: dir, seed, vp: `${w}x${h}`, tomas: [] };
 try {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: w < 600, isMobile: w < 600 });
@@ -63,13 +67,18 @@ try {
   const errores = [];
   page.on('pageerror', (e) => errores.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errores.push(m.text()));
-  await page.goto(`http://127.0.0.1:${sv.address().port}/?debug&god&screen=play&seed=${seed}`);
+  await page.goto(`http://127.0.0.1:${sv.address().port}/?debug&${QUERY || `god&screen=play&seed=${seed}`}`);
   await page.waitForFunction(() => window.__moki?.scene.scenes[0]?.level && window.__moki.scene.scenes[0].screen === 'play', null, { timeout: 60000 });
   const nivel = await page.evaluate(() => {
     const l = window.__moki.scene.scenes[0].level;
-    return { modo: l.modo, seed: l.seed, mecanicas: l.mecanicas, starts: l.starts, trampolines: l.entities.filter((e) => e.type === 'tramp').map((e) => Math.round(e.D)), vientos: (l.vientos || []).map((v) => [Math.round(v.D0), Math.round(v.D1), v.k]) };
+    const de = (t) => l.entities.filter((e) => e.type === t).map((e) => Math.round(e.D));
+    return { modo: l.modo, seed: l.seed, mecanicas: l.mecanicas, starts: l.starts, trampolines: de('tramp'), timbres: de('timbre'), zanjas: (l.zanjas || []).map((z) => Math.round(z.H0)), vientos: (l.vientos || []).map((v) => [Math.round(v.D0), Math.round(v.D1), v.k]) };
   });
   reporte.nivel = nivel;
+  if (TOMAS && TOMAS[0] === 'auto') {
+    const hay = (lista, d) => (lista.length ? [String(lista[0] + d)] : []);
+    TOMAS = [...hay(nivel.trampolines, -300), ...hay(nivel.trampolines, -60), ...hay(nivel.vientos.map((v) => v[0]), -250), ...hay(nivel.timbres, -300), ...hay(nivel.zanjas, -300)];
+  }
   await page.evaluate(`window.__leer = ${leerEstado.toString()}`);
   reporte.primeraLectura = await page.evaluate((c) => window.__leer(c), conTarde); // recién arrancado: debe salir sin listo, si no el instrumento no mide
   if (!TOMAS) console.log(JSON.stringify(nivel));
