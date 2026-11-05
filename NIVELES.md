@@ -483,3 +483,206 @@ Invitado de arte, 2-nov. Desarrolla el punto 6 de la §9. Referencias leídas: `
 - **Las 5 fichas sobre una lámina de 92.** Si se superponen con la que ya está en el piso, bajar la separación a 24 o dejar solo la lámina y las fichas ordenadas.
 - **Torre fuera de pantalla** a 385 o más con 1.0 s de separación (221 px a 320, 266 a 385). El boceto se hace a 320. Si hace falta, el líder decide acortar `torreSec`.
 - **Poses.** No se inventó ninguna. Si la pose de salto no tiene la mano arriba al tocar, hay que avisar al líder para que lo escale.
+
+### 10. Hueco en el suelo (zanja), especificación (3-nov)
+Invitado de niveles. Sale del pendiente "hueco en el suelo" de GDD.md §9. Los números salen de `config.js` (gravedad 2200, salto 720, corte 0.45, `jumpMinPx` 62, coyote 90 ms, Moki de 38 de ancho) pasados por las ecuaciones de `jumpmodel.js` a mano. Los "≈" no los corrí: el constructor los confirma con la prueba del punto 4 antes de tocar el juego.
+**Nombre en el código: `zanja` (tipo) y `Z`/`ZZ` (códigos).** "Hueco" ya significa otra cosa en `generar.js` (`HUECO_MAX`, huecos de novedad, F2b "huecos sin decisión") y en la §8 de repisas. Para el jugador se sigue llamando hueco.
+
+**1. Qué es en el juego.**
+- Un tramo del carril sin suelo. Moki tiene que saltarlo. Si no lo salta, cae y pierde **igual que hoy al chocar**: se llama a `crash()` con `cause: 'zanja'`, sale la tarjeta de fallo y reintenta desde la última página. No hay vidas nuevas ni castigo distinto.
+- **Dos anchos, nada más:** `Z` (corto, cualquier salto lo pasa) y `ZZ` (largo, pide salto mantenido). Es la primera vez que "mantén" sirve para ir **lejos** y no para ir **alto**.
+- **Cuándo se cae.** Moki se apoya si sus pies (`x ± pie`, con `pie = 10`) tocan algo de suelo. Si sale de la orilla sin saltar, el coyote de 90 ms sigue valiendo (`lastGroundedAt` ya se pone al dejar el suelo, línea ~1199). Si pasan esos 90 ms sin saltar, Moki cae. Al bajar 30 px bajo el suelo (≈0.165 s) se llama a `crash()`. Si aterriza en la orilla de enfrente hasta 10 px por debajo del suelo (lo que se baja en el coyote: ≈8.9 px), se sube al suelo. Si va más abajo, ya no se salva.
+- **Cómo se ve, solo con el cartón que ya existe y sin arte generado.** Es un corte en el carril dibujado con `Graphics` a profundidad ≈4.7 (encima de la superficie, el canto y los dobleces, que están en 4 a 4.2, y debajo de Moki, en 10). Va de `groundY − 8` (la línea que se ve del suelo) hasta abajo de la pantalla.
+  - **Fondo:** de `kraftDark` en la orilla a `#22211F` al 90 % en 40 px. Es oscuro hacia abajo, sin textura nueva.
+  - **Orilla de cerca (rasgada):** el mismo borde irregular que `ground.surface()` (la suma de senos), en vertical, con 3 fibras claras de papel colgando.
+  - **Orilla de lejos (doblada):** se ve la cara del corte, una banda de 6 px de `kraftDark` con las ondas del corrugado y una solapa de papel de 8 px doblada hacia adentro.
+  - **Marca de peligro:** un contorno claro de 3 px (`#F4E8D5` al 70 %) en las dos orillas de arriba. Es el mismo idioma de ARTE.md, donde el contorno claro solo lo llevan las cosas que matan. **Sin naranja.**
+  - Sobre el hueco no se dibujan piezas de suelo (`groundPiece`), pasto ni la sombra de Moki. La sombra se apaga mientras Moki va encima.
+- **Que se lea:** a 375×667 y a 1280×720 se ven 389 px de mundo por delante de Moki (`minVisibleWidth`, `portrait.visibleWidth`). `Z` a 420 mide 143 px y entra entera a pantalla 0.59 s antes de que Moki llegue a la orilla. `ZZ` a 420 mide 235 px y entra entera 0.37 s antes. Contraste estimado entre el fondo del hueco y la superficie: ≈7.8:1 de día (`#22211F` contra `kraftLight`) y ≈5:1 de noche (con la mezcla 0.245 de la §9).
+
+**2. Física y anchos (calculados, no a ojo).**
+- **Aire del toque** (16 ms, sube con el mínimo de 62 px): ≈0.016 + 0.215 + 0.237 = **0.468 s**. **Aire del salto mantenido** (sin corte, pico 117.8): 2·720/2200 = **0.6545 s**. Coinciden con la §1 (≈0.47 y ≈0.655).
+- **Ventana de despegue** del bot, que no usa coyote: `(aire·v + 2·pie − W) / v`. Se pide **≥ 100 ms** para tener ±40 con margen. El ancho va en segundos, como todo lo demás (`W = ancho·v`, con `v` la velocidad del tramo que usa `expand()`).
+
+| Código | Ancho | px a 350 / 385 / 420 | Ventana a velocidad normal | En Vuelta rápida (392 / 431 / 470) | Sin saltar |
+|---|---|---|---|---|---|
+| `Z` | 0.34 s | 119 / 131 / 143 | toque ≈185 / 180 / 175 ms | toque ≈216 / 210 / 206 ms | 283 a 293 ms sin apoyo, más que el coyote: siempre cae |
+| `ZZ` | 0.56 s | — / 216 / 235 | mantenido ≈145 / 143 ms; al toque le faltan ≈16 / 18 px | mantenido ≈200 / 197 ms; el toque **sí** pasa por ≈5 px | cae |
+
+- **Límites de `Z`:** el máximo es `0.468 − 0.1 + 20/v` ≈ 0.416 s a 420. El mínimo, para que nunca se pase caminando con el coyote, es `0.09 + 20/v + margen` ≈ 0.19 s. Elegí 0.34 para que sea más fácil que la caja (de 109 a 156 ms en `config.js`) y sirva para estrenar.
+- **Límites de `ZZ`:** el mínimo, para que el toque sin coyote quede corto por ≥ 10 px, es `0.468 + 30/v` ≈ 0.546 s a 385. El máximo, para que el mantenido tenga ≥ 100 ms, es `0.5545 + 20/v` ≈ 0.602 s a 420. Elegí **0.56**. `ZZ` no va a 350, porque ahí el mínimo y el máximo casi se tocan.
+- **Fugas conocidas.** (a) Un toque en el último cuadro del coyote suma hasta 0.09·v (≈35 px) y cruza `ZZ`. Es premio para quien apura, no una puerta: el bot no lo usa. (b) En la Vuelta rápida el nivel se juega ×1.12 con los mismos px, y `ZZ` se puede pasar con un toque. Allá la lección de mantener se diluye. La justicia no se rompe, porque las ventanas crecen.
+- **Al reaparecer** Moki sale al 85 % de velocidad, y en `ZZ` la ventana bajaría a ≈69 ms. Por eso no hay zanjas en la calma (de 0 a 4 s de página). Eso también cubre el cambio de velocidad entre tramos (`tramoEaseSec` 2).
+
+**3. Dónde aparece y cómo se une.**
+- **Modos:** solo Reto del día y Libre. **Clásico, demo, escaparate y tutorial nunca** (usan `SCRIPTS`/`GAME_LEVEL` y no pasan por `generarNivel`). No se ata a un nivel del Cuaderno, porque no pide un gesto nuevo: es saltar. Por eso puede entrar al Reto para todos a la vez. **Ojo, es una excepción** a "el Reto no usa mecánicas destrabadas" (§4). La decide el director.
+  - Bloques con `mec: 'zanja'`. `generarNivel` agrega `'zanja'` a `mecanicas` en Reto y en Libre.
+  - En el Reto, solo desde la fecha `C.zanja.retoDesde` (`'AAAA-MM-DD'`, el día siguiente a integrar), para que el Reto de un día no cambie a media jornada. Las fechas anteriores rearman su nivel sin zanja.
+- **Desde cuándo:** `Z` desde la página 2, al abrir la subida (s ≥ 4 de T2, D ≥ 9600 + 4·350 ≈ 11000 px). La primera vez de la partida sale siempre `zanja-intro`. `ZZ` desde la página 3 y solo en el pico. **Nunca en T1** (ahí están las lecciones), ni en la calma (0-4 s), ni en el respiro, ni después del segundo 26.
+- **Frecuencia:** como mucho 2 bloques de zanja por página y 1 `ZZ`. Peso normal, **no** `PESO_MEC` 5. Meta: de 1 a 2 por página, o sea **de 3 a 6 por partida** (se mide en 50 semillas: un promedio entre 3 y 6, y ninguna página con más de 2). La regla (a) ya separa el tema `zanja`, así que no salen dos bloques de zanja seguidos.
+- **Bloques** (`bloques.js`, `dur` incluye la cola de ≥ 1.2 s):
+
+| id | dur | ev | dif | min-max | tags | extra |
+|---|---|---|---|---|---|---|
+| `zanja-intro` | 2.5 | `[[0,'Z+A3']]` | 1 | 2-4 | zanja, premio | `soloEstreno` |
+| `zanja` | 2 | `[[0,'Z']]` | 2 | 2-4 | zanja | |
+| `zanja-caja` | 3 | `[[0,'C'],[1.2,'Z']]` | 2 | 2-4 | zanja, ritmo | |
+| `zanja-larga` | 3 | `[[0,'ZZ+Aup']]` | 3 | 3-4 | zanja, salto-largo | `soloPico` |
+| `zanja-torre` | 3.5 | `[[0,'T'],[1.5,'ZZ']]` | 4 | 3-4 | zanja, torre | `soloPico` |
+  - Las piezas en arco sobre la zanja sirven de guía: dicen "aquí se salta y de este largo". `A3` (de 91 a 113) se alcanza con el toque. `Aup` (164 arriba) solo se alcanza completo con el salto mantenido (62 + 80 de alcance = 142, que no llega a 164).
+  - `zanja-torre` encadena dos "mantén" de distinto tipo (alto y luego lejos). La orilla de la zanja queda a 1.5 − 0.28 = 1.22 s de la torre, y el aterrizaje de la torre cae a ≈+0.33 s: quedan ≈0.89 s libres.
+- **`expand()`:** `Z` y `ZZ` arman `{ kind: 'obs', type: 'zanja', D, W, plan: 'tap' | 'hold' }` con `W = ancho·speed` y la meten también en `level.zanjas = [{ H0, H1 }]` (H0 = D − W/2 y H1 = D + W/2). Sin zanjas, `level.zanjas` queda vacío.
+- **Reglas de unión** (en el generador; el validador las vuelve a probar):
+  - **Aterrizaje limpio:** después del salto que cruza la zanja, lo siguiente que mata queda a ≥ `C.zanja.libreSec` = 0.75 s. Nunca una caja, torre, viga, pop-up u otra zanja en la zona de aterrizaje.
+  - **Llegada limpia:** del centro del obstáculo anterior a H0 hay ≥ 1.0 s.
+  - **Viga:** ninguna de 0.7 s antes de H0 a 0.5 s después de H1. El salto mantenido sube la cabeza a ≈210 y la viga cuelga en 190.
+  - **Viento:** ninguna zanja dentro de una zona ni hasta 1 s después. En contra (0.85), `ZZ` deja al mantenido con ≈48 ms de ventana.
+  - **Trampolín:** ninguna zanja bajo el vuelo ni en los 0.75 s después de caer (≥ 2.2 s después de un `J`). Cruzarla volando sería gratis, y la caída podría ser dentro.
+  - **Timbre:** ninguna zanja dentro de su bloque ni en los 0.75 s después del salto que lo toca.
+  - **Pop-up `U`:** a ≥ 1.4 s después de H1 (`popup.minGapBeforeSec`).
+  - **Filas `P5` y `OLA`:** no van encima de la zanja. `P5` sí puede ir después de la zona de aterrizaje.
+  - **Repisas:** no están en el código. Si regresan, nada de zanjas bajo una repisa.
+  - **Checkpoint:** ninguna zanja a menos de 1 s de la orilla de la página.
+
+**4. Justicia (`validar.js`).**
+- **Regla nueva V-zanja (muerte por caída):** en cada cuadro en que Moki está en el suelo (`rise === 0`: sin salto, o con el salto ya terminado), si `[dist − pie, dist + pie]` cae completo dentro de algún `[H0, H1]`, devuelve `{ ok: false, cause: 'zanja' }`. El bot **no** usa coyote, para quedar del lado seguro.
+- **Cómo apunta:** la zanja es un `obs` con `plan`, así que el bot ya despega con `D − airTravel(plan, v)/2` centrado. En el ciclo de choque se salta como el `tramp` (no tiene caja que choque). Cuenta como "algo que mata" para `sig`, de modo que `caida`, `viento-salida` y `timbre-salida` ya la respetan.
+- **`zanja-salida`:** al aterrizar del salto que cruzó una zanja, lo siguiente que mata queda a ≥ 0.75 s. Si no, se vuelve a sortear.
+- **Margen de orilla:** el reporte suma `minOrilla`, la menor distancia en px entre el aterrizaje y H1 − pie y entre H0 + pie y el despegue. Sirve para ver qué tan justa queda cada zanja.
+- **Pasa:** bot con −40, 0 y +40 ms, en 320, 350, 385 y 420, y en la Vuelta rápida (×1.12, hasta 470), en Reto (30 fechas) y Libre (50 semillas). **Cruza el 100 % de las zanjas.**
+- **Prueba del instrumento** (en la prueba de `validar`, no en cada nivel):
+  1. El pasivo (`force 'none'`) muere con `cause: 'zanja'` en la primera `Z`.
+  2. `force 'tap'` muere en toda `ZZ` a 385 y 420 (no en Vuelta, por la fuga b).
+  3. Un bot "tarde" (+70 ms) cae en `ZZ`: la zanja castiga de verdad.
+  4. Cada ventana medida queda a ±10 ms de la tabla del punto 2. Si no, se corrige el ancho, no el validador.
+
+**5. Modo Paseo (sin choques).** **Las zanjas se rellenan; no se quitan.** Así el nivel, la semilla y el RNG quedan idénticos a los de la partida normal, y no hace falta generar otro nivel. Con `paseoRun` (y con `god`), `apoyado()` regresa `true` siempre. El hueco se dibuja tapado con un parche de la superficie que ya existe (`groundSurface` encima del tramo) y con el contorno del hueco al 50 % (`paseo.obstacleAlpha`). Se lee como "aquí había hueco y está tapado", igual que los obstáculos atenuados de Paseo. Moki corre encima sin saltar.
+
+**6. Cambios en `RunScene` (para estimar el costo).**
+- `apoyado(dist)`: si `level.zanjas` está vacío (Clásico), regresa `true` sin hacer cuentas. Así el Clásico queda idéntico byte a byte en su recorrido.
+- En `stepJump` (línea ~1174), la condición `y >= groundY` pasa a `y >= groundY && apoyado()`, con la subida si va ≤ 10 px abajo. Si no hay apoyo, sigue cayendo. Con `y ≥ groundY + 30` se llama a `crash(zanja)`.
+- En `crash()` (línea ~1951), la zanja se salta el cálculo de penetración, igual que la viga, porque no tiene `size.width`. La pista de la tarjeta, `fail.hint.zanja`, dice "Brinca antes de la orilla. Si es ancho, mantén.", y pasa por lectura-fácil.
+- `bots.js` (el demo) apunta igual que el validador.
+
+**7. Sabremos que estuvo bien si:**
+- El bot cruza el **100 % de las zanjas en 50 semillas** de Libre y 30 fechas de Reto, a ±40 ms, en las 4 velocidades y en la Vuelta rápida. Fallback 0 %. Las 4 pruebas del instrumento del punto 4 pasan.
+- **Clásico idéntico: bot con 2142 puntos y 78/78.** Sin zanjas, `apoyado()` no cambia ni un cuadro.
+- **JS inicial ≤ +600 B gzip.** Estimo ≈550 a 650: config 50, códigos y `expand` 80, bloques 110, reglas del generador 90, validador 110, `apoyado` + caída + `crash` 130, dibujo 130, parche de Paseo 30 y pista 30. Si pasa de 600, primero sale `zanja-caja` y luego la solapa doblada.
+- **≥ 55 FPS a 375 en N8 (Hardcore).** Cada zanja se dibuja una vez en un `Graphics` que se mueve con el mundo, y en pantalla hay 2 como mucho.
+- **A ciegas, a 375 y a 1280:** un invitado nuevo ve 3 capturas (una `Z` de día, una `ZZ` de noche y una con movimiento reducido) y nombra la zanja como peligro ("hoyo", "hueco", "me caigo") sin pista **en las 3**. Además ve una cuarta de Paseo y dice "tapado" o "se puede pasar".
+- **Contraste** con `herramientas/medidor-contraste.mjs`: orilla (contorno claro y canto) contra el fondo del hueco **≥ 2.0**, y el fondo del hueco contra la superficie **≥ 2.0**, de día y de noche.
+- Promedio de 3 a 6 zanjas por partida, y F2a, F2b, F3 (F3b = 0) y F6 sin empeorar respecto a master.
+
+**8. Riesgos y qué queda fuera.**
+- **Riesgo #1: suma poca decisión.** `Z` funciona como una caja (cualquier salto) y `ZZ` como una torre (mantener). F4 no sube: no hay elección nueva, solo una forma nueva y otra manera de fallar. Lo que aporta es variedad (F1 sube ≈+2 patrones) y un peligro que se entiende al instante en cualquier corredor.
+- **Riesgo #2: "mantén para ir lejos" se aprende mal.** Por el coyote y la Vuelta rápida, un toque a veces pasa `ZZ`. Si 2 de 5 personas no notan la diferencia, `ZZ` sale solo en el pico de T4. Si aun así no la notan, se queda solo `Z`.
+- **Riesgo #3: caer se siente injusto si Moki "pisa" la orilla y se cae.** Con `pie = 10`, Moki parado en la orilla con medio cuerpo afuera sigue apoyado. Si la gente dice "pisé y me caí", sube `pie` a 14. Las ventanas crecen 8 px.
+- **Riesgo #4: el Reto cambia para todos.** Hay que rehacer la línea base de Reto y Libre (15/15 y 10/10) y avisar en la novedad del día.
+- **Apagado:** `C.zanja.on = false` quita los bloques sin borrar nada. Clásico y Paseo no dependen de eso.
+- **Fuera de este corte:** zanjas dobles (`Z.Z`), zanja con trampolín (cruzarla volando), zanja con viento, zanjas que se abren de pronto (como el pop-up), caer "a otro piso", una pared que se choque dentro del hueco, sonido propio (por ahora usa el de fallo), y que la Vuelta rápida tenga sus propios anchos.
+- Va en `config.js`: `zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, retoDesde: 'AAAA-MM-DD', on: true }`.
+
+### 11. Zonas, corte 1 (5-nov)
+Invitado de niveles. Sale de MAPA-SISTEMAS #5. Leí el código pero no pude correr nada: ningún número de este punto está medido, salvo los que el director midió en master 827cfd0. Los "≈" son cuentas a mano. Las bases las toma el constructor en el paso 0.
+
+**Idea.** Cada página deja de mezclar las tres mecánicas y se queda con una. No hay arte, sprites, sonidos ni bloques nuevos: solo cambian pesos y reglas de `generar.js`.
+
+**Por qué hoy una página se parece a otra (código).**
+- `generar.js` l.88: todas las mecánicas pesan igual (`PESO_MEC` 5) en todas las páginas.
+- l.288: cada respiro de T2 a T4 trae un trampolín forzado.
+- l.434: castiga a T2 y T3 si no traen timbre.
+- l.66 y l.68: los topes (2 de viento, 1 de timbre) ya se llenan con los estrenos (l.268-271). T2 no puede tener más viento que su estreno, aunque quisiera.
+- El bioma no ayuda: se baraja con su propia semilla (l.456-461), no se relaciona con lo que pide la página, tiñe poco (k 0.06 a 0.10, salvo cartulina) y su nombre ("Sigue: ...", §8) no está en el código.
+
+**1. Carácter por página.**
+| Página | Velocidad | Carácter | Por qué ahí |
+|---|---|---|---|
+| T1 | 320 | Sin zona. Igual que hoy, con su trampolín si sale. | Ahí vive el tutorial. Quitar el `J` deja T1 solo con `C` y `T`, y el siguiente patrón nuevo llegaría ≈25 s después (F6). |
+| T2 | 350 | **Viento** | Ya se estrena aquí. `NO_VIENTO` prohíbe vigas cerca del viento, y T2 no tiene vigas: es la página donde menos estorba. |
+| T3 | 385 | **Timbre** (junto a las vigas, que ya pesan doble) | Ya se estrena aquí, y 385 es el máximo del timbre (`vMax`). |
+| T4 | 420 | **Trampolín, zanja y ola** | La zanja ya se estrena aquí con todo destrabado (`zanja.js` l.43). El timbre no cabe a 420. |
+
+Quién ve qué (RunScene l.556-557: trampolín en nivel 3, viento en 5, timbre en 9, zanja en Libre si ya bajó su módulo):
+| Destrabadas (sin contar zanja) | Nivel | Qué pasa |
+|---|---|---|
+| 0 | 1-2 | Sin zonas. Nivel idéntico a hoy. |
+| 1 (trampolín) | 3-4 | Sin zonas. Nivel idéntico a hoy: una sola mecánica no tiene contra qué contrastar, y quien la acaba de destrabar debe verla pronto. |
+| 2 (trampolín, viento) | 5-8 | T2 viento, T3 trampolín, T4 trampolín. |
+| 3 | 9+ | T2 viento, T3 timbre, T4 trampolín. |
+
+La zanja no entra en la regla: conserva sus topes, su peso y su estreno.
+
+**Modos.** Clásico no pasa por `generarNivel`. Reto recibe `mecanicas = []`, así que `zonaDe` da `null` y no cambian ni el nivel ni el uso del RNG. Paseo usa el mismo nivel que la partida normal, y las zonas no leen nada de Paseo.
+
+**2. Cambio en `generar.js`.**
+```js
+const ZONA = { 2: 'viento', 3: 'timbre', 4: 'tramp' };
+const PESO_ZONA = 10;  // doble de PESO_MEC; la regla (a) sigue alternando con bloques sin mecánica
+const TOPE_ZONA = { viento: 4, timbre: 2 };
+export const zonaDe = (tramo, m) => {
+  if (tramo < 2 || ['tramp', 'viento', 'timbre'].filter((x) => m.includes(x)).length < 2) return null;
+  return m.includes(ZONA[tramo]) ? ZONA[tramo] : m.includes('tramp') ? 'tramp' : null;
+};
+```
+- **`generarTramo`:** `ctx.zona = zonaDe(tramo, mecanicas)`.
+- **Filtro de `fill()`:** si hay `ctx.zona`, se descarta el bloque con `b.mec` de `tramp`, `viento` o `timbre` que no sea `ctx.zona`. La zanja pasa.
+- **l.66:** tope de viento `ctx.zona === 'viento' ? TOPE_ZONA.viento : 2`.
+- **l.68 y l.104:** `nTimbre` pasa a ser contador. Tope `ctx.zona === 'timbre' ? TOPE_ZONA.timbre : 1`. Es una excepción a §9.3 ("máx. 1 por página"), que el director debe aprobar.
+- **l.88:** el último factor pasa a `(q.mec ? (q.mec === ctx.zona ? PESO_ZONA : q.peso || PESO_MEC) : 1)`.
+- **l.252:** con `ctx.zona === 'tramp'` y `tramo === 4`, la sorpresa siempre es `ola`, sin saltarse el `pick` para que el uso del RNG no cambie. Sin esto, una de cada 4 semillas no estrena nada en T4 cuando no hay zanja.
+- **l.288:** el trampolín forzado del respiro solo sale con `!ctx.zona || ctx.zona === 'tramp'`.
+- **l.434 (obligatorio):** el castigo de +6 solo aplica con `!zonaDe(i + 1, mecanicas) || zonaDe(i + 1, mecanicas) === 'timbre'`. Si no se cambia, T2 nunca podrá librarlo: agotará los 16 intentos y elegirá peor.
+
+**Sin bloques nuevos:** los 14 que hay bastan. **Sin señal al jugador en este corte:** si la mecánica no se nota por sí sola, un letrero solo tapa el problema, y además falsearía la prueba a ciegas. Si la prueba falla pero FZ1 cumple, la señal de reserva, y solo esa, es cambiar `hud.cp` por "Página de viento", "Página de timbres" o "Página de trampolines" en la l.1478 de `RunScene`, en esas páginas, y repetir la prueba con críticos nuevos.
+
+**3. Sabremos que estuvo bien si.**
+
+**Paso 0, antes de tocar el juego (10 min).**
+- `flow-medir.mjs` no conoce la zanja: no la importa, y `Z` truena en `PARTES` (l.135). Por eso los números de hoy no miden el Libre real. Se le agrega, solo con `zanja` en la lista, `await import('../src/zanja.js')`, `Z` y `ZZ` en `PARTES` y un caso sin elección como el de `tramp`. `niveles.mjs` necesita el mismo import.
+- Se mide master con `tramp,viento,timbre` y con `tramp,viento,timbre,zanja`.
+- Se agregan las métricas de abajo y se anota su base. **Si en master FZ1 ya cumple su meta en T2, T3 y T4, la hipótesis es falsa: se para y se avisa.**
+
+**Métricas nuevas de carácter (en `flow-medir`, sobre `tr.script`, sin `P5`).**
+- **FZ1, mecánica propia:** % de eventos de la página que son de su zona. Viento = sufijo `<` o `>`; trampolín = `J`; timbre = `B` o `+B`. Se calcula también en master, con la misma tabla `ZONA`.
+- **FZ2, página contra página:** cada página es un vector de % por tipo (caja, torre, viga, pop-up, salto largo, ola, trampolín, viento, timbre, zanja). FZ2 es la distancia promedio entre T2, T3 y T4, con `0.5 × Σ|a − b|` (0 = iguales, 1 = nada en común).
+
+| Vara (Libre, 3 mecánicas, 50 semillas, salvo que se indique) | Hoy | Meta |
+|---|---|---|
+| FZ1 T2 / T3 / T4 | por medir (≈15 / 8 / 12 a mano) | **≥ 25 / 12 / 20** |
+| FZ2 | por medir | **≥ base × 1.3** |
+| F1 | 10.93 | ≥ 9 (vara 7) |
+| F2a / F2b | 4.5 / 4.63 | ≤ 4.5 s / ≤ 12 % |
+| F3 / F3b | por medir | ≤ 4 s / 0 |
+| F4 | 22.64 (mín. 18.5) | promedio ≥ 20, mínimo ≥ 17 |
+| F6 | 19.36 | promedio ≤ 24, máximo ≤ 30 |
+| Tiempo de `generarNivel` en Node | por medir | ≤ base × 1.5 (cada rechazo vuelve a correr el validador) |
+| JS inicial | - | **≤ +300 B gzip** (≈200 a 260 a mano) |
+
+**Justicia y modos.**
+- **Bot:** `niveles.mjs` con 50 semillas, con `tramp,viento`, con `tramp,viento,timbre` y con esas 3 más `zanja`. Las dos rutas pasan a −40, 0 y +40 con holgura ≥ 4 px. Pasivo, solo toque y solo mantener mueren. Respaldo 0.
+- **Idénticos a master:** Clásico (2142, 78/78) y Reto (2362). Además, los `entities` serializados de 30 fechas de Reto y de 30 semillas con `[]`, `['tramp']` y `['zanja']`. Esta comparación vale más que los puntajes.
+- **T1 con 3 mecánicas:** su guion en el intento 0 es igual al de master.
+- **Paseo:** una partida en Libre con `?mec=tramp,viento,timbre` llega al final sin choques.
+
+**Prueba a ciegas (3 críticos nuevos, según `moki-gauntlet-a-ciegas`).**
+- **Qué ven:** dos juegos sin etiqueta, A (master) y B (zonas), con la misma semilla, otra para cada crítico. De cada uno, T2, T3 y T4 en desorden, con 6 capturas a 375 por página, una cada 5 s, sacadas con el bot y en headless.
+- **Qué se les pregunta:** (1) "En una frase, ¿qué te pide cada página que no te piden las otras?". (2) "Del 1 al 10, ¿qué tanto se sienten como lugares distintos las páginas de este juego?".
+- **Pasa si:** al menos 2 de 3 críticos nombran el elemento correcto (rachas o viento, campana, trampolín) en al menos 2 de las 3 páginas de B, **y** B le gana a A por 2 puntos o más en al menos 2 de 3. La diferencia menor a 2 no cuenta.
+- **Límite:** las capturas miden si se distingue, no si se siente fresco. Eso solo lo dice jugar: cierra Jorge con `?mec=tramp,viento,timbre`.
+
+**4. Riesgos.**
+- **Quién lo ve (el mayor).** La primera partida es Clásico (RunScene l.549) y el modo por defecto es Reto (l.57). Este corte solo llega a Libre desde el nivel 5. Si el "monótono" de Jorge viene del Reto, esto no lo arregla. Para eso ya está la pieza del Reto en 4 fases (DECISIONES 1-nov). El Reto con zonas queda fuera de este corte, porque pide que las mecánicas salgan para todos, y eso lo decide el director.
+- **Orden fijo.** Viento, timbre y trampolín siempre en ese orden se aprende, pero también se predice. Dentro de cada página el sorteo sigue variando. Barajar el orden es otro corte, porque choca con `vMax` y con los estrenos.
+- **F4 baja.** T2 se queda sin trampolín ni timbre, y el viento no da elección. A mano queda ≈1 punto abajo. Si queda bajo 20, se devuelve el trampolín al respiro de T2.
+- **Más rechazos.** Más viento choca con `NO_VIENTO` y más trampolines con las reglas de la zanja. Eso puede dar más intentos, respaldos o tiempo. Si pasa, `TOPE_ZONA.viento` baja a 3 y `PESO_ZONA` a 8.
+- **T4 demasiado dura.** A 420 se juntan ola, zanja y trampolín. Si un crítico o Jorge lo marca, sale el `tramp-doble` de T4.
+- **Timbre repetido.** Dos por página cansan si se lee como viga (§9.7). Si pasa, el tope regresa a 1.
+
+**Si se pasa de 90 min, se recorta en este orden:**
+1. Tope de timbre: regresa a 1. T3 se queda con su estreno y sus vigas.
+2. `ola` forzada: fuera, y se anota el F6 de las semillas sin ola.
+3. Tope de viento de 4 a 3.
+4. FZ2: se reporta sin meta.
+5. La prueba a ciegas pasa a la siguiente vuelta, con la pieza **sin integrar**.
+
+No se recorta: el filtro por zona, las l.288 y l.434, FZ1, el bot y la comparación de idénticos. `C.zonas = false` lo apaga todo sin borrar nada.
