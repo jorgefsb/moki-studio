@@ -33,6 +33,10 @@ const gram = gramNueva();
 // Niveles con mecánicas (el Reto desde su fecha; DECISIONES 5-nov 09:30): 8 % y respiro tras un 4 no son estrictos, se miden aparte
 const gramMec = gramNueva();
 const usoMec = {};
+// Con mecánicas, tramp-intro cuenta como respiro (dif 1, pisarlo es descansar; DECISIONES 5-nov 09:35), pero puede salir
+// sorteado: se cuenta aparte. Las fechas son fijas, así que este número solo sube si cambia el generador.
+const TOPE_DIF4_TRAMP_INTRO = 16;
+let dif4TrampIntro = 0;
 const justicia = { fechas: 0, corridas: 0, trampolines: 0, zonasViento: 0, fechasConFallo: [] };
 for (const s of seeds) {
   const L = generarNivel(s);
@@ -77,7 +81,10 @@ for (const s of seeds) {
       if (!i) return;
       const p = ids[i - 1];
       if (dif(p) >= 3 && dif(id) >= 3) gr.dosDuros++;
-      if (dif(p) >= 4 && !descanso(id)) gr.sinRespiroTras4++;
+      if (dif(p) >= 4 && !descanso(id)) {
+        if (conMec && id === 'tramp-intro') dif4TrampIntro++;
+        else gr.sinRespiroTras4++;
+      }
       if (p === id && id !== 'relleno') gr.repetidoSeguido++;
     });
   });
@@ -104,9 +111,9 @@ const totalMec = escritosMec.reduce((a, [, n]) => a + n, 0);
 const pctMec = escritosMec.map(([id, n]) => [id, +((100 * n) / totalMec).toFixed(2)]).sort((a, b) => b[1] - a[1]);
 const sobre10 = pctMec.filter(([id, p]) => p > 10 && id !== 'tramp-intro' && id !== 'tramp-nudo');
 const pctSinRespiro = gramMec.paginas ? +((100 * gramMec.sinRespiroTras4) / gramMec.paginas).toFixed(2) : 0;
-console.log('conMecanicas', JSON.stringify({ gramatica: gramMec, sinRespiroPct: pctSinRespiro, topeSinRespiroPct: 1, sobre10, tramp: pctMec.filter(([id]) => id === 'tramp-intro' || id === 'tramp-nudo'), masUsados: pctMec.slice(0, 5) }));
+console.log('conMecanicas', JSON.stringify({ gramatica: gramMec, sinRespiroPct: pctSinRespiro, topeSinRespiroPct: 1, dif4TrampIntro, topeDif4TrampIntro: TOPE_DIF4_TRAMP_INTRO, sobre10, tramp: pctMec.filter(([id]) => id === 'tramp-intro' || id === 'tramp-nudo'), masUsados: pctMec.slice(0, 5) }));
 console.log({ justiciaConMecanicas: justicia });
-const gramMecMal = gramMec.dosDuros + gramMec.repetidoSeguido + gramMec.masDe2 + gramMec.filasSobre20 + sobre10.length + (pctSinRespiro > 1 ? 1 : 0);
+const gramMecMal = gramMec.dosDuros + gramMec.repetidoSeguido + gramMec.masDe2 + gramMec.filasSobre20 + sobre10.length + (pctSinRespiro > 1 ? 1 : 0) + (dif4TrampIntro > TOPE_DIF4_TRAMP_INTRO ? 1 : 0);
 
 // Libre con trampolín y viento (mecánicas 'tramp' y 'viento'): las N semillas libres. Las dos rutas forzadas (pisar siempre / saltar
 // siempre) terminan con ±40 ms y holgura >= 4 px; el pasivo (nunca salta), el de solo toque y el de solo mantener mueren.
