@@ -1242,14 +1242,19 @@ export class RunScene extends Phaser.Scene {
 
     this.vy += C.gravity * (this.vuelo ? C.tramp.gravityK : 1) * dt;
     const impact = this.vy;
+    const y0 = this.y;
     this.y += this.vy * dt;
     // Zanja (NIVELES.md §10.1): sin suelo bajo los pies sigue cayendo; a caePx bajo el suelo, choque. Si llega a la
-    // orilla de enfrente hasta subePx abajo, se sube.
+    // orilla de enfrente hasta subePx abajo, se sube. Quien venía de arriba aterriza aunque el cuadro lento lo pase de
+    // largo (DECISIONES 5-nov 10:35): si no, volvía a pasarse en cada cuadro y Moki no aterrizaba ni saltaba nunca más.
     const Z = C.zanja;
-    const piso = this.y >= C.world.groundY && this.y <= C.world.groundY + Z.subePx && this.apoyado();
+    const piso = this.y >= C.world.groundY && (this.y <= C.world.groundY + Z.subePx || y0 <= C.world.groundY) && this.apoyado();
     if (!piso && this.y >= C.world.groundY + Z.caePx && !this.dead) {
       const z = this.obstacles.find((o) => o.type === 'zanja' && Math.abs(o.x - this.px) <= o.W / 2 + Z.pie);
-      return z ? this.crash(z) : void (this.y = C.world.groundY);
+      if (z) return this.crash(z);
+      this.y = C.world.groundY; // la red: sin vy, el cuadro siguiente aterriza normal
+      this.vy = 0;
+      return undefined;
     }
     if (piso) {
       this.y = C.world.groundY;
