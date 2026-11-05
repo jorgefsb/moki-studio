@@ -17,6 +17,13 @@ export class Escaparate {
     this.s = scene;
     this.vuelta = 0;
     this.nov = null; // lo nuevo de hoy (public/novedades.json), llega por import dinámico: el juego normal no lo carga
+    // Armar el nivel tarda ~1 s de un jalón: en startGame era Moki congelado al arrancar. Se arma al entrar al título y startGame lo toma.
+    const hacer = scene.makeLevel;
+    scene.makeLevel = (sd) => {
+      const n = this.nivel;
+      this.nivel = null;
+      return n || hacer.call(scene, sd);
+    };
     this.nuevaVuelta();
     import('./novedades.js')
       .then((m) => m.cargar().then((n) => ((this.m = m), (this.nov = n))))
@@ -60,7 +67,8 @@ export class Escaparate {
     const E = C.escaparate;
     this.ms += dtMs;
     if (this.fase === 'titulo') {
-      if (this.ms < E.tituloMs || !this.zanja) return;
+      if (this.zanja && !this.nivel) this.nivel = s.makeLevel();
+      if (this.ms < E.tituloMs || !this.nivel) return;
       if (this.m) this.m.ocultar(); // el cartel vive en el título: en partida taparía el HUD a 375
       s.startGame();
       s.god = true; // red de seguridad del bot, igual que en el demo; se quita solo para el tropiezo
