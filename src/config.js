@@ -84,13 +84,14 @@ export const CONFIG = {
   },
   // Trampolín (NIVELES.md flow, mecánica #1): pisarlo lanza con vy fija y gravedad flotada; vuelo ~1.25 s, pico ~234 px.
   // Libra un obstáculo a 0.9 s (el nudo; torre con >= 52 px a 320 px/s) y pide 0.75 s libres al caer. Solo en Libre desde el nivel 3 del Cuaderno.
-  tramp: { velocity: 750, gravityK: 0.55, nudoSec: 0.9, caidaLibreSec: 0.75, nivel: 3 },
+  // reto: desde qué fecha entra al Reto del día para todos (una semana tras su estreno); null la saca
+  tramp: { velocity: 750, gravityK: 0.55, nudoSec: 0.9, caidaLibreSec: 0.75, nivel: 3, reto: '2026-11-09' },
   // Viento (NIVELES.md "#2 Viento"): despegar dentro de una zona estira (favor) o encoge (contra) el salto en x: el mundo
   // avanza a speed * k mientras Moki está en el aire. Zona de D - antesSec a D + despuesSec; al aterrizar con k != 1,
   // lo siguiente a >= salidaSec. Solo en Libre desde el nivel 5 del Cuaderno.
   // contra 0.85 (no 0.8): con 0.8 la ventana de C< a 320 px/s mide 80 ms y no aguanta ±40 (scripts/viento-calibrar.mjs)
   // rampaSec: el mundo va de 1 a k (y de vuelta al aterrizar) en línea recta; a favor tarda 60 ms y en contra 30 (misma pendiente; con 80 el ciego a -40 ya no chocaba: scripts/viento-calibrar.mjs)
-  viento: { favor: 1.3, contra: 0.85, antesSec: 0.7, despuesSec: 0.15, salidaSec: 0.75, rampaSec: 0.06, nivel: 5 },
+  viento: { favor: 1.3, contra: 0.85, antesSec: 0.7, despuesSec: 0.15, salidaSec: 0.75, rampaSec: 0.06, nivel: 5, reto: '2026-11-09' },
   // Timbre (NIVELES.md §9): campana colgante a 1.0 s antes de una torre; si la toca el salto mantenido, la torre se
   // acuesta hacia adelante (retardo + caída) y deja 5 piezas de piso. Caja de 46 de ancho = el dibujo (líder, 2-nov).
   // lo 186 -> 190: el mantenido de 130 ms sube la cabeza a 189 y sonaba a medias; el completo llega a 202 (timbre-calibrar).

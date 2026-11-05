@@ -551,9 +551,9 @@ export class RunScene extends Phaser.Scene {
       return GAME_LEVEL;
     }
     const modo = this.modo;
-    // Mecánicas (NIVELES.md flow): solo en Libre; el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno.
+    // Mecánicas (NIVELES.md flow): en Libre, el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno; el Reto las toma de su fecha (generarNivel).
     const nv = nivelDe(leerCuaderno()).nivel;
-    const mecanicas = modo !== 'libre' ? [] : ['tramp', 'viento', 'timbre'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
+    const mecanicas = modo !== 'libre' ? undefined : ['tramp', 'viento', 'timbre'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
     if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }

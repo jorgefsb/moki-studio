@@ -28,8 +28,12 @@ const { simulateJump, simulateBounce } = await import('../src/jumpmodel.js');
 const N_LIBRES = Number(process.argv[2]) || 10;
 const MEC = process.argv[3] ? process.argv[3].split(',') : []; // lista: tramp,viento
 const LIBRES = Array.from({ length: N_LIBRES }, (_, i) => String((i * 2654435761) >>> 0));
-const RETOS = Array.from({ length: 10 }, (_, i) => {
-  const d = new Date(2026, 10, 1 + i);
+// 5º argumento AAAA-MM-DD:N: N fechas del Reto desde esa, con las mecánicas que les tocan por fecha.
+// Sin él, las 10 de siempre sin mecánicas (la línea base de flow no se mueve).
+const [DESDE, N_RETOS] = (process.argv[5] || '2026-11-01:10').split(':');
+const RETOS = Array.from({ length: +N_RETOS }, (_, i) => {
+  const [y, m, dd] = DESDE.split('-').map(Number);
+  const d = new Date(y, m - 1, dd + i);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 });
 
@@ -291,7 +295,7 @@ const resumen = (rs) => {
 };
 
 const clasico = medir(GAME_LEVEL);
-const retos = RETOS.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'reto')) }));
+const retos = RETOS.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'reto', process.argv[5] ? {} : { mecanicas: [] })) }));
 const libres = LIBRES.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'libre', { mecanicas: MEC })) }));
 const vara = { F1: '>= 7', F2a: '<= 4.5 s', F2b: '<= 12 %', F3: '<= 4 s', F3b: '0', F4: '>= 20 %', F6: '<= 30 s' };
 console.log(JSON.stringify({ fecha: '2026-11-01', libres: N_LIBRES, mecanicas: MEC, vara, resumen: { clasico: resumen([clasico]), reto: resumen(retos), libre: resumen(libres) }, clasico, retos, libres }, null, 1));
