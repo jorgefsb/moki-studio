@@ -87,8 +87,9 @@ class MokiPoses {
     return true;
   }
 
-  // CHOQUE: Moki sigue siendo el mismo dibujo. Durante el hit-stop se aplasta contra el obstáculo, sale en arco (la caída
-  // del kit) mientras el mundo retrocede, y se asienta agachado (primer cuadro del aterrizaje). Solo visual: s.y no cambia.
+  // CHOQUE: Moki sigue siendo el mismo dibujo, encogido todo el golpe (primer cuadro del aterrizaje): se aplasta contra el
+  // obstáculo en el hit-stop, sale en arco mientras el mundo retrocede y se asienta. La caída del kit estira el brazo y en
+  // la ronda a ciegas se leyó como puñetazo ("fallar no castiga", ARTE). Solo visual: s.y no cambia.
   golpe() {
     const s = this.s;
     const K = C.art.choque;
@@ -106,7 +107,7 @@ class MokiPoses {
       const k = Math.min(1, u / 0.3);
       const sx = K.aplastado[0] + (1 - K.aplastado[0]) * k;
       const sy = K.aplastado[1] + (1 - K.aplastado[1]) * k;
-      return this.dibuja('pose-fall', 0, this.y0 + (g - this.y0) * u * u - K.saltoPx * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
+      return this.dibuja('pose-land', 0, this.y0 + (g - this.y0) * u * u - K.saltoPx * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
     }
     if (!this.polvo) {
       this.polvo = true;
