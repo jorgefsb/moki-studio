@@ -94,7 +94,7 @@ class MokiPoses {
   golpe() {
     const s = this.s;
     const K = C.art.choque;
-    const g = C.world.groundY;
+    const g = C.world.groundY - (s.sobre ? s.sobre.size.height : 0);
     if (this.y0 === null || this.y0 === undefined) {
       this.y0 = s.y;
       this.polvo = false;
@@ -102,13 +102,14 @@ class MokiPoses {
     if (s.cause === 'zanja') return this.dibuja('pose-fall', 0, s.y, 0, 1, 1);
     const t = s.deadFor - C.art.hitStopMs;
     if (t < 0) return this.dibuja('pose-run', 0, this.y0, -2, K.aplastado[0], K.aplastado[1]);
-    const dur = K.arcoMs + Math.min(300, (g - this.y0) * 0.7); // desde el aire tarda más en bajar
+    const sube = s.sobre ? this.y0 - g : 0; // cajas pegadas: rebota hacia arriba y cae encima de la que ya pasó
+    const dur = K.arcoMs + Math.min(300, (sube || g - this.y0) * 0.7); // desde el aire tarda más en bajar
     const u = t / dur;
     if (u < 1) {
       const k = Math.min(1, u / 0.3);
       const sx = K.aplastado[0] + (1 - K.aplastado[0]) * k;
       const sy = K.aplastado[1] + (1 - K.aplastado[1]) * k;
-      return this.dibuja('pose-run', 0, this.y0 + (g - this.y0) * u * u - K.saltoPx * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
+      return this.dibuja('pose-run', 0, this.y0 + (g - this.y0) * u * u - (K.saltoPx + sube / 2) * Math.sin(Math.PI * u), K.giroDeg * Math.sin(Math.PI * u), sx, sy);
     }
     if (!this.polvo) {
       this.polvo = true;

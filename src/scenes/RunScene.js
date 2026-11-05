@@ -432,6 +432,8 @@ export class RunScene extends Phaser.Scene {
     this.nextFlag = this.tramoIdx + 1; // siguiente bandera por colocar
     this.y = C.world.groundY;
     this.vy = 0;
+    this.sobre = null;
+    this.mokiShadow.setDepth(9);
     this.grounded = true;
     this.lastGroundedAt = 0;
     this.pressedAt = -1e9;
@@ -1798,6 +1800,7 @@ export class RunScene extends Phaser.Scene {
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
     this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f) * (this.apoyado() || this.paseoRun ? 1 : 0)); // sobre la zanja no hay sombra
+    if (this.sobre) this.mokiShadow.setPosition(this.sobre.x, g - this.sobre.size.height + 1).setDisplaySize(56, 10).setAlpha(0.28 * this.recoilDone); // encima de la caja: aparece conforme llega
     // Pasos de cartón (CRECE, Cuaderno nivel 4): uno por ciclo de la carrera normal (1 de cada 2 pisadas), contado por
     // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
     if (!this.pasos || this.screen !== 'play' || !this.grounded || this.dead || this.dist < this.pasoD) this.pasoD = this.dist;
@@ -2065,6 +2068,14 @@ export class RunScene extends Phaser.Scene {
         this.placeEntities();
       }
     }
+    // Cajas pegadas: entre las dos Moki no cabe y el retroceso lo dejaba parado dentro de la que ya pasó. Con poses el
+    // rebote termina encima de esa caja, con el mismo retroceso; sin poses (no hay arco) se queda donde chocó.
+    const conPoses = this.poses && !this.calm;
+    this.retroceso = conPoses ? C.art.choque.recoilPx : C.art.recoilPx;
+    const atras = this.obstacles.find((q) => q.type === 'caja' && q.x < o.x && Math.abs(q.x + this.retroceso - this.px) < 49); // (caja 60 + Moki 38) / 2
+    this.sobre = conPoses && atras;
+    if (atras && !conPoses) this.retroceso = 0;
+    if (this.sobre) this.mokiShadow.setDepth(10.5); // su sombra cae sobre la caja, no en el suelo tapado
     this.cobrarCinta(false); // al chocar la cinta se enrolla sin cartel; lo juntado ya contó
     cerrarIntento(o.type === 'zanja' ? 'zanja' : 'choque');
     this.dead = true;
@@ -2114,7 +2125,7 @@ export class RunScene extends Phaser.Scene {
       // está despegado de la caja y no parece que la atraviesa. Con movimiento reducido: sin retroceso.
       const u = Math.min(1, (this.deadFor - C.art.hitStopMs) / 220);
       const e = this.reduced ? 0 : easeOutCubic(u);
-      const back = (this.poses && !this.calm ? C.art.choque.recoilPx : C.art.recoilPx) * (e - this.recoilDone);
+      const back = this.retroceso * (e - this.recoilDone);
       this.recoilDone = e;
       this.speed = 0;
       this.dist -= back;
@@ -2133,12 +2144,17 @@ export class RunScene extends Phaser.Scene {
     if (this.cardShown && this.deadFor >= C.retryLockoutMs) this.ui.unlockFail();
   }
 
+  // Cabeza de Moki parado, en px de pantalla (encima de la caja, si el choque lo dejó ahí)
+  cabezaY() {
+    return (C.world.groundY - (this.sobre ? this.sobre.size.height : 0) - C.player.spriteHeight - this.top) * this.zoom;
+  }
+
   failRect() {
     const W = this.scale.width;
     const H = this.scale.height;
     const z = this.zoom;
     const mokiX = this.px * z;
-    const headY = (C.world.groundY - C.player.spriteHeight - this.top) * z;
+    const headY = this.cabezaY();
     const wide = W >= 700 && W > H * 0.9;
     if (wide) {
       const left = Math.round(mokiX + 120);
@@ -2262,7 +2278,7 @@ export class RunScene extends Phaser.Scene {
     // Zonas en px de pantalla: la tira no tapa a Moki (cabeza) y en vertical baja al suelo de papel
     const zonas = {
       wide: W >= 700 && W > H * 0.9,
-      headY: (C.world.groundY - C.player.spriteHeight - this.top) * z,
+      headY: this.cabezaY(),
       floorY: (C.world.groundY - this.top) * z,
     };
     this.ui.showCuaderno(revisar(this.partida), zonas);
