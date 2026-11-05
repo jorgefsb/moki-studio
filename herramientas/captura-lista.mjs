@@ -58,7 +58,7 @@ const leerEstado = (conTarde) => {
 };
 
 let codigo = 0;
-const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new'] });
+const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new', '--use-angle=vulkan', '--enable-gpu', '--ignore-gpu-blocklist'] }); // sin GPU, ?escaparate no llega a la partida en 60 s
 const reporte = { build: dir, seed, vp: `${w}x${h}`, tomas: [] };
 try {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: w < 600, isMobile: w < 600 });
