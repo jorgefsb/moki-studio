@@ -2079,11 +2079,13 @@ export class RunScene extends Phaser.Scene {
       this.partida.crashes += 1;
       this.partida.crashesByTramo[this.tramoIdx] = (this.partida.crashesByTramo[this.tramoIdx] || 0) + 1; // fila de la tarjeta para compartir
     }
-    this.particles.burst('crash', this.px + 12, this.y - 10);
+    // Los trozos salen del punto de contacto; en la zanja, de los pies
+    if (o.type === 'zanja') this.particles.burst('crash', this.px + 12, this.y - 10);
+    else this.particles.burst('crash', this.px + C.player.width / 2 + 12, this.y - (o.type === 'viga' ? C.player.spriteHeight : 48));
     this.buzz(25); // golpe suave, nada que regañe
     this.shake(2, 120);
-    // El obstáculo se arruga 2% (papel apachurrado) y se queda así; al reintentar se crea liso de nuevo
-    if (!this.calm && o.sprite && o.type !== 'zanja') this.tweens.add({ targets: o.sprite, scaleX: 1.02, scaleY: 0.98, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 120, ease: 'Cubic.easeOut' });
+    // El obstáculo cede al golpe y se queda arrugado 2% (papel apachurrado); al reintentar se crea liso de nuevo
+    if (!this.calm && o.sprite && o.type !== 'zanja') this.tweens.add({ targets: o.sprite, scaleX: { from: 1.07, to: 1.02 }, scaleY: { from: 0.93, to: 0.98 }, angle: o.type === 'viga' ? o.sprite.angle : -1, duration: 180, ease: 'Cubic.easeOut' });
     // La mejor marca se guarda también al fallar (no en el demo)
     const prevBest = num(this.bestKey(), 0);
     const isNew = !this.demo && !this.paseoRun && this.score > prevBest;
@@ -2112,7 +2114,7 @@ export class RunScene extends Phaser.Scene {
       // está despegado de la caja y no parece que la atraviesa. Con movimiento reducido: sin retroceso.
       const u = Math.min(1, (this.deadFor - C.art.hitStopMs) / 220);
       const e = this.reduced ? 0 : easeOutCubic(u);
-      const back = C.art.recoilPx * (e - this.recoilDone);
+      const back = (this.poses && !this.calm ? C.art.choque.recoilPx : C.art.recoilPx) * (e - this.recoilDone);
       this.recoilDone = e;
       this.speed = 0;
       this.dist -= back;
@@ -2120,7 +2122,7 @@ export class RunScene extends Phaser.Scene {
       this.placeEntities();
       this.particles.update(dtMs, -back);
       this.stepMoki(dtMs);
-    }
+    } else this.particles.update(dtMs, 0); // el hit-stop detiene al mundo, no a los trozos
     void dt;
     if (!this.cardShown && this.deadFor >= (this.reduced ? 150 : 250)) {
       this.cardShown = true;
