@@ -55,7 +55,7 @@ class MokiPoses {
   // Llamar después de rig.update. Devuelve true si la pose se ve (y el títere se esconde).
   update() {
     const s = this.s;
-    const on = !s.calm && (s.dead ? s.screen === 'dead' : s.screen === 'play' || s.screen === 'demo');
+    const on = !s.calm && (s.dead ? s.screen === 'dead' && s.cause !== 'zanja' : s.screen === 'play' || s.screen === 'demo'); // en la zanja, el títere
     this.sprite.setVisible(on);
     s.rig.setVisible(!on);
     this.rim.setVisible(on && !s.dead && s.rimA > 0 && s.scale.width / s.scale.height > C.portrait.maxAspect);
@@ -99,7 +99,6 @@ class MokiPoses {
       this.y0 = s.y;
       this.polvo = false;
     }
-    if (s.cause === 'zanja') return this.dibuja('pose-fall', 0, s.y, 0, 1, 1);
     const t = s.deadFor - C.art.hitStopMs;
     if (t < 0) return this.dibuja('pose-run', 0, this.y0, -2, K.aplastado[0], K.aplastado[1]);
     const sube = s.sobre ? this.y0 - g : 0; // cajas pegadas: rebota hacia arriba y cae encima de la que ya pasó

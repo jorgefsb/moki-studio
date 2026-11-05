@@ -1117,7 +1117,7 @@ export class RunScene extends Phaser.Scene {
     else if (this.screen === 'final') this.updateFinal(dtMs);
     else this.updateRun(dtMs);
     this.cinta.update(dtMs, this.px, this.y, this.dist, this.reduced || C.juice === 0);
-    if (this.poses) this.poses.update(); // con poses listas, el sprite reemplaza al títere (calma, choque y meta: títere)
+    if (this.poses) this.poses.update(); // con poses listas, el sprite reemplaza al títere (calma, zanja y meta: títere)
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
@@ -2072,7 +2072,7 @@ export class RunScene extends Phaser.Scene {
     // rebote termina encima de esa caja, con el mismo retroceso; sin poses (no hay arco) se queda donde chocó.
     const conPoses = this.poses && !this.calm;
     this.retroceso = conPoses && o.type !== 'zanja' ? C.art.choque.recoilPx : C.art.recoilPx; // en la zanja, igual que master: con 56 terminaba casi sobre tierra firme
-    const atras = this.obstacles.find((q) => q.type === 'caja' && q.x < o.x && Math.abs(q.x + this.retroceso - this.px) < 49); // (caja 60 + Moki 38) / 2
+    const atras = o.type !== 'zanja' && this.obstacles.find((q) => q.type === 'caja' && q.x < o.x && Math.abs(q.x + this.retroceso - this.px) < 49); // (caja 60 + Moki 38) / 2
     this.sobre = conPoses && atras;
     if (atras && !conPoses) this.retroceso = 0;
     if (this.sobre) this.mokiShadow.setDepth(10.5); // su sombra cae sobre la caja, no en el suelo tapado
