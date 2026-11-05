@@ -405,8 +405,10 @@ const firmaPico = (script) => [...script].sort((a, b) => a[0] - b[0]).filter(([t
 
 // seed: texto ("2026-10-29") o número. Devuelve el nivel de buildLevel más { seed, modo, biomas, fallbacks }.
 // opts.mecanicas: mecánicas destrabadas (['tramp']); solo las pasa Libre. Sin ellas, el nivel es el de siempre.
+// El Reto las toma de su fecha (la semilla es la fecha, no el reloj ni el nivel de nadie: igual para todos ese día).
+const mecanicasReto = (seed) => (/^\d{4}-\d\d-\d\d$/.test(seed) ? ['tramp', 'viento'].filter((m) => C[m].reto && seed >= C[m].reto) : []);
 export function generarNivel(seed, modo = 'reto', opts = {}) {
-  const mecanicas = opts.mecanicas || [];
+  const mecanicas = opts.mecanicas || (modo === 'reto' ? mecanicasReto(seed) : []);
   const fallbacks = [];
   let prev = new Set();
   const global = new Set();
