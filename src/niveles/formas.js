@@ -4,7 +4,7 @@
 import { rng, hashSeed } from './rng.js';
 
 // Interruptor por modo y fecha. libre: true o false. reto: fecha AAAA-MM-DD desde la que entra, o null. Para apagar: { libre: false, reto: null }.
-export const INTERRUPTOR = { libre: true, reto: null };
+export const INTERRUPTOR = { libre: true, reto: '2026-11-10' };
 export const formasActivas = (seed, modo) => (modo === 'libre' ? INTERRUPTOR.libre : modo === 'reto' && !!INTERRUPTOR.reto && /^\d{4}-\d\d-\d\d$/.test(seed) && seed >= INTERRUPTOR.reto);
 
 // Un valor al azar de a a b en pasos de 0.25 s
