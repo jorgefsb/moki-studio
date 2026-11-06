@@ -1,6 +1,8 @@
 // MEDIR FLOW (NIVELES.md "Flow y mecánicas (plan 1-nov)", punto 1): cuánta variedad tiene una partida, sin navegador.
 //   node scripts/flow-medir.mjs [semillas libres=10] [mecánica: tramp] [regla-vieja o -] [AAAA-MM-DD:N] > evidencia/v2-flow-base.json
 //   (con mecánica, Libre se genera con ella destrabada; el Clásico nunca la lleva y el Reto solo por fecha, con el último argumento)
+//   node scripts/flow-medir.mjs 50 tramp,viento,timbre,zanja - 2026-11-09:30 variedad
+//   (sin el argumento 'variedad', la salida es la de siempre, byte a byte; zanja carga src/zanja.js, solo si se pide)
 // Instrumento fuera del paquete del juego (como scripts/inventario-encargos.mjs): lee el nivel que arma el juego
 // (GAME_LEVEL y generarNivel) y su guion por tramo [segundo, código]; no cambia nada del juego. Determinista: misma
 // semilla, mismo número.
@@ -19,6 +21,13 @@
 // F4 es un MODELO: simulateJump (mismas ecuaciones que el juego) contra cajas de choque aproximadas con config.js
 // (caja libra con 38 px, torre con 78, la viga castiga arriba de 94). Se revisa contra el nivel: el plan que el nivel
 // asigna a cada obstáculo tiene que sobrevivir en el modelo (campo "modeloCoincide").
+//
+// Variedad (previz/mundo-que-cambia/D2-gramatica.md), con el argumento 'variedad', sobre las mismas decisiones:
+//   VF  casillas de 0.25 s de la partida, sin el tutorial (T1 0-12 s), con una decisión en >= 50 % de las semillas
+//   VC  % de huecos entre decisiones seguidas que miden de 2.0 a 2.5 s (el compás)
+//   VP  distancia entre páginas 2, 3 y 4: cada página es un vector de % de decisiones en 10 cajones de 3 s y la
+//       distancia es 0.5 * suma |a - b| (0 iguales, 1 nada en común); promedio de los 3 pares
+//   VE  la misma distancia, misma página en semillas consecutivas, promedio de las páginas 2 a 4
 globalThis.__JORGE_INTERVENTIONS__ = 0;
 const { CONFIG: C } = await import('../src/config.js');
 const { GAME_LEVEL, SCRIPTS } = await import('../src/tramos.js');
@@ -27,6 +36,8 @@ const { simulateJump, simulateBounce } = await import('../src/jumpmodel.js');
 
 const N_LIBRES = Number(process.argv[2]) || 10;
 const MEC = process.argv[3] ? process.argv[3].split(',') : []; // lista: tramp,viento
+if (MEC.includes('zanja')) await import('../src/zanja.js'); // módulo diferido, como en el juego (RunScene.makeLevel)
+const VARIEDAD = process.argv[6] === 'variedad';
 const LIBRES = Array.from({ length: N_LIBRES }, (_, i) => String((i * 2654435761) >>> 0));
 // 5º argumento AAAA-MM-DD:N: N fechas del Reto desde esa, con las mecánicas que les tocan por fecha.
 // Sin él, las 10 de siempre sin mecánicas (la línea base de flow no se mueve).
@@ -52,8 +63,10 @@ const PARTES = {
   OLA: Array.from({ length: 6 }, (_, i) => ['caja', i * C.waveGapSec]),
   J: [['tramp', 0]],
   B: [['timbre', 0]],
+  Z: [['zanja', 0]],
+  ZZ: [['zanja', 0]],
 };
-const BASE = { caja: 'caja', torre: 'torre', viga: 'viga', vc: 'viga', cc: 'salto largo', tramp: 'trampolín', timbre: 'timbre' };
+const BASE = { caja: 'caja', torre: 'torre', viga: 'viga', vc: 'viga', cc: 'salto largo', tramp: 'trampolín', timbre: 'timbre', zanja: 'zanja' };
 const tipoBase = (patron, tipo) => (patron === 'U' ? 'pop-up' : patron === 'OLA' ? 'ola' : BASE[tipo]);
 
 const ARCS = {
@@ -124,8 +137,9 @@ function evaluar(tipo, v, arco) {
   return { vivos, eleccion: vivos.length >= 2 && resultados.size >= 2, cobro };
 }
 
-function medir(L) {
+function medir(L, grupo = []) {
   const decisiones = [];
+  grupo.push({ decisiones, len: L.tramos[0].len, paginas: L.tramos.length });
   const eventos = [];
   let t0 = 0;
   L.tramos.forEach((tr, i) => {
@@ -146,7 +160,8 @@ function medir(L) {
         const arco = k === 0 && reward && ARCS[reward] ? { ...ARCS[reward], gap: ARCS[reward].gap * kv } : null;
         // trampolín: pisarlo (none) vuela y cobra el arco del vuelo; saltarlo (tap) no lo cobra. Ambos sobreviven
         // (el validador lo prueba con las dos rutas y ±40 ms).
-        const ev = timbre ? { vivos: ['hold', 'tap'], eleccion: true, cobro: { hold: 5, tap: 0 } } : tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed * kv, arco);
+        // zanja: sin modelo de paso; cuenta como decisión sin elección (F4 y F4b con zanja quedan aproximados, a la baja)
+        const ev = tipo === 'zanja' ? { vivos: ['tap', 'hold'], eleccion: false, cobro: {} } : timbre ? { vivos: ['hold', 'tap'], eleccion: true, cobro: { hold: 5, tap: 0 } } : tipo === 'tramp' ? { vivos: ['none', 'tap'], eleccion: reward === 'Avu', cobro: { none: reward === 'Avu' ? 5 : 0, tap: 0 } } : evaluar(tipo, tr.speed * kv, arco);
         decisiones.push({ t: +(t0 + t + at).toFixed(3), tipo: timbre ? 'timbre' : tipo, patron, base: timbre ? 'timbre' : tipoBase(sopla ? main.slice(0, -1) : main, tipo), tramo: i, ...ev });
       });
     }
@@ -288,14 +303,48 @@ function medir(L) {
   };
 }
 
+const st = (a) => ({ min: Math.min(...a), prom: +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2), max: Math.max(...a) });
 const resumen = (rs) => {
   const k = (f) => rs.map(f);
-  const st = (a) => ({ min: Math.min(...a), prom: +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2), max: Math.max(...a) });
   return { partidas: rs.length, F1: st(k((r) => r.F1)), F1b: st(k((r) => r.F1b)), F2a: st(k((r) => r.F2a)), F2b: st(k((r) => r.F2b)), F3s: st(k((r) => r.F3.s)), F3b: st(k((r) => r.F3b)), F4: st(k((r) => r.F4)), F4b: st(k((r) => r.F4b)), F6: st(k((r) => r.F6)), FP: st(k((r) => r.FP)), FPmin: st(k((r) => r.FPmin)), duroPico: st(k((r) => r.duroPico)), desacuerdosModelo: rs.reduce((s, r) => s + r.modeloCoincide.desacuerdos, 0) };
 };
 
-const clasico = medir(GAME_LEVEL);
-const retos = RETOS.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'reto', process.argv[5] ? {} : { mecanicas: [] })) }));
-const libres = LIBRES.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'libre', { mecanicas: MEC })) }));
+// Variedad de un grupo de partidas (ver arriba). Con una sola partida (Clásico) VF y VE no aplican.
+const TUTORIAL_S = 12;
+const vectorPagina = ({ decisiones, len }, p) => {
+  const v = Array(10).fill(0);
+  const loc = decisiones.filter((d) => d.tramo === p);
+  for (const d of loc) v[Math.min(9, Math.floor((d.t - p * len) / 3))] += 1 / loc.length;
+  return v;
+};
+const distancia = (a, b) => 0.5 * a.reduce((s, x, i) => s + Math.abs(x - b[i]), 0);
+const promedio = (a) => a.reduce((s, x) => s + x, 0) / a.length;
+function variedad(grupo) {
+  const veces = new Map();
+  for (const { decisiones } of grupo) {
+    const casillas = new Set(decisiones.filter((d) => d.t >= TUTORIAL_S).map((d) => Math.floor(d.t * 4 + 1e-9)));
+    for (const c of casillas) veces.set(c, (veces.get(c) || 0) + 1);
+  }
+  const fijos = [...veces].filter(([, n]) => n >= grupo.length / 2).sort((a, b) => a[0] - b[0]).map(([c, n]) => ({ s: c / 4, pct: +((100 * n) / grupo.length).toFixed(1) }));
+  const vc = grupo.map(({ decisiones }) => {
+    const huecos = decisiones.slice(1).map((d, i) => d.t - decisiones[i].t);
+    return (100 * huecos.filter((h) => h >= 2 - 1e-9 && h <= 2.5 + 1e-9).length) / huecos.length;
+  });
+  const vectores = grupo.map((g) => Array.from({ length: g.paginas }, (_, p) => vectorPagina(g, p)));
+  const vp = vectores.map(([, a, b, c]) => promedio([distancia(a, b), distancia(a, c), distancia(b, c)]));
+  const redondea = (o) => ({ min: +o.min.toFixed(3), prom: o.prom, max: +o.max.toFixed(3) });
+  const base = { partidas: grupo.length, VC: redondea(st(vc)), VP: redondea({ ...st(vp), prom: +promedio(vp).toFixed(3) }) };
+  if (grupo.length < 2) return base;
+  const porPagina = (p) => vectores.slice(1).map((v, i) => distancia(vectores[i][p], v[p]));
+  const ve = vectores.slice(1).map((v, i) => promedio([1, 2, 3].map((p) => distancia(vectores[i][p], v[p]))));
+  return { ...base, VF: fijos.length, VFcasillas: fijos, VE: redondea({ ...st(ve), prom: +promedio(ve).toFixed(3) }), VEporPagina: [0, 1, 2, 3].map((p) => +promedio(porPagina(p)).toFixed(3)) };
+}
+
+const decsClasico = [];
+const decsRetos = [];
+const decsLibres = [];
+const clasico = medir(GAME_LEVEL, decsClasico);
+const retos = RETOS.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'reto', process.argv[5] ? {} : { mecanicas: [] }), decsRetos) }));
+const libres = LIBRES.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'libre', { mecanicas: MEC }), decsLibres) }));
 const vara = { F1: '>= 7', F2a: '<= 4.5 s', F2b: '<= 12 %', F3: '<= 4 s', F3b: '0', F4: '>= 20 %', F6: '<= 30 s' };
-console.log(JSON.stringify({ fecha: '2026-11-01', libres: N_LIBRES, mecanicas: MEC, vara, resumen: { clasico: resumen([clasico]), reto: resumen(retos), libre: resumen(libres) }, clasico, retos, libres }, null, 1));
+console.log(JSON.stringify({ fecha: '2026-11-01', libres: N_LIBRES, mecanicas: MEC, vara, resumen: { clasico: resumen([clasico]), reto: resumen(retos), libre: resumen(libres) }, ...(VARIEDAD ? { variedad: { clasico: variedad(decsClasico), reto: variedad(decsRetos), libre: variedad(decsLibres) } } : {}), clasico, retos, libres }, null, 1));
