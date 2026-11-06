@@ -1,4 +1,4 @@
-// KIT DE PAPEL del ambiente (DECISIONES 6-nov 08:10, pieza 4; caso-001): mariposa, globo y estrella como recortes doblados.
+// KIT DE PAPEL del ambiente (DECISIONES 6-nov 08:10, pieza 4; caso-001): mariposa y globo como recortes doblados.
 // Viaja en el chunk diferido del atardecer; mientras no llega, Ambient.can no los deja salir. Cada cara plana lleva su propio valor:
 // la luz viene de arriba a la derecha (el sol del nivel 1) y el grueso del papel asoma abajo a la izquierda. Sin degradados ni naranja.
 import { PAL, TONE, mix, rgba, rng } from './palette.js';
@@ -6,7 +6,6 @@ import { mk } from './textures.js';
 import { conFibra, conSombra } from './cantoPapel.js';
 
 const LUZ = mix(PAL.paper, '#FFFFFF', 0.55);
-const TAU = Math.PI * 2;
 
 // Orilla de papel: parte cada lado en pasos cortos y mueve un poco cada punto, sin llegar a verse dentada
 function orilla(puntos, r, amp) {
@@ -143,43 +142,7 @@ function globo() {
   return acabar(c, x, { alpha: 0.28, blur: 1.5, dx: -3, dy: 3 });
 }
 
-// Estrella de origami colgada de un hilo: cada punta con dos caras planas, una alta y una baja, apagadas para que no se lean como bisel de ficha
-function estrella() {
-  const [c, x] = mk(36, 56);
-  const r = rng(181);
-  const [cx, cy] = [18, 38];
-  x.strokeStyle = rgba(PAL.border, 0.9);
-  x.lineWidth = 1.5;
-  x.beginPath();
-  x.moveTo(cx, 0);
-  x.lineTo(cx, cy - 13);
-  x.stroke();
-  const pts = Array.from({ length: 10 }, (_, i) => {
-    const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    const rad = (i % 2 ? 6 : 15) + (r() - 0.5);
-    return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad];
-  });
-  x.fillStyle = TONE.kraftDark;
-  trazar(x, pts, -1.4, 1.4);
-  x.fill();
-  pts.forEach(([ax, ay], i) => {
-    const [bx, by] = pts[(i + 1) % 10];
-    x.fillStyle = i % 2 ? mix(PAL.kraft, PAL.ink, 0.1) : mix(PAL.paper, PAL.kraft, 0.22);
-    x.strokeStyle = x.fillStyle; // sin hueco de antialias entre caras
-    x.lineWidth = 0.5;
-    x.beginPath();
-    x.moveTo(cx, cy);
-    x.lineTo(ax, ay);
-    x.lineTo(bx, by);
-    x.closePath();
-    x.fill();
-    x.stroke();
-  });
-  return acabar(c, x, { alpha: 0.26, blur: 2, dx: -1.5, dy: 1.5 });
-}
-
 export function montarKit(add) {
   add('ambButterfly', mariposa());
   add('ambBalloon', globo());
-  add('ambStar', estrella());
 }

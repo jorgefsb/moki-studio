@@ -1077,6 +1077,33 @@ function ambBands() {
   return c;
 }
 
+// Estrella de papel colgada de un hilo (solo en la noche)
+function ambStar() {
+  const [c, x] = mk(36, 56);
+  const r = rng(181);
+  x.strokeStyle = rgba(PAL.border, 0.9);
+  x.lineWidth = 1.5;
+  x.beginPath();
+  x.moveTo(18, 0);
+  x.lineTo(18, 24);
+  x.stroke();
+  const path = (g) => {
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const rad = i % 2 ? 6 : 14;
+      i ? g.lineTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad) : g.moveTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad);
+    }
+    g.closePath();
+  };
+  cut(x, path, { fill: PAL.paper, edgeW: 2.5, shadow: null, r, fiberCount: 14 });
+  x.strokeStyle = PAL.kraft;
+  x.lineWidth = 2;
+  x.beginPath();
+  path(x);
+  x.stroke();
+  return c;
+}
+
 function chip(color, seed) {
   const [c, x] = mk(10, 8);
   const r = rng(seed);
@@ -1157,6 +1184,7 @@ export function buildTextures(scene) {
   defer('ambBird0', () => ambBird(0, 151));
   defer('ambBird1', () => ambBird(1, 152));
   defer('ambLamp', () => ambLamp());
+  defer('ambStar', () => ambStar());
   defer('ambBands', () => ambBands());
   defer('chipOrange', () => chip(PAL.accent, 73));
   defer('chipAmber', () => chip(PAL.warm, 74));

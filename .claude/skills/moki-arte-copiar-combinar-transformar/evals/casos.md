@@ -15,3 +15,4 @@ Fuente: Jorge 5-nov ("ambiente a recortes de papel con luz de atardecer") y dire
   5. JS inicial reportado, base y rama en la misma corrida.
   6. QA ligera del probador.
 - Regla antes de ver: con 2 de 3 no entra a master. Queda en rama con toma en video para el cronista, y se anota qué pidieron los críticos.
+- Resultado, 6-nov: mariposas y globo ganaron 3 de 3 y van a QA. La estrella perdió en papel (0 de 3, metal 3 de 3) y regresó a la de master; se queda como regresión de este caso. Evidencia: evidencia/kit-ambiente/RESULTADO.md.
