@@ -1077,69 +1077,6 @@ function ambBands() {
   return c;
 }
 
-// Globo de papel: gajos kraft claro y papel, cesta de tinta al 40%
-function ambBalloon() {
-  const [c, x] = mk(80, 110);
-  const r = rng(161);
-  const env = (g) => g.ellipse(40, 38, 32, 36, 0, 0, TAU);
-  cut(x, env, { fill: mix(PAL.kraft, PAL.paper, 0.55), edgeW: 2, shadow: { alpha: 0.12, blur: 4, dx: 1, dy: 3 }, r, fiberCount: 40 });
-  x.save();
-  x.beginPath();
-  env(x);
-  x.clip();
-  x.fillStyle = PAL.paper;
-  for (const [a, b] of [[14, 26], [38, 50], [62, 74]]) x.fillRect(a, 0, b - a, 80);
-  x.restore();
-  x.strokeStyle = rgba(PAL.ink, 0.4);
-  x.lineWidth = 1.5;
-  x.beginPath();
-  x.moveTo(24, 70);
-  x.lineTo(32, 90);
-  x.moveTo(56, 70);
-  x.lineTo(48, 90);
-  x.stroke();
-  x.fillStyle = rgba(PAL.ink, 0.4);
-  x.fillRect(31, 90, 18, 12);
-  return c;
-}
-
-// Mariposa de papel (alas abiertas; el aleteo escala el ancho)
-function ambButterfly() {
-  const [c, x] = mk(36, 28);
-  const r = rng(171);
-  cut(x, (g) => { g.ellipse(10, 11, 9, 8, -0.3, 0, TAU); g.ellipse(26, 11, 9, 8, 0.3, 0, TAU); g.ellipse(11, 20, 6, 5, 0.3, 0, TAU); g.ellipse(25, 20, 6, 5, -0.3, 0, TAU); }, { fill: mix(PAL.paper, PAL.kraft, 0.35), edgeW: 1.5, shadow: null, r, fiberCount: 8 });
-  x.fillStyle = PAL.ink;
-  x.fillRect(17, 6, 2, 17);
-  return c;
-}
-
-// Estrella de papel colgada de un hilo (solo en la noche)
-function ambStar() {
-  const [c, x] = mk(36, 56);
-  const r = rng(181);
-  x.strokeStyle = rgba(PAL.border, 0.9);
-  x.lineWidth = 1.5;
-  x.beginPath();
-  x.moveTo(18, 0);
-  x.lineTo(18, 24);
-  x.stroke();
-  const path = (g) => {
-    for (let i = 0; i < 10; i++) {
-      const a = -Math.PI / 2 + (i * Math.PI) / 5;
-      const rad = i % 2 ? 6 : 14;
-      i ? g.lineTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad) : g.moveTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad);
-    }
-    g.closePath();
-  };
-  cut(x, path, { fill: PAL.paper, edgeW: 2.5, shadow: null, r, fiberCount: 14 });
-  x.strokeStyle = PAL.kraft;
-  x.lineWidth = 2;
-  x.beginPath();
-  path(x);
-  x.stroke();
-  return c;
-}
-
 function chip(color, seed) {
   const [c, x] = mk(10, 8);
   const r = rng(seed);
@@ -1220,9 +1157,6 @@ export function buildTextures(scene) {
   defer('ambBird0', () => ambBird(0, 151));
   defer('ambBird1', () => ambBird(1, 152));
   defer('ambLamp', () => ambLamp());
-  defer('ambBalloon', () => ambBalloon());
-  defer('ambButterfly', () => ambButterfly());
-  defer('ambStar', () => ambStar());
   defer('ambBands', () => ambBands());
   defer('chipOrange', () => chip(PAL.accent, 73));
   defer('chipAmber', () => chip(PAL.warm, 74));

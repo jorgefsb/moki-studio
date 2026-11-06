@@ -386,7 +386,7 @@ export class Ambient {
       const n = 1 + Math.floor(r() * 2);
       const top = Math.min(C.world.groundY - 205, band[1]); // y < groundY-200
       const yy = Math.min(top, band[0] + (band[1] - band[0]) * 0.3 + r() * 20);
-      for (let i = 0; i < n; i++) ev.sprites.push(s.add.image(s.vw + 20 + i * 40, yy, 'ambButterfly').setDepth(3.4).setAlpha(0.9).setScale(this.px(24, 36)));
+      for (let i = 0; i < n; i++) ev.sprites.push(s.add.image(s.vw + 20 + i * 40, yy, 'ambButterfly').setDepth(3.4).setScale(this.px(24, 36)));
       ev.life = 8000;
       ev.vx = -(48 + r() * 24);
       ev.y = yy;
@@ -583,6 +583,7 @@ export class Ambient {
       sp.x = s.vw + 20 + i * 40 + a.vx * dt;
       sp.y = a.y + i * 14 + Math.sin(dt * 2.2 + i * 2) * 14;
       sp.setScale(this.px(24, 36) * (0.4 + 0.6 * Math.abs(Math.sin(dt * 9 + i))), this.px(24, 36)); // aleteo: el ancho va de 100 a 40%
+      sp.setAngle(Math.cos(dt * 2.2 + i * 2) * 5); // se ladea con su vaivén, como papel en el aire
     });
     if (age > a.life) {
       a.sprites.forEach((sp) => sp.destroy());
@@ -600,7 +601,7 @@ export class Ambient {
     sp.x = b.x0 - (s.dist - b.d0) * 0.08; // capa 2, mucho más lenta que a 0.3x para que dure sus ~24 s a la vista
     sp.y = b.y0 + (b.y1 - b.y0) * (1 - Math.pow(1 - Math.min(1, age / 9000), 2)) + Math.sin(age / 900) * 3; // sube tras las colinas
     sp.setAngle(Math.sin(age / 1400) * 1.5);
-    sp.setAlpha(0.95 * Math.min(1, age / 1200) * (u > 0.92 ? 1 - (u - 0.92) / 0.08 : 1));
+    sp.setAlpha(Math.min(1, age / 1200) * (u > 0.92 ? 1 - (u - 0.92) / 0.08 : 1));
     if (age > b.life || sp.x < -120) {
       sp.destroy();
       this.slow = null;

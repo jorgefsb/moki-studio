@@ -11,6 +11,7 @@ import { montarBoceto } from './boceto.js';
 import { montarBokeh } from './bokeh.js';
 import { montarHojas } from './hojas.js';
 import { montarCapas } from './capas.js';
+import { montarKit } from './kitAmbiente.js';
 import { SOMBRA_K, conFibra, conSombra, hornear, sombra, labioSuelo, sombraSuelo } from './cantoPapel.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
@@ -261,6 +262,7 @@ export function montar(s) {
   add('tardeSombraSuelo', sombraSuelo(TARDE.sombra, Pa.sombra.suelo));
   Object.entries(OBS).forEach(([k, fn]) => add(`${k}_t`, fn()));
   add('token_t', ficha());
+  montarKit(add);
   // El atardecer es SOLO del nivel 1 del Cuaderno (DECISIONES 3-nov 10:34, duda 1). En los demás niveles st queda en 0: la tarde
   // de siempre, sin tocar DAY.
   const nivel1 = () => nivelDe(leerCuaderno()).nivel === 1;
