@@ -37,6 +37,7 @@ const usoMec = {};
 // sorteado: se cuenta aparte. Las fechas son fijas, así que este número solo sube si cambia el generador.
 // Era 16 con trampolín y viento. Se movió a 21 DESPUÉS de ver 21 con viento.reto = null (DECISIONES 5-nov, director): es alarma de
 // que el generador cambió, no juicio de que 21 esté bien. Cualquier otro valor regresa al director.
+// Tope 21, esperado 0 con formas en el Reto (director, 6-nov).
 const TOPE_DIF4_TRAMP_INTRO = 21;
 let dif4TrampIntro = 0;
 const justicia = { fechas: 0, corridas: 0, trampolines: 0, zonasViento: 0, fechasConFallo: [] };
