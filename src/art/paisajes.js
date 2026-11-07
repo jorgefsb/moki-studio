@@ -79,7 +79,7 @@ const TRAMOS = [
   null,
   // Ciudad de cartón: casitas de kraft al frente, edificios altos atrás, cielo de papel gris claro
   {
-    cielo: () => cielo([[0, '#CFC6BA'], [1, '#EFE6D6']]),
+    cielo: () => cielo([[0, '#6FA8D6'], [0.65, '#B4D6EA'], [1, '#F2EAD6']]), // día claro: el beige no decía ninguna hora (caso-004, 3 de 3)
     // Banqueta con juntas y, más abajo, la orilla y la calle
     suelo: () => suelo({
       franja: '#9E9587',
