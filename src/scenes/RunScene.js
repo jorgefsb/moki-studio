@@ -603,7 +603,7 @@ export class RunScene extends Phaser.Scene {
 
   // Contador anónimo: cada intento (Jugar, Otra vez o reintento) cuenta una vez; el demo no cuenta
   abreIntento() {
-    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel);
+    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx);
   }
 
   startDemo() {
@@ -2082,7 +2082,7 @@ export class RunScene extends Phaser.Scene {
     if (atras && !conPoses) this.retroceso = 0;
     if (this.sobre) this.mokiShadow.setDepth(10.5); // su sombra cae sobre la caja, no en el suelo tapado
     this.cobrarCinta(false); // al chocar la cinta se enrolla sin cartel; lo juntado ya contó
-    cerrarIntento(o.type === 'zanja' ? 'zanja' : 'choque');
+    cerrarIntento(o.type === 'zanja' ? 'zanja' : 'choque', o.type);
     this.dead = true;
     this.screen = 'dead';
     this.deadFor = 0;
