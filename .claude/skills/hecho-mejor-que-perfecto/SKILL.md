@@ -43,3 +43,15 @@ Todo lo demás se hace.
 - "Solo con OK de Jorge."
 
 Si lo vas a escribir, aplica esta skill y decide tú.
+
+## Regla de los 30 minutos (Jorge, 6-nov 08:11: canon)
+- Nada espera a Jorge. Si Spark o el director le preguntan algo y en 30 minutos no contesta, se avanza con la opción recomendada. Jorge la ajusta después, en vivo, con su feedback.
+- Toda pregunta a Jorge lleva su opción recomendada y la hora límite: "Si no contestas a las HH:MM, hago X".
+- Pueden aplicar el silencio-es-sí: Spark y el director.
+- Puertas que piden "personas": se cubren con invitados a ciegas y bots. Jorge califica después, en vivo.
+- Fuera de la regla (siempre esperan a Jorge): dinero, contratos, borrar sin respaldo, secretos, cruzar empresas y personas reales sin permiso.
+- Salto visible: cada día a las 18:30 algo que se ve entra a master y a la demo. La pantalla enseña alarma roja si el juego pasa 6 h sin cambios.
+
+## Horas de la bitácora (Spark, 6-nov, caso-002)
+- Cada línea de BITACORA.md y DECISIONES.md se escribe SOLO con el comando `bitacora "Rol · texto"` (o `bitacora --decision "Rol · texto"`), que pone fecha y hora reales. Nunca con echo ni a mano: el 7-nov las horas seguían saliendo inventadas (06:42 a las 11:47).
+- Si una hora ya quedó mal, no se reescribe: se agrega una línea de corrección con la hora real.
