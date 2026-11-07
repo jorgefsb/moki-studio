@@ -68,7 +68,7 @@ export const CONFIG = {
 
   // Moki
   squashMax: 0.03,
-  juice: 1, // 0 Nada, 1 Poquito, 2 Mucho, 3 Hardcore (el menú llega con el sonido)
+  juice: 2, // 0 Nada, 1 Poquito, 2 Mucho, 3 Hardcore (el menú llega con el sonido). Mucho la primera vez (DIVERSIÓN 2B); lo guardado en el menú y el movimiento reducido mandan
 
   // Escena: la banda jugable es 960x540 lógicos; en pantallas más altas el diorama se extiende arriba y abajo.
   // minVisibleWidth: en pantallas angostas se ve ese ancho lógico (Moki ≈76 px en 375, ARTE: 64-80).

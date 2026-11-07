@@ -48,3 +48,12 @@ Escrito antes del código, 7-nov 10:55 (16:55Z). Alcance: solo src/contador.js y
 - Puertas: Clásico 2142 78/78; Reto 2362 x2; FPS 375 y carga CPU x4 no peores que master; JS inicial sube solo unos bytes gz; consola 0.
 - Regla: una sola pasada. No se manda nada al worker real desde pruebas.
 - Se revisa: este commit es anterior al de código; evidencia/medicion-2/RESULTADO.md trae las cifras y lo NO VERIFICADO.
+
+## caso-007 · DIVERSIÓN 2B: Mucho por defecto la primera vez
+Escrito antes del código, 7-nov 11:55 (17:55Z). Alcance: un número en src/config.js (juice 1 → 2), sobre master ee9ea59. Rama v2/juice-mucho.
+- Entrada: quien llega sin haber tocado el menú juega en Poquito: sin chispa al despegar, sin pasto, sin x2 en el contador, sin confeti y sin vibración. Hoy 0 de 5 de esos efectos en la primera partida.
+- Mucho prende (leído del código): x2/x3 en el contador (RunScene.js:745), pasto que se dobla al aterrizar (RunScene.js:750), nubes que tiemblan en checkpoint y arco (:770), confeti en mejor marca, aterrizaje con 6-8 papelitos en vez de 3-5 (particles.js burst), estela con tope 8 en vez de 3 desde el nivel 8, y vibración en momentos importantes (feel.js buzz, solo táctil).
+- Prueba: build de producción, headless. (a) jugador nuevo sin moki.juice: nivel efectivo 2; (b) con moki.juice = '1' guardado: sigue 1 (el menú manda); (c) con prefers-reduced-motion: reduce, sin moki.juice: escena.reduced = true y 0 partículas, sin x2 y sin vibración (el movimiento reducido manda); (d) el menú sigue ciclando Nada → Poquito → Mucho.
+- Puertas: FPS a 390 con el bot no pierde más de 2 contra master (mismo bot, alternado, 3+3, sin fijar moki.juice); Clásico 2142 78/78; Reto 2362 x2; carga CPU x4 no peor que master (alternado 5+5, semáforo al empezar y terminar, tanda en ROJO no vale); JS inicial sube solo unos bytes; consola 0.
+- Regla: una sola pasada. Si no pasa, queda en rama. Nada al worker real.
+- Se revisa: este commit es anterior al de código; evidencia/juice-mucho/RESULTADO.md trae las cifras y lo NO VERIFICADO.
