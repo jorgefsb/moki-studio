@@ -12,6 +12,7 @@ import { montarBokeh } from './bokeh.js';
 import { montarHojas } from './hojas.js';
 import { montarCapas } from './capas.js';
 import { montarKit } from './kitAmbiente.js';
+import { montarPaisajes } from './paisajes.js';
 import { SOMBRA_K, conFibra, conSombra, hornear, sombra, labioSuelo, sombraSuelo } from './cantoPapel.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
@@ -569,4 +570,5 @@ export function montar(s) {
   montarBoceto(s, o, colocar, TARDE.sol.r);
   if (TARDE.bokeh) montarBokeh(s);
   if (TARDE.hojas) montarHojas(s);
+  montarPaisajes(s, pintadas, gy);
 }
