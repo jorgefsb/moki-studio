@@ -61,3 +61,27 @@ Para después, solo con OK de Jorge: correo y lead magnets, prensa, precios y of
 Entregables extra:
 - `publicar/AAAA-MM-DD-posts.md` trae, por pieza: red, texto, tarjeta, por qué funciona según el contexto y el veredicto del crítico.
 - `MARKETING.md` en la raíz: calendario de 2 semanas, embudo (post → moki.jorgesuarez.com.mx → jugar → seguir a Jorge) y la lista de directorios propuestos.
+
+## Las 5 series (Jorge, 3-nov 21:36: "adelante con todas")
+Además de la entrada diaria, cada pieza pública cae en una de estas series. Máximo una serie al día encima del recap, y máximo UNA encuesta por semana (la segunda encuesta del 2-nov no tuvo votos porque salió 8 h después de la primera).
+
+1. **El estudio por dentro** (cada vez que cambia la estructura). Agrega un objeto a `historia` en equipo.json con el campo `cambio`: `antes[]`, `ahora[]`, `ganamos` (con número) y `fallo` (lo que no salió). Tarjeta: `bitacora/tarjeta.html?t=cambio&l=es|en` (toma el último cambio; `&v=v6` elige versión). Primer ejemplo: v6 del 3-nov. Página: /equipo.
+2. **Lo que no entró** (viernes). Una cosa que probamos y no entró: qué probamos, qué esperábamos, qué pasó y qué regla nueva salió. Con número y captura del intento. Es la pieza más honesta: nunca la escondas ni la suavices.
+3. **Decidimos** (cuando hay una decisión grande). Las opciones con imagen, cuál ganó, cuáles descartamos y por qué, y quién decidió: Jorge, el director, el público o los críticos a ciegas.
+4. **Lo que nos dijeron** (viernes). Lee `publicar/sugerencias.md`. Cuenta 2 o 3 sugerencias de la gente y qué pasó con cada una. Nunca prometas: el estado dice anotada, probando, entró o no por ahora, siempre con la razón.
+5. **Radar** (viernes, lo prepara el investigador). Un hallazgo de mercado con fuente y fecha: qué está pegando en juegos casuales de navegador y celular, qué piden los jugadores de runners, un hueco que podríamos llenar. Más nuestro propio dato: cuántas partidas hubo y de qué modo (el campo `nivel` es el nivel del Cuaderno, no qué tan lejos llegó la persona) (`/api/partidas?dias=7`). Termina con la pregunta "¿hacia dónde lo llevamos?". Es la encuesta de la semana. Sin etiquetas de otras empresas.
+
+## Sugerencias de la gente (`publicar/sugerencias.md`)
+- Cada comentario con una idea va a la tabla: fecha, red, quién (usuario público, nunca datos personales), la sugerencia en sus palabras, estado y razón.
+- Estados: **anotada** (la leímos), **probando** (hay una rama o un invitado viéndola), **entró** (está en master, con la fecha), **no por ahora** (con la razón honesta).
+- En la red se contesta corto: "Anotada. [razón o qué sigue]". Nunca "lo vamos a hacer".
+- Las sugerencias no saltan la fila: el director las considera al elegir pieza, igual que cualquier otra idea.
+
+## Medición anónima de partidas (Jorge, 3-nov)
+El sitio cuenta partidas por día, modo, nivel y motivo de fin. No guarda IP, cookies ni nada de la persona. Resumen público: https://moki.jorgesuarez.com.mx/api/partidas?dias=7. Úsalo en Radar y en las entradas ("17 de 26 partidas fueron del Reto"; no uses `nivel` para decir hasta dónde llega la gente: es el nivel del Cuaderno). Si el total es menor a 30 partidas, dilo: "todavía son pocas para sacar conclusiones".
+
+## Cada publicación invita a jugar y dice que medimos (Jorge, 7-nov 10:36)
+Toda pieza pública cierra con dos cosas, en palabras sencillas:
+1. Dónde jugar: moki.jorgesuarez.com.mx
+2. Que medimos de forma anónima cómo se juega para mejorarlo: "Contamos las partidas sin datos tuyos. Entre más juegues, mejor sabemos qué arreglar."
+Cuando haya un número de juego nuevo (cuántos se salen, cuántos pasan el nivel 2, cuántos juegan otra), se cuenta con su antes y después. Solo números de público: nunca mezclar partidas del equipo ni de bots.
