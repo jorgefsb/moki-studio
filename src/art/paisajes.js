@@ -94,6 +94,16 @@ const TRAMOS = [
   {
     // día claro: el beige no decía ninguna hora (caso-004, 3 de 3). Con más cuerpo y nubes de papel: el azul pálido Jorge lo leyó viejo (caso-005)
     cielo: () => cielo([[0, '#4F8CC4'], [0.55, '#86B7DC'], [1, '#D6E2DD']], (x) => {
+      // Sol de papel arriba a la derecha, de donde viene la luz de los edificios (pasada B): halo tenue de papel, nada de brillo
+      const halo = x.createRadialGradient(420, 40, 14, 420, 40, 90);
+      halo.addColorStop(0, rgba('#FBF1DC', 0.5));
+      halo.addColorStop(1, rgba('#FBF1DC', 0));
+      x.fillStyle = halo;
+      x.fillRect(320, 0, 160, 140);
+      x.fillStyle = '#FBF1DC';
+      x.beginPath();
+      x.arc(420, 40, 17, 0, Math.PI * 2);
+      x.fill();
       [[70, 46, 1], [250, 84, 0.8], [392, 34, 0.65]].forEach(([u, y, k]) => {
         const nube = () => {
           x.save();
@@ -121,7 +131,8 @@ const TRAMOS = [
     suelo: () => suelo({
       franja: '#A09280',
       corte: '#5F584D',
-      paradas: [[0, '#7D7163'], [0.38, '#76695B'], [0.4, '#5F584D'], [0.43, '#6B655A'], [1, '#4F4A42']],
+      // La calle baja a casi tinta en el borde inferior: el primer plano es lo más oscuro (pasada B). Banqueta cercana sin cambio
+      paradas: [[0, '#7D7163'], [0.38, '#76695B'], [0.4, '#5F584D'], [0.43, '#5B554C'], [0.7, '#3B3731'], [1, '#26241F']],
       seed: 212,
       detalle(x) {
         const q = rng(215);
@@ -133,7 +144,7 @@ const TRAMOS = [
         }
         x.fillStyle = '#6A6155';
         for (let u = 40; u < W; u += 128) x.fillRect(u, SUELO.y + SUELO.franja + 4, 2, 84);
-        x.fillStyle = '#C8B99C'; // rayas de la calle, lejos de donde pisa la caja
+        x.fillStyle = '#A99C84'; // rayas de la calle, lejos de donde pisa la caja; un paso abajo para que no brillen sobre la calle oscura
         for (let u = 20; u < W; u += 128) x.fillRect(u, 196, 56, 5);
       },
     }),
@@ -148,6 +159,13 @@ const TRAMOS = [
       });
       const p = encima(papel(c, '#B5A389', 203, 2), (x) => {
         x.globalCompositeOperation = 'source-atop'; // solo sobre el papel: el borde rasgado no deja asomar el canto
+        // luz de arriba a la derecha: cara derecha más clara, izquierda en sombra
+        bloques.forEach(([u, t, a]) => {
+          x.fillStyle = '#CDBC9E';
+          x.fillRect(u + a - 7, t, 7, H);
+          x.fillStyle = '#9E8D74';
+          x.fillRect(u, t, 6, H);
+        });
         x.fillStyle = '#93826A';
         bloques.forEach(([u, t, a]) => x.fillRect(u + 1, t + 3, a - 2, 2));
         const r = rng(216);
@@ -199,6 +217,16 @@ const TRAMOS = [
         x.restore();
       };
       const p = encima(papel(c, '#8F7558', 205), (x) => {
+        // Luz de arriba a la derecha (pasada B): cara derecha un paso más clara, izquierda un paso más oscura. Las dos entre L 0.13 y L 0.25, también detrás de la caja
+        x.globalCompositeOperation = 'source-atop';
+        fila((u, a, t, pico) => {
+          const y = t + (pico ? 22 : 0);
+          x.fillStyle = '#A08263';
+          x.fillRect(u + a - 12, y, 12, H);
+          x.fillStyle = '#77614B';
+          x.fillRect(u, y, 10, H);
+        });
+        x.globalCompositeOperation = 'source-over';
         // Abajo de BASE (h 130, donde va la caja) el tono de siempre: L sigue bajo 0.305
         recorte(x, BASE, H, () => {
           x.fillStyle = '#A58A6A';
