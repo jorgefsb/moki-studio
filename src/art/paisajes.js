@@ -3,7 +3,7 @@
 // Viaja en el chunk diferido del atardecer. Reto, Clásico y demás niveles no crean ni un objeto.
 // Contraste (caja y torre, cuerpo #452B1C y canto #E9D2AE contra el fondo >= 2.0): hasta h 130 del mundo sobre el suelo, cada capa cae entre L 0.111 y L 0.305.
 // Por eso la noche se lee por el tono y por arriba del cielo, no por oscurecer la banda (la nave A falló por ahí: 1.88).
-import { mix, rng } from './palette.js';
+import { mix, rgba, rng } from './palette.js';
 import { mk } from './textures.js';
 import { conFibra, hornear } from './cantoPapel.js';
 
@@ -34,7 +34,20 @@ const encima = (c, fn) => {
   costura(x, fn);
   return c;
 };
-const papel = (src, color, seed) => hornear(src, { color, labio: mix(color, '#F4E8D5', 0.45), px: 3, seed, sinPie: true, fibraK: 1, rasgado: 2 });
+const papel = (src, color, seed, px = 3) => hornear(src, { color, labio: mix(color, '#F4E8D5', 0.45), px, seed, sinPie: true, fibraK: 1, rasgado: 2 });
+// Sombra de contacto de una capa sobre la de atrás, cruzando la costura del mosaico. Solo cae en lo transparente, arriba de BASE: abajo de h 130 no cambia nada
+const conSombraMosaico = (c, alpha, blur, dx, dy) => {
+  const [t, x] = mk(W, H);
+  x.shadowColor = rgba('#22211F', alpha);
+  x.shadowBlur = blur;
+  x.shadowOffsetX = dx;
+  x.shadowOffsetY = dy;
+  costura(x, (y) => y.drawImage(c, 0, 0));
+  x.shadowColor = 'transparent';
+  x.drawImage(c, 0, 0);
+  x.clearRect(0, H - 2, W, 2); // como sinPie: el mosaico repite en vertical
+  return t;
+};
 
 function cielo(stops, extra) {
   const [c, x] = mk(480, H);
@@ -79,25 +92,75 @@ const TRAMOS = [
   null,
   // Ciudad de cartón: casitas de kraft al frente, edificios altos atrás, cielo de papel gris claro
   {
-    cielo: () => cielo([[0, '#6FA8D6'], [0.65, '#B4D6EA'], [1, '#F2EAD6']]), // día claro: el beige no decía ninguna hora (caso-004, 3 de 3)
-    // Banqueta con juntas y, más abajo, la orilla y la calle
+    // día claro: el beige no decía ninguna hora (caso-004, 3 de 3). Con más cuerpo y nubes de papel: el azul pálido Jorge lo leyó viejo (caso-005)
+    cielo: () => cielo([[0, '#4F8CC4'], [0.55, '#86B7DC'], [1, '#D6E2DD']], (x) => {
+      [[70, 46, 1], [250, 84, 0.8], [392, 34, 0.65]].forEach(([u, y, k]) => {
+        const nube = () => {
+          x.save();
+          x.beginPath();
+          x.rect(0, 0, 480, y + 12 * k); // panza plana, como recorte pegado
+          x.clip();
+          x.beginPath();
+          [[0, 0, 26], [24, -10, 22], [48, -2, 20], [-22, 4, 16], [68, 6, 14]].forEach(([dx, dy, r]) => {
+            x.moveTo(u + dx * k + r * k * 1.3, y + dy * k);
+            x.ellipse(u + dx * k, y + dy * k, r * k * 1.3, r * k, 0, 0, Math.PI * 2);
+          });
+          x.fill();
+          x.restore();
+        };
+        x.save();
+        x.translate(3, 3);
+        x.fillStyle = rgba('#22211F', 0.14);
+        nube();
+        x.restore();
+        x.fillStyle = '#F4E8D5';
+        nube();
+      });
+    }),
+    // Banqueta de losas con juntas, cordón y, más abajo, la calle con rayas. Franja y banqueta siguen entre L 0.111 y L 0.305
     suelo: () => suelo({
-      franja: '#9E9587',
+      franja: '#A09280',
       corte: '#5F584D',
-      paradas: [[0, '#7A7064'], [0.38, '#7A7064'], [0.4, '#5F584D'], [0.43, '#6F685C'], [1, '#4F4A42']],
+      paradas: [[0, '#7D7163'], [0.38, '#76695B'], [0.4, '#5F584D'], [0.43, '#6B655A'], [1, '#4F4A42']],
       seed: 212,
       detalle(x) {
+        const q = rng(215);
+        for (let u = 0; u < W; u += 32) {
+          x.fillStyle = q() < 0.5 ? '#978976' : '#A69984'; // losas de dos tonos, un paso apenas
+          x.fillRect(u + 2, SUELO.y + 4, 30, SUELO.franja - 6);
+          x.fillStyle = '#857967';
+          x.fillRect(u, SUELO.y + 4, 2, SUELO.franja - 4);
+        }
         x.fillStyle = '#6A6155';
         for (let u = 40; u < W; u += 128) x.fillRect(u, SUELO.y + SUELO.franja + 4, 2, 84);
+        x.fillStyle = '#C8B99C'; // rayas de la calle, lejos de donde pisa la caja
+        for (let u = 20; u < W; u += 128) x.fillRect(u, 196, 56, 5);
       },
     }),
+    // Capa 2 (ARTE §7): canto de 2 px más oscuro bajo el borde, sombra de contacto tenue contra el cielo y ventanas de luz
     lejos() {
+      const bloques = [];
+      const q = rng(202);
+      for (let u = 0; u < W; u += 62 + Math.floor(q() * 30)) bloques.push([u, 14 + q() * 66, 50 + q() * 26]);
       const c = silueta((x) => {
-        const q = rng(202);
         x.fillRect(0, 90, W, H);
-        for (let u = 0; u < W; u += 62 + Math.floor(q() * 30)) x.fillRect(u, 14 + q() * 66, 50 + q() * 26, H);
+        bloques.forEach(([u, t, a]) => x.fillRect(u, t, a, H));
       });
-      return papel(c, '#B5A389', 203);
+      const p = encima(papel(c, '#B5A389', 203, 2), (x) => {
+        x.globalCompositeOperation = 'source-atop'; // solo sobre el papel: el borde rasgado no deja asomar el canto
+        x.fillStyle = '#93826A';
+        bloques.forEach(([u, t, a]) => x.fillRect(u + 1, t + 3, a - 2, 2));
+        const r = rng(216);
+        bloques.forEach(([u, t, a]) => {
+          for (let y = t + 12; y < 84; y += 14) {
+            for (let v = u + 7; v + 6 < u + a - 4; v += 12) {
+              x.fillStyle = r() < 0.4 ? '#F4E8D5' : '#9C8A70';
+              x.fillRect(v, y, 6, 8);
+            }
+          }
+        });
+      });
+      return conSombraMosaico(p, 0.2, 6, -3, -2);
     },
     medio() {
       const fila = (fn) => {
@@ -122,14 +185,41 @@ const TRAMOS = [
           x.fill();
         });
       });
-      return encima(papel(c, '#8F7558', 205), (x) => {
-        x.fillStyle = '#A58A6A'; // ventanas de un paso más claras: detrás de una caja, L sigue bajo 0.305
-        fila((u, a, t, pico) => {
-          const y = t + (pico ? 34 : 14);
-          const n = a > 120 ? 3 : 2;
-          for (let i = 0; i < n; i++) x.fillRect(u + 14 + i * ((a - 18) / n), y, 18, 22);
+      const ventanas = (fn) => fila((u, a, t, pico) => {
+        const y = t + (pico ? 34 : 14);
+        const n = a > 120 ? 3 : 2;
+        for (let i = 0; i < n; i++) fn(u + 14 + i * ((a - 18) / n), y, i);
+      });
+      const recorte = (x, y0, y1, fn) => {
+        x.save();
+        x.beginPath();
+        x.rect(-W, y0, 3 * W, y1 - y0);
+        x.clip();
+        fn();
+        x.restore();
+      };
+      const p = encima(papel(c, '#8F7558', 205), (x) => {
+        // Abajo de BASE (h 130, donde va la caja) el tono de siempre: L sigue bajo 0.305
+        recorte(x, BASE, H, () => {
+          x.fillStyle = '#A58A6A';
+          ventanas((v, y) => x.fillRect(v, y, 18, 22));
+        });
+        // Arriba de BASE no hay caja pero sí viga: ventanas con luz de papel, marco y repisa, unas prendidas y otras no. Nada baja de L 0.14 (con marco de tinta la viga bajó a 1.96)
+        recorte(x, 0, BASE, () => {
+          const r = rng(217);
+          ventanas((v, y) => {
+            x.fillStyle = '#7A6550';
+            x.fillRect(v - 2, y - 2, 22, 26);
+            x.fillStyle = r() < 0.6 ? '#F1DDB2' : '#8A735A';
+            x.fillRect(v, y, 18, 22);
+            x.fillStyle = '#7A6550';
+            x.fillRect(v + 8, y, 2, 22);
+            x.fillStyle = '#C9B08C';
+            x.fillRect(v - 3, y + 22, 24, 3);
+          });
         });
       });
+      return conSombraMosaico(p, 0.24, 10, -4, -3); // capa 3: sombra de 8 a 12 de desenfoque sobre la lejos
     },
   },
   // Playa de papel: mar de cartulina azul con olas recortadas, veleros en el horizonte y palmeras
