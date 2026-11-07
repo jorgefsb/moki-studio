@@ -57,3 +57,13 @@ Escrito antes del código, 7-nov 11:55 (17:55Z). Alcance: un número en src/conf
 - Puertas: FPS a 390 con el bot no pierde más de 2 contra master (mismo bot, alternado, 3+3, sin fijar moki.juice); Clásico 2142 78/78; Reto 2362 x2; carga CPU x4 no peor que master (alternado 5+5, semáforo al empezar y terminar, tanda en ROJO no vale); JS inicial sube solo unos bytes; consola 0.
 - Regla: una sola pasada. Si no pasa, queda en rama. Nada al worker real.
 - Se revisa: este commit es anterior al de código; evidencia/juice-mucho/RESULTADO.md trae las cifras y lo NO VERIFICADO.
+
+## caso-008 · DIVERSIÓN 4: casi-choque premiado
+Escrito antes del código, 7-nov 13:35 (19:35Z). Alcance: src/scenes/RunScene.js (colisión), src/audio/sfx.js (sonido 'casi'), src/art/particles.js (chispa), src/config.js (perillas), sobre master 0b4724f. Rama v2/casi-choque.
+- Entrada: hoy pasar raspando un obstáculo no da nada. Con el bot que salta tarde (sonda de evidencia/casi-choque), premios por partida hoy: 0 (no existe). La sonda también cuenta, por fuera del juego, cuántos obstáculos pasa a <= 8 px sin tocarlos (el oráculo).
+- Regla: si la caja de Moki pasa a <= 8 px de la caja de choque de un obstáculo (la misma de obsBox) sin tocarla, al dejarlo atrás: chispa (solo con juice >= 1 y sin movimiento reducido) y sonido que sube con la racha de casi-choques (se corta al chocar o a los 4 s sin otro). Tope uno por obstáculo. No cuentan trampolín, timbre, zanja, torre acostada, demo ni paseo.
+- Prueba: build de producción, headless, 390x844. Bot que salta tarde, ?debug&god, partidas de 30 s; juego y oráculo contados por separado.
+- Pasa: rama 1 a 3 premios por partida con el bot; premios del juego = oráculo (nunca más que obstáculos pasados raspando); nunca dos por el mismo obstáculo; master 0; con juice 0 y con movimiento reducido 0 chispas (el sonido sigue mientras no esté silenciado).
+- Puertas: FPS 390 y 375 no peores que master (alternado); carga CPU x4 no peor (alternado, semáforo al empezar y terminar); Clásico 2142 78/78; Reto 2362 x2; consola 0; JS inicial solo unos bytes más.
+- Regla: una sola pasada. Si no pasa, queda en rama. Nada al worker real.
+- Se revisa: este commit es anterior al de código; evidencia/casi-choque/RESULTADO.md trae las cifras y lo NO VERIFICADO.
