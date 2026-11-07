@@ -39,3 +39,12 @@ Escrito antes del código, 7-nov 09:40 (15:40Z). Alcance: solo tramo 2 de Libre 
 - Regla: una sola pasada. Si no pasa, queda en rama. La vara no se mueve.
 - Se revisa: este commit es anterior al de código; evidencia/ciudad-viva/RESULTADO.md trae las cifras y lo NO VERIFICADO.
 - Pasada B (orden del director, escrita antes del código 7-nov 10:01): la tanda 1 ganó a master 3 de 3, pero 2 de 3 la vieron "un poco deslavada" por falta de luz con dirección y de primer plano oscuro. Cambio: luz desde arriba a la derecha (lado que da la luz más claro, el otro más oscuro, en lejos y medio; sol de papel en el cielo) y calle que baja a casi tinta en el borde inferior. Franja y banqueta cercana sin cambio de rango. Prueba: 3 críticos NUEVOS que no vieron la tanda 1, misma pregunta y vara alto-03-palms, contra master. Pasa igual que arriba. Puertas igual que arriba, más FPS 375 en página 1 y en tramo 2. Si no pasa pero sigue ganando 3 de 3 a master, se integra como mejora parcial con el defecto escrito (decisión del director).
+
+## caso-006 · MEDICIÓN 2 + DIVERSIÓN 1-PRE: el contador dice quién juega, en qué tramo y contra qué cae
+Escrito antes del código, 7-nov 10:55 (16:55Z). Alcance: solo src/contador.js y las llamadas de RunScene.js, sobre master f1e574e. Rama v2/medicion-2.
+- Entrada: hoy el beacon manda {juego, modo, nivel, motivo}. 'nivel' es el del Cuaderno, no el tramo; no hay causa; no se distingue público, equipo y bots. Hoy 0 de 5 campos nuevos (origen, intento, seg, tramo, causa).
+- Prueba: build de producción servido como moki.jorgesuarez.com.mx contra un receptor local (host-resolver-rules a 127.0.0.1, nunca el worker real), headless. Partidas: (a) con ?debug, (b) normal con webdriver, (c) tras abrir ?equipo, (d) tras ?publico; en cada una choque, reintento y salir.
+- Pasa: (a) 0 beacons; (b) todos con origen 'bot'; (c) origen 'equipo'; (d) vuelve a 'bot' (webdriver gana) y localStorage moki-equipo borrado; el reintento llega como intento+1; choque trae tramo 0-99 y causa en [a-z-]; seg entero >= 0; cada cuerpo < 300 bytes; 5 de 5 campos presentes.
+- Puertas: Clásico 2142 78/78; Reto 2362 x2; FPS 375 y carga CPU x4 no peores que master; JS inicial sube solo unos bytes gz; consola 0.
+- Regla: una sola pasada. No se manda nada al worker real desde pruebas.
+- Se revisa: este commit es anterior al de código; evidencia/medicion-2/RESULTADO.md trae las cifras y lo NO VERIFICADO.
