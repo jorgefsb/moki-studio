@@ -13,10 +13,8 @@ const W = 1024;
 const H = 256; // potencia de 2: el mosaico repite en vertical y el filtro mezcla la fila de abajo con la de arriba
 const BASE = 104; // fila de la textura hasta donde la silueta ya es sólida: h 130 del mundo con el pie de la capa media
 const CAPAS = { lejos: { depth: 0, ancho: 929, alto: 256, par: 0.3, pie: 15 }, medio: { depth: 0.001, ancho: 1100, alto: 256, par: 0.6, pie: 22 } };
-const lerp = (a, b, k) => {
-  const c = (s) => Math.round(((a >> s) & 255) + (((b >> s) & 255) - ((a >> s) & 255)) * k);
-  return (c(16) << 16) | (c(8) << 8) | c(0);
-};
+// SUELO PROPIO (caso-004): la capa_suelo es 2048 x 512; aquí la mitad, con la misma geometría de filas: canto en la 12 y franja donde pisa Moki de 18 filas
+const SUELO = { depth: 4.621, k: 2, y: 12, franja: 18 };
 
 // Dibuja n veces con repetición del mosaico: lo que cruza la costura sale del otro lado
 const costura = (x, fn) => [-W, 0, W].forEach((o) => {
@@ -51,12 +49,48 @@ function cielo(stops, extra) {
   return c;
 }
 
+// El suelo de un lugar: franja que pisa Moki, corte oscuro abajo de ella y cuerpo en degradado. Franja y cuerpo cercano caen entre L 0.111 y L 0.305: la caja que sale del suelo se lee contra ellos
+// (con franjas más claras su borde bajó a 1.36).
+function suelo({ franja, corte, paradas, seed, detalle }) {
+  const c = papel(silueta((x) => x.fillRect(0, SUELO.y, W, H)), franja, seed);
+  const x = c.getContext('2d');
+  const y0 = SUELO.y + SUELO.franja;
+  x.globalCompositeOperation = 'source-atop';
+  x.fillStyle = corte;
+  x.fillRect(0, y0, W, 4);
+  const g = x.createLinearGradient(0, y0 + 4, 0, H);
+  paradas.forEach(([k, col]) => g.addColorStop(k, col));
+  x.fillStyle = g;
+  x.fillRect(0, y0 + 4, W, H);
+  costura(x, detalle);
+  conFibra(x, W, H, 0.5);
+  x.globalCompositeOperation = 'source-over';
+  return c;
+}
+const motas = (x, seed, n, cols, tam = 2) => {
+  const q = rng(seed);
+  for (let i = 0; i < n; i++) {
+    x.fillStyle = cols[i % cols.length];
+    x.fillRect(q() * W, SUELO.y + SUELO.franja + 8 + q() * (H - 42), 1 + q() * tam, 1 + q() * tam);
+  }
+};
+
 const TRAMOS = [
   null,
   // Ciudad de cartón: casitas de kraft al frente, edificios altos atrás, cielo de papel gris claro
   {
-    tinte: 0xd9d2cc,
     cielo: () => cielo([[0, '#CFC6BA'], [1, '#EFE6D6']]),
+    // Banqueta con juntas y, más abajo, la orilla y la calle
+    suelo: () => suelo({
+      franja: '#9E9587',
+      corte: '#5F584D',
+      paradas: [[0, '#7A7064'], [0.38, '#7A7064'], [0.4, '#5F584D'], [0.43, '#6F685C'], [1, '#4F4A42']],
+      seed: 212,
+      detalle(x) {
+        x.fillStyle = '#6A6155';
+        for (let u = 40; u < W; u += 128) x.fillRect(u, SUELO.y + SUELO.franja + 4, 2, 84);
+      },
+    }),
     lejos() {
       const c = silueta((x) => {
         const q = rng(202);
@@ -100,8 +134,27 @@ const TRAMOS = [
   },
   // Playa de papel: mar de cartulina azul con olas recortadas, veleros en el horizonte y palmeras
   {
-    tinte: 0xffeabd,
     cielo: () => cielo([[0, '#A9DCE3'], [0.7, '#D8EEE4'], [1, '#FBEFCB']]),
+    // Arena: oscura junto a la franja por el contraste, y se aclara hacia el frente, donde ya no hay obstáculo
+    suelo: () => suelo({
+      franja: '#B29162',
+      corte: '#7D5F3A',
+      paradas: [[0, '#A07C4E'], [0.18, '#A8854F'], [1, '#DCC08C']],
+      seed: 213,
+      detalle(x) {
+        motas(x, 214, 520, ['#94744A', '#E6D0A0'], 2);
+        x.strokeStyle = '#A5854F';
+        x.lineWidth = 2;
+        [120, 168, 214].forEach((y, f) => {
+          for (let u = f * 70; u < W; u += 210) {
+            x.beginPath();
+            x.moveTo(u, y);
+            x.quadraticCurveTo(u + 45, y - 7, u + 90, y);
+            x.stroke();
+          }
+        });
+      },
+    }),
     lejos() {
       const c = silueta((x) => x.fillRect(0, 72, W, H));
       return encima(papel(c, '#86BBCF', 206), (x) => {
@@ -161,7 +214,14 @@ const TRAMOS = [
   },
   // Noche: arriba tinta azul, abajo azul claro para que el obstáculo se separe. Luna y estrellas de papel, cerros y pinos azules.
   {
-    tinte: 0x9fabda,
+    // Suelo de noche: la franja la alumbra la luna, abajo se va a tinta
+    suelo: () => suelo({
+      franja: '#A4AFD8',
+      corte: '#39416F',
+      paradas: [[0, '#525E94'], [0.2, '#525E94'], [1, '#2C3464']],
+      seed: 215,
+      detalle: (x) => motas(x, 216, 260, ['#4A5588', '#6A76AE'], 2),
+    }),
     astro: true,
     cielo: () => cielo([[0, '#1E2650'], [0.35, '#2F3B72'], [0.52, '#6676B2'], [1, '#7E8EC6']], (x) => {
       const q = rng(208);
@@ -230,26 +290,31 @@ export function montarPaisajes(s, pintadas, gy) {
   const llave = (i, n) => `paisaje${i}_${n}`;
   const add = (k, fn) => s.textures.exists(k) || s.textures.addCanvas(k, fn());
   // De uno en uno, en los ratos libres y con aire entre uno y otro: el primero de cada tramo no debe caer en una decisión
+  const NOMBRES = ['cielo', 'lejos', 'medio', 'suelo'];
   const cola = [];
-  [1, 2, 3].forEach((i) => ['cielo', 'lejos', 'medio'].forEach((n) => cola.push(() => add(llave(i, n), TRAMOS[i][n]))));
+  [1, 2, 3].forEach((i) => NOMBRES.forEach((n) => cola.push(() => add(llave(i, n), TRAMOS[i][n]))));
   cola.push(() => add('paisajeLuna', luna));
+  s.paisajeCostos = []; // ms de cada horneada, solo lectura, para medir
   let horneando = false;
   const hornea = () => {
     if (horneando || !cola.length) return;
     horneando = true;
     enReposo(() => {
+      const t0 = performance.now();
       cola.shift()();
+      s.paisajeCostos.push(Math.round(performance.now() - t0));
       setTimeout(() => (horneando = false), 300);
     }, { timeout: 800 });
   };
   const pilas = [null, null, null, null];
   const lista = (i) => {
     if (pilas[i]) return true;
-    if (!['cielo', 'lejos', 'medio'].every((n) => s.textures.exists(llave(i, n)))) return false;
+    if (!NOMBRES.every((n) => s.textures.exists(llave(i, n)))) return false;
     if (TRAMOS[i].astro && !s.textures.exists('paisajeLuna')) return false;
     const d = 3.07 + (i - 1) * 0.003; // arriba de la capa media pintada (3.06) y abajo de todo lo demás: lo que queda detrás no se ve
     const capa = (n, dd) => s.add.tileSprite(0, 0, 10, 10, llave(i, n)).setOrigin(0, 0).setDepth(d + dd).setVisible(false);
-    pilas[i] = { cielo: capa('cielo', 0), lejos: capa('lejos', 0.0005), medio: capa('medio', 0.001) };
+    // suelo: arriba de capa_suelo (4.62) y debajo de lo que corre sobre él. Lo demás de la pila queda en 3.07: detrás de todo el suelo
+    pilas[i] = { cielo: capa('cielo', 0), lejos: capa('lejos', 0.0005), medio: capa('medio', 0.001), suelo: capa('suelo', SUELO.depth + (i - 1) * 0.001 - d) };
     if (TRAMOS[i].astro) pilas[i].astro = s.add.image(0, 0, 'paisajeLuna').setDepth(d + 0.0002).setVisible(false);
     return true;
   };
@@ -267,6 +332,9 @@ export function montarPaisajes(s, pintadas, gy) {
       const alto = K.alto * ms;
       pon(P[n], g + K.pie - alto + baja, s.vw, alto, (K.ancho * ms) / W, alto / H, quieto ? 0 : s.dist * K.par);
     });
+    const L = pintadas.suelo; // ya colocada este cuadro: mismo lugar, mismo corrimiento
+    P.suelo.setPosition(L.x, L.y).setSize(L.width, L.height).setTileScale(L.tileScaleX * SUELO.k, L.tileScaleY * SUELO.k);
+    P.suelo.tilePositionX = L.tilePositionX / SUELO.k;
     if (P.astro) P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
     Object.values(P).forEach((v) => v.setVisible(a > 0).setAlpha(a));
   };
@@ -276,7 +344,6 @@ export function montarPaisajes(s, pintadas, gy) {
   let antes = null;
   const apagar = () => {
     pilas.forEach((P) => P && Object.values(P).forEach((v) => v.setVisible(false)));
-    if (pintadas.suelo) pintadas.suelo.clearTint();
     cur = 0;
     k = 1;
     s.paisaje = null;
@@ -307,9 +374,7 @@ export function montarPaisajes(s, pintadas, gy) {
       colocar(P, g, i === cur ? k : i === cur - 1 && k < 1 ? 1 : 0);
     });
     const tiene = cur > 0 && pilas[cur];
-    if (tiene && k >= 1) [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio].forEach((v) => v.setVisible(false)); // lo tapado no se dibuja
-    const tin = (i) => (i > 0 ? TRAMOS[i].tinte : 0xffffff);
-    pintadas.suelo.setTint(lerp(tin(cur > 0 ? cur - 1 : 0), tin(cur), k));
+    if (tiene && k >= 1) [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio, pintadas.suelo].forEach((v) => v.setVisible(false)); // lo tapado no se dibuja
     if (cur > 0 && s.bokeh) s.bokeh.forEach((q) => q.im.setAlpha(q.im.alpha * (1 - (cur > 1 ? 1 : k)))); // círculos de luz de la tarde: en otro lugar no van
   };
   s.events.on('postupdate', paso);
