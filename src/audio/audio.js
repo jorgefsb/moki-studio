@@ -342,6 +342,7 @@ const A = {
     const fn = name === 'timbre' ? this.capasMod.timbre : SFX[name];
     if (!fn) return;
     if (name === 'popAviso') this.popTics = (this.popTics || 0) + 1; // para las pruebas: tics del pop-up que sí sonaron
+    if (name === 'casi') this.casiTics = (this.casiTics || 0) + 1; // para las pruebas: casi-choques que sí sonaron
     // El sonido va fuera del juice (decisión del líder): racha x2/x3, arco completo, ámbar y tarjeta suenan siempre.
     // Solo lo visual depende del juice.
     const extra = {};

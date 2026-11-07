@@ -308,5 +308,23 @@ export function festejo(ctx, dest, t, o = {}) {
   N.forEach((m, i) => campana(ctx, P.out, t + i * 0.11, m, (0.07 + i * 0.008) * P.pk, { atkMin: P.atkMin, tail: i === N.length - 1 ? (o.hc ? 0.6 : 0.4) : 0.18 }));
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello, festejo };
+// Casi-choque (DIVERSIÓN 4): soplo de papel que sube y un tic de cartón en pentatónica una octava abajo de las piezas;
+// o.index = racha de casi-choques (0 a 4, luego se queda arriba). Cola 90 ms.
+const CASI_SCALE = [72, 74, 76, 79, 81];
+export function casi(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const i = clamp(o.index || 0, 0, CASI_SCALE.length - 1);
+  const nz = noise(ctx, t, 0.09);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.Q.value = 2;
+  bp.frequency.setValueAtTime(900 + i * 150, t);
+  bp.frequency.exponentialRampToValueAtTime(3000 + i * 400, t + 0.08);
+  const g = ctx.createGain();
+  shape(g, t, Math.max(0.008, P.atkMin), 0.12 * P.pk * P.v, t + 0.09);
+  nz.connect(bp).connect(g).connect(P.out);
+  carton(ctx, P.out, t + 0.03, CASI_SCALE[i], 0.03, 0.14, { atkMin: P.atkMin, vol: P.v * P.pk, detune: P.d });
+}
+
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello, festejo, casi };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };
