@@ -1988,3 +1988,96 @@ Nada espera a Jorge. Pregunta con opción recomendada y hora límite; a los 30 m
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Salto visible cada 4 horas (Jorge, 8-nov 10:05, canon)
+
+"¿Qué podemos hacer para tener algo vistoso y que se note en el lado izquierdo o publicado máximo cada 4 horas?"
+
+1. Entre 08:00 y 18:00, y de 20:00 en adelante, master recibe un cambio de juego (src/) que se note a simple vista cada 4 h como máximo, con PASS del probador.
+2. Esperar datos no bloquea el estudio. Si la pieza de arriba de COLA espera datos, se toma la siguiente pieza visible que no dependa de ellos (arte, luz, juice, tarjeta) y se deja la razón en COLA.md.
+3. Sin muestra pública suficiente, la diversión se mide con bots y jugador simulado (canon 7-nov), no se espera.
+4. El latido manda "SALTO VISIBLE" cuando el juego lleva 4 h sin cambiar y el tablero enciende la alarma a las 4 h. Eso no es ruido: es la orden.
