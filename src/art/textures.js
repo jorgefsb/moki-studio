@@ -1077,30 +1077,29 @@ function ambBands() {
   return c;
 }
 
-// Estrella de papel colgada de un hilo (solo en la noche)
+// Estrella de papel colgada de un hilo (solo en la noche). Cara mate de papel con corte irregular, canto de cartón
+// abajo-derecha (grosor) y sombra proyectada sobre el cielo: luz de arriba a la izquierda (ARTE §7). Sin facetas: dos valores se leían metal.
 function ambStar() {
-  const [c, x] = mk(36, 56);
+  const [c, x] = mk(56, 64);
   const r = rng(181);
   x.strokeStyle = rgba(PAL.border, 0.9);
   x.lineWidth = 1.5;
   x.beginPath();
-  x.moveTo(18, 0);
-  x.lineTo(18, 24);
+  x.moveTo(24, 0);
+  x.lineTo(24, 12);
   x.stroke();
-  const path = (g) => {
-    for (let i = 0; i < 10; i++) {
-      const a = -Math.PI / 2 + (i * Math.PI) / 5;
-      const rad = i % 2 ? 6 : 14;
-      i ? g.lineTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad) : g.moveTo(18 + Math.cos(a) * rad, 38 + Math.sin(a) * rad);
-    }
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const rad = (i % 2 ? 7.5 : 18) + (r() - 0.5) * 1.6; // corte a mano: puntas un poco desiguales
+    pts.push([24 + Math.cos(a) * rad, 30 + Math.sin(a) * rad]);
+  }
+  const path = (dx, dy) => (g) => {
+    pts.forEach(([u, v], i) => (i ? g.lineTo(u + dx, v + dy) : g.moveTo(u + dx, v + dy)));
     g.closePath();
   };
-  cut(x, path, { fill: PAL.paper, edgeW: 2.5, shadow: null, r, fiberCount: 14 });
-  x.strokeStyle = PAL.kraft;
-  x.lineWidth = 2;
-  x.beginPath();
-  path(x);
-  x.stroke();
+  cut(x, path(2, 2.5), { fill: TONE.kraftDark, edgeW: 0, shadow: { alpha: 0.3, blur: 4, dx: 4, dy: 6 }, r, fiberCount: 8 });
+  cut(x, path(0, 0), { fill: PAL.paper, edgeW: 1.5, shadow: null, r, fiberCount: 18 });
   return c;
 }
 

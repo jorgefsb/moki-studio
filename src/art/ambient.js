@@ -76,6 +76,8 @@ export class Ambient {
     this.active = this.slow = this.cloud = this.flutter = null;
     this.chips.forEach((c) => c.s.destroy());
     this.stars.forEach((st) => st.s.destroy());
+    if (this.threads) this.threads.destroy();
+    this.threads = null;
     this.chips = [];
     this.stars = [];
   }
@@ -240,19 +242,45 @@ export class Ambient {
     const band = this.flightY();
     if (!band) return;
     const n = (s.vw > 700 ? 7 : 5) + Math.floor(this.r() * 2); // arte: 7-8 en ancho, 5-6 en celular
+    // Hilos y cordel se hornean UNA vez en un lienzo a resolución de pantalla (no un Graphics: Phaser lo re-tesela
+    // cada cuadro y la basura daba colapsos de FPS a 390). Mismo trazo; el lienzo se escala 1/zoom.
+    const z = s.zoom;
+    // cordel de lado a lado bajo el HUD, con comba: de él cuelgan los hilos (sueltos parecían flotar o colgar de los botones)
+    // en px de pantalla: 68 en las orillas, 76 al centro; los botones del HUD terminan en 63 (48 + 12 + sombra), >= 8 libres
+    const cy = (u) => band[0] - (8 * ((2 * u) / s.vw - 1) ** 2) / z;
+    const oy = band[0] - 10 / z;
+    const span = Math.max(10, band[1] - band[0]);
+    if (s.textures.exists('ambThreads')) s.textures.remove('ambThreads');
+    const tex = s.textures.createCanvas('ambThreads', Math.ceil(s.vw * z), Math.ceil((band[0] + 0.6 * span + 4 - oy) * z));
+    const x2 = tex.getContext();
+    const line = (pts, w, a) => {
+      x2.globalAlpha = a;
+      x2.lineWidth = w;
+      x2.beginPath();
+      pts.forEach(([u, v]) => x2.lineTo(u * z, (v - oy) * z));
+      x2.stroke();
+    };
+    x2.strokeStyle = PAL.border;
+    line(Array.from({ length: 17 }, (_, j) => [(j * s.vw) / 16, cy((j * s.vw) / 16)]), 1.5, 0.85);
+    this.threads = s.add.image(0, oy, 'ambThreads').setOrigin(0, 0).setScale(1 / z).setDepth(1.94); // hilos: adorno colgado, no ficha
     for (let i = 0; i < n; i++) {
+      const near = i % 2 === 0; // dos planos: cerca más grande, más baja y con más sombra; lejos más chica, alta y hacia tinta
       const x = s.vw * (0.2 + (0.78 * (i + this.r() * 0.6)) / n);
-      const y = band[0] - 10 + this.r() * Math.max(10, (band[1] - band[0]) * 0.55);
-      const sp = s.add.image(x, y, 'ambStar').setOrigin(0.5, 0).setDepth(1.95).setScale(0.001); // sobre la cordillera (1.9): antes la tapaba
-      this.stars.push({ s: sp, x0: x, d0: s.dist });
-      if (s.reduced) sp.setScale(1);
+      const y = band[0] + (near ? [0.5, 0.22, 0.38, 0.12][(i / 2) % 4] + this.r() * 0.1 : this.r() * 0.15) * span; // cerca a alturas distintas: en fila pareja se leían planas
+      line([[x, cy(x)], [x, y + 2]], near ? 1.5 : 1, near ? 0.9 : 0.6);
+      const k = near ? 1.15 : 0.75;
+      const sp = s.add.image(x, y, 'ambStar').setOrigin(24 / 56, 0).setDepth(near ? 1.96 : 1.95).setScale(0.001);
+      if (!near) sp.setTint(toTint(hex(mix(PAL.paper, PAL.border, 0.45))));
+      this.stars.push({ s: sp, x0: x, d0: s.dist, k });
+      if (s.reduced) sp.setScale(k);
       else {
         const rot = (this.r() < 0.5 ? -1 : 1) * 1.5;
         sp.setAngle(rot);
-        s.tweens.add({ targets: sp, scale: 1, duration: 150, delay: i * 120, ease: 'Back.easeOut' });
+        s.tweens.add({ targets: sp, scale: k, duration: 150, delay: i * 120, ease: 'Back.easeOut' });
         s.tweens.add({ targets: sp, angle: 0, duration: 600, delay: i * 120 });
       }
     }
+    tex.refresh();
   }
 
   // Cresta de la colina (capa lejana): fila del primer píxel opaco de cada columna, y las zonas planas (sin casas ni arbustos)
