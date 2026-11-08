@@ -853,8 +853,8 @@ export class RunScene extends Phaser.Scene {
   creaBandera() {
     if (!this.textures.exists('marcaVez')) {
       const cv = document.createElement('canvas');
-      cv.width = 32;
-      cv.height = 52;
+      cv.width = 40;
+      cv.height = 64; // >= 52 px en pantalla a 375 (zoom 0.815): se lee como marca, no como pieza
       const g = cv.getContext('2d');
       const tri = (c, p) => {
         g.fillStyle = c;
@@ -865,15 +865,15 @@ export class RunScene extends Phaser.Scene {
         g.fill();
       };
       g.fillStyle = '#22211F'; // canto del asta
-      g.fillRect(3, 2, 5, 50);
+      g.fillRect(3, 2, 6, 62);
       g.fillStyle = '#B99168';
-      g.fillRect(4, 2, 3, 50);
-      tri('#22211F', [7, 3, 31, 12, 7, 21]); // canto del banderín
-      tri('#F4E8D5', [8, 5.5, 27, 12, 8, 18.5]);
+      g.fillRect(4, 2, 4, 62);
+      tri('#22211F', [8, 3, 39, 15, 8, 27]); // canto del banderín
+      tri('#F4E8D5', [9, 6, 34, 15, 9, 24]);
       this.textures.addCanvas('marcaVez', cv);
     }
     const img = this.add.image(-200, C.world.groundY + 2, 'marcaVez').setOrigin(0.15, 1).setDepth(9.95).setVisible(false);
-    const shadow = this.addShadow(-200, 26, 0.22).setVisible(false);
+    const shadow = this.addShadow(-200, 30, 0.22).setVisible(false);
     this.bandera = { D: null, m: null, sprite: img, shadow };
   }
 
@@ -2158,7 +2158,10 @@ export class RunScene extends Phaser.Scene {
     this.recoilDone = 0;
     this.holding = false;
     this.cause = o.type;
-    this.choqueD = this.dist; // la bandera de la vez pasada se clava aquí al reintentar
+    this.choqueD = this.dist; // metros de la bandera de la vez pasada
+    // La bandera se clava ATRÁS del obstáculo (nunca debajo: la caja la tapaba): 64 px antes de su borde izquierdo
+    const anchoO = o.type === 'zanja' ? o.W || 0 : (o.size && o.size.width) || 0;
+    this.banderaD = Math.min(this.dist, o.D - anchoO / 2) - 64;
     this.cardShown = false;
     if (this.partida && !this.demo) {
       this.partida.crashes += 1;
@@ -2243,7 +2246,7 @@ export class RunScene extends Phaser.Scene {
     const pct = Math.min(99, Math.floor((100 * this.dist) / this.level.end));
     const where = this.cp.idx > 0 ? t('fail.cp') : t('fail.start');
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
-    const meta = pct > 10 ? `${t('fail.faltan', { n: this.ultimoFaltan })} · ${where}` : where; // solo pasado el 10%
+    const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
       { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord },
       () => this.respawn()
@@ -2254,7 +2257,7 @@ export class RunScene extends Phaser.Scene {
   // Reintento con un toque: Moki sale del inicio del tramo con lo guardado y 85% de velocidad que sube en 1 s.
   respawn() {
     this.ui.hideFail();
-    if (this.choqueD != null) Object.assign(this.bandera, { D: this.choqueD, m: Math.floor(this.choqueD / 100) });
+    if (this.choqueD != null) Object.assign(this.bandera, { D: this.banderaD, m: Math.floor(this.choqueD / 100), obsD: this.banderaD + 64 });
     const cp = this.cp;
     this.pieces = cp.pieces;
     this.pieceValue = cp.pieceValue;
