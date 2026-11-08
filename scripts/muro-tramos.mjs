@@ -12,6 +12,11 @@ const { GAME_LEVEL, TRAMP_PISA } = await import('../src/tramos.js');
 const { generarNivel } = await import('../src/niveles/generar.js');
 
 export { correr };
+// MURO_CAJA=x,top prueba otra caja de choque de la caja sin tocar config.js (solo este proceso)
+if (process.env.MURO_CAJA) {
+  const [x, top] = process.env.MURO_CAJA.split(',').map(Number);
+  C.hitboxShrinkCaja = { x, top };
+}
 const [outPath = '/dev/null', nArg = '40'] = process.argv.slice(2);
 const N = Number(nArg);
 const DT = 1 / 60;
