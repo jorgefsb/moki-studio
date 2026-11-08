@@ -242,18 +242,33 @@ export class Ambient {
     const band = this.flightY();
     if (!band) return;
     const n = (s.vw > 700 ? 7 : 5) + Math.floor(this.r() * 2); // arte: 7-8 en ancho, 5-6 en celular
-    const g = (this.threads = s.add.graphics().setDepth(1.94)); // hilos: adorno colgado, no ficha
+    // Hilos y cordel se hornean UNA vez en un lienzo a resolución de pantalla (no un Graphics: Phaser lo re-tesela
+    // cada cuadro y la basura daba colapsos de FPS a 390). Mismo trazo; el lienzo se escala 1/zoom.
+    const z = s.zoom;
     // cordel de lado a lado bajo el HUD, con comba: de él cuelgan los hilos (sueltos parecían flotar o colgar de los botones)
-    const cy = (u) => band[0] - 16 + 12 * (1 - ((2 * u) / s.vw - 1) ** 2);
-    g.lineStyle(1.5, hex(PAL.border), 0.85).beginPath().moveTo(0, cy(0));
-    for (let u = 0; u <= s.vw; u += s.vw / 16) g.lineTo(u, cy(u));
-    g.strokePath();
+    // en px de pantalla: 68 en las orillas, 76 al centro; los botones del HUD terminan en 63 (48 + 12 + sombra), >= 8 libres
+    const cy = (u) => band[0] - (8 * ((2 * u) / s.vw - 1) ** 2) / z;
+    const oy = band[0] - 10 / z;
+    const span = Math.max(10, band[1] - band[0]);
+    if (s.textures.exists('ambThreads')) s.textures.remove('ambThreads');
+    const tex = s.textures.createCanvas('ambThreads', Math.ceil(s.vw * z), Math.ceil((band[0] + 0.6 * span + 4 - oy) * z));
+    const x2 = tex.getContext();
+    const line = (pts, w, a) => {
+      x2.globalAlpha = a;
+      x2.lineWidth = w;
+      x2.beginPath();
+      pts.forEach(([u, v]) => x2.lineTo(u * z, (v - oy) * z));
+      x2.stroke();
+    };
+    x2.strokeStyle = PAL.border;
+    line(Array.from({ length: 17 }, (_, j) => [(j * s.vw) / 16, cy((j * s.vw) / 16)]), 1.5, 0.85);
+    this.threads = s.add.image(0, oy, 'ambThreads').setOrigin(0, 0).setScale(1 / z).setDepth(1.94); // hilos: adorno colgado, no ficha
     for (let i = 0; i < n; i++) {
       const near = i % 2 === 0; // dos planos: cerca más grande, más baja y con más sombra; lejos más chica, alta y hacia tinta
-      const k = near ? 1.15 : 0.75;
       const x = s.vw * (0.2 + (0.78 * (i + this.r() * 0.6)) / n);
-      const y = band[0] + (near ? [0.5, 0.22, 0.38, 0.12][(i / 2) % 4] + this.r() * 0.1 : this.r() * 0.15) * Math.max(10, band[1] - band[0]); // cerca a alturas distintas: en fila pareja se leían planas
-      g.lineStyle(near ? 1.5 : 1, hex(PAL.border), near ? 0.9 : 0.6).lineBetween(x, cy(x), x, y + 2);
+      const y = band[0] + (near ? [0.5, 0.22, 0.38, 0.12][(i / 2) % 4] + this.r() * 0.1 : this.r() * 0.15) * span; // cerca a alturas distintas: en fila pareja se leían planas
+      line([[x, cy(x)], [x, y + 2]], near ? 1.5 : 1, near ? 0.9 : 0.6);
+      const k = near ? 1.15 : 0.75;
       const sp = s.add.image(x, y, 'ambStar').setOrigin(24 / 56, 0).setDepth(near ? 1.96 : 1.95).setScale(0.001);
       if (!near) sp.setTint(toTint(hex(mix(PAL.paper, PAL.border, 0.45))));
       this.stars.push({ s: sp, x0: x, d0: s.dist, k });
@@ -265,6 +280,7 @@ export class Ambient {
         s.tweens.add({ targets: sp, angle: 0, duration: 600, delay: i * 120 });
       }
     }
+    tex.refresh();
   }
 
   // Cresta de la colina (capa lejana): fila del primer píxel opaco de cada columna, y las zonas planas (sin casas ni arbustos)
