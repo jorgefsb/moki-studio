@@ -4,7 +4,7 @@ import { CONFIG as C } from '../config.js';
 
 const POOL = 90;
 const rand = (a, b) => a + Math.random() * (b - a);
-const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber' };
+const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO' };
 
 export class Particles {
   constructor(scene) {
@@ -16,6 +16,25 @@ export class Particles {
     }
     this.cursor = 0;
     this.clock = 0;
+    // Motas del casi-choque con canto (ARTE §4): crema con borde kraft y naranja con borde crema, para que se lean sobre
+    // el casco crema, el traje naranja, el cielo del atardecer y la noche
+    for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {
+      if (scene.textures.exists(k)) continue;
+      const t = scene.textures.createCanvas(k, 14, 12);
+      const x = t.context;
+      x.beginPath();
+      x.moveTo(2, 2);
+      x.lineTo(12, 1);
+      x.lineTo(12, 10);
+      x.lineTo(3, 11);
+      x.closePath();
+      x.fillStyle = f;
+      x.fill();
+      x.lineWidth = 2;
+      x.strokeStyle = b;
+      x.stroke();
+      t.refresh();
+    }
   }
 
   get alive() {
@@ -124,13 +143,15 @@ export class Particles {
         this.emit(['amber', 'paper', 'kraft', 'orange'][i % 4], x, y, { vx: rand(-60, 120), vy: -rand(180, 300), g: 380, life: 900, spin: 360, osc: 12, fadeFrom: 0.67 });
       }
     } else if (type === 'casi') {
-      // Casi-choque: chispa de papel naranja y crema desde el punto que pasó raspando, hacia atrás y arriba. Sin ámbar
-      // (ARTE §4: es del checkpoint). Escala 1.6-2.2: motas de 5-8 px en pantalla a 390 (a escala 1 eran 2-4 px)
+      // Casi-choque: chispa de papel naranja y crema con canto, hacia arriba y apenas atrás de Moki (va adelante). Sin
+      // ámbar (ARTE §4: es del checkpoint). Nace a 6-12 px de la esquina y vive 440-520 ms sin desvanecer hasta el 55 %:
+      // a los 150-200 ms del premio está entera (antes vivía 220-300 ms y ya se apagaba)
+      // Moki va a ~60 px del borde izquierdo: si la chispa se va hacia atrás con el mundo sale del cuadro en 100 ms
+      // (recaptura 8-nov). Por eso se lleva la velocidad del mundo: en pantalla sube y se queda apenas detrás de la esquina
       const n = L === 1 ? 4 : L === 2 ? 7 : 10;
+      const v = this.scene.speed || 0;
       for (let i = 0; i < n; i++) {
-        const a = rand(Math.PI * 0.6, Math.PI * 1.6);
-        const sp = rand(90, 170);
-        this.emit(i % 3 === 2 ? 'paper' : 'orange', x, y, { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, g: 300, life: rand(220, 300), spin: 360, scale: rand(1.6, 2.2) });
+        this.emit(i % 3 === 2 ? 'casiP' : 'casiO', x - rand(2, 8), y - rand(4, 10), { vx: v - rand(20, 90), vy: -rand(160, 260), g: 260, life: rand(440, 520), fadeFrom: 0.55, spin: 240, scale: rand(1.5, 1.9) });
       }
     } else if (type === 'crash') {
       // Del punto de contacto hacia arriba y adelante, con fuerza desde el primer cuadro: hacia atrás le pasaban por la cara a Moki
