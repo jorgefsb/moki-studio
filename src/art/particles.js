@@ -124,12 +124,13 @@ export class Particles {
         this.emit(['amber', 'paper', 'kraft', 'orange'][i % 4], x, y, { vx: rand(-60, 120), vy: -rand(180, 300), g: 380, life: 900, spin: 360, osc: 12, fadeFrom: 0.67 });
       }
     } else if (type === 'casi') {
-      // Casi-choque: chispa chica de papel naranja y ámbar desde el punto que pasó raspando, hacia atrás y arriba
+      // Casi-choque: chispa de papel naranja y crema desde el punto que pasó raspando, hacia atrás y arriba. Sin ámbar
+      // (ARTE §4: es del checkpoint). Escala 1.6-2.2: motas de 5-8 px en pantalla a 390 (a escala 1 eran 2-4 px)
       const n = L === 1 ? 4 : L === 2 ? 7 : 10;
       for (let i = 0; i < n; i++) {
         const a = rand(Math.PI * 0.6, Math.PI * 1.6);
         const sp = rand(90, 170);
-        this.emit(['orange', 'amber', 'paper'][i % 3], x, y, { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, g: 300, life: rand(220, 300), spin: 360, scale: rand(0.8, 1.2) });
+        this.emit(i % 3 === 2 ? 'paper' : 'orange', x, y, { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, g: 300, life: rand(220, 300), spin: 360, scale: rand(1.6, 2.2) });
       }
     } else if (type === 'crash') {
       // Del punto de contacto hacia arriba y adelante, con fuerza desde el primer cuadro: hacia atrás le pasaban por la cara a Moki
