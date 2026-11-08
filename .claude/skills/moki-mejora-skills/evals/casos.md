@@ -78,3 +78,14 @@ Escrito antes del código, 7-nov 22:35 CDMX (04:35Z). Rama v2/muro sobre master 
 - Puertas: FPS 390/375 y carga CPU x4 no peores que master; Clásico 2142 78/78 (explicar si cambia); Reto 2362 x2; consola 0; JS inicial solo unos bytes; scripts/niveles.mjs VERDE.
 - Regla: una sola pasada. Si no pasa, queda en rama. Nada al worker real, sin push.
 - Se revisa: este commit es anterior al de código; evidencia/diversion-1/RESULTADO.md trae las cifras y lo NO VERIFICADO.
+
+## caso-010 · DIVERSIÓN 3: "¿Otra?" (bandera donde llegaste y "te faltaron X m")
+Escrito antes del código, 8-nov 00:42 CDMX (06:42Z). Rama v2/otra sobre master 2282f02. Instrumento: evidencia/diversion-3/base.mjs (build de producción, headless, 390x844, bot pasivo que choca, entrada real con clics; mide toques, ms de pared y ms de juego desde el choque hasta que Moki corre otra vez).
+- Dato público: no lo tengo (el contador nuevo manda intento; /api/partidas?origen=todos lo trae el director o Spark). **Todo lo de aquí es dato de bot, no de personas.** "% de partidas que empiezan otra" no se puede medir con bot: el bot siempre juega otra.
+- Entrada (master, 15 muertes en Clásico, Reto y Libre): de morir a jugar otra es 1 toque. La tarjeta sale a los 267 ms de juego, el toque se acepta desde los 550 ms (C.retryLockoutMs, guarda contra el toque de pánico) y Moki vuelve a correr a los 550-600 ms de juego con un toque 350 ms después de ver la tarjeta. Los toques antes de 550 ms se tiran (diseño). Headless corre a 8-10 fps por la carga, así que los ms de pared (2.4-4.8 s) no valen; en un aparato a 60 fps, juego = pared.
+- Lectura: el camino ya es corto; lo que falta es **motivo** para tocar otra vez. Hoy la tarjeta dice "Llegaste al N%" (un porcentaje abstracto) y al reintentar no hay nada en el mundo que diga hasta dónde llegaste.
+- Cambio mínimo: (1) la tarjeta de fallo dice "Te faltaron X m para la meta" en lugar del %, con la misma regla (solo pasado el 10 %); (2) al reintentar, una bandera de papel (asta kraft, banderín papel con canto tinta, sombra de contacto tinta; nada ámbar, nada naranja) clavada en el suelo donde chocaste la vez pasada, quieta (sin vaivén: no es juice), igual con juice 0 y movimiento reducido. Sin pantallas ni botones nuevos.
+- Pasa: toques y ms de juego de morir a jugar iguales a master (1 toque, <= 600 ms); la bandera existe en el reintento a la distancia del último choque; la tarjeta dice los metros; juice 0 y reducido: la bandera está y no se mueve.
+- Puertas: Clásico 2142 78/78; Reto 2362 x2; FPS 390/375 no peores; consola 0; JS inicial pocos bytes (se dice cuántos).
+- Regla: una sola pasada, tope 45 min. Sin push, nada al worker. La meta real (% que juega otra en menos de 10 s) se confirma con el contador público.
+- Se revisa: este commit es anterior al de código; evidencia/diversion-3/RESULTADO.md trae las cifras y lo NO VERIFICADO.

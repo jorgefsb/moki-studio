@@ -256,7 +256,11 @@ export function createUI() {
         head.append(el('h2', '', hint), el('span', 'ui-tag', t('end.new')));
         card.append(head);
       } else card.append(el('h2', '', hint));
-      if (meta) card.append(el('p', 'meta', meta));
+      if (Array.isArray(meta)) {
+        const p = el('p', 'meta');
+        meta.forEach((m) => p.append(el('span', '', m))); // un renglón cada uno: nunca 'checkpoint' huérfano
+        card.append(p);
+      } else if (meta) card.append(el('p', 'meta', meta));
       const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
       pill.disabled = true;
@@ -372,7 +376,7 @@ export function createUI() {
       const aire = 20;
       const lugar = () => {
         const sh = strip.offsetHeight;
-        const t0 = c.t + c.h + 10;
+        const t0 = c.t + c.h + 14;
         if (t0 + sh <= H - aire && (zonas.wide || t0 + sh <= zonas.headY - 6)) return t0;
         const t1 = H - aire - sh;
         return t1 < zonas.floorY + 4 || t1 < c.t + c.h + 6 ? null : t1;
