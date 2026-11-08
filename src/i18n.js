@@ -44,6 +44,7 @@ const ES = {
   'fail.cp': 'Sigues desde el checkpoint',
   'fail.start': 'Empiezas de nuevo',
   'fail.pct': 'Llegaste al {n}%',
+  'fail.faltan': 'Te faltaron {n} m para la meta',
   'fail.go.touch': 'Toca para seguir',
   'fail.go.kbd': 'Espacio para seguir',
   'end.title': '¡Llegaste!',

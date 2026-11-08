@@ -152,6 +152,7 @@ export class RunScene extends Phaser.Scene {
 
     this.px = C.player.xMax;
     this.mokiShadow = this.add.image(this.px, C.world.groundY, 'shadow').setDepth(9);
+    this.creaBandera();
     // Moki es un títere recortado (src/art/mokiRig.js). Nunca espejado: ni flipX ni escala negativa.
     this.rig = createMokiRig(this);
     this.vientoG = this.add.graphics().setDepth(9.6);
@@ -847,6 +848,48 @@ export class RunScene extends Phaser.Scene {
 
   // ---------- Piezas del mundo ----------
 
+  // ¿Otra? (DIVERSIÓN 3): bandera de papel clavada donde chocaste la vez pasada. Asta kraft, banderín papel con canto
+  // tinta, sombra de contacto; nada ámbar (eso es el checkpoint) ni naranja. Quieta: es dato, no juice.
+  creaBandera() {
+    if (!this.textures.exists('marcaVez')) {
+      const cv = document.createElement('canvas');
+      cv.width = 32;
+      cv.height = 52;
+      const g = cv.getContext('2d');
+      const tri = (c, p) => {
+        g.fillStyle = c;
+        g.beginPath();
+        g.moveTo(p[0], p[1]);
+        g.lineTo(p[2], p[3]);
+        g.lineTo(p[4], p[5]);
+        g.fill();
+      };
+      g.fillStyle = '#22211F'; // canto del asta
+      g.fillRect(3, 2, 5, 50);
+      g.fillStyle = '#B99168';
+      g.fillRect(4, 2, 3, 50);
+      tri('#22211F', [7, 3, 31, 12, 7, 21]); // canto del banderín
+      tri('#F4E8D5', [8, 5.5, 27, 12, 8, 18.5]);
+      this.textures.addCanvas('marcaVez', cv);
+    }
+    const img = this.add.image(-200, C.world.groundY + 2, 'marcaVez').setOrigin(0.15, 1).setDepth(9.95).setVisible(false);
+    const shadow = this.addShadow(-200, 26, 0.22).setVisible(false);
+    this.bandera = { D: null, m: null, sprite: img, shadow };
+  }
+
+  // La bandera vive en el mundo: se ve en juego y en la tarjeta de fallo, nunca en el título, el demo ni el paseo.
+  ponBandera() {
+    const b = this.bandera;
+    const on = b.D != null && !this.demo && !this.paseoRun && (this.screen === 'play' || this.screen === 'dead');
+    const x = this.px + (b.D || 0) - this.dist;
+    const ve = on && x > -40 && x < this.vw + 40;
+    b.sprite.setVisible(ve);
+    b.shadow.setVisible(ve);
+    if (!ve) return;
+    b.sprite.x = x;
+    b.shadow.x = x + 6;
+  }
+
   addShadow(x, w, alpha) {
     return this.add
       .image(x, C.world.groundY + 1, 'shadow')
@@ -1456,6 +1499,7 @@ export class RunScene extends Phaser.Scene {
       this.meta.arch.x = this.meta.x;
       this.meta.shadow.x = this.meta.x + 10;
     }
+    if (this.bandera) this.ponBandera();
   }
 
   stepEntities(step, dtMs) {
@@ -2114,6 +2158,7 @@ export class RunScene extends Phaser.Scene {
     this.recoilDone = 0;
     this.holding = false;
     this.cause = o.type;
+    this.choqueD = this.dist; // la bandera de la vez pasada se clava aquí al reintentar
     this.cardShown = false;
     if (this.partida && !this.demo) {
       this.partida.crashes += 1;
@@ -2197,7 +2242,8 @@ export class RunScene extends Phaser.Scene {
   showFailCard() {
     const pct = Math.min(99, Math.floor((100 * this.dist) / this.level.end));
     const where = this.cp.idx > 0 ? t('fail.cp') : t('fail.start');
-    const meta = pct > 10 ? `${t('fail.pct', { n: pct })} · ${where}` : where; // el % solo si pasa de 10
+    this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
+    const meta = pct > 10 ? `${t('fail.faltan', { n: this.ultimoFaltan })} · ${where}` : where; // solo pasado el 10%
     this.ui.showFail(
       { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord },
       () => this.respawn()
@@ -2208,6 +2254,7 @@ export class RunScene extends Phaser.Scene {
   // Reintento con un toque: Moki sale del inicio del tramo con lo guardado y 85% de velocidad que sube en 1 s.
   respawn() {
     this.ui.hideFail();
+    if (this.choqueD != null) Object.assign(this.bandera, { D: this.choqueD, m: Math.floor(this.choqueD / 100) });
     const cp = this.cp;
     this.pieces = cp.pieces;
     this.pieceValue = cp.pieceValue;
