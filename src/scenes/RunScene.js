@@ -454,6 +454,8 @@ export class RunScene extends Phaser.Scene {
     this.arcGot = {};
     this.combo = 0;
     this.lastPickAt = -1e9;
+    this.casiN = 0;
+    this.casiAt = -1e9;
     this.botRelease = -1;
     this.hideBanner(true);
     this.rig.reset();
@@ -1539,8 +1541,10 @@ export class RunScene extends Phaser.Scene {
         continue;
       }
       if (o.type === 'zanja') continue; // la zanja no choca: se cae (stepJump)
-      if (o.caida || this.rewinding || this.god || this.paseoRun || (o.pop && !o.up)) continue; // la torre acostada es piso
+      if (o.caida || this.paseoRun || (o.pop && !o.up)) continue; // la torre acostada es piso
       const { l: ol, r: or, t: ot, b: ob } = this.obsBox(o.type, o.x);
+      if (!o.casiFin && !this.demo && !this.rewinding) this.casiMide(o, ol, or, ot, ob, pl, pw, pt, pb);
+      if (this.rewinding || this.god) continue;
       if (pl < or && pl + pw > ol && pt < ob && pb > ot) {
         this.crash(o);
         break;
@@ -1548,6 +1552,25 @@ export class RunScene extends Phaser.Scene {
     }
     void step;
     void dtMs;
+  }
+
+  // Casi-choque (DIVERSIÓN 4): menor distancia entre la caja de Moki y la de choque mientras se acerca y la pasa. Al dejarla
+  // atrás sin haberla tocado y a <= C.casi.px: chispa y sonido una sola vez por obstáculo. Solo premia, nunca toca física.
+  casiMide(o, ol, or, ot, ob, pl, pw, pt, pb) {
+    const dx = Math.max(ol - (pl + pw), pl - or, 0);
+    const dy = Math.max(ot - pb, pt - ob, 0);
+    if (!dx && !dy) o.casiToco = true;
+    if (dx < 40) o.casiMin = Math.min(o.casiMin ?? Infinity, Math.hypot(dx, dy));
+    if (pl <= or) return;
+    o.casiFin = true;
+    if (o.casiToco || !C.casi.on || !(o.casiMin <= C.casi.px)) return;
+    this.casiN = (this.casiN || 0) + 1; // para las pruebas: premios de la partida
+    this.casiRacha = this.t - (this.casiAt || -Infinity) < C.casi.rachaSec * 1000 ? (this.casiRacha || 0) + 1 : 0;
+    this.casiAt = this.t;
+    audio.sfx('casi', { index: this.casiRacha });
+    // chispa en la esquina que pasó raspando: arriba de la caja (o abajo de la viga), del lado de Moki
+    const cy = o.type === 'viga' && this.y - (C.player.height - 6) >= ob - C.casi.px ? ob : ot;
+    this.particles.burst('casi', or, cy);
   }
 
   // Trampolín: vy fija y gravedad flotada hasta caer (jumpmodel.simulateBounce). Moki no se espeja: solo se estira.
@@ -2045,6 +2068,7 @@ export class RunScene extends Phaser.Scene {
   // ---------- Fallo ----------
 
   crash(o) {
+    this.casiAt = -1e9; // chocar corta la racha de casi-choques
     const tut = this.tut;
     if (tut && !this.demo && (tut.state === 'run' || tut.state === 'stopped' || tut.state === 'decel') && (tut.stage === 1 || tut.stage === 3)) {
       // Fallar una lección no saca tarjeta: el obstáculo regresa a la espera y la mano reaparece.

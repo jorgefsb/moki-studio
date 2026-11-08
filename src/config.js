@@ -101,6 +101,9 @@ export const CONFIG = {
   // Zanja (NIVELES.md §10): hueco en el suelo, solo en Libre. Anchos en s (W = ancho * velocidad del tramo); pie: medio
   // apoyo de Moki; cae a caePx bajo el suelo = choque; sube si va <= subePx abajo; libreSec tras aterrizar de cruzarla
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true },
+  // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
+  // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro
+  casi: { px: 8, rachaSec: 4, on: true },
   hitboxShrink: { x: 18, top: 16 }, // torre y viga (la lección de Mantén no se toca)
   hitboxShrinkCaja: { x: 22, top: 20 }, // la caja perdona más (T3f): ventana de despegue de 109 a 156 ms y de dos cajas de 94 a ~134 ms a 320 px/s
   pickupSize: 30,

@@ -55,6 +55,7 @@ async function boot() {
         Promise.resolve(audioFacade).then((a) => ({
           unlocked: a.unlocked,
           popTics: a.popTics || 0,
+          casiTics: a.casiTics || 0,
           ctx: a.ctx ? a.ctx.state : null,
           master: a.bus ? +a.bus.master.gain.value.toFixed(3) : null, // ganancia general (hide() la baja a 0)
           musica: a.bus ? +a.bus.duckGain.gain.value.toFixed(3) : null, // nivel de la música
