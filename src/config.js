@@ -105,7 +105,7 @@ export const CONFIG = {
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro
   casi: { px: 8, rachaSec: 4, on: true },
   hitboxShrink: { x: 18, top: 16 }, // torre y viga (la lección de Mantén no se toca)
-  hitboxShrinkCaja: { x: 22, top: 20 }, // la caja perdona más (T3f): ventana de despegue de 109 a 156 ms y de dos cajas de 94 a ~134 ms a 320 px/s
+  hitboxShrinkCaja: { x: 23, top: 20 }, // la caja perdona más (T3f; x 22 -> 23 en DIVERSIÓN 1, caso-009: la página 2 era el muro del bot humano)
   pickupSize: 30,
 
   // Títere recortado de moki-lado.webp (ANIMACION.md §1). Cajas en píxeles de la fuente (134x260),
