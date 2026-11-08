@@ -36,7 +36,7 @@ export const CONFIG = {
 
   // Audio (AUDIO.md §3): el maestro es fijo; solo se calibran los dos buses
   // Calibrado con OfflineAudioContext: música con todas las capas = -18 dBFS de pico, efectos principales ≈ -12 dBFS
-  audio: { master: 0.125, sfxBus: 5.7, yield: 0.3, duck: 0.63, limitDb: -8, limitKnee: 3, limitRatio: 10, limitMakeup: 0.646, musicBus: 0.78, echoWet: 0.33, echoFeedback: 0.25 },
+  audio: { master: 0.125, sfxBus: 5.7, yield: 0.3, duck: 0.63, limitDb: -8, limitKnee: 3, limitRatio: 10, limitMakeup: 0.646, musicBus: 0.78, echoWet: 0.33, echoFeedback: 0.25, variar: 0.3, respiro: 0.15 }, // variar/respiro: MÚSICA QUE CAMBIA (variar.js), probabilidad por nota de cambiar a la vecina del acorde y por compás de quitar una nota
 
   // Piezas y puntaje
   pickupReach: { dx: 30, dy: 34, bodyCenter: 46 }, // la caja de recogida sigue el cuerpo, no todo Moki

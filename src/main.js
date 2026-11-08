@@ -65,6 +65,9 @@ async function boot() {
           energy: a.music ? a.music.state.target : null,
           layersOn: a.music ? a.music.state.layerOn.slice(1) : null,
           step: a.music ? a.music.state.step : null,
+          vuelta: a.music && a.music.state.mel ? a.music.state.mel.v : null, // MÚSICA QUE CAMBIA: vuelta del tema y semilla
+          semilla: a.music ? a.music.state.seed : null,
+          notas: a.music && a.music.state.mel ? JSON.stringify(a.music.state.mel.notes.slice(0, 8)) : null,
           playing: a.music ? a.music.state.running : false,
           master: a.bus ? a.bus.master.gain.value : null,
           sfxBus: a.bus ? a.bus.sfxBus.gain.value : null,
