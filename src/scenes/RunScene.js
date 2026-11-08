@@ -853,28 +853,36 @@ export class RunScene extends Phaser.Scene {
   creaBandera() {
     if (!this.textures.exists('marcaVez')) {
       const cv = document.createElement('canvas');
-      cv.width = 40;
-      cv.height = 64; // >= 52 px en pantalla a 375 (zoom 0.815): se lee como marca, no como pieza
+      cv.width = 52;
+      cv.height = 84; // ~68 px en pantalla a 375 (zoom 0.815): presencia en celular
       const g = cv.getContext('2d');
-      const tri = (c, p) => {
-        g.fillStyle = c;
+      const tri = (p) => {
         g.beginPath();
         g.moveTo(p[0], p[1]);
         g.lineTo(p[2], p[3]);
         g.lineTo(p[4], p[5]);
-        g.fill();
+        g.closePath();
       };
       g.fillStyle = '#22211F'; // canto del asta
-      g.fillRect(3, 2, 6, 62);
+      g.fillRect(4, 2, 9, 82);
       g.fillStyle = '#B99168';
-      g.fillRect(4, 2, 4, 62);
-      tri('#22211F', [8, 3, 39, 15, 8, 27]); // canto del banderín
-      tri('#F4E8D5', [9, 6, 34, 15, 9, 24]);
+      g.fillRect(5, 2, 7, 82);
+      g.fillStyle = '#22211F'; // canto del banderín
+      tri([12, 3, 51, 21, 12, 39]);
+      g.fill();
+      g.save(); // cuadros tinta/kraft: marca de cartón, no bandera blanca
+      tri([13, 7, 45, 21, 13, 35]);
+      g.clip();
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) {
+        g.fillStyle = (r + c) % 2 ? '#22211F' : '#B99168';
+        g.fillRect(13 + c * 7, 7 + r * 7, 7, 7);
+      }
+      g.restore();
       this.textures.addCanvas('marcaVez', cv);
     }
-    const img = this.add.image(-200, C.world.groundY + 2, 'marcaVez').setOrigin(0.15, 1).setDepth(9.95).setVisible(false);
-    const shadow = this.addShadow(-200, 30, 0.22).setVisible(false);
-    this.bandera = { D: null, m: null, sprite: img, shadow };
+    const img = this.add.image(-200, C.world.groundY + 2, 'marcaVez').setOrigin(8.5 / 52, 1).setDepth(9.95).setVisible(false);
+    const shadow = this.addShadow(-200, 40, 0.4).setVisible(false);
+    this.bandera = { D: null, m: null, sprite: img, shadow, sk: null };
   }
 
   // La bandera vive en el mundo: se ve en juego y en la tarjeta de fallo, nunca en el título, el demo ni el paseo.
@@ -887,7 +895,12 @@ export class RunScene extends Phaser.Scene {
     b.shadow.setVisible(ve);
     if (!ve) return;
     b.sprite.x = x;
-    b.shadow.x = x + 6;
+    const sk = this.ambient ? this.ambient.shadowK : 1; // misma sombra de contacto que la caja (abajo-derecha)
+    if (b.sk !== sk) {
+      b.sk = sk;
+      b.shadow.setDisplaySize(40 * sk, 18).setAlpha(0.4 / Math.max(1, sk * 0.9));
+    }
+    b.shadow.x = x + 9 * sk;
   }
 
   addShadow(x, w, alpha) {
