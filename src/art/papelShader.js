@@ -1,8 +1,10 @@
 // P6a PRIMER SHADER: papel del atardecer del nivel 1 (skills moki-shaders y shader-art-coding, gokayfem/shader-skills MIT).
 // Ruta A de moki-shaders, HORNEAR: cada shader se pinta UNA vez en un WebGL suelto, se copia a un lienzo 2D y el juego solo dibuja
 // imágenes. Costo 0 en FPS. GLSL ES 1.00 (WebGL1, como Phaser 3): sin uint ni bits; fBm de ruido de gradiente con octavas giradas
-// (noise.glsl de la librería) pero periódico, para que el mosaico empate; viñeta cos^4 de post.glsl.
+// (noise.glsl de la librería) pero periódico, para que el mosaico empate; viñeta de borde cálido (vuelta B: rampa en el anillo de la viñeta de siempre, no cos^4).
 // Si el navegador no da WebGL o el shader no compila, regresa null y el juego se queda con el papel de siempre.
+
+import { PAL, mix } from './palette.js';
 
 const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
 
@@ -55,20 +57,24 @@ void main(){
 }
 `;
 
-// Viñeta cos^4 (post.glsl) con borde cálido: multiplica hacia un kraft claro, el naranja se hace más hondo y no se agrisa.
+// Viñeta con borde cálido: multiplica hacia un kraft claro, el naranja se hace más hondo y no se agrisa.
 // Vuelta B: misma forma que la viñeta de siempre (textures.js lightLayer: blanco puro hasta 0.30 del lado, cae hasta 0.78, centro en
 // x .5, y .42 desde arriba). Antes el centro blanco era chico y la capa (depth 30, encima de Moki) le pintaba el casco durazno.
 const LUZ = `${COMUN}
 uniform vec3 borde;
 uniform float fuerza;
+uniform float curva;
+uniform vec3 tinta;
+uniform float gris;
 void main(){
   vec2 uv=gl_FragCoord.xy/resolution;
   float r=length(uv-vec2(.5,.58));                     // y de WebGL sube: .58 aquí = .42 desde arriba
-  float t=clamp((r-.30)/.48,0.,1.);                    // 0 = centro neutro (blanco: no toca a Moki), 1 = borde
-  float c=cos(t*1.5707963);
-  float a=(1.-c*c*c*c)*fuerza;                         // caída cos^4: arranca suave y se carga en la orilla
-  float d=hash12(gl_FragCoord.xy)/255.*step(.001,a);   // tramado solo donde hay degradado; el centro queda blanco exacto
-  gl_FragColor=vec4(mix(vec3(1.),borde,a)+d,1.);
+  float t=clamp((r-.30)/.48,0.,1.);                    // mismo anillo que el degradado de siempre: 0 = centro neutro, 1 = orilla
+  float a=pow(t,curva)*fuerza;                         // curva > 1: cerca de Moki casi no toca, se carga en las esquinas
+  float d=hash12(gl_FragCoord.xy)/255.*step(.001,t);   // tramado solo donde hay degradado; el centro queda blanco exacto
+  // la tinta de la viñeta de siempre (lineal, gris*t) se queda donde va Moki para que su casco empate con master; en las esquinas se va
+  float g=gris*t*(1.-smoothstep(.3,.8,t));
+  gl_FragColor=vec4(mix(vec3(1.),borde,a)*mix(vec3(1.),tinta,g)+d,1.);
 }
 `;
 
@@ -124,8 +130,23 @@ function pinta(frag, W, H, unis) {
 export const PAPEL = {
   on: true, // en false, el atardecer vuelve al papel y la viñeta gris de siempre
   grano: { tam: 512, fuerza: 0.16, tinta: '#8A4A22', alfa: 1 }, // fuerza: cuánto llega la mota más oscura hacia la tinta café (vuelta B: 0.12 → 0.16, que se note a 660)
-  luz: { tam: 256, borde: '#E9C49C', fuerza: 0.65 }, // borde: kraft claro (no tinta); fuerza: cuánto llega la orilla al kraft (vuelta B: 1 → 0.65, más suave)
+  // borde: kraft claro (no tinta). Vuelta B: rampa t^curva en el anillo de la viñeta de siempre: esquina ~0.6 del kraft (antes 1.0, ~40% más suave).
+  // gris = C.light.vignette y halo = C.light.halo (config.js), copiados para no meter config al chunk; el gris solo vive cerca del centro.
+  luz: { tam: 256, borde: '#E9C49C', fuerza: 1.1, curva: 2.2, halo: 0.14, gris: 0.2 },
 };
+
+// El halo cálido arriba a la izquierda de la capa de luz de siempre (textures.js lightLayer, mismos números): la vuelta A lo perdía
+// y por eso el casco de Moki no empataba con master.
+function halo(cv) {
+  const S = cv.width;
+  const x = cv.getContext('2d');
+  x.globalCompositeOperation = 'multiply';
+  const h = x.createRadialGradient(S * 0.1, S * 0.02, 0, S * 0.1, S * 0.02, S * 0.75);
+  h.addColorStop(0, mix('#FFFFFF', PAL.warm, PAPEL.luz.halo));
+  h.addColorStop(1, '#FFFFFF');
+  x.fillStyle = h;
+  x.fillRect(0, 0, S, S);
+}
 
 export function hornearPapel() {
   if (!PAPEL.on) return null;
@@ -133,7 +154,8 @@ export function hornearPapel() {
   const L = PAPEL.luz;
   try {
     const grano = pinta(GRANO, G.tam, G.tam, { fuerza: G.fuerza, tinta: rgb(G.tinta) });
-    const luz = pinta(LUZ, L.tam, L.tam, { borde: rgb(L.borde), fuerza: L.fuerza });
+    const luz = pinta(LUZ, L.tam, L.tam, { borde: rgb(L.borde), fuerza: L.fuerza, curva: L.curva, tinta: rgb(PAL.ink), gris: L.gris });
+    if (luz) halo(luz);
     return grano && luz ? { grano, luz } : null;
   } catch {
     return null;
