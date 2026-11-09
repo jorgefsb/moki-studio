@@ -70,14 +70,14 @@ EXT.z = {
     }
     // contorno de papel opaco: al 70 % daba 1.64-1.69 contra el suelo de día (sonda-zanja, 3-nov); en Paseo, al 50 %
     g.fillStyle(hex(PAL.paper), s.paseoRun ? C.paseo.obstacleAlpha : 1);
-    // P5d (director 9-nov): el invitado dio NO PASA a los postes de 6 px que no salían del suelo. Ahora asoman 22 px
-    // sobre el suelo (de -22 a 28), 9 px de grueso, travesaño de 17x5; tinta de 3 px por fuera, igual de alta.
-    const PA = 22;
-    [-9, W].forEach((x) => g.fillRect(x, -PA, 9, 28 + PA).fillRect(x - 4, -PA - 5, 17, 5));
-    // y una línea de tinta por fuera de cada orilla (corte de papel): el papel solo da ~2.0 contra el suelo de día
-    g.fillStyle(hex(PAL.ink), s.paseoRun ? C.paseo.obstacleAlpha : 0.85);
-    [-12, W + 9].forEach((x) => g.fillRect(x, -PA - 5, 3, 33 + PA));
-    g.fillRect(-13, -PA - 8, 19, 3).fillRect(W - 4, -PA - 8, 19, 3); // tapa de tinta sobre cada travesaño
+    // P5d (director 9-nov): el invitado dio NO PASA a los postes de 6 px que no salían del suelo (y a 9 px que asomaban
+    // 22). Ahora son estacas de 12 px que asoman 40 px, con perfil de tinta de 3 px alrededor y travesaño de 22x6.
+    const PA = 40;
+    const a = s.paseoRun ? C.paseo.obstacleAlpha : 1;
+    g.fillStyle(hex(PAL.ink), s.paseoRun ? C.paseo.obstacleAlpha : 0.9);
+    [-12, W].forEach((x) => g.fillRect(x - 3, -PA - 3, 18, 31 + PA).fillRect(x - 8, -PA - 9, 28, 12));
+    g.fillStyle(hex(PAL.paper), a);
+    [-12, W].forEach((x) => g.fillRect(x, -PA, 12, 28 + PA).fillRect(x - 5, -PA - 6, 22, 6));
     const o = { D: e.D, type: 'zanja', plan: e.plan, W, sprite: g, entered: true };
     o.destroy = () => g.destroy();
     s.obstacles.push(o);

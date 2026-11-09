@@ -564,7 +564,7 @@ function tramp(dim = 0) {
   x.lineWidth = 4;
   x.stroke();
   const tabla = (g) => g.roundRect(2, 2, 96, 14, 6);
-  x.fillStyle = k(mix(PAL.kraft, PAL.paper, 0.12)); // kraft cálido, un pelo más claro que el suelo
+  x.fillStyle = k(PAL.kraft); // kraft puro: con papel mezclado el invitado lo leyó beige grisáceo de día
   x.beginPath();
   tabla(x);
   x.fill();
@@ -573,9 +573,9 @@ function tramp(dim = 0) {
   tabla(x);
   x.clip();
   fibers(x, 100, 34, r, { count: 40, color: PAL.ink, alpha: 0.06 });
-  fibers(x, 100, 34, r, { count: 50, color: PAL.paper, alpha: 0.25 });
+  fibers(x, 100, 34, r, { count: 30, color: PAL.paper, alpha: 0.12 });
   x.fillStyle = k(PAL.paper); // tapa de papel: la cara que pisa Moki
-  x.fillRect(2, 2, 96, 4);
+  x.fillRect(2, 2, 96, 2);
   x.fillStyle = k(TONE.kraftDark); // canto café
   x.fillRect(2, 11, 96, 5);
   x.restore();
