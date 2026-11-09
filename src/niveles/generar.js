@@ -519,7 +519,10 @@ const mecanicasReto = (seed) => (/^\d{4}-\d\d-\d\d$/.test(seed) ? ['tramp', 'vie
 export function generarNivel(seed, modo = 'reto', opts = {}) {
   // P5c: opts.nivelMec = mecánicas del nivel del Cuaderno (barra.js mecanicasDeNivel) que el Reto suma a las de su
   // fecha. Misma semilla del día dentro de cada nivel; sin ellas (nivel 1) el Reto es el de siempre.
-  const mecanicas = opts.mecanicas || (modo === 'reto' ? [...new Set([...mecanicasReto(seed), ...(opts.nivelMec || [])])] : []);
+  // P5c2: opts.nivelSola = el nivel estrena su mecánica: sale SOLA, sin el trampolín de la fecha (si no, N3 = N1).
+  const deFecha = opts.nivelSola ? [] : mecanicasReto(seed);
+  const mecanicas = opts.mecanicas || (modo === 'reto' ? [...new Set([...deFecha, ...(opts.nivelMec || [])])] : []);
+  const k0 = opts.salto || 0; // P5c2: intentos desplazados al regenerar un Reto por nivel que no pasa entero
   const formas = formasActivas(seed, modo) ? formasDePartida(seed) : null;
   const ajusteReto = !!formas && modo === 'reto';
   const fallbacks = [];
@@ -538,7 +541,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
     let t = null;
     let mejor = Infinity;
     // Reto con formas: una página sin ningún intento válido sigue probando antes de caer al guion clásico
-    for (let k = 0; (k < INTENTOS || (ajusteReto && !t && k < INTENTOS_RETO)) && mejor > novedadMax; k++) {
+    for (let k = k0; (k < k0 + INTENTOS || (ajusteReto && !t && k < k0 + INTENTOS_RETO)) && mejor > novedadMax; k++) {
       const script = generarTramo(seed, i + 1, k, prev, global, mecanicas, formas && formas[i], ajusteReto);
       if (!ajusteReto && !tramoValido(script, tr.speed)) continue;
       // repetir una secuencia larga de una página anterior cuenta como hueco de novedad perdido
@@ -576,7 +579,14 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
     const j = Math.floor(r() * (i + 1));
     [biomas[i], biomas[j]] = [biomas[j], biomas[i]];
   }
-  return { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, ...(opts.nivel ? { nivel: opts.nivel } : {}), biomas, fallbacks, bloques: tramos.map((t) => t.ids), bloquesFase: tramos.map((t) => t.fases || []), ...(formas ? { formas } : {}) };
+  const nivel = { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, ...(opts.nivel ? { nivel: opts.nivel } : {}), biomas, fallbacks, bloques: tramos.map((t) => t.ids), bloquesFase: tramos.map((t) => t.fases || []), ...(formas ? { formas } : {}) };
+  // P5c2: cada página pasa sola, pero en el Reto por nivel (zanja+trampolín) el nivel entero podía no pasar a +40 ms
+  // (10-dic N4: zanja-larga y luego tramp-nudo). Se revisa entero y, si falla, se regenera con otros intentos
+  // (igual para todos ese día y nivel). Sin opts.nivelMec (nivel 1, Clásico, Libre) no corre: nada cambia.
+  const salto = opts.salto || 0;
+  if (modo === 'reto' && opts.nivelMec && salto < 3 * INTENTOS && ![0, 40, -40].every((j) => validateLevel(nivel, null, j).ok))
+    return generarNivel(seed, modo, { ...opts, salto: salto + INTENTOS });
+  return nivel;
 }
 
 export const semillaReto = () => todayKey();

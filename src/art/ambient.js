@@ -175,7 +175,8 @@ export class Ambient {
     }
     // contraste obstáculo/fondo >= 2.0 en cada hora (medido en pantalla): de día más claro el fondo, de noche el cartón se oscurece
     this.obsTint = lerpColor(A.obs, B.obs, d.t);
-    s.obstacles.forEach((o) => o.sprite && o.sprite.setTint(this.obsTint));
+    // P5c2: el trampolín no es peligro: sin el tinte de la hora (su papel se leía gris metálico); de noche usa tramp_n
+    s.obstacles.forEach((o) => o.sprite && o.type !== 'tramp' && o.sprite.setTint(this.obsTint));
     this.setNight(d.to === 3 ? d.t >= 0.5 : d.from === 3 ? d.t < 0.5 : false);
     s.clouds.setTint(lerpColor(0xffffff, far, 0.6));
     // bandas de fibra (tarde y, más tenues, noche): capas de papel, no un degradado liso

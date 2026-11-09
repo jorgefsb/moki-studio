@@ -18,15 +18,19 @@ export const REGALOS = [
   { id: 'estela', nivel: () => 8 },
 ];
 
-// P5c (director 9-nov): lo ya hecho se juega en el Cuaderno. Mecánicas del Reto según el nivel: en su nivel de estreno
-// sale SOLA; después se combina con las anteriores. N1 nada (Reto de jugador nuevo idéntico), N2 zanja, N3 trampolín,
-// N4 zanja+tramp, N5 viento, N6 las tres, N7 timbre, N8-10 todo.
-const ESTRENOS = () => [['zanja', C.zanja.nivel], ['tramp', C.tramp.nivel], ['viento', C.viento.nivel], ['timbre', C.timbre.nivel]];
+// P5c (director 9-nov): lo ya hecho se juega en el Cuaderno. Mecánicas del Reto según el nivel.
+// P5c2 (director 9-nov 12:52): el nivel 1 ya trae el trampolín por su fecha, así que N3 = trampolín era igual a N1.
+// Ahora cada estreno sale SOLO (sin el trampolín de la fecha) y el nivel siguiente lo combina con lo ya visto:
+// N1 trampolín (fecha, idéntico), N2 zanja, N3 viento, N4 zanja+tramp, N5 viento+tramp, N6 las tres,
+// N7 (C.timbre.nivel) timbre, N8-10 todo. En Libre los regalos siguen abriendo por C.*.nivel (sin cambio).
+const RETO_NIVELES = [[], [], ['zanja'], ['viento'], ['zanja', 'tramp'], ['viento', 'tramp'], ['zanja', 'tramp', 'viento']];
 export function mecanicasDeNivel(nv) {
-  const e = ESTRENOS();
-  const sola = e.find(([, n]) => n === nv);
-  return sola ? [sola[0]] : e.filter(([, n]) => n <= nv).map(([id]) => id);
+  if (nv === C.timbre.nivel) return ['timbre'];
+  if (nv > C.timbre.nivel) return ['zanja', 'tramp', 'viento', 'timbre'];
+  return RETO_NIVELES[Math.max(0, Math.min(nv, RETO_NIVELES.length - 1))] || [];
 }
+// Estreno = una sola mecánica en el nivel: sale sin las de la fecha
+export const estrenoSolo = (mec) => mec.length === 1;
 
 function leer() {
   let d = null;

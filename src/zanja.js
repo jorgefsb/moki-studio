@@ -70,10 +70,11 @@ EXT.z = {
     }
     // contorno de papel opaco: al 70 % daba 1.64-1.69 contra el suelo de día (sonda-zanja, 3-nov); en Paseo, al 50 %
     g.fillStyle(hex(PAL.paper), s.paseoRun ? C.paseo.obstacleAlpha : 1);
-    [-3, W].forEach((x) => g.fillRect(x, 0, 3, 26).fillRect(x - 4, -3, 11, 3));
-    // y una línea de tinta de 2 px por fuera de cada orilla (corte de papel): el papel solo da ~2.0 contra el suelo de día
+    // P5c2 (director 9-nov): postes de 3 -> 6 px y travesaño de 4 px; tinta de 2 -> 3 px. Se leían delgados a 390x844
+    [-6, W].forEach((x) => g.fillRect(x, 0, 6, 28).fillRect(x - 4, -4, 14, 4));
+    // y una línea de tinta por fuera de cada orilla (corte de papel): el papel solo da ~2.0 contra el suelo de día
     g.fillStyle(hex(PAL.ink), s.paseoRun ? C.paseo.obstacleAlpha : 0.85);
-    [-5, W + 3].forEach((x) => g.fillRect(x, 0, 2, 26));
+    [-9, W + 6].forEach((x) => g.fillRect(x, 0, 3, 28));
     const o = { D: e.D, type: 'zanja', plan: e.plan, W, sprite: g, entered: true };
     o.destroy = () => g.destroy();
     s.obstacles.push(o);

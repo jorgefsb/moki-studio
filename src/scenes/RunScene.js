@@ -14,7 +14,7 @@ import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
-import { abierto, siguiente, sumar, mecanicasDeNivel } from '../barra.js';
+import { abierto, siguiente, sumar, mecanicasDeNivel, estrenoSolo } from '../barra.js';
 import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { IR, DESTINOS } from '../ir.js';
@@ -692,7 +692,7 @@ export class RunScene extends Phaser.Scene {
     if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
     // P5c: el Reto suma las mecánicas del nivel del Cuaderno (barra.js mecanicasDeNivel); nivel 1 = el Reto de siempre
     const nivelMec = modo === 'libre' ? [] : mecanicasDeNivel(nv).filter((m) => m !== 'zanja' || EXT.z);
-    const opts = modo === 'libre' ? { mecanicas } : nivelMec.length ? { nivelMec, nivel: nv } : {};
+    const opts = modo === 'libre' ? { mecanicas } : nivelMec.length ? { nivelMec, nivel: nv, ...(estrenoSolo(nivelMec) ? { nivelSola: true } : {}) } : {}; // P5c2
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, opts);
   }
 
@@ -1188,7 +1188,7 @@ export class RunScene extends Phaser.Scene {
       const sk = this.ambient ? this.ambient.shadowK : 1; // mañana y tarde: sombras largas y suaves; mediodía: cortas
       o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }
-    if (this.ambient) o.sprite.setTint(this.ambient.obsTint);
+    if (this.ambient && e.type !== 'tramp') o.sprite.setTint(this.ambient.obsTint); // P5c2: el trampolín no lleva el tinte de la hora
     // Paseo: el obstáculo se dibuja atenuado para que cruzarlo se lea a propósito y no como un error de colisión
     if (this.paseoRun) [o.sprite, o.shadow, ...(o.threads || [])].forEach((g) => g.setAlpha(g.alpha * C.paseo.obstacleAlpha));
     o.destroy = () => {

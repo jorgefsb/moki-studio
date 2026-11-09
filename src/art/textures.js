@@ -542,14 +542,15 @@ function torre(dim = 0, soft = 1, ink = 1) {
   return c;
 }
 
-// Trampolín (J, placeholder para el director de arte): tabla de kraft cálido con canto oscuro (no es peligro: sin
-// kraftDanger ni naranja) sobre un resorte de cartón doblado en zigzag y una base. 88x24 de juego; al lanzar se aplasta.
+// Trampolín (J): tabla de PAPEL con contorno de tinta sobre un resorte de tinta y papel en zigzag y una base de tinta.
+// P5c2 (director 9-nov): la tabla kraft se fundía con el suelo y los cerros (kraft sobre kraft); papel + tinta es el
+// máximo contraste de la paleta sin naranja ni ámbar (no es peligro ni checkpoint). 88x24 de juego; al lanzar se aplasta.
 function tramp(dim = 0) {
   const [c, x] = mk(100, 34);
   const k = (col) => mix(col, PAL.ink, dim * 0.35);
-  x.fillStyle = k(TONE.kraftDark);
+  x.fillStyle = PAL.ink;
   x.beginPath();
-  x.roundRect(10, 27, 80, 6, 3);
+  x.roundRect(9, 26, 82, 7, 3);
   x.fill();
   x.lineJoin = 'round';
   x.beginPath();
@@ -557,11 +558,16 @@ function tramp(dim = 0) {
   x.strokeStyle = PAL.ink;
   x.lineWidth = 9;
   x.stroke();
-  x.strokeStyle = k(TONE.kraftDark);
-  x.lineWidth = 6;
+  x.strokeStyle = k(PAL.paper);
+  x.lineWidth = 4;
   x.stroke();
-  block(x, 2, 2, 96, 14, { body: k(PAL.kraft), tape: false, seed: 61, dim });
-  x.fillStyle = k(TONE.kraftDark);
+  block(x, 2, 2, 96, 14, { body: k(mix(PAL.paper, PAL.kraft, 0.25)), tape: false, seed: 61, dim, ink: 2.5 }); // papel entibiado: el papel puro bajo el tinte del ambiente se leía gris acero
+  x.strokeStyle = PAL.ink;
+  x.lineWidth = 2.5;
+  x.beginPath();
+  x.roundRect(2, 2, 96, 14, 6);
+  x.stroke();
+  x.fillStyle = PAL.ink;
   x.fillRect(5, 12, 90, 3);
   return c;
 }
