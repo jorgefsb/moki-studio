@@ -53,7 +53,7 @@ export function sumar(metros, piezas) {
   const s = siguiente();
   if (!s) return null;
   const b = leer();
-  b.pts += pts;
+  b.pts = Math.round(b.pts + pts);
   let abrio = null;
   if (b.pts >= C.barra.meta) {
     b.abiertos.push(s.id);
