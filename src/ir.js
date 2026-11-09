@@ -15,8 +15,12 @@ export const DESTINOS = {
   viento: { modo: 'libre', tramo: 1, nivel: null, mec: ['viento'] },
   timbre: { modo: 'libre', tramo: 1, nivel: null, mec: ['timbre'] },
   formas: { modo: 'reto', tramo: 0, nivel: null }, // formas de página: Libre siempre y el Reto desde hoy
+  // P3e (7): Libre escoge paisaje. Fila del nivel 1 del mapa de arte (paisajes.js RUTA[0]): Atardecer, Ciudad, Playa, Noche
+  'libre-atardecer': { modo: 'libre', tramo: 0, nivel: 1 },
+  'libre-playa': { modo: 'libre', tramo: 2, nivel: 1 },
+  'libre-noche': { modo: 'libre', tramo: 3, nivel: 1 },
 };
-const ALIAS = { tramp: 'trampolin', 'trampolín': 'trampolin', campana: 'timbre' };
+const ALIAS = { tramp: 'trampolin', 'trampolín': 'trampolin', campana: 'timbre', 'libre-ciudad': 'ciudad' };
 
 // Encargos del nivel 1 del Cuaderno (cuaderno.js NIVELES[0]); hechos = nivel 2. Copiados para no importar cuaderno.js aquí.
 const NIVEL1 = ['cajas3', 'cajas5', 'piezas15'];

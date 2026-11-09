@@ -519,12 +519,15 @@ export class RunScene extends Phaser.Scene {
   //  Punto NUEVO en la tarjeta que cambió en 7 días (novedades.json "donde"); se apaga al jugarla.
   menu() {
     const coarse = this.coarse;
+    const n = this.nov;
+    // P3e (3): la versión de lo nuevo es la entrada de novedades.json (fecha + título, la cambia el cronista al integrar)
+    const version = n && n.lineas.length ? `${n.fecha}|${n.titulo}` : '';
     if (load('moki.primera') !== '1') {
+      if (version) save('moki.nov.visita', version); // el jugador nuevo ya ve lo de hoy: el aviso es para cuando cambie
       this.ui.showMenu({ hero: { titulo: t('menu.jugar'), sub: t(coarse ? 'menu.jugar.d' : 'menu.jugar.kbd'), onPick: () => this.startGame() }, cards: [] }, this.saludoZonas());
       return;
     }
     const nv = nivelDe(leerCuaderno()).nivel;
-    const n = this.nov;
     const fresco = n && n.fecha && diaLocal() - Math.floor(Date.parse(`${n.fecha}T12:00:00Z`) / 864e5) <= 7;
     const nuevos = new Set(fresco ? n.donde.map((d) => NODO_DE[d]).filter((k) => k && load(`moki.nuevo.visto.${k}`) !== n.fecha) : []);
     const visto = (k) => n && n.fecha && save(`moki.nuevo.visto.${k}`, n.fecha);
@@ -536,8 +539,39 @@ export class RunScene extends Phaser.Scene {
       this.pedirZanja();
       this.startGame();
     };
+    const juegaNuevo = () => (visto(NODO_DE[destino]), irA(destino));
+    const alMenu = () => ((this.vistaMenu = null), this.menu());
+    // P3e (3) Lo nuevo desde tu última visita: el jugador que vuelve y no ha visto esta versión la ve primero, a 1 toque de jugarla.
+    // Se marca vista al enseñarla (si toca el lienzo y juega, ya la vio). Las ligas ?ir= no lo enseñan.
+    if (!this.vistaMenu && version && !IR && load('moki.nov.visita') !== version) {
+      save('moki.nov.visita', version);
+      this.vistaMenu = 'aviso';
+    }
+    if (this.vistaMenu === 'aviso') {
+      this.ui.showMenu(
+        {
+          aviso: { titulo: t('menu.visita'), lineas: n.lineas },
+          hero: { titulo: t('menu.nuevo'), sub: n.titulo, onPick: juegaNuevo },
+          cards: [{ nombre: t('menu.todo'), linea: t('menu.todo.d'), onPick: alMenu }],
+        },
+        this.saludoZonas()
+      );
+      return;
+    }
+    // P3e (7) Libre escoge paisaje: la tarjeta Libre abre sus 4 lugares; "Todos" es el Libre de siempre (todas las páginas, guarda marca)
+    if (this.vistaMenu === 'libre') {
+      const lugar = (k, ir) => ({ nombre: t(`menu.${k}`), linea: t(`menu.libre.${k}`), onPick: () => (visto('libre'), irA(ir)) });
+      this.ui.showMenu(
+        {
+          hero: { titulo: t('menu.libre.todos'), sub: t('menu.libre.d'), onPick: () => ((this.vistaMenu = null), jugar('libre', 'libre')()) },
+          cards: [lugar('n1', 'libre-atardecer'), lugar('n3', 'ciudad'), lugar('n4', 'libre-playa'), lugar('n2', 'libre-noche'), { nombre: t('menu.atras'), linea: t('menu.atras.d'), onPick: alMenu }],
+        },
+        this.saludoZonas()
+      );
+      return;
+    }
     const reto = { nombre: t('menu.reto'), linea: t('menu.reto.d'), nuevo: nuevos.has('reto'), onPick: jugar('reto', 'reto') };
-    const libre = { nombre: t('menu.libre'), linea: t('menu.libre.d'), nuevo: nuevos.has('libre'), onPick: jugar('libre', 'libre') };
+    const libre = { nombre: t('menu.libre'), linea: t('menu.libre.elige'), nuevo: nuevos.has('libre'), onPick: () => ((this.vistaMenu = 'libre'), this.menu()) };
     const ruta = RUTA.map(([k, ir, abre], i) => {
       const a = abre();
       return {
@@ -584,7 +618,7 @@ export class RunScene extends Phaser.Scene {
     const corto = this.scale.height < 480;
     this.ui.showMenu(
       {
-        hero: { titulo: t('menu.nuevo'), sub: n ? n.titulo : '', onPick: () => (visto(NODO_DE[destino]), irA(destino)) },
+        hero: { titulo: t('menu.nuevo'), sub: n ? n.titulo : '', onPick: juegaNuevo },
         cards,
         pie: corto ? t('menu.lienzo') : `${t('cu.nivel', { n: nv })} · ${t(hola.key, { n: hola.n })}`,
       },
@@ -745,6 +779,7 @@ export class RunScene extends Phaser.Scene {
     this.distLabel.set(`0 ${t('hud.m')}`);
     this.pieceLabel.set('0');
     this.lastM = 0;
+    this.vistaMenu = null; // P3e: el título siempre vuelve al menú principal (o al aviso de lo nuevo)
     this.menu();
     this.demoStripping = false;
     this.cargarNov();
