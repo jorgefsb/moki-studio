@@ -571,7 +571,9 @@ export function montarPaisajes(s, pintadas, gy) {
   let k = 1;
   let antes = null;
   let encendido = false;
+  let horaPendiente = null; // hora de ambient que espera a que el paisaje tape todo
   const apagar = () => {
+    horaPendiente = null;
     Object.values(pilas).forEach((P) => Object.values(P).forEach((v) => v.setVisible(false)));
     if (amb.conPaisaje) {
       amb.conPaisaje = false;
@@ -618,6 +620,10 @@ export function montarPaisajes(s, pintadas, gy) {
     const g = gy();
     Object.entries(pilas).forEach(([key, P]) => colocar(P, g, key === cur ? k : key === prev ? (cur ? 1 : 1 - k) : 0));
     const cubre = (cur && k >= 1) || (cur && prev);
+    if (horaPendiente !== null && cur && k >= 1) {
+      sdP.call(amb, horaPendiente, true);
+      horaPendiente = null;
+    }
     if (cubre && pintadas && amb.n1) {
       [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio, pintadas.suelo].forEach((v) => v.setVisible(false)); // lo tapado no se dibuja
     } else if (cubre) tapar();
@@ -634,7 +640,11 @@ export function montarPaisajes(s, pintadas, gy) {
   amb.setDay = function (i, instant) {
     if (s.demo || s.paseoRun || amb.n1 || i !== s.tramoIdx) return sdP.call(this, i, instant);
     const L = lugarDe(i);
+    horaPendiente = null;
     if (L === 'N') return sdP.call(this, 3, instant || esLugar(lugarDe(i - 1)));
+    // De la Noche con estrellas a un paisaje: la noche se queda debajo mientras el paisaje entra (si no, la mañana beige asomaba en el fundido)
+    // y cambia de golpe cuando ya lo tapa todo
+    if (esLugar(L) && !instant && lugarDe(i - 1) === 'N') return void (horaPendiente = 0);
     return sdP.call(this, esLugar(L) ? 0 : i, instant);
   };
   // El nivel se lee al empezar, como amb.n1: caer y reintentar sigue en la misma fila del mapa
