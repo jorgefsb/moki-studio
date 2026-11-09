@@ -145,7 +145,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 /* P3b: barra de lo siguiente en la tarjeta de fallo (papel kraft, se llena en naranja) */
 .ui-barra { margin: 6px 0 2px; font-size: 15px; line-height: 20px; }
 .ui-barra .abrio { display: block; color: #22211F; }
-.ui-barra .tit { display: block; color: rgba(34, 33, 31, 0.84); }
+.ui-barra .fila { display: flex; align-items: center; gap: 10px; }
+.ui-barra .dib { flex: none; width: 32px; height: 32px; }
+.ui-barra .dib svg { display: block; }
+.ui-barra .txt { min-width: 0; }
+.ui-barra .tit { display: block; color: #22211F; }
+.ui-barra .falta { display: block; color: rgba(34, 33, 31, 0.84); font-size: 14px; line-height: 18px; }
 .ui-barra .tubo { display: block; height: 8px; margin-top: 4px; border-radius: 4px; background: #E6D3B6; border: 1px solid #B99168; overflow: hidden; }
 .ui-barra .lleno { display: block; height: 100%; background: #FF6B35; transition: width 600ms cubic-bezier(0.25, 0.5, 0.45, 1); }
 

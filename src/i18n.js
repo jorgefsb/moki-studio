@@ -49,6 +49,7 @@ const ES = {
   'fail.faltan': 'Te faltaron {n} m para la meta',
   'barra.tit': 'Lo siguiente: {r}',
   'barra.abrio': '¡Abriste {r}!',
+  'barra.falta': 'Te faltan {m} m o {p} piezas',
   'regalo.tramp': 'el trampolín',
   'regalo.pasos': 'los pasos de cartón',
   'regalo.viento': 'el viento',
