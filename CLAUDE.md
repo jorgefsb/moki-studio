@@ -2123,3 +2123,43 @@ Nada espera a Jorge. Pregunta con opción recomendada y hora límite; a los 30 m
 ## Bitácora con historia y gráficos (Jorge, 8-nov 23:32, canon)
 
 Cada entrada del día usa la skill papacitoos-storytelling (una persona que juega, su creencia, un solo punto, escena concreta, aha con porqué) y trae, además de su gráfico: otra gráfica o una imagen de antes y después, una disyuntiva (opción A, opción B, qué elegimos y por qué), "en qué la regamos" (honesto), una pregunta para el que lee y una liga "Juega esto" que lleva directo a lo nuevo. El sitio ya pinta esos campos (graficos, imagenes, disyuntiva, la_regamos, pregunta, juega).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Modelo del director (Jorge, 9-nov 02:21, canon)
+
+"Al director siempre Opus 5.5 o el mejor Opus que haya en el momento." El asiento estudio-director corre con claude-opus-5-5 (rig seat set-model, auditado, 9-nov 02:22). Si sale un Opus mejor, Spark lo cambia con `rig seat set-model estudio-director@estudio-moki --model <id>` el mismo día. Nadie baja al director a Sonnet ni a Haiku para ahorrar. Los demás asientos y los invitados usan el modelo más barato que pase su prueba (ley L8): Opus solo donde el criterio pesa (constructor, game-feel, niveles), Sonnet para el resto.
