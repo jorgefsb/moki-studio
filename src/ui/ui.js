@@ -255,7 +255,7 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect, isNew }, onGo) {
+    showFail({ hint, meta, prompt, rect, isNew, barra, bandera }, onGo, onBandera) {
       ui.hideFail();
       ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
@@ -273,25 +273,68 @@ export function createUI() {
         meta.forEach((m) => p.append(el('span', '', m))); // un renglón cada uno: nunca 'checkpoint' huérfano
         card.append(p);
       } else if (meta) card.append(el('p', 'meta', meta));
+      // P3b: barra de lo siguiente (perder también avanza). abrio = lo que esta caída acaba de abrir.
+      if (barra) {
+        const b = el('div', 'ui-barra');
+        if (barra.abrio) b.append(el('b', 'abrio', t('barra.abrio', { r: t(`regalo.${barra.abrio}`) })));
+        if (barra.sig) {
+          const s = barra.sig;
+          const fila = el('div', 'fila');
+          const dib = el('span', `dib ${s.id}`); // dibujo de papel del regalo: fondo SVG en ui.css
+          const txt = el('span', 'txt');
+          txt.append(el('span', 'tit', t('barra.tit', { r: t(`regalo.${s.id}`) })), el('span', 'falta', t('barra.falta', { m: s.faltaM, p: s.faltaP })));
+          fila.append(dib, txt);
+          b.append(fila);
+          const tubo = el('i', 'tubo');
+          const lleno = el('i', 'lleno');
+          lleno.style.width = `${Math.round((100 * s.pts) / s.meta)}%`;
+          tubo.append(lleno);
+          b.append(tubo);
+        }
+        card.append(b);
+      }
       const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
       pill.disabled = true;
       card.append(pill);
+      // P3b ayuda tras 3 caídas en el mismo tramo: segundo botón, sin castigo; el toque en el fondo sigue siendo reintentar
+      let alt = null;
+      if (bandera && onBandera) {
+        alt = el('button', 'ui-btn secondary ui-bandera', `⚑ ${bandera}`);
+        alt.type = 'button';
+        alt.disabled = true;
+        alt.addEventListener('pointerdown', (e) => e.stopPropagation());
+        card.append(alt);
+      }
       scrim.append(card);
       root.appendChild(scrim);
+      // Pantallas bajas (embed 660x372, 640x400): si el contenido no cabe en maxHeight, se aprieta por pasos para que el
+      // botón de reintento siempre se vea: 1) barra en una línea, 2) sin la línea de meta, 3) la barra queda en texto
+      // ("Lo siguiente: ..." o "¡Abriste ...!") sin dibujo ni tubo, 4) sin la barra. Con bandera, antes que nada los dos
+      // botones van lado a lado (el alto lo topa la cabeza de Moki: la tarjeta no puede crecer)
+      for (const k of [...(alt ? ['lado'] : []), 'apretada', 'apretada2', 'apretada3', 'apretada4']) {
+        if (card.scrollHeight <= card.clientHeight + 1) break;
+        card.classList.add(k);
+      }
       let fired = false;
       const go = () => {
         if (fired || pill.disabled) return;
         fired = true;
         onGo();
       };
+      if (alt)
+        alt.addEventListener('click', () => {
+          if (fired || alt.disabled) return;
+          fired = true;
+          onBandera();
+        });
       scrim.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         go();
       });
       pill.addEventListener('click', go);
       primary = go;
-      state.fail = { scrim, card, pill };
+      state.fail = { scrim, card, pill, alt };
       requestAnimationFrame(() => {
         card.style.opacity = '1';
         card.style.transform = 'translateY(0)';
@@ -312,6 +355,7 @@ export function createUI() {
     unlockFail() {
       if (!state.fail) return;
       state.fail.pill.disabled = false;
+      if (state.fail.alt) state.fail.alt.disabled = false;
       state.fail.pill.classList.add('ready');
       state.fail.pill.focus({ preventScroll: true });
     },

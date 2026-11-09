@@ -281,4 +281,16 @@ export const CONFIG = {
   // sun.y: px sobre el suelo (en vertical se multiplica por portrait.farScale, como los cerros).
   ridge: { scale: 1.45, mix: 0.3, parallax: 0.15, lift: 34 },
   sun: { x: 0.68, y: 270, r: 44 },
+  // P3b (director 9-nov 05:05, propuestas/p3b-sincaer-n5.md V1): el encargo 'sinCaer' del nivel 5 del Cuaderno se
+  // cumple llegando a la meta con <= sinCaerMax choques (era 0: el bot humano limpiaba 8-19%, el novato ~0%). El sello
+  // de partida 'sinCaerme' (perfecto, 0 choques) no se toca. 0 regresa al criterio viejo.
+  sinCaerMax: 2,
+  // P3b perder también avanza (src/barra.js): cada intento suma metros + piezas x porPieza; al llegar a meta se abre el
+  // siguiente regalo (trampolín, pasos, viento, estela, timbre) aunque el Cuaderno no llegue a su nivel. meta medida con
+  // scripts/barra-medir.mjs: el bot medio la llena en <= 5 min de juego sin contar piezas.
+  barra: { meta: 700, porPieza: 5 },
+  // P3b ayuda (como el modo de ayuda de Celeste, sin castigo): tras `choques` caídas en el mismo tramo la tarjeta ofrece
+  // empezar desde la bandera: antes del grupo de obstáculos donde chocó (se junta lo que esté a < grupoSec del
+  // siguiente) en vez del inicio del tramo. Solo si eso ahorra >= ahorroSec de carrera.
+  ayuda: { choques: 3, grupoSec: 1.2, ahorroSec: 3 },
 };
