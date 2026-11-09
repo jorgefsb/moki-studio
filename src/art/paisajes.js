@@ -52,16 +52,17 @@ const conSombraMosaico = (c, alpha, blur, dx, dy) => {
   return t;
 };
 
+const CW = 480; // ancho del cielo: múltiplo de la fibra (240), así el mosaico no marca costura
 function cielo(stops, extra) {
-  const [c, x] = mk(480, H);
+  const [c, x] = mk(CW, H);
   const g = x.createLinearGradient(0, 0, 0, H);
   stops.forEach(([k, col]) => g.addColorStop(k, col));
   x.fillStyle = g;
-  x.fillRect(0, 0, 480, H);
-  conFibra(x, 480, H, 0.4);
+  x.fillRect(0, 0, CW, H);
+  conFibra(x, CW, H, 0.4);
   if (extra) extra(x);
   x.fillStyle = stops[0][1];
-  x.fillRect(0, H - 2, 480, 2);
+  x.fillRect(0, H - 2, CW, 2);
   return c;
 }
 
@@ -98,12 +99,12 @@ const TRAMOS = [
     // día claro: el beige no decía ninguna hora (caso-004, 3 de 3). Con más cuerpo y nubes de papel: el azul pálido Jorge lo leyó viejo (caso-005)
     // El sol ya no va en el mosaico (su halo se cortaba en el borde: costura junto al sol, LA SUMA B): es imagen aparte, como la luna
     astro: 'paisajeSol',
-    cielo: (stops = [[0, '#4F8CC4'], [0.55, '#86B7DC'], [1, '#D6E2DD']]) => cielo(stops, (x) => {
+    cielo: (stops = [[0, '#7A8C9C'], [0.55, '#A9B8C0'], [1, '#DCDDD6']]) => cielo(stops, (x) => {
       [[70, 46, 1], [250, 84, 0.8], [392, 34, 0.65]].forEach(([u, y, k]) => {
         const nube = () => {
           x.save();
           x.beginPath();
-          x.rect(0, 0, 480, y + 12 * k); // panza plana, como recorte pegado
+          x.rect(0, 0, CW, y + 12 * k); // panza plana, como recorte pegado
           x.clip();
           x.beginPath();
           [[0, 0, 26], [24, -10, 22], [48, -2, 20], [-22, 4, 16], [68, 6, 14]].forEach(([dx, dy, r]) => {
@@ -336,7 +337,7 @@ const TRAMOS = [
       detalle: (x) => motas(x, 216, 260, ['#4A5588', '#6A76AE'], 2),
     }),
     astro: 'paisajeLuna',
-    cielo: (stops = [[0, '#1E2650'], [0.35, '#2F3B72'], [0.52, '#6676B2'], [1, '#7E8EC6']]) => cielo(stops, (x) => {
+    cielo: (stops = [[0, '#202838'], [0.35, '#34404F'], [0.52, '#6A7A8F'], [1, '#8494A8']]) => cielo(stops, (x) => {
       const q = rng(208);
       x.fillStyle = '#F4E8D5';
       for (let i = 0; i < 26; i++) {
@@ -419,9 +420,9 @@ const LUGARES = {
   c: [1, null],
   p: [2, null],
   n: [3, null],
-  cA: [1, [[0, '#7A98C8'], [0.55, '#E7B29A'], [1, '#F4C9A2']]], // Ciudad al alba: azul que baja a durazno (sin lila: ARTE §13.4)
+  cA: [1, [[0, '#8A99AC'], [0.55, '#E7B29A'], [1, '#F4C9A2']]], // Ciudad al alba: azul que baja a durazno (sin lila: ARTE §13.4)
   pA: [2, [[0, '#7FB3D6'], [0.6, '#F2C987'], [1, '#F5A97A']]], // Playa en tarde dorada
-  nA: [3, [[0, '#121838'], [0.35, '#1F2A5E'], [0.55, '#4F5F9E'], [1, '#6878B6']]], // Noche de cielo más profundo
+  nA: [3, [[0, '#161B27'], [0.35, '#262F40'], [0.55, '#56647A'], [1, '#707F94']]], // Noche de cielo más profundo, azul tinta (pasada de color: la pervinca se iba a morado)
   cB: [1, [[0, '#8C95A3'], [0.6, '#B3B6B4'], [1, '#CFCBC1']], null], // Ciudad nublada, gris frío: sin sol
   pB: [2, [[0, '#5E7A8E'], [0.6, '#9DB5BA'], [1, '#D5DCCB']]], // Playa con tormenta lejana
   nB: [3, [[0, '#1A1D2B'], [0.35, '#2B3247'], [0.55, '#5A6582'], [1, '#7884A0']]], // Noche pizarra (la violeta del mapa cae en morado: ARTE §13.4)
@@ -523,30 +524,34 @@ export function montarPaisajes(s, pintadas, gy) {
     pilas[key] = P;
     return true;
   };
-  const pon = (L, y, w, h, kx, ky, tile) => {
-    L.setPosition(0, y).setSize(w, h).setTileScale(kx, ky);
-    L.tilePositionX = tile / kx;
+  // x0: borde izquierdo de lo visible; el mosaico se corre lo mismo para quedarse quieto en pantalla
+  const pon = (L, x0, y, w, h, kx, ky, tile) => {
+    L.setPosition(x0, y).setSize(w, h).setTileScale(kx, ky);
+    L.tilePositionX = (tile + x0) / kx;
   };
-  const colocar = (P, g, a) => {
-    if (a <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
+  // Se ve de x0 a x1 (px de pantalla), opaco. El cruce de lugar es un cambio de escena de papel que entra por la derecha, no un fundido:
+  // con alfa, el cielo claro que entraba lavaba los edificios y veleros del que se iba (doble exposición, ARTE pasada de color de LA SUMA B)
+  const colocar = (P, g, x0, x1) => {
+    if (x1 - x0 <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
+    const w = x1 - x0;
     const ms = s.midS || 1;
     const quieto = s.reduced;
     const hC = g + 12 - s.top;
-    pon(P.cielo, s.top, s.vw, hC, hC / H, hC / H, 0);
+    pon(P.cielo, x0, s.top, w, hC, hC / H, hC / H, 0);
     [['lejos', s.far.y - s.base.far], ['medio', s.mid.y - s.base.mid]].forEach(([n, baja]) => {
       const K = CAPAS[n];
       const alto = K.alto * ms;
-      pon(P[n], g + K.pie - alto + baja, s.vw, alto, (K.ancho * ms) / W, alto / H, quieto ? 0 : s.dist * K.par);
+      pon(P[n], x0, g + K.pie - alto + baja, w, alto, (K.ancho * ms) / W, alto / H, quieto ? 0 : s.dist * K.par);
     });
     // Mismo lugar y corrimiento que el suelo pintado del nivel 1 (capas.js), esté o no cargado
     const S = sueloEn(s, g);
-    P.suelo.setPosition(0, S.y).setSize(s.vw, S.h).setTileScale(S.kx * SUELO.k, S.ky * SUELO.k);
-    P.suelo.tilePositionX = s.dist / S.kx / SUELO.k;
+    pon(P.suelo, x0, S.y, w, S.h, S.kx * SUELO.k, S.ky * SUELO.k, s.dist);
+    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(1));
     if (P.astro) {
       if (P.astro.texture.key === 'paisajeSol') P.astro.setPosition(s.vw * 0.76, s.top + (hC * 40) / H).setScale(hC / H);
       else P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
+      P.astro.setVisible(P.astro.x >= x0 && P.astro.x <= x1); // el astro pasa entero con su hoja
     }
-    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(a));
   };
 
   // Fuera del nivel 1 no hay fondo pintado que esconder: lo tapado es el fondo de siempre. Se guarda cómo estaba para regresarlo.
@@ -618,7 +623,8 @@ export function montarPaisajes(s, pintadas, gy) {
       amb.applyDay(0);
     }
     const g = gy();
-    Object.entries(pilas).forEach(([key, P]) => colocar(P, g, key === cur ? k : key === prev ? (cur ? 1 : 1 - k) : 0));
+    const borde = s.vw * (1 - k); // la hoja nueva entra por la derecha; la que se va queda entera debajo (o, sin nueva, se recoge)
+    Object.entries(pilas).forEach(([key, P]) => colocar(P, g, key === cur ? borde : 0, key === cur ? s.vw : key === prev ? (cur ? s.vw : borde) : 0));
     const cubre = (cur && k >= 1) || (cur && prev);
     if (horaPendiente !== null && cur && k >= 1) {
       sdP.call(amb, horaPendiente, true);
