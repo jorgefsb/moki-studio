@@ -19,4 +19,14 @@ Regla de Jorge del 8-nov-2026, después de casi dos semanas de anunciar avances 
 4. La portada del sitio y el cartel de novedades se rehacen solos con cada versión.
 5. Una puerta de QA revisa todo esto antes de cada publicación. Si falla, no se publica.
 
+## Ley de la última versión
+
+Jorge, 8-nov-2026 22:23: "La última versión siempre debe ser la suma de todo lo decidido y la mejor versión. Si algo se mejoró, se decidió y se produjo, ESE debe ser el highlight y lo que se puede jugar principalmente."
+
+1. La versión de hoy es la suma de todo lo aprobado. Nada aprobado se queda en una rama.
+2. Nada producido espera al calendario: no hay candados por fecha.
+3. Si algo se abre jugando (un nivel, un sello), también tiene un botón para probarlo ya.
+4. Lo último que mejoró es lo primero que ves al entrar.
+5. Si algo nuevo empeora otra cosa, se arregla antes de publicar. La versión de hoy nunca retrocede.
+
 Ver [[puerta-de-integracion]] y [[errores-y-aprendizajes]].

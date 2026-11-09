@@ -2100,3 +2100,13 @@ Nada espera a Jorge. Pregunta con opción recomendada y hora límite; a los 30 m
 3. El cronista, en cada integración: actualiza public/novedades.json (fecha, 3 líneas, dónde se ve), GDD.md (la sección que cambió) y el wiki metodo/ (ver metodo/SCHEMA.md). Sin eso la pieza no se marca [x] en COLA.
 4. La lista de cambios de la publicación lleva el "dónde" de cada cambio.
 5. Antes de cada deploy, la puerta de QA del sitio (herramientas/qa-sitio.py en la laptop) revisa versión, portada, novedades, menú y ligas. Si falla, no se publica.
+
+## Ley de la última versión (Jorge, 8-nov 22:23, canon)
+
+"La última versión siempre debe ser la suma de todo lo decidido y la mejor versión. Si algo se mejoró, se decidió y se produjo, ESE debe ser el highlight y lo que se puede jugar principalmente."
+
+1. master es la suma de TODO lo decidido y producido. Nada aprobado se queda en una rama: o entra a master el mismo día, o se anota en "Lo que no entró" con su razón.
+2. Nada producido espera al calendario. Prohibidos los candados por fecha (por ejemplo `reto: '2026-11-09'` en config.js o `INTERRUPTOR.reto: '2026-11-10'` en niveles/formas.js).
+3. Un candado de progreso (nivel del Cuaderno, sello, Vuelta rápida) solo vale si lo nuevo tiene además una liga o botón "Pruébalo" que lleva directo ahí sin jugar horas.
+4. El highlight del día es lo principal: la pantalla de inicio y el cartel "Lo nuevo de hoy" enseñan y llevan a lo último que se mejoró.
+5. Si una mejora nueva hace peor otra cosa, gana la suma mejor: se arregla antes de publicar, no se publica una versión que retrocede.

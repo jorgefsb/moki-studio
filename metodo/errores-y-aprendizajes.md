@@ -2,6 +2,8 @@
 
 Cada error grave deja una regla. Lo más nuevo va arriba.
 
+- **8-nov · Estrella de noche que tiraba los cuadros.** Los hilos y el cordel de las estrellas se dibujaban de nuevo en cada cuadro y a 390 px había tirones. Se hornean una vez en un lienzo y se miden doce partidas contra master en la misma tanda. Costó dos pasadas y 104 bytes de más, que el director aceptó a propósito. Regla: dibujo que no cambia se hornea una vez ([[puerta-de-integracion]]).
+- **7-nov · Capturas que mentían.** Una chispa no se veía en 8 capturas y el error estaba en el script, que recortaba mal. Después sí había un fallo real: salía de la pantalla. Regla: antes de arreglar el juego, enmarca la cosa en la captura ([[gauntlet-a-ciegas]]).
 - **8-nov · Avances que no se podían jugar.** Casi dos semanas anunciando mejoras que vivían donde el jugador no llega, con la portada del primer día. Regla: [[lo-nuevo-se-juega]] y puerta de QA antes de cada publicación.
 - **8-nov · Sesión de IA vencida.** El estudio se paró 5 horas sin que nadie lo viera. Ahora el latido lo detecta y el tablero lo enseña en rojo.
 - **8-nov · Estudio dormido con trabajo pendiente.** El latido solo despertaba si algo cambiaba; con el estudio quieto nada cambiaba. Ahora despierta si hay cola y pide un salto visible cada 4 horas.
