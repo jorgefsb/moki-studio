@@ -164,6 +164,10 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-fail.apretada3 .ui-barra .abrio + .fila { display: none; }
 .ui-fail.apretada .ui-barra .dib { width: 22px; height: 22px; background-size: 22px; }
 .ui-fail.apretada .ui-barra .tubo { margin-top: 2px; }
+/* Pantallas bajas con bandera: reintento y bandera en una fila, mitad y mitad; el texto puede ir en 2 renglones */
+.ui-card.ui-fail.lado { width: min(440px, calc(100% - 32px)) !important; }
+.ui-fail.lado .ui-pill, .ui-fail.lado .ui-bandera { display: inline-flex; vertical-align: top; width: calc(50% - 4px); padding: 4px 10px; font-size: 15px; line-height: 1.1; white-space: normal; text-align: center; text-wrap: balance; }
+.ui-fail.lado .ui-bandera { margin-left: 8px; }
 .ui-barra .lleno { display: block; height: 100%; background: #FF6B35; transition: width 600ms cubic-bezier(0.25, 0.5, 0.45, 1); }
 
 /* Embed (?embed=1): los paneles con scroll no lo pasan a la página padre al llegar al borde. */
