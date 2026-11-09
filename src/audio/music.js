@@ -1,6 +1,7 @@
 // Secuenciador del tema (AUDIO.md §4): un solo contador de pasos módulo 512 con lookahead; las capas de energía
 // son nodos de ganancia que cambian solo en el límite de compás. Recibe (ctx, bus): sirve igual con OfflineAudioContext.
 import { STEP, BAR_STEPS, LOOP_STEPS, SKELETON, CHORD_OF_BAR, MELODY, CHORDS } from './theme.js';
+import { melodia } from './variar.js';
 import { carton, cuadrada, pulso, bajo, tok, shaker, tic, campana } from './voices.js';
 
 const MID = 2.6; // melodía y voces medias +7 dB (T3c3): en celular la música debe oírse sin el bajo
@@ -22,6 +23,8 @@ export function createMusic(ctx, bus, opts = {}) {
     fixed: opts.level !== undefined, // render offline: grados fijos desde el primer paso
     papel: opts.papel || null, // capa de papel (papel.js, carga diferida); null en el clásico
     capas: opts.capas || null, // capas del Cuaderno (capas.js)
+    seed: opts.seed || 1, // semilla de la variación (variar.js); nueva en cada arranque desde el título
+    mel: null, // melodía de la vuelta en curso: { v, notes }
   };
   if (S.fixed) for (let k = 1; k <= 3; k++) S.layerOn[k] = S.target >= k;
   const rnd = (a) => (Math.random() * 2 - 1) * a;
@@ -45,6 +48,8 @@ export function createMusic(ctx, bus, opts = {}) {
 
   function scheduleStep(step, time) {
     const bar = Math.floor(step / BAR_STEPS) % 32;
+    const v = Math.floor(step / LOOP_STEPS); // vuelta del tema: la 0 suena tal cual, las demás varían (variar.js)
+    if (!S.mel || S.mel.v !== v) S.mel = { v, notes: melodia(v, S.seed) };
     const s = step % BAR_STEPS;
     if (s === 0) applyLevel(time);
     const live = (k) => S.layerOn[k] || S.layerOffUntil[k] > time;
@@ -57,7 +62,7 @@ export function createMusic(ctx, bus, opts = {}) {
 
     // --- melodía ---
     const m = MELODY[bar];
-    for (const [st, midi, len] of m.notes) {
+    for (const [st, midi, len] of S.mel.notes[bar]) {
       if (st !== s) continue;
       // En B (cuadrada) el pulso fuerte cae en 0, 4, 8 y 12: más legible con notas largas
       const strong = m.voice === 'cuadrada' ? s % 4 === 0 : skel;
@@ -117,7 +122,7 @@ export function createMusic(ctx, bus, opts = {}) {
 
   function tick() {
     while (S.nextTime < ctx.currentTime + LOOKAHEAD) {
-      scheduleStep(S.step % LOOP_STEPS, S.nextTime);
+      scheduleStep(S.step, S.nextTime);
       S.nextTime += STEP;
       S.step += 1;
     }
@@ -143,7 +148,10 @@ export function createMusic(ctx, bus, opts = {}) {
     start(fromStart) {
       if (S.running) return;
       S.running = true;
-      if (fromStart) S.step = 0;
+      if (fromStart) {
+        S.step = 0;
+        S.seed = (Math.random() * 2 ** 31) | 0; // semilla por partida
+      }
       S.nextTime = ctx.currentTime + 0.06;
       tick();
       S.timer = setInterval(tick, TICK_MS);
