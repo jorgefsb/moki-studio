@@ -2,7 +2,7 @@
   "id": "2026-11-09",
   "fecha": "2026-11-09",
   "borrador": true,
-  "borrador_nota": "Borrador 9-nov 11:20 CDMX, versión 14f30c6 (P5 TÍTULO). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
+  "borrador_nota": "Borrador 9-nov 11:30 CDMX, versión b2ecc48 (cerros malva). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
   "titulo": {
     "es": "Ahora el juego te lleva directo a lo nuevo",
     "en": "Now the game takes you straight to what is new"
@@ -137,8 +137,8 @@
       "en": "Start screen for first-time players. No link needed: you see it as soon as you open the game."
     },
     "la_regamos": {
-      "es": "En pantallas bajas el botón JUGAR queda a solo 11 píxeles del suelo, falta el sol de papel y abajo, en celular, se ve una franja café plana. Los tres quedan anotados para el siguiente corte.",
-      "en": "On short screens the PLAY button sits only 11 pixels from the ground, the paper sun is missing and, on a phone, a flat brown strip shows at the bottom. All three are noted for the next cut."
+      "es": "En pantallas bajas, JUGAR queda a 11 píxeles del suelo. Falta el sol de papel. En celular, abajo, sobra una franja café plana. Los tres van al siguiente corte.",
+      "en": "On short screens, PLAY sits 11 pixels from the ground. The paper sun is missing. On a phone, a flat brown strip shows at the bottom. All three go to the next cut."
     },
     "aprendimos": {
       "es": "Antes de dibujar, escribimos una página con lo que no se negocia del look. Luego comparamos contra una referencia, con y sin botones.",
@@ -147,6 +147,20 @@
     "pregunta": {
       "es": "Cuando abres el juego, ¿qué es lo primero que quieres tocar?",
       "en": "When you open the game, what is the first thing you want to tap?"
+    }
+  },
+  "malva": {
+    "donde": {
+      "es": "Pantalla de inicio y nivel 1 de quien juega por primera vez. Sin liga: se ve al abrir el juego.",
+      "en": "Start screen and level 1 for first-time players. No link: you see it as soon as you open the game."
+    },
+    "cifras": {
+      "es": "Tres críticos nuevos, a ciegas, prefirieron los cerros rosados. Ninguno vio morado claro, pero queda un tinte muy tenue.",
+      "en": "Three new blind critics preferred the pink hills. None saw a clear purple, but a very faint tint remains."
+    },
+    "la_regamos": {
+      "es": "Los cerros ahora se parecen demasiado a los pinos y el fondo lejano se ve más plano. A cambio, ya no hay morado fuerte. Lo revisa el director de arte.",
+      "en": "The hills now look too much like the pines and the far background looks flatter. In return, the strong purple is gone. The art director will review it."
     }
   }
 }
