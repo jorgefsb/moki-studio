@@ -103,10 +103,11 @@ export const CONFIG = {
   // lo 186 -> 190: el mantenido de 130 ms sube la cabeza a 189 y sonaba a medias; el completo llega a 202 (timbre-calibrar).
   // vuelta A (director, 2-nov 05:10): x1.3 con choque igual al dibujo (aro 46 x 1.3 = 60), torre a 0.9 s (a 385 queda
   // entera en los 389 px que se ven delante de Moki a 375: 346 + 30) y solo en tramos de <= vMax px/s
-  timbre: { lo: 190, hi: 214, ancho: 60, escala: 1.3, torreSec: 0.9, vMax: 385, caidaSec: 0.3, libreSec: 0.75, nivel: 9 },
+  timbre: { lo: 190, hi: 214, ancho: 60, escala: 1.3, torreSec: 0.9, vMax: 385, caidaSec: 0.3, libreSec: 0.75, nivel: 7 }, // P5c: nivel 9 -> 7 (una mecánica nueva cada uno o dos niveles del Cuaderno)
   // Zanja (NIVELES.md §10): hueco en el suelo, solo en Libre. Anchos en s (W = ancho * velocidad del tramo); pie: medio
   // apoyo de Moki; cae a caePx bajo el suelo = choque; sube si va <= subePx abajo; libreSec tras aterrizar de cruzarla
-  zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true },
+  // nivel (P5c): en el Reto se estrena en el nivel 2 del Cuaderno (en Libre sale desde el inicio, como antes)
+  zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro
   casi: { px: 8, rachaSec: 4, on: true },

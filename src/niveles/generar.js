@@ -517,7 +517,9 @@ function huecoForma(script) {
 // El Reto las toma de su fecha (la semilla es la fecha, no el reloj ni el nivel de nadie: igual para todos ese día).
 const mecanicasReto = (seed) => (/^\d{4}-\d\d-\d\d$/.test(seed) ? ['tramp', 'viento'].filter((m) => C[m].reto && seed >= C[m].reto) : []);
 export function generarNivel(seed, modo = 'reto', opts = {}) {
-  const mecanicas = opts.mecanicas || (modo === 'reto' ? mecanicasReto(seed) : []);
+  // P5c: opts.nivelMec = mecánicas del nivel del Cuaderno (barra.js mecanicasDeNivel) que el Reto suma a las de su
+  // fecha. Misma semilla del día dentro de cada nivel; sin ellas (nivel 1) el Reto es el de siempre.
+  const mecanicas = opts.mecanicas || (modo === 'reto' ? [...new Set([...mecanicasReto(seed), ...(opts.nivelMec || [])])] : []);
   const formas = formasActivas(seed, modo) ? formasDePartida(seed) : null;
   const ajusteReto = !!formas && modo === 'reto';
   const fallbacks = [];
@@ -574,7 +576,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
     const j = Math.floor(r() * (i + 1));
     [biomas[i], biomas[j]] = [biomas[j], biomas[i]];
   }
-  return { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, biomas, fallbacks, bloques: tramos.map((t) => t.ids), bloquesFase: tramos.map((t) => t.fases || []), ...(formas ? { formas } : {}) };
+  return { ...buildLevel(tramos), seed: String(seed), modo, mecanicas, ...(opts.nivel ? { nivel: opts.nivel } : {}), biomas, fallbacks, bloques: tramos.map((t) => t.ids), bloquesFase: tramos.map((t) => t.fases || []), ...(formas ? { formas } : {}) };
 }
 
 export const semillaReto = () => todayKey();

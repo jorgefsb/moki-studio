@@ -14,9 +14,19 @@ export const REGALOS = [
   { id: 'tramp', nivel: () => C.tramp.nivel, ir: 'trampolin' },
   { id: 'pasos', nivel: () => 4 },
   { id: 'viento', nivel: () => C.viento.nivel, ir: 'viento' },
-  { id: 'estela', nivel: () => 8 },
   { id: 'timbre', nivel: () => C.timbre.nivel, ir: 'timbre' },
+  { id: 'estela', nivel: () => 8 },
 ];
+
+// P5c (director 9-nov): lo ya hecho se juega en el Cuaderno. Mecánicas del Reto según el nivel: en su nivel de estreno
+// sale SOLA; después se combina con las anteriores. N1 nada (Reto de jugador nuevo idéntico), N2 zanja, N3 trampolín,
+// N4 zanja+tramp, N5 viento, N6 las tres, N7 timbre, N8-10 todo.
+const ESTRENOS = () => [['zanja', C.zanja.nivel], ['tramp', C.tramp.nivel], ['viento', C.viento.nivel], ['timbre', C.timbre.nivel]];
+export function mecanicasDeNivel(nv) {
+  const e = ESTRENOS();
+  const sola = e.find(([, n]) => n === nv);
+  return sola ? [sola[0]] : e.filter(([, n]) => n <= nv).map(([id]) => id);
+}
 
 function leer() {
   let d = null;
