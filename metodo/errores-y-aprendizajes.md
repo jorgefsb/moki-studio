@@ -11,3 +11,4 @@ Cada error grave deja una regla. Lo más nuevo va arriba.
 - **8-nov · Música repetitiva.** Un solo tema de 80 s en todos los niveles. Primero se quitó la repetición; el tema nuevo va después, con maquetas a ciegas.
 - **8-nov · Luz horneada en cajas.** Tres intentos sin ganar a ciegas. Se paró: el problema era la luz de la escena, no la textura.
 - **7-nov · Video con tres encabezados y la misma música.** Se arregló la plantilla y la música cambia cada día. No se borraron los videos publicados.
+- **8-nov · Música que sí cambia, pero sin oído.** Se midió que el primer tramo ya no se repite antes de 300 s (antes 80 s). Aprendimos que "no repite" se prueba con números y "suena bien" no: eso lo dice el oído de Jorge. La primera versión repetía en 41 de 200 semillas y las guardas solas no bastaron; hubo que sumar una segunda nota del acorde.

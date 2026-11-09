@@ -1,0 +1,84 @@
+{
+  "id": "2026-11-08",
+  "fecha": "2026-11-08",
+  "borrador": true,
+  "borrador_nota": "Borrador actualizado 8-nov 23:35 CDMX, master 36c3371 (suma ESTRELLA NOCHE 2 606d297 y MÚSICA 1). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
+  "titulo": {
+    "es": "Moki ahora te dice cuánto te faltó, y te pone una bandera donde chocaste",
+    "en": "Moki now tells you how far you fell short, and puts a flag where you crashed"
+  },
+  "historia": [
+    {
+      "es": "Anoche el estudio metió cuatro cambios. El principal: al chocar, la tarjeta dice cuántos metros te faltaron para la meta. Al volver a intentar, aparece una banderita de papel donde chocaste la vez pasada.",
+      "en": "Last night the studio made four changes. The main one: when you crash, the card says how many meters you were short of the finish. When you try again, a small paper flag shows where you crashed last time."
+    },
+    {
+      "es": "La primera versión no servía: la caja del choque tapaba la bandera y nadie la veía. La separamos 64 píxeles y ahora sí se ve en tres tamaños de pantalla. Un programa comprobó que la bandera marca justo los metros del choque anterior: 102 contra 102.",
+      "en": "The first version did not work: the crash box hid the flag and nobody could see it. We moved it 64 pixels away and now it shows on three screen sizes. A program checked that the flag marks exactly the meters of the last crash: 102 against 102."
+    },
+    {
+      "es": "También bajamos un muro. En el segundo tramo moría mucha gente por una caja. La hicimos 1 píxel más perdonadora. En el Reto, un jugador simulado moría ahí 60.9 de cada 100 veces; ahora 43.2. Es un programa jugando, no personas.",
+      "en": "We also lowered a wall. In the second section many players died on a box. We made it 1 pixel more forgiving. In the Challenge, a simulated player died there 60.9 times out of 100; now 43.2. It is a program playing, not people."
+    },
+    {
+      "es": "Las chispas de casi chocar tardaron tres intentos. Primero no se veían. Luego descubrimos que salían de la pantalla hacia atrás, porque no seguían el movimiento del mundo. Ya se ven.",
+      "en": "The near-crash sparks took three tries. First they could not be seen. Then we found they flew off the screen backwards, because they did not follow the world's movement. Now they show."
+    },
+    {
+      "es": "Nadie lo ha jugado en un celular real. Todavía no sabemos si alguien vuelve a intentar más veces por la bandera: lo dirá el contador público.",
+      "en": "Nobody has played it on a real phone. We do not know yet whether the flag makes people try again more: the public counter will tell."
+    },
+    {
+      "es": "Además, en la noche del nivel 2 las estrellas ahora son de papel con canto de cartón y sombra. Un panel de tres críticos que no sabían cuál era cuál eligió la nueva los tres. Costó dos arreglos: la primera versión tiraba cuadros en celulares, y cocinar los hilos una sola vez lo resolvió.",
+      "en": "Also, on the level 2 night the stars are now paper with a cardboard edge and a shadow. A panel of three critics who did not know which was which picked the new one all three times. It took two fixes: the first version dropped frames on phones, and baking the strings once solved it."
+    },
+    {
+      "es": "Y la música deja de repetirse. Antes el primer tramo volvía idéntico a los 80 segundos; ahora tarda 300 segundos o más. Se oye después de la primera vuelta; no hay liga directa. Lo midió un programa, nadie lo ha oído: falta el oído de Jorge.",
+      "en": "And the music stops repeating. Before, the first phrase came back identical after 80 seconds; now it takes 300 seconds or more. You hear it after the first lap; there is no direct link. A program measured it, nobody has heard it: Jorge's ear is still missing."
+    }
+  ],
+  "aprendimos": {
+    "es": "Una captura sin la cosa que buscas puede engañar. Dos veces creímos que el arreglo fallaba, y una vez el error estaba en nuestra captura, no en el juego.",
+    "en": "A screenshot without the thing you are looking for can mislead. Twice we thought the fix failed, and once the mistake was in our capture, not in the game."
+  },
+  "sigue": {
+    "es": "Juega a Moki en moki.jorgesuarez.com.mx",
+    "en": "Play Moki at moki.jorgesuarez.com.mx"
+  },
+  "imagen": "evidencia/diversion-3/pasada-bandera/capturas/j-def-375-bandera.png (bandera) y j-def-375-tarjeta.png (tarjeta); ya revisadas por el invitado de arte, no las abrí",
+  "imagen_alt": {
+    "es": "Pantalla de celular de Moki con una banderita de papel antes de la caja donde chocaste la vez pasada, y la tarjeta que dice cuántos metros te faltaron.",
+    "en": "Moki phone screen with a small paper flag before the box where you crashed last time, and the card saying how many meters you were short."
+  },
+  "grafico": {
+    "titulo": {
+      "es": "Jugador simulado del Reto: de cada 100 intentos, cuántos mueren en el tramo 2",
+      "en": "Simulated Challenge player: out of 100 tries, how many die in section 2"
+    },
+    "datos": [
+      {
+        "etiqueta": "Antes",
+        "valor": 60.9
+      },
+      {
+        "etiqueta": "Ahora",
+        "valor": 43.2
+      }
+    ]
+  },
+  "decisiones": [
+    {
+      "es": "La bandera se mueve fuera de la caja del choque; si no se veía, no servía aunque estuviera bien puesta.",
+      "en": "The flag moved out of the crash box; if it could not be seen, it did not work even if well placed."
+    },
+    {
+      "es": "El segundo tramo se hizo un poco más perdonador; se confirmará con partidas reales en 7 días.",
+      "en": "The second section was made a little more forgiving; it will be confirmed with real games in 7 days."
+    },
+    {
+      "es": "La estrella de papel no entró hasta que dejó de tirar cuadros; se aceptó un exceso de 352 bytes a cambio.",
+      "en": "The paper star did not go in until it stopped dropping frames; an excess of 352 bytes was accepted in return."
+    }
+  ],
+  "fuente_datos": "BITACORA 7-nov 22:24 a 8-nov 01:40; evidencia/diversion-1/RESULTADO.md (bot, caso-009: 60.9 a 43.2 % en T2 del Reto, hitbox caja 22 a 23); evidencia/diversion-3/pasada-bandera (bandera 102 m = choque 102 m; probador PASS). Integrados: casi-choque 7253359, muro 9e115c6, chispa 2282f02, ¿Otra? d20fce3. Todo es bot, sin celular real ni personas; sin dato público aún. Suma 8-nov: ESTRELLA NOCHE 2 606d297 (ciego 3 de 3, BITACORA 8-nov 11:45 a 14:05) y MÚSICA 1 36c3371 (BITACORA 8-nov 22:35; evidencia/musica-1/RESULTADO.md: 80 s a 300 s o más en 200 semillas, 14.7 % de notas, -15.4 dBFS). Sin oído, sin celular real."
+}
