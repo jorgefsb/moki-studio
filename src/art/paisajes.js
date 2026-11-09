@@ -10,7 +10,9 @@ import { conFibra, hornear } from './cantoPapel.js';
 import { sueloEn } from './capas.js';
 import { leerCuaderno, nivelDe } from '../cuaderno.js';
 
-export const PAISAJE = { on: true, fundidoMs: 2500 }; // on: false y Libre vuelve al fondo de un solo dibujo
+// on: false y Libre vuelve al fondo de un solo dibujo. hojaMs: el cruce de lugar (hoja de papel que entra por la derecha, director 10:44Z: <= 600 ms).
+// fundidoMs: con movimiento reducido, fundido corto (ARTE §12: 120 a 180 ms)
+export const PAISAJE = { on: true, hojaMs: 600, fundidoMs: 180 };
 
 const W = 1024;
 const H = 256; // potencia de 2: el mosaico repite en vertical y el filtro mezcla la fila de abajo con la de arriba
@@ -531,8 +533,9 @@ export function montarPaisajes(s, pintadas, gy) {
   };
   // Se ve de x0 a x1 (px de pantalla), opaco. El cruce de lugar es un cambio de escena de papel que entra por la derecha, no un fundido:
   // con alfa, el cielo claro que entraba lavaba los edificios y veleros del que se iba (doble exposición, ARTE pasada de color de LA SUMA B)
-  const colocar = (P, g, x0, x1) => {
-    if (x1 - x0 <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
+  // aC, aR: alfa del cielo y del resto; solo el fundido de movimiento reducido los baja (el cielo antes, para que tape lo que se va sin fantasmas)
+  const colocar = (P, g, x0, x1, aC = 1, aR = 1) => {
+    if (x1 - x0 <= 0 || aR <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
     const w = x1 - x0;
     const ms = s.midS || 1;
     const quieto = s.reduced;
@@ -546,12 +549,35 @@ export function montarPaisajes(s, pintadas, gy) {
     // Mismo lugar y corrimiento que el suelo pintado del nivel 1 (capas.js), esté o no cargado
     const S = sueloEn(s, g);
     pon(P.suelo, x0, S.y, w, S.h, S.kx * SUELO.k, S.ky * SUELO.k, s.dist);
-    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(1));
+    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(aR));
+    P.cielo.setAlpha(aC);
     if (P.astro) {
       if (P.astro.texture.key === 'paisajeSol') P.astro.setPosition(s.vw * 0.76, s.top + (hC * 40) / H).setScale(hC / H);
       else P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
       P.astro.setVisible(P.astro.x >= x0 && P.astro.x <= x1); // el astro pasa entero con su hoja
     }
+  };
+
+  // Canto de la hoja que cruza: sombra de contacto de tinta (6 px, del 0 al 24 %) sobre lo que queda debajo y 2 px de papel. Dos tiras:
+  // una sobre el cielo y las siluetas, otra sobre el suelo (cada una justo arriba de la hoja nueva)
+  const CANTO = 8;
+  add('paisajeCanto', () => {
+    const [c, x] = mk(CANTO, 4);
+    for (let i = 0; i < 6; i++) {
+      x.fillStyle = rgba('#22211F', (0.24 * (i + 1)) / 6);
+      x.fillRect(i, 0, 1, 4);
+    }
+    x.fillStyle = '#F4E8D5';
+    x.fillRect(6, 0, 2, 4);
+    return c;
+  });
+  const cantos = [0, 1].map(() => s.add.image(0, 0, 'paisajeCanto').setOrigin(0, 0).setVisible(false));
+  const canto = (g, x) => {
+    if (x === null || x <= 0) return void cantos.forEach((v) => v.visible && v.setVisible(false));
+    const S = sueloEn(s, g);
+    const P = cur ? pilas[cur] : pilas[prev];
+    cantos[0].setPosition(x - CANTO + 2, s.top).setDisplaySize(CANTO, S.y - s.top + 2).setDepth(P.medio.depth + 0.0001).setVisible(true);
+    cantos[1].setPosition(x - CANTO + 2, S.y).setDisplaySize(CANTO, S.h).setDepth(P.suelo.depth + 0.0001).setVisible(true);
   };
 
   // Fuera del nivel 1 no hay fondo pintado que esconder: lo tapado es el fondo de siempre. Se guarda cómo estaba para regresarlo.
@@ -604,16 +630,16 @@ export function montarPaisajes(s, pintadas, gy) {
     const brinco = antes === null || Math.abs(s.dist - antes) > 400;
     antes = s.dist;
     if (quiere !== cur && (quiere === null || lista(quiere))) {
-      prev = brinco || s.reduced ? null : cur;
+      prev = brinco ? null : cur;
       cur = quiere;
-      k = brinco || s.reduced ? 1 : 0;
+      k = brinco ? 1 : 0;
       if (cur) profundidad(pilas[cur], 1);
       if (prev) profundidad(pilas[prev], 0);
     } else if (brinco) {
       k = 1;
       prev = null;
     }
-    k = Math.min(1, k + delta / PAISAJE.fundidoMs);
+    k = Math.min(1, k + delta / (s.reduced ? PAISAJE.fundidoMs : PAISAJE.hojaMs));
     if (k >= 1) prev = null;
     s.paisaje = { cur: cur ? LUGARES[cur][0] : 0, lugar: cur, k }; // solo lectura, para medir
     // Obstáculos y fichas de la tarde (cuerpo #452B1C, canto claro): con ellos se midió el contraste de cada capa. Se cambian a media entrada
@@ -624,7 +650,16 @@ export function montarPaisajes(s, pintadas, gy) {
     }
     const g = gy();
     const borde = s.vw * (1 - k); // la hoja nueva entra por la derecha; la que se va queda entera debajo (o, sin nueva, se recoge)
-    Object.entries(pilas).forEach(([key, P]) => colocar(P, g, key === cur ? borde : 0, key === cur ? s.vw : key === prev ? (cur ? s.vw : borde) : 0));
+    const sube = (a) => Math.min(1, a * 3);
+    Object.entries(pilas).forEach(([key, P]) => {
+      if (key !== cur && key !== prev) return colocar(P, g, 0, 0);
+      if (s.reduced) {
+        const a = key === cur ? k : cur ? 1 : 1 - k;
+        return colocar(P, g, 0, s.vw, sube(a), a);
+      }
+      colocar(P, g, key === cur ? borde : 0, key === cur || cur ? s.vw : borde);
+    });
+    canto(g, k < 1 && !s.reduced && (cur || prev) ? borde : null);
     const cubre = (cur && k >= 1) || (cur && prev);
     if (horaPendiente !== null && cur && k >= 1) {
       sdP.call(amb, horaPendiente, true);
