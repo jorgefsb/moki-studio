@@ -3,13 +3,13 @@
   "titulo": "Lo nuevo de hoy: una pantalla de inicio nueva",
   "lineas": [
     "Abre el juego: atardecer de papel con cerros rosados.",
-    "El Reto del día suma lo del nivel; el nivel 3 estrena viento.",
+    "Trampolín de tabla, postes de estaca y viento en el nivel 3.",
     "Desde tu 2.ª visita, cada tarjeta del menú dice qué es y qué ganas."
   ],
-  "ir": "zanja",
+  "ir": "viento",
   "donde": [
     null,
-    "zanja",
+    "viento",
     null
   ]
 }
