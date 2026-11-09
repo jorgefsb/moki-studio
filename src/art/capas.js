@@ -21,6 +21,15 @@ const SOL = { en: 0.8, hasta: 0.2, fin: 44254, r: 85, y: 0.57, sube: 110, rgb: '
 const SUELO_ARRIBA = 12; // px del mundo que el canto del suelo pintado queda arriba de groundY: Moki pisa la franja crema
 const SUELO_MARGEN = 6; // px de la textura, ya en el mundo, entre el borde de la textura y ese canto
 
+// Dónde va el suelo pintado este cuadro (lo usa también paisajes.js, que ya no necesita las capas cargadas para alinearse)
+export function sueloEn(s, g) {
+  const ms = s.midS || 1;
+  const kx = (CAPAS.suelo.ancho * ms) / TEX.w;
+  const alto = CAPAS.suelo.alto * ms;
+  const y = g - SUELO_ARRIBA - SUELO_MARGEN * ms;
+  return { y, h: Math.min(alto, s.bottom - y + 2), kx, ky: alto / TEX.h };
+}
+
 export function montarCapas(s) {
   const c = { cargando: true, cargadas: false, activa: false };
   s.capas = c;
@@ -51,9 +60,8 @@ export function montarCapas(s) {
     };
     plano(c.lejos, 'lejos', ms, s.far.y - s.base.far); // en vertical, con farS tapaban todo el cielo y el sol
     plano(c.medio, 'medio', ms, s.mid.y - s.base.mid);
-    const altoS = CAPAS.suelo.alto * ms;
-    const yS = g - SUELO_ARRIBA - SUELO_MARGEN * ms;
-    pon(c.suelo, 0, yS, s.vw, Math.min(altoS, s.bottom - yS + 2), (CAPAS.suelo.ancho * ms) / TEX.w, altoS / TEX.h, s.dist);
+    const S = sueloEn(s, g);
+    pon(c.suelo, 0, S.y, s.vw, S.h, S.kx, S.ky, s.dist);
     nombres.forEach((n) => c[n].setVisible(st > 0).setAlpha(st));
   };
 
