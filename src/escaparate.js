@@ -10,7 +10,7 @@ import { diaLocal } from './racha.js';
 import { NIVELES } from './cuaderno.js';
 import { airTravel } from './jumpmodel.js';
 
-export const ESCAPARATE = SOLO_MEMORIA;
+export const ESCAPARATE = SOLO_MEMORIA && new URLSearchParams(window.location.search).has('escaparate'); // ?ir= también vive en memoria, pero no es el escaparate
 
 export class Escaparate {
   constructor(scene) {
