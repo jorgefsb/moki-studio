@@ -3,13 +3,13 @@
   "titulo": "Lo nuevo de hoy: una pantalla de inicio nueva",
   "lineas": [
     "Abre el juego: atardecer de papel con cerros rosados.",
-    "En Libre escoges el paisaje: Atardecer, Ciudad, Playa o Noche.",
+    "El Reto del día suma lo del nivel: zanjas, trampolín, viento, timbre.",
     "En el menú, 'Vota lo que sigue' te lleva a elegir la próxima idea."
   ],
-  "ir": "libre-playa",
+  "ir": "zanja",
   "donde": [
     null,
-    "libre",
+    "zanja",
     null
   ]
 }
