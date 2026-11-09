@@ -300,7 +300,7 @@ Evidencia en `evidencia/audio-*`.
 | 16 | Pestaña oculta | Al ocultar la pestaña el contexto queda `suspended`; al volver no suena hasta pulsar "Seguir" |
 | 17 | Sonido fuera del juice | Con juice Nada, Poquito, Mucho y Hardcore la música y los efectos base suenan igual; el juice solo agrega o quita extras (racha, ámbar, récord, arco, fanfarria de 0.4 s o menos). Solo `moki.sound` silencia |
 | 18 | Movimiento reducido | Con la preferencia activa: audio sigue, sin thump, sin barrido, ducking en 300 ms y capas en 1.5 s; sin cambios bruscos |
-| 19 | Sin recursos externos | `dist/` sin archivos de audio (.mp3, .ogg, .wav, .m4a, .webm de audio) ni peticiones de red de terceros |
+| 19 | Recursos externos con licencia (canon Jorge 8-nov) | Se permiten archivos de audio y assets de terceros si su licencia permite uso comercial y caben en el presupuesto de peso; sin peticiones de red de terceros en el juego |
 | 20 | Consola | 0 errores y 0 avisos de "AudioContext was not allowed to start" |
 | 21 | Rendimiento | La música no mueve la caída de cuadros: promedio de cuadros dentro de 5% con y sin audio (celular de gama media) |
 | 22 | Suave al oído | Revisión humana a volumen normal: nada estridente, nada chillón, nada fatiga en 3 minutos de juego; suena a juguete de cartón, no a consola de 8 bits |

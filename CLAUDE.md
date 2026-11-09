@@ -2081,3 +2081,12 @@ Nada espera a Jorge. Pregunta con opción recomendada y hora límite; a los 30 m
 2. Esperar datos no bloquea el estudio. Si la pieza de arriba de COLA espera datos, se toma la siguiente pieza visible que no dependa de ellos (arte, luz, juice, tarjeta) y se deja la razón en COLA.md.
 3. Sin muestra pública suficiente, la diversión se mide con bots y jugador simulado (canon 7-nov), no se espera.
 4. El latido manda "SALTO VISIBLE" cuando el juego lleva 4 h sin cambiar y el tablero enciende la alarma a las 4 h. Eso no es ruido: es la orden.
+
+## Cualquier herramienta, cualquier origen (Jorge, 8-nov 20:14, canon)
+
+"No importa si no lo hicimos nosotros. Lo que importa es que hagamos nosotros lo que sea que se necesite para hacer el juego, no importa con qué."
+
+1. El origen de una pieza no importa: arte, música, sonidos, código o datos pueden venir de bancos de assets, datasets, IA, librerías o lo que sea. Lo que es nuestro es el juego y el trabajo de hacerlo.
+2. Esto reemplaza cualquier regla anterior de "todo propio", "nada descargado" o "sin archivos de terceros" (agente de audio, AUDIO.md §19 y similares).
+3. Lo que sigue igual: la licencia debe permitir uso comercial y no meter marcas ajenas; Moki sigue su biblia (parche MOKI en la oreja derecha anatómica, nunca espejado, nunca en pose T); el peso y los FPS siguen siendo puerta.
+4. Se escoge lo que haga el juego más divertido y más rápido. Primero divertido, luego bonito.
