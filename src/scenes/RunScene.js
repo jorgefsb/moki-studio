@@ -14,6 +14,7 @@ import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
+import { abierto, siguiente, sumar } from '../barra.js';
 import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { IR, DESTINOS } from '../ir.js';
@@ -507,8 +508,8 @@ export class RunScene extends Phaser.Scene {
     audio.setPapel(!this.demo && level.biomas ? level.biomas[this.tramoIdx] : null); // timbre del papel (clásico y demo: sin papel)
     const nivelCu = !this.demo && level.biomas ? nivelDe(leerCuaderno()).nivel : 1;
     audio.setNivel(nivelCu); // capas del Cuaderno (clásico y demo: solo la base)
-    this.pasos = nivelCu >= 4; // pasos de cartón desde el nivel 4
-    this.estela = nivelCu >= 8; // estela de papel al correr desde el nivel 8
+    this.pasos = !this.demo && level.biomas ? abierto('pasos', nivelCu) : false; // pasos de cartón: nivel 4 o la barra (P3b)
+    this.estela = !this.demo && level.biomas ? abierto('estela', nivelCu) : false; // estela de papel: nivel 8 o la barra
   }
 
   // SELECTOR (PLAN-MENU v2, propuestas/ruta-de-moki.md): el título es un menú de tarjetas en 3 estados.
@@ -642,7 +643,7 @@ export class RunScene extends Phaser.Scene {
     // Mecánicas (NIVELES.md flow): en Libre, el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno; el Reto las toma de su fecha (generarNivel).
     const nv = nivelDe(leerCuaderno()).nivel;
     const pedidas = [...MEC, ...((IR && IR.mec) || [])]; // ?mec= (pruebas) o la liga ?ir=trampolin|viento|timbre
-    const mecanicas = modo !== 'libre' ? undefined : ['tramp', 'viento', 'timbre'].filter((m) => pedidas.includes(m) || nv >= C[m].nivel);
+    const mecanicas = modo !== 'libre' ? undefined : ['tramp', 'viento', 'timbre'].filter((m) => pedidas.includes(m) || abierto(m, nv)); // nivel o barra (P3b)
     if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
@@ -706,6 +707,8 @@ export class RunScene extends Phaser.Scene {
 
   // Contador anónimo: cada intento (Jugar, Otra vez o reintento) cuenta una vez; el demo no cuenta
   abreIntento() {
+    this.barraD0 = this.dist; // P3b: desde aquí cuenta este intento para la barra
+    this.barraP0 = this.pieces;
     abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx);
   }
 
@@ -2292,6 +2295,7 @@ export class RunScene extends Phaser.Scene {
     const anchoO = o.type === 'zanja' ? o.W || 0 : (o.size && o.size.width) || 0;
     this.banderaD = Math.min(this.dist, o.D - anchoO / 2) - 64;
     this.cardShown = false;
+    this.sumaBarra();
     if (this.partida && !this.demo) {
       this.partida.crashes += 1;
       this.partida.crashesByTramo[this.tramoIdx] = (this.partida.crashesByTramo[this.tramoIdx] || 0) + 1; // fila de la tarjeta para compartir
@@ -2377,10 +2381,26 @@ export class RunScene extends Phaser.Scene {
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
     const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
-      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord },
+      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta() },
       () => this.respawn()
     );
     this.showCuaderno();
+  }
+
+  // P3b perder también avanza: metros y piezas de este intento a la barra (src/barra.js); recuerda si abrió algo
+  sumaBarra() {
+    if (this.demo || !this.partida || this.barraD0 == null) return;
+    const abrio = sumar((this.dist - this.barraD0) / 100, this.pieces - (this.barraP0 || 0));
+    this.barraD0 = null;
+    if (abrio) this.barraAbrio = abrio;
+  }
+
+  // Lo que pinta la tarjeta: el regalo recién abierto (una vez) y el siguiente con su avance
+  barraTarjeta() {
+    const abrio = this.barraAbrio;
+    this.barraAbrio = null;
+    const sig = siguiente();
+    return abrio || sig ? { abrio, sig } : null;
   }
 
   // Reintento con un toque: Moki sale del inicio del tramo con lo guardado y 85% de velocidad que sube en 1 s.
@@ -2419,6 +2439,7 @@ export class RunScene extends Phaser.Scene {
     if (!this.paseoRun) save('moki.done', '1'); // abre Hardcore (decisión del líder); un paseo no lo abre
     this.cobrarCinta(true, false); // meta: solo el x3; el x2 chico no pisa la meta ni la mejor marca
     if (this.partida) Object.assign(this.partida, { finished: true, pieceTotal: this.level.pieceTotal });
+    this.sumaBarra();
     // Puntaje, metros y piezas se congelan UNA vez al cruzar la meta: la tarjeta y la mejor marca dicen lo mismo
     const best = num(this.bestKey(), 0);
     const score = this.score;

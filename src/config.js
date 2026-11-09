@@ -281,4 +281,8 @@ export const CONFIG = {
   // cumple llegando a la meta con <= sinCaerMax choques (era 0: el bot humano limpiaba 8-19%, el novato ~0%). El sello
   // de partida 'sinCaerme' (perfecto, 0 choques) no se toca. 0 regresa al criterio viejo.
   sinCaerMax: 2,
+  // P3b perder también avanza (src/barra.js): cada intento suma metros + piezas x porPieza; al llegar a meta se abre el
+  // siguiente regalo (trampolín, pasos, viento, estela, timbre) aunque el Cuaderno no llegue a su nivel. meta medida con
+  // scripts/barra-medir.mjs: el bot medio la llena en <= 5 min de juego sin contar piezas.
+  barra: { meta: 700, porPieza: 5 },
 };

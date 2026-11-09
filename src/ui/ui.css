@@ -142,6 +142,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-card.ui-fail h2 { font-size: 21px; line-height: 27px; margin-bottom: 4px; }
 .ui-card.ui-fail .meta { color: rgba(34, 33, 31, 0.84); opacity: 1; text-wrap: balance; }
 .ui-card.ui-fail .meta span { display: block; }
+/* P3b: barra de lo siguiente en la tarjeta de fallo (papel kraft, se llena en naranja) */
+.ui-barra { margin: 6px 0 2px; font-size: 15px; line-height: 20px; }
+.ui-barra .abrio { display: block; color: #22211F; }
+.ui-barra .tit { display: block; color: rgba(34, 33, 31, 0.84); }
+.ui-barra .tubo { display: block; height: 8px; margin-top: 4px; border-radius: 4px; background: #E6D3B6; border: 1px solid #B99168; overflow: hidden; }
+.ui-barra .lleno { display: block; height: 100%; background: #FF6B35; transition: width 600ms cubic-bezier(0.25, 0.5, 0.45, 1); }
 
 /* Embed (?embed=1): los paneles con scroll no lo pasan a la página padre al llegar al borde. */
 .embed .ui-asi .wrap, .embed .ui-card { overscroll-behavior: contain; }

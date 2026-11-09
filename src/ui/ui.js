@@ -255,7 +255,7 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect, isNew }, onGo) {
+    showFail({ hint, meta, prompt, rect, isNew, barra }, onGo) {
       ui.hideFail();
       ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
@@ -273,6 +273,21 @@ export function createUI() {
         meta.forEach((m) => p.append(el('span', '', m))); // un renglón cada uno: nunca 'checkpoint' huérfano
         card.append(p);
       } else if (meta) card.append(el('p', 'meta', meta));
+      // P3b: barra de lo siguiente (perder también avanza). abrio = lo que esta caída acaba de abrir.
+      if (barra) {
+        const b = el('div', 'ui-barra');
+        if (barra.abrio) b.append(el('b', 'abrio', t('barra.abrio', { r: t(`regalo.${barra.abrio}`) })));
+        if (barra.sig) {
+          const s = barra.sig;
+          b.append(el('span', 'tit', t('barra.tit', { r: t(`regalo.${s.id}`) })));
+          const tubo = el('i', 'tubo');
+          const lleno = el('i', 'lleno');
+          lleno.style.width = `${Math.round((100 * s.pts) / s.meta)}%`;
+          tubo.append(lleno);
+          b.append(tubo);
+        }
+        card.append(b);
+      }
       const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
       pill.disabled = true;
