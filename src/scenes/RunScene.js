@@ -2300,6 +2300,7 @@ export class RunScene extends Phaser.Scene {
       this.partida.crashes += 1;
       this.partida.crashesByTramo[this.tramoIdx] = (this.partida.crashesByTramo[this.tramoIdx] || 0) + 1; // fila de la tarjeta para compartir
     }
+    this.ayudaD = this.puntoAyuda(o);
     // Los trozos salen del punto de contacto; en la zanja, de los pies
     if (o.type === 'zanja') this.particles.burst('crash', this.px + 12, this.y - 10);
     else this.particles.burst('crash', this.px + C.player.width / 2 + 12, this.y - (o.type === 'viga' ? C.player.spriteHeight : 48));
@@ -2381,8 +2382,9 @@ export class RunScene extends Phaser.Scene {
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
     const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
-      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta() },
-      () => this.respawn()
+      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null },
+      () => this.respawn(),
+      () => this.respawn(true)
     );
     this.showCuaderno();
   }
@@ -2403,14 +2405,32 @@ export class RunScene extends Phaser.Scene {
     return abrio || sig ? { abrio, sig } : null;
   }
 
+  // P3b ayuda: tras C.ayuda.choques caídas en este tramo, punto de salida antes del grupo de obstáculos donde chocó
+  // (no dentro de otro obstáculo ni de una zanja). null si no toca ofrecerla o si casi no ahorra camino.
+  puntoAyuda(o) {
+    const A = C.ayuda;
+    const P = this.partida;
+    if (this.demo || !P || !A || (P.crashesByTramo[this.tramoIdx] || 0) < A.choques || o.D == null) return null;
+    const v = this.tramoSpeed(this.tramoIdx);
+    const obs = this.level.entities.filter((e) => e.kind === 'obs' && e.D > this.cp.dist && e.D <= o.D);
+    let i = obs.findIndex((e) => e.D === o.D);
+    if (i < 0) return null;
+    while (i > 0 && obs[i].D - obs[i - 1].D < A.grupoSec * v) i--; // el grupo entero (la caja antes de la torre, etc.)
+    const prev = obs[i - 1];
+    const d = prev ? prev.D + (prev.W || 0) / 2 + 90 : this.cp.dist; // ya del otro lado del anterior, con aire
+    if (obs[i].D - d < 0.9 * v) return null; // sin tiempo de ver venir el grupo
+    return d - this.cp.dist >= A.ahorroSec * v ? d : null;
+  }
+
   // Reintento con un toque: Moki sale del inicio del tramo con lo guardado y 85% de velocidad que sube en 1 s.
-  respawn() {
+  // bandera = la ayuda de P3b: sale desde this.ayudaD (mismo tramo, mismas piezas guardadas).
+  respawn(bandera) {
     this.ui.hideFail();
     if (this.choqueD != null) Object.assign(this.bandera, { D: this.banderaD, m: Math.floor(this.choqueD / 100), obsD: this.banderaD + 64 });
     const cp = this.cp;
     this.pieces = cp.pieces;
     this.pieceValue = cp.pieceValue;
-    this.resetRun(this.level, cp.dist);
+    this.resetRun(this.level, bandera && this.ayudaD != null ? this.ayudaD : cp.dist);
     this.screen = 'play';
     this.abreIntento();
     audio.setStreak(0);

@@ -142,12 +142,18 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-card.ui-fail h2 { font-size: 21px; line-height: 27px; margin-bottom: 4px; }
 .ui-card.ui-fail .meta { color: rgba(34, 33, 31, 0.84); opacity: 1; text-wrap: balance; }
 .ui-card.ui-fail .meta span { display: block; }
+.ui-card.ui-fail .ui-bandera { display: block; margin-top: 8px; }
 /* P3b: barra de lo siguiente en la tarjeta de fallo (papel kraft, se llena en naranja) */
 .ui-barra { margin: 6px 0 2px; font-size: 15px; line-height: 20px; }
 .ui-barra .abrio { display: block; color: #22211F; }
 .ui-barra .fila { display: flex; align-items: center; gap: 10px; }
 .ui-barra .dib { flex: none; width: 32px; height: 32px; }
-.ui-barra .dib svg { display: block; }
+/* P3b: dibujos de papel de los regalos (32 x 32, tinta, kraft y naranja de la paleta) */
+.ui-barra .dib.tramp { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%2322211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 22h22'/%3E%3Cpath d='M8 22l-2 6M24 22l2 6'/%3E%3Cpath d='M7 19q9 6 18 0' fill='%23B99168'/%3E%3Cpath d='M16 4v9M12 9l4-5 4 5' stroke='%23FF6B35'/%3E%3C/svg%3E") center / 32px no-repeat; }
+.ui-barra .dib.pasos { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%2322211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='11' cy='20' rx='4' ry='6' fill='%23B99168'/%3E%3Cellipse cx='21' cy='12' rx='4' ry='6' fill='%23B99168'/%3E%3C/svg%3E") center / 32px no-repeat; }
+.ui-barra .dib.viento { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%2322211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 11h15a4 4 0 1 0-4-4'/%3E%3Cpath d='M4 17h21a4 4 0 1 1-4 4' stroke='%23FF6B35'/%3E%3Cpath d='M4 23h9'/%3E%3C/svg%3E") center / 32px no-repeat; }
+.ui-barra .dib.estela { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%2322211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 22q6-10 12-6t12-8' stroke='%23FF6B35'/%3E%3Crect x='6' y='20' width='4' height='4' fill='%23B99168'/%3E%3Crect x='16' y='14' width='4' height='4' fill='%23B99168'/%3E%3C/svg%3E") center / 32px no-repeat; }
+.ui-barra .dib.timbre { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%2322211F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 4v3'/%3E%3Cpath d='M9 21q0-12 7-12t7 12z' fill='%23B99168'/%3E%3Cpath d='M7 21h18'/%3E%3Ccircle cx='16' cy='25' r='2' fill='%23FF6B35'/%3E%3C/svg%3E") center / 32px no-repeat; }
 .ui-barra .txt { min-width: 0; }
 .ui-barra .tit { display: block; color: #22211F; }
 .ui-barra .falta { display: block; color: rgba(34, 33, 31, 0.84); font-size: 14px; line-height: 18px; }

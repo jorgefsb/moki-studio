@@ -45,6 +45,7 @@ const ES = {
   'fail.hint.zanja': 'Brinca antes de la orilla. Si es ancho, mantén.',
   'fail.cp': 'Sigues desde el checkpoint',
   'fail.start': 'Empiezas de nuevo',
+  'fail.bandera': 'Empieza desde la bandera',
   'fail.pct': 'Llegaste al {n}%',
   'fail.faltan': 'Te faltaron {n} m para la meta',
   'barra.tit': 'Lo siguiente: {r}',

@@ -285,4 +285,8 @@ export const CONFIG = {
   // siguiente regalo (trampolín, pasos, viento, estela, timbre) aunque el Cuaderno no llegue a su nivel. meta medida con
   // scripts/barra-medir.mjs: el bot medio la llena en <= 5 min de juego sin contar piezas.
   barra: { meta: 700, porPieza: 5 },
+  // P3b ayuda (como el modo de ayuda de Celeste, sin castigo): tras `choques` caídas en el mismo tramo la tarjeta ofrece
+  // empezar desde la bandera: antes del grupo de obstáculos donde chocó (se junta lo que esté a < grupoSec del
+  // siguiente) en vez del inicio del tramo. Solo si eso ahorra >= ahorroSec de carrera.
+  ayuda: { choques: 3, grupoSec: 1.2, ahorroSec: 3 },
 };

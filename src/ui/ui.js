@@ -8,16 +8,6 @@ import festejoUrl from '../../assets/moki/pixel/moki_jump_rise_right_strip5.png'
 
 const reducedMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-// P3b: dibujos de papel de los regalos de la barra (32 x 32, tinta, kraft y naranja de la paleta)
-const svg = (d) => `<svg viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#22211F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-const DIBUJO = {
-  tramp: svg('<path d="M5 22h22" /><path d="M8 22l-2 6M24 22l2 6" /><path d="M7 19q9 6 18 0" fill="#B99168" /><path d="M16 4v9M12 9l4-5 4 5" stroke="#FF6B35" />'),
-  pasos: svg('<ellipse cx="11" cy="20" rx="4" ry="6" fill="#B99168" /><ellipse cx="21" cy="12" rx="4" ry="6" fill="#B99168" />'),
-  viento: svg('<path d="M4 11h15a4 4 0 1 0-4-4" /><path d="M4 17h21a4 4 0 1 1-4 4" stroke="#FF6B35" /><path d="M4 23h9" />'),
-  estela: svg('<path d="M4 22q6-10 12-6t12-8" stroke="#FF6B35" /><rect x="6" y="20" width="4" height="4" fill="#B99168" /><rect x="16" y="14" width="4" height="4" fill="#B99168" />'),
-  timbre: svg('<path d="M16 4v3" /><path d="M9 21q0-12 7-12t7 12z" fill="#B99168" /><path d="M7 21h18" /><circle cx="16" cy="25" r="2" fill="#FF6B35" />'),
-};
-
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -265,7 +255,7 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect, isNew, barra }, onGo) {
+    showFail({ hint, meta, prompt, rect, isNew, barra, bandera }, onGo, onBandera) {
       ui.hideFail();
       ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
@@ -290,8 +280,7 @@ export function createUI() {
         if (barra.sig) {
           const s = barra.sig;
           const fila = el('div', 'fila');
-          const dib = el('span', 'dib');
-          dib.innerHTML = DIBUJO[s.id] || ''; // dibujo de papel del regalo (constantes de abajo, no texto del jugador)
+          const dib = el('span', `dib ${s.id}`); // dibujo de papel del regalo: fondo SVG en ui.css
           const txt = el('span', 'txt');
           txt.append(el('span', 'tit', t('barra.tit', { r: t(`regalo.${s.id}`) })), el('span', 'falta', t('barra.falta', { m: s.faltaM, p: s.faltaP })));
           fila.append(dib, txt);
@@ -308,6 +297,15 @@ export function createUI() {
       pill.type = 'button';
       pill.disabled = true;
       card.append(pill);
+      // P3b ayuda tras 3 caídas en el mismo tramo: segundo botón, sin castigo; el toque en el fondo sigue siendo reintentar
+      let alt = null;
+      if (bandera && onBandera) {
+        alt = el('button', 'ui-btn secondary ui-bandera', `⚑ ${bandera}`);
+        alt.type = 'button';
+        alt.disabled = true;
+        alt.addEventListener('pointerdown', (e) => e.stopPropagation());
+        card.append(alt);
+      }
       scrim.append(card);
       root.appendChild(scrim);
       let fired = false;
@@ -316,13 +314,19 @@ export function createUI() {
         fired = true;
         onGo();
       };
+      if (alt)
+        alt.addEventListener('click', () => {
+          if (fired || alt.disabled) return;
+          fired = true;
+          onBandera();
+        });
       scrim.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         go();
       });
       pill.addEventListener('click', go);
       primary = go;
-      state.fail = { scrim, card, pill };
+      state.fail = { scrim, card, pill, alt };
       requestAnimationFrame(() => {
         card.style.opacity = '1';
         card.style.transform = 'translateY(0)';
@@ -343,6 +347,7 @@ export function createUI() {
     unlockFail() {
       if (!state.fail) return;
       state.fail.pill.disabled = false;
+      if (state.fail.alt) state.fail.alt.disabled = false;
       state.fail.pill.classList.add('ready');
       state.fail.pill.focus({ preventScroll: true });
     },
