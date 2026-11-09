@@ -153,6 +153,7 @@ export function createUI() {
           const nom = el('b', '', c.nombre);
           if (c.hecho) nom.prepend(el('i', 'mn-hecho'));
           tx.append(nom, el('span', '', c.linea));
+          b.title = c.linea; // P3d: misma línea como ayuda del mouse en escritorio
           b.append(tx);
           if (c.nuevo) b.append(punto());
           grid.append(b);
@@ -174,9 +175,14 @@ export function createUI() {
         const tx = el('div', 'tx');
         tx.append(el('b', '', t('voto.titulo')), el('span', '', t('voto.menu')));
         v.append(tx, el('em', 'mn-voto-ir', t('voto.btn')));
+        v.title = t('voto.menu');
         p.append(v);
       }
-      if (m.pie) p.append(el('p', 'mn-pie', m.pie));
+      if (m.pie) {
+        const pie = el('p', 'mn-pie', m.pie);
+        if (m.pieTitle) pie.title = m.pieTitle;
+        p.append(pie);
+      }
       root.appendChild(p);
       state.menu = p;
       ui.placeMenu(zonas);
@@ -414,7 +420,9 @@ export function createUI() {
       const head = el('div', 'cu-head');
       const tit = el('span', 'cu-tit');
       tit.append(el('span', 'cu-nivel', t('cu.nivel', { n: tira.nivel })), el('b', '', t('cu.title')));
-      head.append(tit, el('span', '', t('cu.count', { n: tira.total, de: tira.de })));
+      const cnt = el('span', '', t('cu.count', { n: tira.total, de: tira.de }));
+      cnt.title = t('cu.count.d');
+      head.append(tit, cnt);
       strip.append(head);
       const list = el('ul');
       const row = (id, done, txt, isNew) => {
@@ -713,7 +721,7 @@ export function createUI() {
       const scrim = el('div', 'ui-scrim pause');
       const card = el('div', 'ui-card ui-pause');
       card.style.position = 'relative';
-      card.append(el('h2', '', t('pause.title')));
+      card.append(el('h2', '', t('pause.title')), el('p', 'ui-pause-hud', t('pause.hud'))); // P3d: el HUD es lienzo, se explica aquí
       const stack = el('div', 'stack');
       const resume = el('button', 'ui-btn primary', t('pause.resume'));
       resume.type = 'button';

@@ -628,6 +628,7 @@ export class RunScene extends Phaser.Scene {
         cards,
         voto: votoMenu(),
         pie: corto ? t('menu.lienzo') : `${t('cu.nivel', { n: nv })} · ${t(hola.key, { n: hola.n })}`,
+        pieTitle: corto ? '' : t('cu.nivel.d'),
       },
       this.saludoZonas()
     );
