@@ -2,14 +2,14 @@
   "fecha": "2026-11-09",
   "titulo": "Lo nuevo de hoy: la música cambia y la noche brilla",
   "lineas": [
-    "La música ya no repite el mismo tramo: desde la segunda vuelta, a los 80 segundos de partida, cambia algunas notas. Hay que jugar un rato para oírlo; no hay liga directa.",
-    "En la noche del nivel 2, las estrellas son de papel, con canto de cartón y sombra, colgadas de un cordel bajo los botones.",
-    "Juega más de 80 segundos y fíjate si notas la diferencia en la música."
+    "Estrellas de papel en la noche del nivel 2. Toca Pruébalo.",
+    "Menú nuevo: abre el juego y toca Juega lo nuevo.",
+    "La música cambia pasados 80 segundos. No tiene botón: juega y escucha."
   ],
   "ir": "noche",
   "donde": [
-    null,
     "noche",
+    null,
     null
   ]
 }
