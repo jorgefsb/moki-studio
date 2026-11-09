@@ -12,8 +12,8 @@ const KEY = 'moki.barra';
 // Orden = orden del Cuaderno. ir = liga 'Pruébalo' (ley de la última versión); sin liga se ve en cualquier partida.
 export const REGALOS = [
   { id: 'tramp', nivel: () => C.tramp.nivel, ir: 'trampolin' },
+  { id: 'viento', nivel: () => C.viento.nivel, ir: 'viento' }, // P5d: viento en N3 (antes 5), antes que pasos (4)
   { id: 'pasos', nivel: () => 4 },
-  { id: 'viento', nivel: () => C.viento.nivel, ir: 'viento' },
   { id: 'timbre', nivel: () => C.timbre.nivel, ir: 'timbre' },
   { id: 'estela', nivel: () => 8 },
 ];

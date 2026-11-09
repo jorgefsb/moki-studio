@@ -542,12 +542,14 @@ function torre(dim = 0, soft = 1, ink = 1) {
   return c;
 }
 
-// Trampolín (J): tabla de PAPEL con contorno de tinta sobre un resorte de tinta y papel en zigzag y una base de tinta.
-// P5c2 (director 9-nov): la tabla kraft se fundía con el suelo y los cerros (kraft sobre kraft); papel + tinta es el
-// máximo contraste de la paleta sin naranja ni ámbar (no es peligro ni checkpoint). 88x24 de juego; al lanzar se aplasta.
+// Trampolín (J): tabla de KRAFT cálido con tapa de papel, canto kraft oscuro y contorno de tinta, sobre un resorte de
+// tinta y papel en zigzag y una base de tinta. P5d (director 9-nov): la tabla de papel (P5c2) se leía gris metálico: el
+// canto de block() es body+34 % tinta y sobre papel da gris. Aquí la tabla se dibuja a mano: kraft + tapa de papel +
+// canto kraftDark (café, no gris) y contorno de tinta para que no se funda con el suelo. Solo tokens (kraft, paper, ink).
 function tramp(dim = 0) {
   const [c, x] = mk(100, 34);
   const k = (col) => mix(col, PAL.ink, dim * 0.35);
+  const r = rng(61);
   x.fillStyle = PAL.ink;
   x.beginPath();
   x.roundRect(9, 26, 82, 7, 3);
@@ -561,14 +563,27 @@ function tramp(dim = 0) {
   x.strokeStyle = k(PAL.paper);
   x.lineWidth = 4;
   x.stroke();
-  block(x, 2, 2, 96, 14, { body: k(mix(PAL.paper, PAL.kraft, 0.25)), tape: false, seed: 61, dim, ink: 2.5 }); // papel entibiado: el papel puro bajo el tinte del ambiente se leía gris acero
+  const tabla = (g) => g.roundRect(2, 2, 96, 14, 6);
+  x.fillStyle = k(PAL.kraft); // kraft puro: con papel mezclado el invitado lo leyó beige grisáceo de día
+  x.beginPath();
+  tabla(x);
+  x.fill();
+  x.save();
+  x.beginPath();
+  tabla(x);
+  x.clip();
+  fibers(x, 100, 34, r, { count: 40, color: PAL.ink, alpha: 0.06 });
+  fibers(x, 100, 34, r, { count: 30, color: PAL.paper, alpha: 0.12 });
+  x.fillStyle = k(PAL.paper); // tapa de papel: la cara que pisa Moki
+  x.fillRect(2, 2, 96, 2);
+  x.fillStyle = k(TONE.kraftDark); // canto café
+  x.fillRect(2, 11, 96, 5);
+  x.restore();
   x.strokeStyle = PAL.ink;
   x.lineWidth = 2.5;
   x.beginPath();
-  x.roundRect(2, 2, 96, 14, 6);
+  tabla(x);
   x.stroke();
-  x.fillStyle = PAL.ink;
-  x.fillRect(5, 12, 90, 3);
   return c;
 }
 

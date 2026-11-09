@@ -60,7 +60,7 @@ export class Cinta {
   cobrar(aviso, x2ok) {
     if (!this.combo) return 0;
     const mult = this.mult;
-    if (aviso && (mult > 2 || (mult > 1 && x2ok))) this.showAviso(mult > 2 ? `x${mult} +${this.valor}` : `+${this.valor}`, mult > 2);
+    if (aviso && (mult > 2 || (mult > 1 && x2ok))) this.showAviso(`x${mult} +${this.valor}`, mult > 2); // P5d: el chico decía solo '+N' y se leía como chip fantasma; ahora 'x2 +N'
     this.combo = 0;
     this.rollT = 0;
     this.rollFrom = this.len;
