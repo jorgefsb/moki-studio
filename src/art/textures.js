@@ -561,7 +561,7 @@ function tramp(dim = 0) {
   x.strokeStyle = k(PAL.paper);
   x.lineWidth = 4;
   x.stroke();
-  block(x, 2, 2, 96, 14, { body: k(PAL.paper), tape: false, seed: 61, dim, ink: 2.5 });
+  block(x, 2, 2, 96, 14, { body: k(mix(PAL.paper, PAL.kraft, 0.25)), tape: false, seed: 61, dim, ink: 2.5 }); // papel entibiado: el papel puro bajo el tinte del ambiente se leía gris acero
   x.strokeStyle = PAL.ink;
   x.lineWidth = 2.5;
   x.beginPath();
