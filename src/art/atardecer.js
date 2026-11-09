@@ -564,7 +564,7 @@ export function montar(s) {
     s.midVeil.setTintFill(lerp(s.midVeil.tintTopLeft, lerp(alto, hex(TARDE.cieloMedio), 0.35), st)); // su borde cae al inicio del degradado
     if (s.sun) s.sun.setAlpha(s.sun.alpha * (1 - st));
     amb.obsTint = lerp(amb.obsTint, 0xffffff, st);
-    s.obstacles.forEach((q) => q.sprite && q.sprite.setTint(amb.obsTint));
+    s.obstacles.forEach((q) => q.sprite && q.type !== 'tramp' && q.sprite.setTint(amb.obsTint)); // P5c2: trampolín sin tinte
     colocar();
   }
   amb.applyDay(0);

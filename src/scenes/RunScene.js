@@ -1188,7 +1188,7 @@ export class RunScene extends Phaser.Scene {
       const sk = this.ambient ? this.ambient.shadowK : 1; // mañana y tarde: sombras largas y suaves; mediodía: cortas
       o.shadow = this.addShadow(x + 9 * sk, size.width * 1.45 * sk, 0.4 / Math.max(1, sk * 0.9)); // sombra hacia abajo-derecha
     }
-    if (this.ambient) o.sprite.setTint(this.ambient.obsTint);
+    if (this.ambient && e.type !== 'tramp') o.sprite.setTint(this.ambient.obsTint); // P5c2: el trampolín no lleva el tinte de la hora
     // Paseo: el obstáculo se dibuja atenuado para que cruzarlo se lea a propósito y no como un error de colisión
     if (this.paseoRun) [o.sprite, o.shadow, ...(o.threads || [])].forEach((g) => g.setAlpha(g.alpha * C.paseo.obstacleAlpha));
     o.destroy = () => {
