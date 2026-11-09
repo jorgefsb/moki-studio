@@ -558,7 +558,8 @@ export class RunScene extends Phaser.Scene {
       this.ui.showMenu(
         {
           aviso: { titulo: t('menu.visita'), lineas: n.lineas },
-          hero: { titulo: t('menu.nuevo'), sub: n.titulo, onPick: juegaNuevo },
+          // P3g: el subtítulo dice lo que abre el botón (la línea de novedades cuyo 'donde' es el destino), no el título del día
+          hero: { titulo: t('menu.nuevo'), sub: n.lineas[n.donde.indexOf(destino)] || n.titulo.replace(/^Lo nuevo de hoy:\s*/i, ''), onPick: juegaNuevo },
           cards: [{ nombre: t('menu.todo'), linea: t('menu.todo.d'), onPick: alMenu }],
         },
         this.saludoZonas()
