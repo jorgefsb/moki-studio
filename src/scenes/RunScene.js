@@ -636,7 +636,6 @@ export class RunScene extends Phaser.Scene {
 
   startGame() {
     this.ui.hideDemo();
-    this.ui.hideNovedades();
     this.ui.hideFinal();
     this.ui.hideAsi();
     this.ui.hideFail();
@@ -2453,8 +2452,15 @@ export class RunScene extends Phaser.Scene {
       }, 2600);
     // En vertical la tarjeta va entre el HUD y la cabeza de Moki (compacta): no lo tapa
     const rect = this.failRect();
-    const wide = this.scale.width >= 700 && this.scale.width > this.scale.height * 0.9;
-    const r = wide ? rect : { ...rect, compact: true };
+    const W = this.scale.width;
+    const H = this.scale.height;
+    const wide = W >= 700 && W > H * 0.9;
+    let r = wide ? rect : { ...rect, compact: true };
+    // LA SUMA A: bajito y ancho (660x372 embebido, 640x400) la tarjeta va completa a la derecha de Moki, de arriba abajo
+    if (H < 480 && W > H) {
+      const left = Math.round(this.saludoZonas().mokiR + 20);
+      r = { left, top: 8, width: Math.min(460, W - left - 12), maxHeight: H - 16, compact: true, corto: true };
+    }
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(

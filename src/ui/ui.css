@@ -324,3 +324,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 }
 .ui-sigue { margin: 10px 0 0; font: 600 16px/21px Inter, sans-serif; }
 @media (hover: hover) { .mn-card:hover { background-color: #efdcc0; } }
+/* LA SUMA A: ¡Llegaste! completa en 660x372 sin scroll: datos en dos columnas, botones en una fila */
+.ui-card.corto { padding: 10px 14px 10px; }
+.ui-card.corto h2 { font-size: 24px; line-height: 28px; margin-bottom: 2px; }
+.ui-card.corto .ui-rows { grid-template-columns: auto auto auto auto; gap: 0 10px; font-size: 14px; line-height: 20px; margin: 4px 0 0; }
+.ui-card.corto .ui-rows dd { font-size: 16px; line-height: 20px; }
+.ui-card.corto .ui-sigue { margin-top: 6px; font-size: 14px; line-height: 19px; }
+.ui-card.corto .ui-btn { min-height: 44px; margin-top: 6px; }
+.ui-card.corto .ui-link { min-height: 32px; margin-top: 2px; font-size: 14px; }
+.ui-card.corto p.meta { margin: 2px 0 0; font-size: 14px; line-height: 18px; }

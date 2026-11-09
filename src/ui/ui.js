@@ -489,7 +489,7 @@ export function createUI() {
       ui.hideTachado();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
-      const card = el('div', rect.compact ? 'ui-card compact' : 'ui-card');
+      const card = el('div', `ui-card${rect.compact ? ' compact' : ''}${rect.corto ? ' corto' : ''}`);
       // Entra igual que la tarjeta de fallo: sube 18 px con fundido de 250 ms
       const still = reducedMQ.matches || feel.level === 0;
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto', opacity: '0', transform: still ? 'none' : 'translateY(18px)', transition: still ? 'opacity 150ms ease-out' : 'opacity 250ms ease-out, transform 250ms ease-out' });
