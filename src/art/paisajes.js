@@ -419,12 +419,12 @@ const LUGARES = {
   c: [1, null],
   p: [2, null],
   n: [3, null],
-  cA: [1, [[0, '#6F86C6'], [0.55, '#D99BA6'], [1, '#F2BFA4']]], // Ciudad al alba: rosa y durazno
+  cA: [1, [[0, '#7A98C8'], [0.55, '#E7B29A'], [1, '#F4C9A2']]], // Ciudad al alba: azul que baja a durazno (sin lila: ARTE §13.4)
   pA: [2, [[0, '#7FB3D6'], [0.6, '#F2C987'], [1, '#F5A97A']]], // Playa en tarde dorada
   nA: [3, [[0, '#121838'], [0.35, '#1F2A5E'], [0.55, '#4F5F9E'], [1, '#6878B6']]], // Noche de cielo más profundo
   cB: [1, [[0, '#8C95A3'], [0.6, '#B3B6B4'], [1, '#CFCBC1']], null], // Ciudad nublada, gris frío: sin sol
   pB: [2, [[0, '#5E7A8E'], [0.6, '#9DB5BA'], [1, '#D5DCCB']]], // Playa con tormenta lejana
-  nB: [3, [[0, '#24173F'], [0.35, '#3B2A66'], [0.55, '#6D5C9E'], [1, '#8A7CB8']]], // Noche violeta tinta
+  nB: [3, [[0, '#1A1D2B'], [0.35, '#2B3247'], [0.55, '#5A6582'], [1, '#7884A0']]], // Noche pizarra (la violeta del mapa cae en morado: ARTE §13.4)
 };
 // Mapa de arte por nivel del Cuaderno (evidencia/lo-nuevo/MAPA-ARTE-B.md, ajustes del director 8-nov 23:33): una fila por nivel, página 1 a 4.
 // 0 = el atardecer del nivel 1 (atardecer.js). 'N' = la Noche con estrellas de papel de ambient.js (606d297), intacta: el ciclo no la pisa.
@@ -573,6 +573,10 @@ export function montarPaisajes(s, pintadas, gy) {
   let encendido = false;
   const apagar = () => {
     Object.values(pilas).forEach((P) => Object.values(P).forEach((v) => v.setVisible(false)));
+    if (amb.conPaisaje) {
+      amb.conPaisaje = false;
+      amb.applyDay(0);
+    }
     cur = prev = null;
     k = 1;
     s.paisaje = null;
@@ -605,6 +609,12 @@ export function montarPaisajes(s, pintadas, gy) {
     k = Math.min(1, k + delta / PAISAJE.fundidoMs);
     if (k >= 1) prev = null;
     s.paisaje = { cur: cur ? LUGARES[cur][0] : 0, lugar: cur, k }; // solo lectura, para medir
+    // Obstáculos y fichas de la tarde (cuerpo #452B1C, canto claro): con ellos se midió el contraste de cada capa. Se cambian a media entrada
+    const conP = !!cur && (k >= 0.5 || !!prev);
+    if (conP !== !!amb.conPaisaje) {
+      amb.conPaisaje = conP;
+      amb.applyDay(0);
+    }
     const g = gy();
     Object.entries(pilas).forEach(([key, P]) => colocar(P, g, key === cur ? k : key === prev ? (cur ? 1 : 1 - k) : 0));
     const cubre = (cur && k >= 1) || (cur && prev);
