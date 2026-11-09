@@ -56,17 +56,19 @@ void main(){
 `;
 
 // Viñeta cos^4 (post.glsl) con borde cálido: multiplica hacia un kraft claro, el naranja se hace más hondo y no se agrisa.
+// Vuelta B: misma forma que la viñeta de siempre (textures.js lightLayer: blanco puro hasta 0.30 del lado, cae hasta 0.78, centro en
+// x .5, y .42 desde arriba). Antes el centro blanco era chico y la capa (depth 30, encima de Moki) le pintaba el casco durazno.
 const LUZ = `${COMUN}
 uniform vec3 borde;
-uniform float focal;
-float vignette(vec2 uv,float f){float c=f/sqrt(dot(uv,uv)+f*f);return c*c*c*c;}
+uniform float fuerza;
 void main(){
   vec2 uv=gl_FragCoord.xy/resolution;
-  vec2 q=(uv-vec2(.5,.58))*1.8; // la textura se estira a la pantalla: la viñeta sale elíptica como la de siempre; centro un poco arriba (y de WebGL sube)
-  float v=vignette(q,focal);
-  float k=smoothstep(.55,.95,v);
-  float d=hash12(gl_FragCoord.xy)/255.;                // tramado: el degradado sin escalones
-  gl_FragColor=vec4(mix(borde,vec3(1.),k)+d,1.);
+  float r=length(uv-vec2(.5,.58));                     // y de WebGL sube: .58 aquí = .42 desde arriba
+  float t=clamp((r-.30)/.48,0.,1.);                    // 0 = centro neutro (blanco: no toca a Moki), 1 = borde
+  float c=cos(t*1.5707963);
+  float a=(1.-c*c*c*c)*fuerza;                         // caída cos^4: arranca suave y se carga en la orilla
+  float d=hash12(gl_FragCoord.xy)/255.*step(.001,a);   // tramado solo donde hay degradado; el centro queda blanco exacto
+  gl_FragColor=vec4(mix(vec3(1.),borde,a)+d,1.);
 }
 `;
 
@@ -121,8 +123,8 @@ function pinta(frag, W, H, unis) {
 // PAPEL: perillas del horneado (aquí y no en config.js, para no crecer el JS inicial: este módulo va en el chunk del atardecer)
 export const PAPEL = {
   on: true, // en false, el atardecer vuelve al papel y la viñeta gris de siempre
-  grano: { tam: 512, fuerza: 0.12, tinta: '#8A4A22', alfa: 1 }, // fuerza: cuánto llega la mota más oscura hacia la tinta café
-  luz: { tam: 256, borde: '#E9C49C', focal: 1.15 }, // borde: kraft claro (no tinta); focal más chica = viñeta más ancha
+  grano: { tam: 512, fuerza: 0.16, tinta: '#8A4A22', alfa: 1 }, // fuerza: cuánto llega la mota más oscura hacia la tinta café (vuelta B: 0.12 → 0.16, que se note a 660)
+  luz: { tam: 256, borde: '#E9C49C', fuerza: 0.65 }, // borde: kraft claro (no tinta); fuerza: cuánto llega la orilla al kraft (vuelta B: 1 → 0.65, más suave)
 };
 
 export function hornearPapel() {
@@ -131,7 +133,7 @@ export function hornearPapel() {
   const L = PAPEL.luz;
   try {
     const grano = pinta(GRANO, G.tam, G.tam, { fuerza: G.fuerza, tinta: rgb(G.tinta) });
-    const luz = pinta(LUZ, L.tam, L.tam, { borde: rgb(L.borde), focal: L.focal });
+    const luz = pinta(LUZ, L.tam, L.tam, { borde: rgb(L.borde), fuerza: L.fuerza });
     return grano && luz ? { grano, luz } : null;
   } catch {
     return null;
