@@ -522,7 +522,8 @@ export function montar(s) {
     // Con la tarde completa la silueta plana tapa la capa media de siempre y su velo, pero la misma línea del mosaico asomaría de ellos
     s.mid.setVisible(st < 1);
     s.midVeil.setVisible(st < 1 && veloVisible);
-    const tarde = st >= 0.5;
+    // con paisaje propio (paisajes.js, LA SUMA B) también: el contraste de sus capas se midió contra estos obstáculos y fichas
+    const tarde = st >= 0.5 || !!amb.conPaisaje;
     if (tarde !== !!amb.tarde) {
       amb.tarde = tarde;
       s.obstacles.forEach((q) => q.sprite && q.sprite.setTexture(amb.obsKey(q.type)));

@@ -1,13 +1,18 @@
-// PAISAJE POR TRAMO (DECISIONES 7-nov 00:20, evidencia/tramos-espec.md idea 2): en Libre, nivel 1, las páginas 2 a 4 tapan el fondo pintado con su propio
-// paisaje de papel: Ciudad de cartón, Playa de papel y Noche. La página 1 es el atardecer de siempre. Solo dibuja, sin azar de juego ni física.
-// Viaja en el chunk diferido del atardecer. Reto, Clásico y demás niveles no crean ni un objeto.
+// PAISAJE POR TRAMO (DECISIONES 7-nov 00:20, evidencia/tramos-espec.md idea 2) y LA SUMA B (DECISIONES 8-nov 23:33): cada página de cada nivel
+// del Cuaderno tapa el fondo con su paisaje de papel (Ciudad de cartón, Playa de papel, Noche y sus cielos de otra hora) según RUTA, en Reto,
+// Clásico y Libre. El nivel 1 empieza en el atardecer y el nivel 2 en la Noche con estrellas de ambient.js. Solo dibuja, sin azar de juego ni física.
+// Viaja en el chunk diferido del atardecer. Demo y Paseo no lo usan.
 // Contraste (caja y torre, cuerpo #452B1C y canto #E9D2AE contra el fondo >= 2.0): hasta h 130 del mundo sobre el suelo, cada capa cae entre L 0.111 y L 0.305.
 // Por eso la noche se lee por el tono y por arriba del cielo, no por oscurecer la banda (la nave A falló por ahí: 1.88).
 import { mix, rgba, rng } from './palette.js';
 import { mk } from './textures.js';
 import { conFibra, hornear } from './cantoPapel.js';
+import { sueloEn } from './capas.js';
+import { leerCuaderno, nivelDe } from '../cuaderno.js';
 
-export const PAISAJE = { on: true, fundidoMs: 2500 }; // on: false y Libre vuelve al fondo de un solo dibujo
+// on: false y Libre vuelve al fondo de un solo dibujo. hojaMs: el cruce de lugar (hoja de papel que entra por la derecha, director 10:44Z: <= 600 ms).
+// fundidoMs: con movimiento reducido, fundido corto (ARTE §12: 120 a 180 ms)
+export const PAISAJE = { on: true, hojaMs: 600, fundidoMs: 180 };
 
 const W = 1024;
 const H = 256; // potencia de 2: el mosaico repite en vertical y el filtro mezcla la fila de abajo con la de arriba
@@ -49,16 +54,17 @@ const conSombraMosaico = (c, alpha, blur, dx, dy) => {
   return t;
 };
 
+const CW = 480; // ancho del cielo: múltiplo de la fibra (240), así el mosaico no marca costura
 function cielo(stops, extra) {
-  const [c, x] = mk(480, H);
+  const [c, x] = mk(CW, H);
   const g = x.createLinearGradient(0, 0, 0, H);
   stops.forEach(([k, col]) => g.addColorStop(k, col));
   x.fillStyle = g;
-  x.fillRect(0, 0, 480, H);
-  conFibra(x, 480, H, 0.4);
+  x.fillRect(0, 0, CW, H);
+  conFibra(x, CW, H, 0.4);
   if (extra) extra(x);
   x.fillStyle = stops[0][1];
-  x.fillRect(0, H - 2, 480, 2);
+  x.fillRect(0, H - 2, CW, 2);
   return c;
 }
 
@@ -93,22 +99,14 @@ const TRAMOS = [
   // Ciudad de cartón: casitas de kraft al frente, edificios altos atrás, cielo de papel gris claro
   {
     // día claro: el beige no decía ninguna hora (caso-004, 3 de 3). Con más cuerpo y nubes de papel: el azul pálido Jorge lo leyó viejo (caso-005)
-    cielo: () => cielo([[0, '#4F8CC4'], [0.55, '#86B7DC'], [1, '#D6E2DD']], (x) => {
-      // Sol de papel arriba a la derecha, de donde viene la luz de los edificios (pasada B): halo tenue de papel, nada de brillo
-      const halo = x.createRadialGradient(420, 40, 14, 420, 40, 90);
-      halo.addColorStop(0, rgba('#FBF1DC', 0.5));
-      halo.addColorStop(1, rgba('#FBF1DC', 0));
-      x.fillStyle = halo;
-      x.fillRect(320, 0, 160, 140);
-      x.fillStyle = '#FBF1DC';
-      x.beginPath();
-      x.arc(420, 40, 17, 0, Math.PI * 2);
-      x.fill();
+    // El sol ya no va en el mosaico (su halo se cortaba en el borde: costura junto al sol, LA SUMA B): es imagen aparte, como la luna
+    astro: 'paisajeSol',
+    cielo: (stops = [[0, '#7A8C9C'], [0.55, '#A9B8C0'], [1, '#DCDDD6']]) => cielo(stops, (x) => {
       [[70, 46, 1], [250, 84, 0.8], [392, 34, 0.65]].forEach(([u, y, k]) => {
         const nube = () => {
           x.save();
           x.beginPath();
-          x.rect(0, 0, 480, y + 12 * k); // panza plana, como recorte pegado
+          x.rect(0, 0, CW, y + 12 * k); // panza plana, como recorte pegado
           x.clip();
           x.beginPath();
           [[0, 0, 26], [24, -10, 22], [48, -2, 20], [-22, 4, 16], [68, 6, 14]].forEach(([dx, dy, r]) => {
@@ -252,7 +250,7 @@ const TRAMOS = [
   },
   // Playa de papel: mar de cartulina azul con olas recortadas, veleros en el horizonte y palmeras
   {
-    cielo: () => cielo([[0, '#A9DCE3'], [0.7, '#D8EEE4'], [1, '#FBEFCB']]),
+    cielo: (stops = [[0, '#A9DCE3'], [0.7, '#D8EEE4'], [1, '#FBEFCB']]) => cielo(stops),
     // Arena: oscura junto a la franja por el contraste, y se aclara hacia el frente, donde ya no hay obstáculo
     suelo: () => suelo({
       franja: '#B29162',
@@ -340,8 +338,8 @@ const TRAMOS = [
       seed: 215,
       detalle: (x) => motas(x, 216, 260, ['#4A5588', '#6A76AE'], 2),
     }),
-    astro: true,
-    cielo: () => cielo([[0, '#1E2650'], [0.35, '#2F3B72'], [0.52, '#6676B2'], [1, '#7E8EC6']], (x) => {
+    astro: 'paisajeLuna',
+    cielo: (stops = [[0, '#202838'], [0.35, '#34404F'], [0.52, '#6A7A8F'], [1, '#8494A8']]) => cielo(stops, (x) => {
       const q = rng(208);
       x.fillStyle = '#F4E8D5';
       for (let i = 0; i < 26; i++) {
@@ -400,109 +398,306 @@ function luna() {
   return c;
 }
 
-// pintadas: el fondo pintado del nivel 1 (capas.js); gy: y del suelo en el mundo. Corre después de colocar y de bokeh, en el mismo postupdate.
+// Sol de papel de la Ciudad, arriba a la derecha, de donde viene la luz de los edificios (pasada B): halo tenue de papel, nada de brillo.
+// Mismo dibujo que vivía en el cielo (radio 17, halo 90), en px de la textura del cielo: se escala igual que él.
+function sol() {
+  const [c, x] = mk(184, 184);
+  const halo = x.createRadialGradient(92, 92, 14, 92, 92, 90);
+  halo.addColorStop(0, rgba('#FBF1DC', 0.5));
+  halo.addColorStop(1, rgba('#FBF1DC', 0));
+  x.fillStyle = halo;
+  x.fillRect(0, 0, 184, 184);
+  x.fillStyle = '#FBF1DC';
+  x.beginPath();
+  x.arc(92, 92, 17, 0, Math.PI * 2);
+  x.fill();
+  return c;
+}
+const ASTROS = { paisajeLuna: luna, paisajeSol: sol };
+
+// LA SUMA B: lugares = silueta de TRAMOS más su cielo. Las variantes solo cambian el cielo (copiar-combinar-transformar: misma silueta,
+// otra hora); cero dibujo nuevo. [tramo, paradas del cielo (null = el de siempre), astro (si falta, el del tramo)]. Ningún cielo es beige
+// ni lleva el naranja de acción.
+const LUGARES = {
+  c: [1, null],
+  p: [2, null],
+  n: [3, null],
+  cA: [1, [[0, '#8A99AC'], [0.55, '#E7B29A'], [1, '#F4C9A2']]], // Ciudad al alba: azul que baja a durazno (sin lila: ARTE §13.4)
+  pA: [2, [[0, '#7FB3D6'], [0.6, '#F2C987'], [1, '#F5A97A']]], // Playa en tarde dorada
+  nA: [3, [[0, '#161B27'], [0.35, '#262F40'], [0.55, '#56647A'], [1, '#707F94']]], // Noche de cielo más profundo, azul tinta (pasada de color: la pervinca se iba a morado)
+  cB: [1, [[0, '#8C95A3'], [0.6, '#B3B6B4'], [1, '#CFCBC1']], null], // Ciudad nublada, gris frío: sin sol
+  pB: [2, [[0, '#5E7A8E'], [0.6, '#9DB5BA'], [1, '#D5DCCB']]], // Playa con tormenta lejana
+  nB: [3, [[0, '#1A1D2B'], [0.35, '#2B3247'], [0.55, '#5A6582'], [1, '#7884A0']]], // Noche pizarra (la violeta del mapa cae en morado: ARTE §13.4)
+};
+// Mapa de arte por nivel del Cuaderno (evidencia/lo-nuevo/MAPA-ARTE-B.md, ajustes del director 8-nov 23:33): una fila por nivel, página 1 a 4.
+// 0 = el atardecer del nivel 1 (atardecer.js). 'N' = la Noche con estrellas de papel de ambient.js (606d297), intacta: el ciclo no la pisa.
+// Reto, Clásico y Libre usan la fila del nivel del jugador; Libre después de la página 4 se queda en la 4.
+export const RUTA = [
+  [0, 'c', 'p', 'n'],
+  ['N', 'c', 'p', 'N'],
+  ['c', 'p', 'n', 'c'],
+  ['p', 'n', 'c', 'p'],
+  ['nA', 'cA', 'pA', 'nA'],
+  ['cA', 'pA', 'nA', 'cA'],
+  ['pA', 'nA', 'cA', 'pA'],
+  ['nB', 'cB', 'pB', 'nB'],
+  ['cB', 'pB', 'nB', 'cB'],
+  ['pB', 'nB', 'cB', 'pB'],
+];
+const esLugar = (L) => typeof L === 'string' && L !== 'N';
+
+// pintadas: el fondo pintado del nivel 1 (capas.js), null en los demás; gy: y del suelo en el mundo. Corre después de colocar y de bokeh,
+// en el mismo postupdate.
 export function montarPaisajes(s, pintadas, gy) {
-  if (!PAISAJE.on || !pintadas) return;
+  if (!PAISAJE.on) return;
   const amb = s.ambient;
   const enReposo = window.requestIdleCallback || ((fn) => setTimeout(fn, 60));
-  const llave = (i, n) => `paisaje${i}_${n}`;
   const add = (k, fn) => s.textures.exists(k) || s.textures.addCanvas(k, fn());
-  // De uno en uno, en los ratos libres y con aire entre uno y otro: el primero de cada tramo no debe caer en una decisión
-  const NOMBRES = ['cielo', 'lejos', 'medio', 'suelo'];
-  const cola = [];
-  [1, 2, 3].forEach((i) => NOMBRES.forEach((n) => cola.push(() => add(llave(i, n), TRAMOS[i][n]))));
-  cola.push(() => add('paisajeLuna', luna));
+  // Lo que pide un lugar, en orden de pila: [llave, horno]. Las siluetas se comparten entre variantes
+  const piezas = (key) => {
+    const [b, paradas, ...resto] = LUGARES[key];
+    const T = TRAMOS[b];
+    const astro = resto.length ? resto[0] : T.astro;
+    const r = [[paradas ? `paisaje_${key}_cielo` : `paisaje${b}_cielo`, () => T.cielo(paradas || undefined)]];
+    ['lejos', 'medio', 'suelo'].forEach((n) => r.push([`paisaje${b}_${n}`, T[n]]));
+    if (astro) r.push([astro, ASTROS[astro]]);
+    return r;
+  };
+  let nivel = nivelDe(leerCuaderno()).nivel;
+  let todoListo = false; // ya está horneado todo lo que pide el nivel: la cola no busca más
+  s.paisajeListo = () => todoListo; // solo lectura, para medir FPS ya sin horneadas
+  const lugarDe = (i) => RUTA[Math.max(1, Math.min(RUTA.length, nivel)) - 1][Math.min(3, Math.max(0, i))];
+  const enJuego = () => !s.demo && s.screen !== 'demo' && !s.paseoRun && !!s.level;
   s.paisajeCostos = []; // ms de cada horneada, solo lectura, para medir
-  // ?ir=ciudad: la partida arranca ya en la página i; sus capas se hornean de golpe antes de empezar (aún corre el demo), no de a una
-  s.hornearPaisaje = (i) => {
+  const medir = (fn) => {
     const t0 = performance.now();
-    NOMBRES.forEach((n) => add(llave(i, n), TRAMOS[i][n]));
-    if (TRAMOS[i].astro) add('paisajeLuna', luna);
+    fn();
     s.paisajeCostos.push(Math.round(performance.now() - t0));
   };
+  // ?ir= y el arranque de cada partida: la página donde nace se hornea de golpe (la partida nace dentro de su paisaje, nunca en beige)
+  s.hornearPaisaje = (i) => {
+    const L = lugarDe(i);
+    if (!esLugar(L) || piezas(L).every(([k]) => s.textures.exists(k))) return;
+    medir(() => piezas(L).forEach(([k, fn]) => add(k, fn)));
+  };
+  // Lo demás del nivel: de una pieza en una, en los ratos libres (también en el título) y con aire entre una y otra
   let horneando = false;
+  // Una horneada cuesta 60 a 180 ms (sonda LA SUMA B): en partida solo en un respiro, con el siguiente obstáculo a 2 s o más (como el fondo vivo)
+  const respiro = () => {
+    if (!enJuego()) return true;
+    const next = s.obstacles.find((o) => o.x > s.px - 50);
+    return !next || (next.x - s.px) / Math.max(s.speed, 1) >= 2;
+  };
   const hornea = () => {
-    if (horneando || !cola.length) return;
+    if (horneando || todoListo || !respiro()) return;
+    let falta = null;
+    for (let i = 0; i < 4 && !falta; i++) {
+      const L = lugarDe(i);
+      if (esLugar(L)) falta = piezas(L).find(([k]) => !s.textures.exists(k));
+    }
+    if (!falta) return void (todoListo = true);
     horneando = true;
     enReposo(() => {
-      const t0 = performance.now();
-      cola.shift()();
-      s.paisajeCostos.push(Math.round(performance.now() - t0));
+      if (respiro()) medir(() => add(falta[0], falta[1])); // el respiro pudo acabarse mientras esperaba
       setTimeout(() => (horneando = false), 300);
     }, { timeout: 800 });
   };
-  const pilas = [null, null, null, null];
-  const lista = (i) => {
-    if (pilas[i]) return true;
-    if (!NOMBRES.every((n) => s.textures.exists(llave(i, n)))) return false;
-    if (TRAMOS[i].astro && !s.textures.exists('paisajeLuna')) return false;
-    const d = 3.07 + (i - 1) * 0.003; // arriba de la capa media pintada (3.06) y abajo de todo lo demás: lo que queda detrás no se ve
-    const capa = (n, dd) => s.add.tileSprite(0, 0, 10, 10, llave(i, n)).setOrigin(0, 0).setDepth(d + dd).setVisible(false);
-    // suelo: arriba de capa_suelo (4.62) y debajo de lo que corre sobre él. Lo demás de la pila queda en 3.07: detrás de todo el suelo
-    pilas[i] = { cielo: capa('cielo', 0), lejos: capa('lejos', 0.0005), medio: capa('medio', 0.001), suelo: capa('suelo', SUELO.depth + (i - 1) * 0.001 - d) };
-    if (TRAMOS[i].astro) pilas[i].astro = s.add.image(0, 0, 'paisajeLuna').setDepth(d + 0.0002).setVisible(false);
+
+  // Una pila por lugar. La que entra con fundido va encima de la que se va (nivel 1 de profundidad), arriba de la capa media pintada (3.06)
+  // y abajo de todo lo demás: lo que queda detrás no se ve
+  const pilas = {};
+  const profundidad = (P, n) => {
+    const d = 3.07 + n * 0.003;
+    P.cielo.setDepth(d);
+    if (P.astro) P.astro.setDepth(d + 0.0002);
+    P.lejos.setDepth(d + 0.0005);
+    P.medio.setDepth(d + 0.001);
+    P.suelo.setDepth(SUELO.depth + n * 0.001); // arriba de capa_suelo (4.62) y debajo de lo que corre sobre él
+  };
+  const lista = (key) => {
+    if (pilas[key]) return true;
+    const pz = piezas(key);
+    if (!pz.every(([k]) => s.textures.exists(k))) return false;
+    const capa = (k) => s.add.tileSprite(0, 0, 10, 10, k).setOrigin(0, 0).setVisible(false);
+    const [cielo, lejos, medio, suelo, astro] = pz.map(([k]) => k);
+    const P = { cielo: capa(cielo), lejos: capa(lejos), medio: capa(medio), suelo: capa(suelo) };
+    if (astro) P.astro = s.add.image(0, 0, astro).setVisible(false);
+    profundidad(P, 0);
+    pilas[key] = P;
     return true;
   };
-  const pon = (L, y, w, h, kx, ky, tile) => {
-    L.setPosition(0, y).setSize(w, h).setTileScale(kx, ky);
-    L.tilePositionX = tile / kx;
+  // x0: borde izquierdo de lo visible; el mosaico se corre lo mismo para quedarse quieto en pantalla
+  const pon = (L, x0, y, w, h, kx, ky, tile) => {
+    L.setPosition(x0, y).setSize(w, h).setTileScale(kx, ky);
+    L.tilePositionX = (tile + x0) / kx;
   };
-  const colocar = (P, g, a) => {
+  // Se ve de x0 a x1 (px de pantalla), opaco. El cruce de lugar es un cambio de escena de papel que entra por la derecha, no un fundido:
+  // con alfa, el cielo claro que entraba lavaba los edificios y veleros del que se iba (doble exposición, ARTE pasada de color de LA SUMA B)
+  // aC, aR: alfa del cielo y del resto; solo el fundido de movimiento reducido los baja (el cielo antes, para que tape lo que se va sin fantasmas)
+  const colocar = (P, g, x0, x1, aC = 1, aR = 1) => {
+    if (x1 - x0 <= 0 || aR <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
+    const w = x1 - x0;
     const ms = s.midS || 1;
     const quieto = s.reduced;
     const hC = g + 12 - s.top;
-    pon(P.cielo, s.top, s.vw, hC, hC / H, hC / H, 0);
+    pon(P.cielo, x0, s.top, w, hC, hC / H, hC / H, 0);
     [['lejos', s.far.y - s.base.far], ['medio', s.mid.y - s.base.mid]].forEach(([n, baja]) => {
       const K = CAPAS[n];
       const alto = K.alto * ms;
-      pon(P[n], g + K.pie - alto + baja, s.vw, alto, (K.ancho * ms) / W, alto / H, quieto ? 0 : s.dist * K.par);
+      pon(P[n], x0, g + K.pie - alto + baja, w, alto, (K.ancho * ms) / W, alto / H, quieto ? 0 : s.dist * K.par);
     });
-    const L = pintadas.suelo; // ya colocada este cuadro: mismo lugar, mismo corrimiento
-    P.suelo.setPosition(L.x, L.y).setSize(L.width, L.height).setTileScale(L.tileScaleX * SUELO.k, L.tileScaleY * SUELO.k);
-    P.suelo.tilePositionX = L.tilePositionX / SUELO.k;
-    if (P.astro) P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
-    Object.values(P).forEach((v) => v.setVisible(a > 0).setAlpha(a));
+    // Mismo lugar y corrimiento que el suelo pintado del nivel 1 (capas.js), esté o no cargado
+    const S = sueloEn(s, g);
+    pon(P.suelo, x0, S.y, w, S.h, S.kx * SUELO.k, S.ky * SUELO.k, s.dist);
+    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(aR));
+    P.cielo.setAlpha(aC);
+    if (P.astro) {
+      if (P.astro.texture.key === 'paisajeSol') P.astro.setPosition(s.vw * 0.76, s.top + (hC * 40) / H).setScale(hC / H);
+      else P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
+      P.astro.setVisible(P.astro.x >= x0 && P.astro.x <= x1); // el astro pasa entero con su hoja
+    }
   };
 
-  let cur = 0;
+  // Canto de la hoja que cruza: sombra de contacto de tinta (6 px, del 0 al 24 %) sobre lo que queda debajo y 2 px de papel. Dos tiras:
+  // una sobre el cielo y las siluetas, otra sobre el suelo (cada una justo arriba de la hoja nueva)
+  const CANTO = 8;
+  add('paisajeCanto', () => {
+    const [c, x] = mk(CANTO, 4);
+    for (let i = 0; i < 6; i++) {
+      x.fillStyle = rgba('#22211F', (0.24 * (i + 1)) / 6);
+      x.fillRect(i, 0, 1, 4);
+    }
+    x.fillStyle = '#F4E8D5';
+    x.fillRect(6, 0, 2, 4);
+    return c;
+  });
+  const cantos = [0, 1].map(() => s.add.image(0, 0, 'paisajeCanto').setOrigin(0, 0).setVisible(false));
+  const canto = (g, x) => {
+    if (x === null || x <= 0) return void cantos.forEach((v) => v.visible && v.setVisible(false));
+    const S = sueloEn(s, g);
+    const P = cur ? pilas[cur] : pilas[prev];
+    cantos[0].setPosition(x - CANTO + 2, s.top).setDisplaySize(CANTO, S.y - s.top + 2).setDepth(P.medio.depth + 0.0001).setVisible(true);
+    cantos[1].setPosition(x - CANTO + 2, S.y).setDisplaySize(CANTO, S.h).setDepth(P.suelo.depth + 0.0001).setVisible(true);
+  };
+
+  // Fuera del nivel 1 no hay fondo pintado que esconder: lo tapado es el fondo de siempre. Se guarda cómo estaba para regresarlo.
+  let tapado = null;
+  const tapar = () => {
+    if (!tapado) {
+      tapado = [s.sky, s.skyGrad, s.skyBand, s.clouds, s.topFade, s.sun, s.ridge, s.ridgeSkirt, s.far, s.farVeil, s.mid, s.midVeil, s.surface, s.canto, s.front, s.shade, amb.lamp, amb.bands, ...s.folds]
+        .filter(Boolean)
+        .map((v) => [v, v.visible]);
+    }
+    tapado.forEach(([v]) => v.setVisible(false));
+    if (s.midPool) s.midPool.forEach((q) => (q.body.setVisible(false), q.veil.setVisible(false))); // stepMidProps los prende cada cuadro
+  };
+  const destapar = () => {
+    if (!tapado) return;
+    tapado.forEach(([v, a]) => v.setVisible(a));
+    tapado = null;
+  };
+
+  let cur = null; // lugar que se ve (o entra)
+  let prev = null; // lugar que se va mientras dura el fundido
   let k = 1;
   let antes = null;
+  let encendido = false;
+  let horaPendiente = null; // hora de ambient que espera a que el paisaje tape todo
   const apagar = () => {
-    pilas.forEach((P) => P && Object.values(P).forEach((v) => v.setVisible(false)));
-    cur = 0;
+    horaPendiente = null;
+    Object.values(pilas).forEach((P) => Object.values(P).forEach((v) => v.setVisible(false)));
+    if (amb.conPaisaje) {
+      amb.conPaisaje = false;
+      amb.applyDay(0);
+    }
+    cur = prev = null;
     k = 1;
     s.paisaje = null;
+    destapar();
   };
-  let encendido = false;
   const paso = (_t, delta) => {
-    const libre = !s.demo && s.screen !== 'demo' && s.level && s.level.modo === 'libre' && !s.paseoRun;
-    if (s.modo === 'libre' && amb.n1) hornea();
-    if (!libre || !amb.n1 || !pintadas.activa || amb.st < 1) {
+    if (!s.paseoRun) hornea();
+    if (!enJuego()) {
       if (encendido) apagar();
       encendido = false;
       antes = null;
       return;
     }
     encendido = true;
-    const quiere = Math.min(3, s.tramoIdx);
-    // reaparecer, ir a otra página o arrancar ya en ella (?ir=ciudad, primer cuadro de la partida): sin fundido
+    const L = lugarDe(s.tramoIdx);
+    const quiere = esLugar(L) ? L : null;
+    // reaparecer, volver a una página o arrancar ya en ella (?ir=ciudad, primer cuadro de la partida): sin fundido
     const brinco = antes === null || Math.abs(s.dist - antes) > 400;
     antes = s.dist;
-    if (quiere !== cur && (quiere === 0 || lista(quiere))) {
-      k = quiere < cur || brinco || s.reduced ? 1 : 0;
+    if (quiere !== cur && (quiere === null || lista(quiere))) {
+      prev = brinco ? null : cur;
       cur = quiere;
-    } else if (brinco) k = 1;
-    k = Math.min(1, k + delta / PAISAJE.fundidoMs);
-    s.paisaje = { cur, k }; // solo lectura, para medir
+      k = brinco ? 1 : 0;
+      if (cur) profundidad(pilas[cur], 1);
+      if (prev) profundidad(pilas[prev], 0);
+    } else if (brinco) {
+      k = 1;
+      prev = null;
+    }
+    k = Math.min(1, k + delta / (s.reduced ? PAISAJE.fundidoMs : PAISAJE.hojaMs));
+    if (k >= 1) prev = null;
+    s.paisaje = { cur: cur ? LUGARES[cur][0] : 0, lugar: cur, k }; // solo lectura, para medir
+    // Obstáculos y fichas de la tarde (cuerpo #452B1C, canto claro): con ellos se midió el contraste de cada capa. Se cambian a media entrada
+    const conP = !!cur && (k >= 0.5 || !!prev);
+    if (conP !== !!amb.conPaisaje) {
+      amb.conPaisaje = conP;
+      amb.applyDay(0);
+    }
     const g = gy();
-    pilas.forEach((P, i) => {
-      if (!P) return;
-      colocar(P, g, i === cur ? k : i === cur - 1 && k < 1 ? 1 : 0);
+    const borde = s.vw * (1 - k); // la hoja nueva entra por la derecha; la que se va queda entera debajo (o, sin nueva, se recoge)
+    const sube = (a) => Math.min(1, a * 3);
+    Object.entries(pilas).forEach(([key, P]) => {
+      if (key !== cur && key !== prev) return colocar(P, g, 0, 0);
+      if (s.reduced) {
+        const a = key === cur ? k : cur ? 1 : 1 - k;
+        return colocar(P, g, 0, s.vw, sube(a), a);
+      }
+      colocar(P, g, key === cur ? borde : 0, key === cur || cur ? s.vw : borde);
     });
-    const tiene = cur > 0 && pilas[cur];
-    if (tiene && k >= 1) [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio, pintadas.suelo].forEach((v) => v.setVisible(false)); // lo tapado no se dibuja
-    if (cur > 0 && s.bokeh) s.bokeh.forEach((q) => q.im.setAlpha(q.im.alpha * (1 - (cur > 1 ? 1 : k)))); // círculos de luz de la tarde: en otro lugar no van
+    canto(g, k < 1 && !s.reduced && (cur || prev) ? borde : null);
+    const cubre = (cur && k >= 1) || (cur && prev);
+    if (horaPendiente !== null && cur && k >= 1) {
+      sdP.call(amb, horaPendiente, true);
+      horaPendiente = null;
+    }
+    if (cubre && pintadas && amb.n1) {
+      [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio, pintadas.suelo].forEach((v) => v.setVisible(false)); // lo tapado no se dibuja
+    } else if (cubre) tapar();
+    else destapar();
+    if (cur && s.bokeh) s.bokeh.forEach((q) => q.im.setAlpha(q.im.alpha * (1 - (prev || k >= 1 ? 1 : k)))); // círculos de luz de la tarde: en otro lugar no van
   };
   s.events.on('postupdate', paso);
   s.events.once('shutdown', () => s.events.off('postupdate', paso));
+
+  // La hora del día sigue al lugar: con paisaje propio, mañana (obstáculos de día, sin faroles ni estrellas de ambient debajo); en la Noche
+  // con estrellas, la noche. Entrar a esa noche desde un paisaje es de golpe abajo: el paisaje se va con su fundido y no asoma el beige.
+  // Solo las llamadas del juego (la página actual); los medidores siguen poniendo cualquier hora. El nivel 1 conserva su hora fija.
+  const sdP = amb.setDay;
+  amb.setDay = function (i, instant) {
+    if (s.demo || s.paseoRun || amb.n1 || i !== s.tramoIdx) return sdP.call(this, i, instant);
+    const L = lugarDe(i);
+    horaPendiente = null;
+    if (L === 'N') return sdP.call(this, 3, instant || esLugar(lugarDe(i - 1)));
+    // De la Noche con estrellas a un paisaje: la noche se queda debajo mientras el paisaje entra (si no, la mañana beige asomaba en el fundido)
+    // y cambia de golpe cuando ya lo tapa todo
+    if (esLugar(L) && !instant && lugarDe(i - 1) === 'N') return void (horaPendiente = 0);
+    return sdP.call(this, esLugar(L) ? 0 : i, instant);
+  };
+  // El nivel se lee al empezar, como amb.n1: caer y reintentar sigue en la misma fila del mapa
+  const rr = s.resetRun;
+  s.resetRun = function (...a) {
+    if (this.demo || !this.partidaEmpezada) {
+      const n = nivelDe(leerCuaderno()).nivel;
+      if (n !== nivel) todoListo = false;
+      nivel = n;
+    }
+    const r = rr.apply(this, a);
+    if (!this.demo && !this.paseoRun) s.hornearPaisaje(this.tramoIdx);
+    return r;
+  };
 }

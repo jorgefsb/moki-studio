@@ -20,7 +20,7 @@ export class Faroles {
     this.items = [0, 1, 2].map(() => ({
       // pie del poste escondido tras el canto de atrás del suelo (depth 4): el farol queda detrás del suelo
       poste: s.add.image(0, 0, 'farolPoste').setOrigin(27 / 128, 1).setScale(0.5).setDepth(3.9).setVisible(false),
-      luz: s.add.image(0, 0, 'farolLuz').setOrigin(0.5, 0).setDepth(4.7).setVisible(false),
+      luz: s.add.image(0, 0, 'farolLuz').setOrigin(0.5, 0).setDepth(4.61).setVisible(false), // 4.61: sobre el suelo y su velo (4.6), bajo la hoja del paisaje (4.621) que entra encima
     }));
   }
 

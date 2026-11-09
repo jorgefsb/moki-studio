@@ -568,7 +568,7 @@ export function montarBoceto(s, o, colocar, radioSol) {
     const venia = !s.demo && amb.n1 && amb.st >= 0.5; // pasó de nivel: del atardecer a la hora del nivel 2, sin salto seco
     const r = sg.apply(this, a);
     if (s.esc) return r;
-    if (amb.n1) empezar();
+    if (amb.n1 && !(s.tramoIdx > 0)) empezar(); // ?ir=ciudad nace en su paisaje: el lápiz pintaba el atardecer y a 2 s saltaba a la Ciudad (LA SUMA B)
     else if (venia) amb.desdeTarde();
     return r;
   };
