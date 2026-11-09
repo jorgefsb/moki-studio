@@ -75,6 +75,15 @@
 .ui-pause .ui-pause-hud { margin: 0; font: 400 14px/18px Inter, sans-serif; color: #22211f; }
 @media (max-height: 479px) { .ui-pause .ui-pause-hud { display: none; } } /* carril corto: la pausa ya llena la pantalla */
 .ui-pause .ui-btn { margin: 0; width: 100%; }
+/* P3f: alto < 480 (660x372 embebido, 640x400): en una columna medía 386 px. Seguir a todo lo ancho y el resto en dos columnas */
+@media (max-height: 479px) {
+  .ui-pause { width: min(480px, calc(100vw - 32px)); padding: 10px 16px 12px; }
+  .ui-pause h2 { font-size: 24px; line-height: 28px; margin: 0; }
+  .ui-pause .stack { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .ui-pause .stack .primary { grid-column: 1 / -1; }
+  .ui-pause .ui-btn { padding: 0 12px; font-size: 16px; }
+  .ui-pause .meta { margin: 8px 0 0; font-size: 14px; line-height: 18px; }
+}
 .ui-foto-btn { gap: 10px; }
 /* Cámara de tinta: cuerpo con borde, lente redonda y joroba del visor (sin color, se lee por la forma) */
 .ui-foto-btn i { position: relative; width: 22px; height: 15px; margin-top: 4px; border: 2.5px solid #22211f; border-radius: 4px; }
@@ -359,6 +368,8 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-menu.corto .mn-pie { font-size: 14px; line-height: 17px; padding: 1px 10px; }
 .mn-mas { display: none; }
 .mn-carril { position: relative; }
+/* P3f: la flecha tenía su propia orilla encima de la última tarjeta visible; ahora el carril le deja un canal de 40 px */
+.ui-menu.corto .mn-carril { padding-right: 40px; }
 .ui-menu.corto .mn-mas {
   display: flex; align-items: center; justify-content: center; position: absolute; right: 0; top: 50%; margin-top: -22px; width: 36px; height: 48px;
   padding: 0; pointer-events: auto; cursor: pointer; background: #f4e8d5; color: #22211f; border: 3px solid #22211f;
