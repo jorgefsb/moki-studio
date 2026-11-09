@@ -607,16 +607,12 @@ export function createUI() {
       // LA SUMA A: al final dice qué sigue y lleva al menú en un toque
       // P3c: en la tarjeta corta la liga de voto ocupa el lugar de 'Qué sigue'; en la grande va debajo con su línea
       if (onMenu && !(d.voto && rect.corto)) card.append(el('p', 'ui-sigue', t('end.sigue')));
-      let voto = null; // se pone después de los botones: nunca empuja a 'Otra vez' fuera de la tarjeta
+      let voto = null; // va después de los botones: nunca empuja a 'Otra vez' fuera de la tarjeta
       if (d.voto) {
-        const sub = rect.corto ? null : el('p', 'ui-voto-sub', t('voto.sub'));
-        const v = votoLink({ href: d.voto.href, onClick: () => {
-          d.voto.onClick();
-          if (sub) sub.textContent = t('voto.gracias');
-          else v.textContent = t('voto.gracias');
-        } }, 'ui-btn secondary ui-voto');
+        const v = votoLink(d.voto, 'ui-btn secondary ui-voto');
         v.textContent = `${t('voto.titulo')} · ${t('voto.btn')}`;
-        voto = sub ? [sub, v] : [v];
+        v.addEventListener('click', () => (v.textContent = t('voto.gracias')));
+        voto = rect.corto ? [v] : [el('p', 'ui-voto-sub', t('voto.sub')), v];
       }
       card.append(again);
       if (onMenu) {
