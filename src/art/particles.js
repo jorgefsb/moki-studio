@@ -117,6 +117,13 @@ export class Particles {
       for (let i = 0; i < n; i++) {
         this.emit(mixColor(i), x - 14 + Math.random() * 16, g - 2, { vx: -rand(40, 110), vy: -rand(60, 130), g: 520, life: rand(320, 380), spin: rand(90, 360) });
       }
+      // P4: bocanada de polvo de papel a ras del suelo, a los dos lados de la bota; crece con la fuerza del golpe (0 a 1)
+      const f = opt.fuerza; // solo el aterrizaje de Moki la manda (choque y torre del timbre quedan igual)
+      const m = f === undefined ? 0 : Math.round((L === 1 ? 2 : L === 2 ? 3 : 4) * (0.5 + f));
+      for (let i = 0; i < m * 2; i++) {
+        const s = i % 2 ? 1 : -1;
+        this.emit(i % 3 ? 'paper' : 'kraft', x + s * rand(6, 14), g - 1, { vx: s * rand(70, 150) * (0.6 + 0.6 * f), vy: -rand(15, 45), g: 60, life: rand(380, 480), spin: rand(40, 120), fadeFrom: 0.35, scale: rand(1.5, 2.1) });
+      }
     } else if (type === 'kick') {
       if (L < 2) return;
       this.emit('kraft', x - 10, g - 2, { vx: -60, vy: -50, g: 520, life: 240, spin: 180 });
