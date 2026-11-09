@@ -112,6 +112,16 @@ export function createUI() {
         return b;
       };
       const punto = () => el('em', 'mn-punto', t('menu.punto'));
+      // P3e: aviso "Lo nuevo desde tu última visita" arriba del botón (texto, no botón: el toque va a Juega lo nuevo)
+      if (m.aviso) {
+        const av = el('div', 'mn-aviso');
+        av.setAttribute('role', 'status');
+        av.append(el('b', '', m.aviso.titulo));
+        const ul = el('ul');
+        for (const l of m.aviso.lineas) ul.append(el('li', '', l));
+        av.append(ul);
+        p.append(av);
+      }
       const h = m.hero;
       const hero = tap(el('button', 'mn-hero'), h.onPick);
       hero.append(el('b', '', h.titulo));
