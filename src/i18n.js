@@ -220,7 +220,7 @@ const ES = {
   'voto.titulo': 'Vota lo que sigue',
   'voto.sub': 'Elige la idea que quieres ver en el juego.',
   'voto.btn': 'Ver ideas',
-  'voto.menu': 'Tu voto decide qué sigue',
+  'voto.menu': 'Escoge qué le agregamos al juego',
   'voto.gracias': 'Gracias. Vuelve cuando quieras.',
 };
 
@@ -232,7 +232,7 @@ const EN = {
   'voto.titulo': "Vote for what's next",
   'voto.sub': 'Pick the idea you want in the game.',
   'voto.btn': 'See ideas',
-  'voto.menu': "Your vote picks what's next",
+  'voto.menu': 'Pick what we add to the game next',
   'voto.gracias': 'Thanks. Come back anytime.',
   // P3d: líneas de las tarjetas del menú (reservado, igual que el resto)
   'vuelta.name': 'Fast Lap',
