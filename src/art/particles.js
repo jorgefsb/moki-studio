@@ -4,7 +4,7 @@ import { CONFIG as C } from '../config.js';
 
 const POOL = 90;
 const rand = (a, b) => a + Math.random() * (b - a);
-const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvoC: 'chipPolvoC', polvoT: 'chipPolvoT' };
+const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo' };
 
 export class Particles {
   constructor(scene) {
@@ -18,9 +18,19 @@ export class Particles {
     this.clock = 0;
     // Motas del casi-choque con canto (ARTE §4): crema con borde kraft y naranja con borde crema, para que se lean sobre
     // el casco crema, el traje naranja, el cielo del atardecer y la noche
-    // P4B: polvo del aterrizaje con contraste sobre el suelo naranja: crema con canto de tinta y tinta con canto crema
-    // (el crema/kraft liso de P4 se leía gris-beige, como textura del piso)
-    for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5'], ['chipPolvoC', '#F4E8D5', '#22211F'], ['chipPolvoT', '#22211F', '#F4E8D5']]) {
+    // P4B: nubecita de polvo del aterrizaje: tres bolitas crema con canto de tinta suave, para que se lea sobre el suelo
+    // naranja (el crema/kraft liso de P4 pasaba como textura; los trozos con canto se leían como íconos)
+    if (!scene.textures.exists('chipPolvo')) {
+      const t = scene.textures.createCanvas('chipPolvo', 22, 16);
+      const x = t.context;
+      const bolas = [[7, 10, 5.5], [14, 9, 6], [11, 6, 4.5]];
+      x.fillStyle = 'rgba(34, 33, 31, 0.55)';
+      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + 1.4, 0, Math.PI * 2), x.fill();
+      x.fillStyle = '#F4E8D5';
+      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
+      t.refresh();
+    }
+    for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {
       if (scene.textures.exists(k)) continue;
       const t = scene.textures.createCanvas(k, 14, 12);
       const x = t.context;
@@ -65,6 +75,7 @@ export class Particles {
     p.osc = o.osc || 0;
     p.fadeFrom = o.fadeFrom ?? 0.6;
     p.estela = o.estela ? o.scale : 0; // escala inicial de la estela (0 = no es estela)
+    p.infla = 0; // polvo del aterrizaje (P4B): lo pone burst('land')
     p.sprite.setTexture(KEYS[color]).setPosition(x, y).setAngle(Math.random() * 360).setAlpha(1).setScale(o.scale || 1).setVisible(true);
     return p;
   }
@@ -89,6 +100,7 @@ export class Particles {
       const u = p.age / p.life;
       s.setAlpha(u < p.fadeFrom ? 1 : Math.pow(1 - (u - p.fadeFrom) / (1 - p.fadeFrom), 3));
       if (p.estela) s.setScale(p.estela * (1 - 0.5 * u));
+      else if (p.infla) s.setScale(p.infla * (1 + 0.7 * Math.sqrt(u)));
     }
   }
 
@@ -121,15 +133,17 @@ export class Particles {
       }
       // P4: bocanada de polvo de papel a ras del suelo, a los dos lados de la bota; crece con la fuerza del golpe (0 a 1)
       const f = opt.fuerza; // solo el aterrizaje de Moki la manda (choque y torre del timbre quedan igual)
-      // P4B: crema con canto de tinta (2 de 3) y tinta (1 de 3), más grande y más tiempo opaco. Al frente se suma la
-      // velocidad del mundo (opt.v): sin eso el mundo se llevaba las del frente bajo la bota y solo se veía el lado de atrás
+      // P4B: nubecitas que nacen en la bota, se abren a los dos lados a ras del suelo y se inflan al irse. Al frente se
+      // suma la velocidad del mundo (opt.v): sin eso el mundo se llevaba las del frente bajo la bota
       const m = f === undefined ? 0 : Math.max(3, Math.round((L === 1 ? 2 : L === 2 ? 3 : 4) * (0.5 + f)));
       const v = opt.v || 0;
       for (let i = 0; i < m * 2; i++) {
         const s = i % 2 ? 1 : -1;
-        const dx = s > 0 ? rand(14, 26) : -rand(8, 20);
-        const vx = s * rand(60, 130) * (0.7 + 0.6 * f) + (s > 0 ? v : 0);
-        this.emit(i % 3 === 2 ? 'polvoT' : 'polvoC', x + dx, g - 2, { vx, vy: -rand(20, 55), g: 90, life: rand(420, 520), spin: rand(40, 140), fadeFrom: 0.55, scale: rand(1.25, 1.7) * (0.85 + 0.3 * f) });
+        const dx = s > 0 ? rand(10, 20) : -rand(6, 16);
+        const vx = s * rand(70, 140) * (0.7 + 0.6 * f) + (s > 0 ? v : 0);
+        const p = this.emit('polvo', x + dx, g - 4, { vx, vy: -rand(10, 35), g: 40, life: rand(380, 480), spin: rand(-30, 30), fadeFrom: 0.5, scale: rand(1.0, 1.3) * (0.85 + 0.3 * f) });
+        p.infla = p.sprite.scaleX; // crece x1.7 en su vida: bocanada, no trozo
+        p.sprite.setAngle(rand(-12, 12));
       }
     } else if (type === 'kick') {
       if (L < 2) return;
