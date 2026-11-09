@@ -2457,10 +2457,12 @@ export class RunScene extends Phaser.Scene {
     const wide = W >= 700 && W > H * 0.9;
     let r = wide ? rect : { ...rect, compact: true };
     // LA SUMA A: bajito y ancho (660x372 embebido, 640x400) la tarjeta va completa a la derecha de Moki, de arriba abajo
+    const zonas = this.saludoZonas();
+    const top = Math.round(Math.max(rect.top, zonas.hudB + 8)); // nunca sobre los metros y las piezas
     if (H < 480 && W > H) {
-      const left = Math.round(this.saludoZonas().mokiR + 20);
-      r = { left, top: 8, width: Math.min(460, W - left - 12), maxHeight: H - 16, compact: true, corto: true };
-    }
+      const left = Math.round(zonas.mokiR + 20);
+      r = { left, top, width: Math.min(460, W - left - 12), maxHeight: H - top - 8, compact: true, corto: true };
+    } else if (!wide) r = { ...r, top, maxHeight: Math.max(150, Math.round(this.cabezaY() - top - 12)), corto: true }; // vertical: datos en 2 columnas para que quepa sin scroll
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
