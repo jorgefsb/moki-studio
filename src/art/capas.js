@@ -63,6 +63,8 @@ export function montarCapas(s) {
     const S = sueloEn(s, g);
     pon(c.suelo, 0, S.y, s.vw, S.h, S.kx, S.ky, s.dist);
     nombres.forEach((n) => c[n].setVisible(st > 0).setAlpha(st));
+    const yPie = S.y + S.h - 2; // 2 px debajo de la textura: sin raya entre las dos
+    c.pie.setPosition(0, yPie).setSize(s.vw, Math.max(0, s.bottom - yPie + 2)).setVisible(st > 0 && s.bottom > yPie + 2).setAlpha(st);
   };
 
   const listas = () => nombres.every((n) => s.textures.exists(llave(n)));
@@ -85,6 +87,8 @@ export function montarCapas(s) {
       t.refresh();
     }
     c.sol = s.add.image(0, 0, 'capa_sol').setDepth(SOL.depth).setVisible(false);
+    // P5 TÍTULO: en vertical alta (390x844) la textura del suelo no llega al borde y asomaba el gris del lienzo: relleno del café de su orilla de abajo
+    c.pie = s.add.rectangle(0, 0, 10, 10, 0x56260e, 1).setOrigin(0, 0).setDepth(CAPAS.suelo.depth - 0.005).setVisible(false);
     c.cargadas = true;
     // Con una transición ya corriendo no se cambia el dibujo a medias: colocar la activa al terminar
     if (!s.boceto) c.activa = true;

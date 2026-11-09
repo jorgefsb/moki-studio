@@ -186,7 +186,8 @@ export function createUI() {
       const wd = Math.min(W - L - 16, 880);
       if (wd >= 300) {
         h = pon(L + (W - L - 16 - wd) / 2, wd);
-        if (h <= H - top0 - 12) return (p.style.top = `${Math.round(H - 12 - h)}px`);
+        const pie = H < 480 ? 8 : 12; // P5: en pantalla baja 4 px más de aire entre JUGAR y la línea del suelo
+        if (h <= H - top0 - pie) return (p.style.top = `${Math.round(H - pie - h)}px`);
       }
       h = pon((W - full) / 2, full);
       const techo = zonas.mokiT - 90; // el demo salta: la cabeza sube ~80 px
