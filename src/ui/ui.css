@@ -73,6 +73,7 @@
 .ui-pause { position: relative; width: min(320px, calc(100vw - 48px)); padding: 18px 20px 20px; }
 .ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
 .ui-pause .ui-pause-hud { margin: 0; font: 400 14px/18px Inter, sans-serif; color: #22211f; }
+@media (max-height: 479px) { .ui-pause .ui-pause-hud { display: none; } } /* carril corto: la pausa ya llena la pantalla */
 .ui-pause .ui-btn { margin: 0; width: 100%; }
 .ui-foto-btn { gap: 10px; }
 /* Cámara de tinta: cuerpo con borde, lente redonda y joroba del visor (sin color, se lee por la forma) */
