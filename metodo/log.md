@@ -6,3 +6,4 @@
 - 2026-11-08 · Ingesta por MÚSICA 1 (36c3371, pedido del líder 23:25). [[errores-y-aprendizajes]] suma que "no repite" se mide y "suena bien" no. GDD sección Audio, novedades.json y borrador de publicar/2026-11-08.json al día, con la ESTRELLA NOCHE 2.
 - 2026-11-09 · El termómetro de diversión se publica en vivo en /termometro/ (pedido de Jorge 00:56); [[medir-diversion]] lo enlaza.
 - 2026-11-09 · Ingesta por SELECTOR + LA SUMA A (0e0b21b). [[lo-nuevo-se-juega]] suma cómo se cumple hoy con Juega lo nuevo, los puntos Nuevo y el donde[] de novedades.json. GDD sección 3 suma el menú y ¡Llegaste!.
+- 2026-11-09 · [[que-es]] suma La hipótesis (un humano que dirige sin saber lo técnico + IA) y [[construir-en-publico]] suma Documentar es crear y el ciclo de medición semanal (Jorge 02:24).
