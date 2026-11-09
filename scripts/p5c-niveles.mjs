@@ -7,7 +7,7 @@ globalThis.window = globalThis.window || { location: { search: '' } }; // barra.
 await import('../src/zanja.js'); // registra la zanja (en el juego baja en diferido)
 const { generarNivel } = await import('../src/niveles/generar.js');
 const { validateLevel } = await import('../src/niveles/validar.js');
-const { mecanicasDeNivel } = await import('../src/barra.js');
+const { mecanicasDeNivel, estrenoSolo } = await import('../src/barra.js');
 const { CONFIG: C } = await import('../src/config.js');
 // racha posible: piezas seguidas a <= windowMs (como scripts/inventario-encargos.mjs)
 const racha = (L, es, i) => {
@@ -43,7 +43,7 @@ for (let nv = 1; nv <= 10; nv++) {
   const apar = {};
   const min = { caja: Infinity, torre: Infinity, viga: Infinity, piezas: Infinity, arcos: Infinity, arcoP1: Infinity, arcoP2: Infinity, arcoP3: Infinity, ambar: Infinity, rachaP1: Infinity, rachaMax: Infinity };
   for (const f of fechas) {
-    const L = generarNivel(f, 'reto', mec.length ? { nivelMec: mec, nivel: nv } : {});
+    const L = generarNivel(f, 'reto', mec.length ? { nivelMec: mec, nivel: nv, ...(estrenoSolo(mec) ? { nivelSola: true } : {}) } : {});
     if (nv === 1) {
       const base = generarNivel(f, 'reto');
       if (JSON.stringify(base.entities) !== JSON.stringify(L.entities)) fuera.push(f);

@@ -14,7 +14,7 @@ import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
-import { abierto, siguiente, sumar, mecanicasDeNivel } from '../barra.js';
+import { abierto, siguiente, sumar, mecanicasDeNivel, estrenoSolo } from '../barra.js';
 import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { IR, DESTINOS } from '../ir.js';
@@ -692,7 +692,7 @@ export class RunScene extends Phaser.Scene {
     if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
     // P5c: el Reto suma las mecánicas del nivel del Cuaderno (barra.js mecanicasDeNivel); nivel 1 = el Reto de siempre
     const nivelMec = modo === 'libre' ? [] : mecanicasDeNivel(nv).filter((m) => m !== 'zanja' || EXT.z);
-    const opts = modo === 'libre' ? { mecanicas } : nivelMec.length ? { nivelMec, nivel: nv } : {};
+    const opts = modo === 'libre' ? { mecanicas } : nivelMec.length ? { nivelMec, nivel: nv, ...(estrenoSolo(nivelMec) ? { nivelSola: true } : {}) } : {}; // P5c2
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, opts);
   }
 
