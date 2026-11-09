@@ -5,6 +5,7 @@
 //   modo: 'reto' | 'libre' · tramo: página donde arranca (0-3) · nivel: nivel del Cuaderno de la partida (null = el del jugador)
 //   mec: mecánicas que Libre destraba aunque el Cuaderno no llegue (trampolín 3, viento 5, timbre 9)
 export const DESTINOS = {
+  nivel1: { modo: 'reto', tramo: 0, nivel: 1 }, // nodo 1 de la Ruta: el atardecer del nivel 1
   nivel2: { modo: 'reto', tramo: 0, nivel: 2 }, // la hora vuelve a moverse: día, tarde y noche
   noche: { modo: 'reto', tramo: 3, nivel: 2 }, // la noche del nivel 2 (estrella de papel, faroles)
   libre: { modo: 'libre', tramo: 0, nivel: null },

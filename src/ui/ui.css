@@ -50,47 +50,7 @@
 .ui-tag { display: inline-block; margin: 2px 0 6px; padding: 2px 10px; border: 2px solid #22211f; border-radius: 999px; background: #ff6b35; font: 700 14px/20px Outfit, sans-serif; }
 .ui-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; margin-top: 8px; font: 400 16px Inter, sans-serif; text-decoration: underline; color: #22211f; }
 
-.ui-demo {
-  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) rotate(-1deg);
-  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 9px 18px;
-  background: #f4e8d5; border: 3px solid #8a7e70; border-radius: 12px; color: #22211f;
-  box-shadow: 0 4px 0 rgba(34, 33, 31, 0.38), 0 0 0 2px #f4e8d5;
-  font: 700 17px/22px Outfit, sans-serif; white-space: nowrap; pointer-events: none;
-  animation: ui-demo-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both, ui-demo-sway 1.6s ease-in-out 6s 3;
-}
-.ui-demo b { font: 700 17px Outfit, sans-serif; }
-@keyframes ui-demo-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) rotate(-2.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-1deg); } }
-@keyframes ui-demo-sway { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 50% { transform: translateX(-50%) translateY(-2px) rotate(-1deg); } }
 
-/* Abajo al centro, sobre la etiqueta del demo: arriba van el HUD (metros y piezas), el sonido y la pausa */
-/* Fila del título: chip de modo y, a su lado, el interruptor de Paseo */
-.ui-modos {
-  position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%); max-width: calc(100vw - 32px); box-sizing: border-box;
-  display: flex; gap: 8px; align-items: stretch; pointer-events: none;
-}
-.ui-modo {
-  min-height: 48px; box-sizing: border-box;
-  padding: 5px 16px; margin: 0; pointer-events: auto; cursor: pointer; white-space: nowrap;
-  background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; color: #22211f; text-align: center;
-}
-.ui-modo b { font: 700 16px/19px Outfit, sans-serif; }
-.ui-modo span { font: 500 14px/17px Inter, sans-serif; color: #5c5148; }
-/* Paseo (GDD §3): casilla de tinta (el estado no depende del color), texto en tinta #22211F, nada de naranja chico */
-.ui-paseo { flex-direction: row; gap: 8px; padding: 5px 14px 5px 10px; }
-.ui-paseo i { flex: none; box-sizing: border-box; width: 22px; height: 22px; border: 2.5px solid #22211f; border-radius: 5px; background: #f4e8d5; display: flex; align-items: center; justify-content: center; }
-.ui-paseo[aria-pressed='true'] i { background: #22211f; }
-.ui-paseo[aria-pressed='true'] i::after { content: ''; width: 9px; height: 5px; margin-top: -3px; border: solid #f4e8d5; border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg); }
-.ui-paseo[aria-pressed='true'] { border-color: #22211f; }
-.ui-paseo .tx { display: flex; flex-direction: column; align-items: flex-start; }
-.ui-paseo span { color: #22211f; }
-/* Vuelta rápida (pieza 5): misma casilla de tinta que Paseo; bloqueada = candado de tinta y borde fino, sin regaño */
-.ui-modos.tres { flex-wrap: wrap; justify-content: center; width: max-content; } /* max-content: con left 50% el absoluto solo tendría medio ancho y partiría en tres renglones */
-.ui-vuelta.locked { cursor: default; border-color: #8a7e70; }
-.ui-vuelta.locked i { position: relative; width: 16px; height: 13px; margin: 7px 3px 0; border: none; border-radius: 3px; background: #22211f; }
-.ui-vuelta.locked i::before { content: ''; position: absolute; left: 3px; top: -8px; width: 10px; height: 10px; box-sizing: border-box; border: 2.5px solid #22211f; border-bottom: none; border-radius: 6px 6px 0 0; }
-/* Con tres chips la fila se parte en dos en pantallas angostas: el saludo sube para no encimarse */
-@media (max-width: 560px) { .ui-modos.tres ~ .ui-saludo { bottom: 198px; } }
 
 .ui-pausebtn {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
@@ -107,6 +67,8 @@
 }
 .ui-soundbtn.hud { left: calc(50% - 80px); }
 .ui-soundbtn.title { left: calc(50% - 80px); } /* mismo lugar que en juego: centro, junto a donde va la pausa */
+/* Angosto (390): a 50% - 80 px el sonido pisaba los metros y las piezas; en el título va al centro y en juego bajo la pausa */
+@media (max-width: 520px) { .ui-soundbtn.title { left: calc(50% - 24px); } .ui-soundbtn.hud { left: calc(50% - 24px); top: 68px; } }
 
 .ui-pause { position: relative; width: min(320px, calc(100vw - 48px)); padding: 18px 20px 20px; }
 .ui-pause .stack { display: grid; gap: 8px; margin-top: 8px; }
@@ -143,11 +105,11 @@
 
 /* Micro-interacciones (FEEL.md): el botón es cartulina que se hunde al presionar y se asoma un pelo al pasar encima.
    Sombra dura de papel, sin glow. Nada (data-juice=0) y movimiento reducido: sin movimiento. */
-.ui-pill, .ui-btn, .ui-pausebtn, .ui-soundbtn { transition: transform 90ms ease-out, box-shadow 90ms ease-out, background-color 120ms ease-out; }
+.ui-pill, .ui-btn, .ui-pausebtn, .ui-soundbtn, .ui-homebtn, .mn-hero, .mn-card { transition: transform 90ms ease-out, box-shadow 90ms ease-out, background-color 120ms ease-out; }
 .ui-pill, .ui-btn { box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22); }
 .ui-pill:not([disabled]):active, .ui-btn:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(34, 33, 31, 0.22); }
 .ui-pausebtn:active { transform: translateX(-50%) translateY(3px); box-shadow: 0 0 0 rgba(34, 33, 31, 0.22); }
-.ui-soundbtn:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(34, 33, 31, 0.22); }
+.ui-soundbtn:active, .ui-homebtn:active, .mn-hero:active, .mn-card:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(34, 33, 31, 0.22); }
 @media (hover: hover) {
   .ui-pill:not([disabled]):hover, .ui-btn:hover { transform: translateY(-1px) rotate(-0.6deg); box-shadow: 0 4px 0 rgba(34, 33, 31, 0.22); }
   .ui-btn.secondary:hover { background-color: #efdcc0; }
@@ -156,9 +118,6 @@
 /* La pastilla de "seguir" asoma cuando se desbloquea: un saltito de papel, una sola vez */
 .ui-pill.ready { animation: ui-pill-ready 260ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
 @keyframes ui-pill-ready { 0% { transform: scale(0.96); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
-/* Leyenda del demo al dar Jugar: baja y se desvanece en 140 ms */
-.ui-demo.out { animation: ui-demo-out 140ms ease-in both; }
-@keyframes ui-demo-out { to { opacity: 0; transform: translateX(-50%) translateY(10px) rotate(-1deg); } }
 /* Nueva mejor marca: la etiqueta brinca y el borde de la tarjeta destella en naranja (sin glow, sin sombra de color) */
 .ui-tag.pop { animation: ui-pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
 .ui-card.pop { animation: ui-edge 320ms ease-out 1; }
@@ -169,10 +128,9 @@ html[data-juice='0'] #ui button:not(.ui-pausebtn):active, html[data-juice='0'] #
 html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-demo { animation: none; }
-  .ui-pill, .ui-btn, .ui-soundbtn { transform: none !important; }
+  .ui-pill, .ui-btn, .ui-soundbtn, .ui-homebtn, .mn-hero, .mn-card { transform: none !important; }
   .ui-pausebtn { transform: translateX(-50%) !important; }
-  .ui-pill.ready, .ui-tag.pop, .ui-demo.out { animation: none; }
+  .ui-pill.ready, .ui-tag.pop, .ui-menu, .ui-menu.out { animation: none; }
 }
 
 .ui-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -269,16 +227,6 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
   .ui-cuaderno .cu-sigue { margin-top: 4px; }
 }
 
-/* Racha (GDD §3): saludo de Moki en el título, etiqueta de papel sobre el chip de modo; tinta, nada de naranja chico */
-.ui-saludo {
-  position: absolute; left: 50%; bottom: 134px; transform: translateX(-50%) rotate(1deg);
-  max-width: calc(100vw - 32px); box-sizing: border-box; padding: 6px 14px; pointer-events: none; white-space: nowrap;
-  background: #f4e8d5; border: 2px solid #8a7e70; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22);
-  color: #22211f; font: 700 16px/22px Outfit, sans-serif;
-  animation: ui-saludo-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) 200ms both;
-}
-@keyframes ui-saludo-in { from { opacity: 0; transform: translateX(-50%) translateY(10px) rotate(-1.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(1deg); } }
-@media (prefers-reduced-motion: reduce) { .ui-saludo { animation: none; } }
 /* Tarjeta para compartir: el aviso de "¡Copiado!" vive en el propio botón; esta región solo es para lectores de pantalla */
 .ui-copied { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* Tarjeta compacta (vertical): las tres acciones en una fila; Copiar es un cuadro de 48 px con ícono */
@@ -319,19 +267,60 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 @keyframes ui-tachar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .ui-tachado, .ui-tachado.out, .ui-tachado .cu-stamp, .ui-tachado s::after { animation: none; } }
 
-/* LO NUEVO SE JUEGA: cartel "Lo nuevo de hoy" en el título (mismos tokens que el del escaparate: papel, tinta, canto kraft,
-   radio de tarjeta 12). Arriba al centro, bajo la fila del HUD; sus botones sí se tocan. */
-.ui-nov {
-  position: absolute; left: 50%; top: 76px; transform: translateX(-50%) rotate(-0.6deg); z-index: 40;
-  width: max-content; max-width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 12px 16px 14px;
-  background: #f4e8d5; color: #22211f; border: 3px solid #8f7254; border-radius: 12px; box-shadow: 3px 5px 0 rgba(34, 33, 31, 0.22);
-  text-align: left; pointer-events: auto;
-  animation: ui-nov-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+/* SELECTOR (PLAN-MENU v2): panel de papel único en el título. Tinta sobre papel, canto kraft, radio 12, sombra dura;
+   el naranja solo en el botón grande y en el punto NUEVO (que además dice "Nuevo": nunca solo color). */
+.ui-menu {
+  position: absolute; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  overflow-y: auto; animation: ui-menu-in 240ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
-.ui-nov .nov-t { margin: 0 0 4px; font: 700 20px/24px Outfit, sans-serif; }
-.ui-nov .nov-l { margin: 2px 0 0; font: 400 16px/22px Inter, sans-serif; }
-.ui-nov .nov-fila { display: flex; flex-wrap: wrap; gap: 8px; }
-.ui-nov .nov-fila .ui-btn + .ui-btn { margin-left: 0; }
-@keyframes ui-nov-in { from { opacity: 0; transform: translateX(-50%) translateY(-10px) rotate(-1.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-0.6deg); } }
-@media (prefers-reduced-motion: reduce) { .ui-nov { animation: none; } }
-html[data-juice='0'] .ui-nov { animation: none; }
+.ui-menu.out { animation: ui-menu-out 140ms ease-in both; }
+@keyframes ui-menu-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ui-menu-out { to { opacity: 0; transform: translateY(10px); } }
+.mn-hero, .mn-card {
+  pointer-events: auto; cursor: pointer; margin: 0; box-sizing: border-box; color: #22211f; text-align: left;
+  border: 3px solid #22211f; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.3); position: relative;
+}
+.mn-hero { min-height: 72px; padding: 8px 18px; background: #ff6b35; display: flex; flex-direction: column; justify-content: center; }
+.mn-hero b { font: 800 24px/28px Outfit, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+.mn-hero span { font: 500 16px/20px Inter, sans-serif; }
+.mn-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 700px) { .mn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ui-menu.una .mn-grid { grid-template-columns: 1fr; }
+.ui-menu.una .mn-card { min-height: 56px; }
+.mn-card { min-height: 64px; padding: 6px 10px; background: #f4e8d5; border-color: #b99168; display: flex; align-items: center; gap: 8px; }
+.mn-card .tx { display: flex; flex-direction: column; min-width: 0; }
+.mn-card b { font: 700 16px/19px Outfit, sans-serif; }
+.mn-card span { font: 500 14px/17px Inter, sans-serif; color: #4a4038; }
+.mn-card.cerrado { border-style: dashed; border-color: #8a7e70; }
+.mn-casilla { flex: none; box-sizing: border-box; width: 22px; height: 22px; border: 2.5px solid #22211f; border-radius: 5px; background: #f4e8d5; display: flex; align-items: center; justify-content: center; }
+.mn-card[aria-pressed='true'] { border-color: #22211f; }
+.mn-card[aria-pressed='true'] .mn-casilla { background: #22211f; }
+.mn-card[aria-pressed='true'] .mn-casilla::after { content: ''; width: 9px; height: 5px; margin-top: -3px; border: solid #f4e8d5; border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg); }
+.mn-hecho { display: inline-block; width: 10px; height: 5px; margin: 0 7px 4px 1px; border: solid #22211f; border-width: 0 0 3px 3px; transform: rotate(-45deg); }
+.mn-punto {
+  position: absolute; top: -9px; right: 6px; padding: 0 7px 0 5px; display: flex; align-items: center; gap: 4px;
+  background: #f4e8d5; border: 2px solid #22211f; border-radius: 999px; font: 700 12px/18px Outfit, sans-serif; font-style: normal;
+}
+.mn-punto::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #ff6b35; border: 1.5px solid #22211f; }
+.mn-pie {
+  align-self: center; margin: 0; padding: 3px 12px; background: #f4e8d5; border: 2px solid #8a7e70; border-radius: 12px;
+  font: 600 14px/19px Inter, sans-serif; color: #22211f; text-align: center;
+}
+/* Alto < 480 (embebido 660x372, 640x400): botón de 56 y un carril horizontal que se desliza; el borde avisa "hay más" */
+.ui-menu.corto { gap: 6px; }
+.ui-menu.corto .mn-hero { min-height: 56px; padding: 4px 14px; }
+.ui-menu.corto .mn-hero b { font-size: 20px; line-height: 24px; }
+.ui-menu.corto .mn-hero span { font-size: 14px; line-height: 17px; }
+.ui-menu.corto .mn-grid {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; pointer-events: auto; padding: 10px 2px 6px; margin-top: -8px;
+  scrollbar-width: thin; mask-image: linear-gradient(90deg, #000 88%, transparent);
+}
+.ui-menu.corto .mn-card { flex: none; width: 176px; min-height: 56px; scroll-snap-align: start; }
+.ui-menu.corto .mn-pie { font-size: 14px; line-height: 17px; padding: 1px 10px; }
+.ui-homebtn {
+  position: absolute; top: 12px; left: calc(50% + 32px); z-index: 2; width: 48px; height: 48px; padding: 0; margin: 0;
+  pointer-events: auto; cursor: pointer; background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px;
+  box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22); display: flex; align-items: center; justify-content: center;
+}
+.ui-sigue { margin: 10px 0 0; font: 600 16px/21px Inter, sans-serif; }
+@media (hover: hover) { .mn-card:hover { background-color: #efdcc0; } }

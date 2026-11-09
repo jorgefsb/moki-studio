@@ -49,7 +49,7 @@ export function createUI() {
     }, C.tachadoMs);
     state.tachado = { node: n, timer };
   };
-  const state = { demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null, tachado: null, tachados: [] };
+  const state = { menu: null, homeBtn: null, demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null, tachado: null, tachados: [] };
 
   // Todo botón suena (AUDIO §5): se engancha en la fase de captura, antes de que el botón actúe
   root.addEventListener(
@@ -91,32 +91,17 @@ export function createUI() {
       if (primary) primary();
     },
 
-    showDemo(coarse) {
-      ui.hideDemo();
-      const d = el('div', 'ui-demo');
-      const b = el('b', '', t('demo.word'));
-      d.append(b, document.createTextNode(` · ${t(coarse ? 'title.demo.touch' : 'title.demo.kbd')}`));
-      root.appendChild(d);
-      state.demo = d;
-    },
-    hideDemo() {
-      // Al dar Jugar la leyenda se va hacia abajo en 140 ms en vez de desaparecer en seco
-      const d = state.demo;
-      state.demo = null;
-      ui.hideModo();
-      if (!d) return;
-      if (reducedMQ.matches || feel.level === 0) return d.remove();
-      d.classList.add('out');
-      setTimeout(() => d.remove(), 150);
-    },
-
-    // Modo de la partida en el título (NIVELES.md §7): un toque al chip alterna Reto del día / Libre; el resto de la pantalla sigue arrancando.
-    // Al lado, el interruptor de Paseo (GDD §3): se combina con cualquiera de los dos modos.
-    // Y Vuelta rápida (pieza 5): con candado y 'Junta 80% de las piezas' hasta tener el sello Coleccionista.
-    showModo(modo, onToggle, paseo, onPaseo, vuelta, onVuelta) {
-      ui.hideModo();
-      const row = el('div', onVuelta ? 'ui-modos tres' : 'ui-modos');
+    // SELECTOR (PLAN-MENU v2, Jorge 8-nov 23:27): un solo panel de papel en el título con las tarjetas del menú.
+    // m = { hero: { titulo, sub, onPick }, cards: [{ nombre, linea, nuevo, cerrado, hecho, pressed, onPick }], pie }
+    // Los hijos van en flujo (nada absoluto adentro): lo que comparte panel no se encima. placeMenu lo pone donde no
+    // toca a Moki ni al HUD. Tocar el lienzo fuera del panel sigue arrancando la partida.
+    showMenu(m, zonas) {
+      ui.hideMenu(true);
+      const p = el('div', 'ui-menu');
+      p.setAttribute('role', 'group');
+      p.setAttribute('aria-label', t('menu.aria'));
       const tap = (b, fn) => {
+        b.type = 'button';
         b.addEventListener('pointerdown', (e) => e.stopPropagation());
         b.addEventListener('keydown', (e) => e.stopPropagation());
         b.addEventListener('click', (e) => {
@@ -124,142 +109,106 @@ export function createUI() {
           if (ui.sfx) ui.sfx();
           fn();
         });
-      };
-      const b = el('button', 'ui-modo');
-      b.type = 'button';
-      b.setAttribute('aria-label', t('modo.aria'));
-      b.append(el('b', '', t(modo === 'libre' ? 'modo.libre' : 'modo.reto')), el('span', '', t(modo === 'libre' ? 'modo.libre.d' : 'modo.reto.d')));
-      tap(b, onToggle);
-      row.append(b);
-      if (onPaseo) {
-        const p = el('button', 'ui-modo ui-paseo');
-        p.type = 'button';
-        p.setAttribute('aria-label', t('paseo.aria'));
-        p.setAttribute('aria-pressed', String(!!paseo));
-        const tx = el('div', 'tx');
-        tx.append(el('b', '', t('paseo.name')), el('span', '', t('paseo.d')));
-        p.append(el('i'), tx);
-        tap(p, onPaseo);
-        row.append(p);
-      }
-      if (onVuelta) {
-        const locked = !!(vuelta && vuelta.locked);
-        const v = el('button', locked ? 'ui-modo ui-paseo ui-vuelta locked' : 'ui-modo ui-paseo ui-vuelta');
-        v.type = 'button';
-        v.setAttribute('aria-label', t(locked ? 'vuelta.aria.lock' : 'vuelta.aria'));
-        if (locked) v.setAttribute('aria-disabled', 'true');
-        else v.setAttribute('aria-pressed', String(!!(vuelta && vuelta.on)));
-        const tx = el('div', 'tx');
-        tx.append(el('b', '', t('vuelta.name')), el('span', '', t(locked ? 'vuelta.lock' : 'vuelta.d')));
-        v.append(el('i'), tx);
-        tap(v, onVuelta);
-        row.append(v);
-      }
-      root.appendChild(row);
-      state.modo = row;
-    },
-    hideModo() {
-      if (state.modo) state.modo.remove();
-      state.modo = null;
-      ui.hideSaludo();
-    },
-
-    // Saludo de Moki según la racha (GDD §3): una etiqueta de papel en el título, solo texto, sin cuenta regresiva
-    // nivel (E1): etiqueta de cartón "Nivel N" dentro del mismo globo, a la izquierda del saludo
-    showSaludo(text, nivel, zonas) {
-      ui.hideSaludo();
-      if (!text) return;
-      const s = el('div', 'ui-saludo');
-      if (nivel) s.append(el('span', 'cu-nivel', t('cu.nivel', { n: nivel })));
-      s.append(document.createTextNode(text));
-      root.appendChild(s);
-      state.saludo = s;
-      ui.placeSaludo(zonas);
-    },
-    // E1b/E1c: la pastilla queda a ~10 px de la línea del suelo (nunca la cruza ni flota lejos de ella) y de Moki:
-    // baja al suelo de papel cuando cabe con 12 px de aire sobre los chips y, si no, sube sobre el suelo; en los dos
-    // casos se corre a la derecha de Moki si lo alcanza. offset* ignora el transform (centrado, ladeo y entrada).
-    placeSaludo(zonas) {
-      const s = state.saludo;
-      if (!s || !zonas) return;
-      const G = 10;
-      s.style.top = '';
-      s.style.bottom = '';
-      s.style.left = '';
-      const W = root.clientWidth;
-      const h = s.offsetHeight;
-      const w = s.offsetWidth;
-      const tope = state.modo ? state.modo.offsetTop - 12 : root.clientHeight - 12;
-      // 640x400: con tres chips la fila se parte en dos y sube sobre la línea del suelo; el saludo nunca baja de su tope
-      const top = Math.min(zonas.floorY + G + h <= tope ? zonas.floorY + G : zonas.floorY - G - h, tope - h);
-      let cx = s.offsetLeft; // con translateX(-50%) el left es el centro
-      if (cx - w / 2 < zonas.mokiR + G) cx = Math.min(zonas.mokiR + G + w / 2, W - 16 - w / 2);
-      Object.assign(s.style, { top: `${Math.round(top)}px`, bottom: 'auto', left: `${Math.round(cx)}px` });
-    },
-    hideSaludo() {
-      if (state.saludo) state.saludo.remove();
-      state.saludo = null;
-    },
-
-    // LO NUEVO SE JUEGA (Jorge 8-nov 21:56): cartel "Lo nuevo de hoy" en el título, la primera visita del día.
-    // n = { titulo, lineas, ir } de public/novedades.json. "Pruébalo" lleva a la liga ?ir= (solo si hay destino);
-    // "Ahora no" lo cierra. Mientras está abierto, el saludo no sale (no caben los dos a 640x400).
-    // Si se encima con los chips de modo (pantallas bajitas), suelta renglones desde el último hasta que quepa.
-    showNovedades(n, onProbar, onCerrar, zonas) {
-      ui.hideNovedades();
-      ui.hideSaludo();
-      const c = el('div', 'ui-nov');
-      c.setAttribute('role', 'dialog');
-      c.setAttribute('aria-label', n.titulo);
-      c.append(el('p', 'nov-t', n.titulo));
-      const lineas = n.lineas.map((l) => el('p', 'nov-l', l));
-      c.append(...lineas);
-      const fila = el('div', 'nov-fila');
-      const boton = (cls, txt, fn) => {
-        const b = el('button', cls, txt);
-        b.type = 'button';
-        b.addEventListener('pointerdown', (e) => e.stopPropagation());
-        b.addEventListener('keydown', (e) => e.stopPropagation());
-        b.addEventListener('click', (e) => {
-          e.stopPropagation();
-          fn();
-        });
         return b;
       };
-      if (onProbar) fila.append(boton('ui-btn primary nov-si', t('nov.probar'), onProbar));
-      fila.append(boton('ui-btn secondary nov-no', t('nov.cerrar'), onCerrar));
-      c.append(fila);
-      c.addEventListener('pointerdown', (e) => e.stopPropagation()); // tocar el cartel no arranca la partida
-      root.appendChild(c);
-      state.nov = c;
-      ui.placeNovedades(zonas);
+      const punto = () => el('em', 'mn-punto', t('menu.punto'));
+      const h = m.hero;
+      const hero = tap(el('button', 'mn-hero'), h.onPick);
+      hero.append(el('b', '', h.titulo));
+      if (h.sub) hero.append(el('span', '', h.sub));
+      p.append(hero);
+      if (m.cards.length) {
+        const grid = el('div', 'mn-grid');
+        grid.addEventListener('pointerdown', (e) => e.stopPropagation()); // el carril se desliza sin arrancar
+        for (const c of m.cards) {
+          const b = tap(el('button', `mn-card${c.cerrado ? ' cerrado' : ''}${c.pressed !== undefined ? ' toggle' : ''}`), c.onPick);
+          if (c.pressed !== undefined) {
+            b.setAttribute('aria-pressed', String(c.pressed));
+            b.append(el('i', 'mn-casilla'));
+          }
+          const tx = el('div', 'tx');
+          const nom = el('b', '', c.nombre);
+          if (c.hecho) nom.prepend(el('i', 'mn-hecho'));
+          tx.append(nom, el('span', '', c.linea));
+          b.append(tx);
+          if (c.nuevo) b.append(punto());
+          grid.append(b);
+        }
+        p.append(grid);
+      }
+      if (m.pie) p.append(el('p', 'mn-pie', m.pie));
+      root.appendChild(p);
+      state.menu = p;
+      ui.placeMenu(zonas);
     },
-    placeNovedades(zonas) {
-      const c = state.nov;
-      if (!c) return;
-      let tope = state.modo ? state.modo.offsetTop - 8 : root.clientHeight - 8;
-      // si el cartel queda sobre Moki, tampoco baja de su cabeza (12 px de aire)
-      const L = c.offsetLeft - c.offsetWidth / 2;
-      if (zonas && zonas.mokiT != null && L < zonas.mokiR && L + c.offsetWidth > zonas.mokiL) tope = Math.min(tope, zonas.mokiT - 12);
-      const ls = [...c.querySelectorAll('.nov-l')];
-      ls.forEach((l) => (l.style.display = ''));
-      for (let i = ls.length - 1; i >= 0 && c.offsetTop + c.offsetHeight > tope; i--) ls[i].style.display = 'none';
+    // Dónde va el panel (px de pantalla): 1) bajo la línea del suelo, a todo lo ancho; 2) a la derecha de Moki;
+    // 3) arriba de su cabeza con aire para el salto del demo. Si nada alcanza, a la derecha con scroll.
+    // Alto < 480 (660x372 embebido, 640x400): las tarjetas van en un carril horizontal.
+    placeMenu(zonas) {
+      const p = state.menu;
+      if (!p || !zonas) return;
+      const W = root.clientWidth;
+      const H = root.clientHeight;
+      const sb = state.soundBtn;
+      const top0 = Math.max(72, (zonas.hudB || 0) + 10, sb ? sb.offsetTop + sb.offsetHeight + 12 : 0); // fila del HUD: sonido, metros y piezas
+      p.classList.toggle('corto', H < 480);
+      p.style.maxHeight = '';
+      const pon = (left, width) => {
+        Object.assign(p.style, { left: `${Math.round(left)}px`, width: `${Math.round(width)}px` });
+        p.classList.toggle('una', width < 320); // columna angosta junto a Moki: una tarjeta por renglón, cada una en 1 línea
+        return p.offsetHeight;
+      };
+      const full = Math.min(W - 32, 560);
+      let h = pon((W - full) / 2, full);
+      const piso = zonas.floorY + 22; // bajo la línea del suelo, con aire para el aplastado de Moki al aterrizar
+      if (piso + h <= H - 12) return (p.style.top = `${Math.round(piso)}px`);
+      const L = zonas.mokiR + 16;
+      const wd = Math.min(W - L - 16, 880);
+      if (wd >= 300) {
+        h = pon(L + (W - L - 16 - wd) / 2, wd);
+        if (h <= H - top0 - 12) return (p.style.top = `${Math.round(H - 12 - h)}px`);
+      }
+      h = pon((W - full) / 2, full);
+      const techo = zonas.mokiT - 90; // el demo salta: la cabeza sube ~80 px
+      if (h <= techo - top0) return (p.style.top = `${Math.round(techo - h)}px`);
+      if (wd >= 240) pon(L + (W - L - 16 - wd) / 2, wd);
+      p.style.maxHeight = `${H - top0 - 12}px`;
+      p.style.top = `${top0}px`;
     },
-    hideNovedades() {
-      if (state.nov) state.nov.remove();
-      state.nov = null;
+    hideMenu(now) {
+      const p = state.menu;
+      state.menu = null;
+      if (!p) return;
+      // Al dar Jugar el panel se va hacia abajo en 140 ms en vez de desaparecer en seco
+      if (now || reducedMQ.matches || feel.level === 0) return p.remove();
+      p.classList.add('out');
+      setTimeout(() => p.remove(), 150);
     },
-    get novedadesOpen() {
-      return !!state.nov;
+    hideDemo() {
+      ui.hideMenu();
     },
 
     showPauseButton(on) {
       if (!on) {
         if (state.pauseBtn) state.pauseBtn.remove();
-        state.pauseBtn = null;
+        if (state.homeBtn) state.homeBtn.remove();
+        state.pauseBtn = state.homeBtn = null;
         return;
       }
       if (state.pauseBtn) return;
+      // Punto 6 de Jorge: de cualquier modo se vuelve al menú en un toque (casita de tinta junto a la pausa,
+      // también encima de la tarjeta de fallo)
+      const hb = el('button', 'ui-homebtn');
+      hb.type = 'button';
+      hb.setAttribute('aria-label', t('menu.volver.aria'));
+      hb.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M6 10v9h4.5v-5h3v5H18v-9" fill="none" stroke="#22211f" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+      hb.addEventListener('pointerdown', (e) => e.stopPropagation());
+      hb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (ui.onHome) ui.onHome();
+      });
+      root.appendChild(hb);
+      state.homeBtn = hb;
       const b = el('button', 'ui-pausebtn');
       b.type = 'button';
       b.setAttribute('aria-label', t('aria.pause'));
@@ -535,7 +484,7 @@ export function createUI() {
     },
 
     // Pantalla final (UX §8)
-    showFinal(d, { onAgain, onHow, onCopy }, rect) {
+    showFinal(d, { onAgain, onHow, onCopy, onMenu }, rect) {
       ui.hideFinal();
       ui.hideTachado();
       const scrim = el('div', 'ui-scrim');
@@ -569,7 +518,16 @@ export function createUI() {
       again.type = 'button';
       const how = el('button', 'ui-btn secondary', t('end.how'));
       how.type = 'button';
-      card.append(again, how);
+      // LA SUMA A: al final dice qué sigue y lleva al menú en un toque
+      if (onMenu) card.append(el('p', 'ui-sigue', t('end.sigue')));
+      card.append(again);
+      if (onMenu) {
+        const menu = el('button', 'ui-btn secondary', t('menu.volver'));
+        menu.type = 'button';
+        menu.addEventListener('click', onMenu);
+        card.append(menu);
+      }
+      card.append(how);
       if (onCopy) {
         // Tarjeta para compartir (GDD §3): copia texto al portapapeles; el aviso es tinta sobre papel, sin naranja chico
         // En la tarjeta compacta (vertical) no cabe una segunda fila: el botón es un cuadro de 48 px con dos hojas
@@ -719,6 +677,7 @@ export function createUI() {
       primary = null;
     },
     onPause: null,
+    onHome: null,
     state,
   };
   void C;

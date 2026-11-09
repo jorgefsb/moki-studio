@@ -17,6 +17,7 @@ import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, 
 import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { IR, DESTINOS } from '../ir.js';
+import { EMBED } from '../embed.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { abrirIntento, cerrarIntento } from '../contador.js';
 import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
@@ -35,6 +36,23 @@ const CLASICO = Q.get('nivel') === 'clasico';
 const MEC = (Q.get('mec') || '').split(','); // ?mec=tramp,viento,timbre destraba mecánicas en Libre sin el nivel del Cuaderno (pruebas)
 // Vuelta rápida se abre con el sello Coleccionista (>=80% de las piezas al terminar; cuaderno.js)
 const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
+// La Ruta (propuestas/ruta-de-moki.md): nodo, liga ?ir= y nivel del Cuaderno en que se abre (cerrado = se puede probar)
+const RUTA = [
+  ['n1', 'nivel1', () => 1],
+  ['n2', 'noche', () => 2],
+  ['n3', 'ciudad', () => C.tramp.nivel],
+  ['n4', 'viento', () => C.viento.nivel],
+];
+// "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
+const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto' };
+// Cambia de dirección: ?ir=<destino> (partida en memoria), otra consulta, o la página limpia; el embebido se conserva
+function irA(ir, q) {
+  const u = new URL(window.location.href);
+  const p = new URLSearchParams(ir ? `ir=${ir}` : q || '');
+  if (EMBED) p.set('embed', '1');
+  u.search = p.toString() ? `?${p}` : '';
+  window.location.assign(u.toString());
+}
 const GOD = Q.has('god') && (import.meta.env.DEV || Q.has('debug')); // sin choques, solo para pruebas
 const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -75,6 +93,7 @@ export class RunScene extends Phaser.Scene {
 
     this.ui = createUI();
     this.ui.onPause = () => this.pauseGame();
+    this.ui.onHome = () => this.goHome();
     // Botón de sonido (moki.sound): refleja solo la preferencia, sin importar el juice
     this.ui.onSound = () => audio.toggle();
     this.ui.sfx = (n, o) => audio.sfx(n, o);
@@ -395,14 +414,7 @@ export class RunScene extends Phaser.Scene {
     // Mano y etiqueta junto a Moki, sobre su cabeza (no en la esquina): ahí está la mirada del jugador.
     this.tutC.setScale(1 / z).setPosition(this.px - 34 / z, g - 232 - 60 / z); // 60 px de pantalla más arriba y a la izquierda: ni Moki ni el arco quedan tapados
     this.tutLabelC.setPosition(62, 0);
-    if (this.ui && this.rig) this.ui.placeSaludo(this.saludoZonas());
-    if (this.ui && this.rig) this.ui.placeNovedades(this.saludoZonas());
-  }
-
-  saludar() {
-    if (this.ui.novedadesOpen) return; // con el cartel de lo nuevo abierto no caben los dos
-    const hola = saludo();
-    this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel, this.saludoZonas());
+    if (this.ui && this.rig) this.ui.placeMenu(this.saludoZonas());
   }
 
   // E1b: zonas en px de pantalla para que la pastilla del saludo no toque la bota ni cruce la línea del suelo.
@@ -414,7 +426,10 @@ export class RunScene extends Phaser.Scene {
     const b = c.getBounds();
     const floorY = (C.world.groundY - 8 - this.top) * z;
     // mokiL y mokiT: caja de Moki parado en el suelo (alto del títere), para que el cartel de lo nuevo no le toque la cabeza
-    return { floorY, mokiR: (this.px + b.right - c.x) * z, mokiL: (this.px + b.left - c.x) * z, mokiT: floorY - b.height * z };
+    // hudB: borde de abajo de los contadores (metros y piezas), para que el menú no se suba encima de ellos
+    const cam = this.cameras.main;
+    const hudB = Math.max(...[this.hudL, this.hudR].map((h) => (h && h.visible ? (h.getBounds().bottom - cam.worldView.y) * cam.zoom : 0)));
+    return { floorY, hudB, mokiR: (this.px + b.right - c.x) * z, mokiL: (this.px + b.left - c.x) * z, mokiT: floorY - b.height * z };
   }
 
   // ---------- Estado de la partida ----------
@@ -483,34 +498,83 @@ export class RunScene extends Phaser.Scene {
     this.estela = nivelCu >= 8; // estela de papel al correr desde el nivel 8
   }
 
-  showModo() {
-    this.ui.showModo(this.modo, () => {
-      this.modo = this.modo === 'libre' ? 'reto' : 'libre';
-      save('moki.modo', this.modo);
+  // SELECTOR (PLAN-MENU v2, propuestas/ruta-de-moki.md): el título es un menú de tarjetas en 3 estados.
+  //  1 nuevo (sin moki.primera): solo "Jugar" (Clásico con tutorial).  2 vuelve (nivel 1 a 4) y 3 (nivel 5 o más):
+  //  JUEGA LO NUEVO primero, luego Reto y Libre (cada uno dice en una línea qué es), la Ruta 1 a 4, Clásico y Paseo.
+  //  Punto NUEVO en la tarjeta que cambió en 7 días (novedades.json "donde"); se apaga al jugarla.
+  menu() {
+    const coarse = this.coarse;
+    if (load('moki.primera') !== '1') {
+      this.ui.showMenu({ hero: { titulo: t('menu.jugar'), sub: t(coarse ? 'menu.jugar.d' : 'menu.jugar.kbd'), onPick: () => this.startGame() }, cards: [] }, this.saludoZonas());
+      return;
+    }
+    const nv = nivelDe(leerCuaderno()).nivel;
+    const n = this.nov;
+    const fresco = n && n.fecha && diaLocal() - Math.floor(Date.parse(`${n.fecha}T12:00:00Z`) / 864e5) <= 7;
+    const nuevos = new Set(fresco ? n.donde.map((d) => NODO_DE[d]).filter((k) => k && load(`moki.nuevo.visto.${k}`) !== n.fecha) : []);
+    const visto = (k) => n && n.fecha && save(`moki.nuevo.visto.${k}`, n.fecha);
+    const destino = (n && ((Object.hasOwn(DESTINOS, n.ir) && n.ir) || n.donde.find((d) => Object.hasOwn(DESTINOS, d)))) || 'reto'; // el highlight (ir) manda
+    const jugar = (modo, k) => () => {
+      visto(k);
+      this.modo = modo;
+      save('moki.modo', modo);
       this.pedirZanja();
-      this.showModo();
-      this.saludar();
-    }, this.paseo, () => {
-      this.paseo = !this.paseo;
-      save('moki.paseo', this.paseo ? '1' : '0');
-      // Paseo y Vuelta rápida no se combinan (director, pieza 5): prender uno apaga el otro
-      if (this.paseo && this.vuelta) {
-        this.vuelta = false;
-        save('moki.vuelta', '0');
-      }
-      this.showModo();
-      this.saludar();
-    }, { on: this.vuelta && vueltaAbierta(), locked: !vueltaAbierta() }, () => {
-      if (!vueltaAbierta()) return; // bloqueada: el candado ya explica cómo se abre, el toque no hace nada
-      this.vuelta = !this.vuelta;
-      save('moki.vuelta', this.vuelta ? '1' : '0');
-      if (this.vuelta && this.paseo) {
-        this.paseo = false;
-        save('moki.paseo', '0');
-      }
-      this.showModo();
-      this.saludar();
+      this.startGame();
+    };
+    const reto = { nombre: t('menu.reto'), linea: t('menu.reto.d'), nuevo: nuevos.has('reto'), onPick: jugar('reto', 'reto') };
+    const libre = { nombre: t('menu.libre'), linea: t('menu.libre.d'), nuevo: nuevos.has('libre'), onPick: jugar('libre', 'libre') };
+    const ruta = RUTA.map(([k, ir, abre], i) => {
+      const a = abre();
+      return {
+        nombre: t('menu.nodo', { n: i + 1, x: t(`menu.${k}`) }),
+        linea: nv < a ? t('menu.nodo.lock', { n: a }) : nv > a ? t('menu.nodo.hecho') : t('menu.nodo.d'),
+        cerrado: nv < a,
+        hecho: nv > a,
+        nuevo: nuevos.has(k),
+        onPick: () => (visto(k), irA(ir)),
+      };
     });
+    const cards = [...(nv >= 5 ? [libre, reto] : [reto, libre]), ...ruta, { nombre: t('menu.clasico'), linea: t('menu.clasico.d'), onPick: () => irA(null, 'nivel=clasico') }];
+    cards.push({
+      nombre: t('paseo.name'),
+      linea: t('menu.paseo.d'),
+      pressed: this.paseo,
+      onPick: () => {
+        this.paseo = !this.paseo;
+        save('moki.paseo', this.paseo ? '1' : '0');
+        // Paseo y Vuelta rápida no se combinan (director, pieza 5): prender uno apaga el otro
+        if (this.paseo && this.vuelta) {
+          this.vuelta = false;
+          save('moki.vuelta', '0');
+        }
+        this.menu();
+      },
+    });
+    if (vueltaAbierta())
+      cards.push({
+        nombre: t('vuelta.name'),
+        linea: t('vuelta.d'),
+        pressed: this.vuelta,
+        onPick: () => {
+          this.vuelta = !this.vuelta;
+          save('moki.vuelta', this.vuelta ? '1' : '0');
+          if (this.vuelta && this.paseo) {
+            this.paseo = false;
+            save('moki.paseo', '0');
+          }
+          this.menu();
+        },
+      });
+    const hola = saludo();
+    const corto = this.scale.height < 480;
+    this.ui.showMenu(
+      {
+        hero: { titulo: t('menu.nuevo'), sub: n ? n.titulo : '', onPick: () => (visto(NODO_DE[destino]), irA(destino)) },
+        cards,
+        pie: corto ? t('menu.lienzo') : `${t('cu.nivel', { n: nv })} · ${t(hola.key, { n: hola.n })}`,
+      },
+      this.saludoZonas()
+    );
   }
 
   // Vuelta rápida en la partida en curso: pedida al empezar y solo en Reto del día o Libre (el clásico no cambia)
@@ -665,41 +729,23 @@ export class RunScene extends Phaser.Scene {
     this.distLabel.set(`0 ${t('hud.m')}`);
     this.pieceLabel.set('0');
     this.lastM = 0;
-    this.ui.showDemo(this.coarse);
-    this.showModo();
-    this.saludar(); // Moki saluda según la racha
+    this.menu();
     this.demoStripping = false;
-    this.lucirNovedades();
+    this.cargarNov();
   }
 
-  // LO NUEVO SE JUEGA (Jorge 8-nov 21:56): la primera vez del día en el título sale "Lo nuevo de hoy" (public/novedades.json)
-  // con "Pruébalo", que abre la liga ?ir= de lo nuevo. Se marca visto al mostrarse: sale una vez por día local.
-  // Ni en una liga ?ir= (ya está en lo nuevo), ni en el escaparate, ni en ?screen=play (pruebas).
-  lucirNovedades() {
-    if (IR || ESCAPARATE || START_SCREEN === 'play' || this.novPedidas) return;
-    const hoy = String(diaLocal());
-    if (load('moki.novedades.visto') === hoy) return;
+  // public/novedades.json (lo llena el cronista): de ahí salen el subtítulo de JUEGA LO NUEVO, su destino y los puntos
+  // NUEVO. Baja una vez; sin él el menú sale igual (Juega lo nuevo cae en el Reto del día).
+  cargarNov() {
+    if (ESCAPARATE || this.novPedidas) return;
     this.novPedidas = true;
     import('../novedades.js')
       .then((m) => m.cargar())
       .then((n) => {
-        if (this.screen !== 'demo' || !n.lineas.length) return;
-        save('moki.novedades.visto', hoy);
-        const ir = Object.hasOwn(DESTINOS, n.ir) ? n.ir : null;
-        const cerrar = () => {
-          this.ui.hideNovedades();
-          if (this.screen === 'demo') this.saludar();
-        };
-        const probar = ir
-          ? () => {
-              const u = new URL(window.location.href);
-              u.search = `?ir=${ir}`;
-              window.location.assign(u.toString());
-            }
-          : null;
-        this.ui.showNovedades(n, probar, cerrar, this.saludoZonas());
+        this.nov = n;
+        if (this.screen === 'demo') this.menu();
       })
-      .catch(() => {}); // sin novedades.json el título sigue como siempre
+      .catch(() => {});
   }
 
   // Momento del puntaje (UX/DISENO): metros + piezas x 10
@@ -896,7 +942,10 @@ export class RunScene extends Phaser.Scene {
   }
 
   goHome() {
-    cerrarIntento('otro'); // dejó el intento desde la pausa sin salir de la página
+    if (this.screen === 'play' || this.screen === 'pause' || this.screen === 'dead') cerrarIntento('otro'); // dejó el intento sin salir de la página
+    // una liga ?ir= o el Clásico viven en su propia dirección: el menú es el de la página limpia (con lo guardado del jugador)
+    if (IR || CLASICO) return irA(null);
+    this.ui.hidePause();
     this.tweens.resumeAll();
     this.startDemo();
   }
@@ -2410,7 +2459,7 @@ export class RunScene extends Phaser.Scene {
     const d = this.finalData;
     this.ui.showFinal(
       { isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
-      { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => copiar(this.textoCompartir()) },
+      { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => copiar(this.textoCompartir()), onMenu: () => this.goHome() },
       r
     );
     this.showCuaderno();

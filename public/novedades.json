@@ -6,5 +6,6 @@
     "El viento empuja tu salto. Si tocas la campana, la torre cae.",
     "Hay zanjas en el suelo: si no saltas, Moki cae."
   ],
-  "ir": "libre"
+  "ir": "libre",
+  "donde": ["trampolin", "viento", "libre"]
 }
