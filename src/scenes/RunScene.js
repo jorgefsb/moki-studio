@@ -790,7 +790,7 @@ export class RunScene extends Phaser.Scene {
       const f = clamp((held - H.fromMs) / (H.toMs - H.fromMs), 0, 1);
       let cut = this.vy * (C.jumpCutMultiplier + (1 - C.jumpCutMultiplier) * f);
       // Un toque rápido nunca baja de jumpMinPx de altura.
-      if (rise + (cut * cut) / (2 * C.gravity) < C.jumpMinPx) cut = -Math.sqrt(2 * C.gravity * (C.jumpMinPx - rise));
+      if (rise + (cut * cut) / (2 * C.jumpG) < C.jumpMinPx) cut = -Math.sqrt(2 * C.jumpG * (C.jumpMinPx - rise));
       this.vy = Math.max(this.vy, cut);
       this.jumping = false;
     }
@@ -1414,7 +1414,7 @@ export class RunScene extends Phaser.Scene {
       if (!this.holding) this.release();
     }
 
-    this.vy += C.gravity * (this.vuelo ? C.tramp.gravityK : 1) * dt;
+    this.vy += (this.vuelo ? C.gravity * C.tramp.gravityK : this.vy < 0 ? C.jumpG : C.fallG) * dt;
     const impact = this.vy;
     const y0 = this.y;
     this.y += this.vy * dt;
@@ -1442,7 +1442,7 @@ export class RunScene extends Phaser.Scene {
           if (this.combo > 0) this.lastPickAt = this.t; // arriba el combo no se rompe: la ventana corre desde que cae
         }
         if (impact > 260) {
-          this.particles.burst('land', this.px, C.world.groundY);
+          this.particles.burst('land', this.px, C.world.groundY, { fuerza: clamp((impact - 260) / 530, 0, 1) }); // 790 px/s: caída del salto mantenido
           audio.sfx('land', { fall: impact / C.jumpVelocity });
           // Aterrizaje fuerte (salto mantenido): el pasto cercano se dobla, vibra un pelo y, en Hardcore, tiembla la cámara
           if (impact > 600) {
@@ -1997,7 +1997,7 @@ export class RunScene extends Phaser.Scene {
     const air = Math.max(0, g - this.y);
     const f = 1 / (1 + air / 150);
     this.mokiShadow.setPosition(this.px + 8, g + 1);
-    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.12), 22 * (0.6 + 0.4 * f));
+    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.3), 22 * (0.6 + 0.4 * f));
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
     this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f) * (this.apoyado() || this.paseoRun ? 1 : 0)); // sobre la zanja no hay sombra

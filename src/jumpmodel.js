@@ -10,7 +10,9 @@ export function simulateJump(holdMs, bounce = false) {
   const key = bounce ? 'tramp' : holdMs === Infinity ? 'inf' : Math.round(holdMs);
   if (cache.has(key)) return cache.get(key);
   const dt = 1 / 240;
-  const g = C.gravity * (bounce ? C.tramp.gravityK : 1);
+  const gT = C.gravity * C.tramp.gravityK;
+  const gOf = (vy) => (bounce ? gT : vy < 0 ? C.jumpG : C.fallG); // caída más pesada que la subida (P4)
+  const g = bounce ? gT : C.jumpG; // el corte del toque se calcula con la gravedad de subida
   let vy = bounce ? -C.tramp.velocity : -C.jumpVelocity;
   let rise = 0;
   let t = 0;
@@ -29,7 +31,7 @@ export function simulateJump(holdMs, bounce = false) {
         jumping = false;
       }
     }
-    vy += g * dt;
+    vy += gOf(vy) * dt;
     rise -= vy * dt;
     t += dt;
     peak = Math.max(peak, rise);

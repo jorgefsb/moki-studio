@@ -1,8 +1,12 @@
 // Perillas del juego. Todo lo que se "siente" se ajusta aquí (BRIEF.md sección 5).
 export const CONFIG = {
   // Salto
-  gravity: 2200, // px/s²
-  jumpVelocity: 720, // px/s
+  gravity: 2200, // px/s² (trampolín y saltito del títere; el salto usa jumpG/fallG)
+  // P4 FEEL BASE (9-nov): caída 1.4x más pesada que la subida. Subida recalibrada para que el salto mantenido siga con
+  // pico 117.8 px y 0.65 s de aire (igual que 720 / 2200 simétrico): generador, validador y bots ven el mismo salto.
+  jumpG: 1872.5,
+  fallG: 2621.5,
+  jumpVelocity: 664.25, // px/s
   jumpHoldMaxMs: 220, // si se suelta antes de esto mientras sube, se corta el salto
   jumpCutMultiplier: 0.45, // vy *= esto al soltar antes
   jumpHoldRamp: { fromMs: 110, toMs: 145 }, // entre estos ms de mantener el corte se afloja hasta el salto completo

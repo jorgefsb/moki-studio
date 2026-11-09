@@ -88,6 +88,9 @@ export function land(ctx, dest, t, o = {}) {
   f.connect(g);
   g.connect(P.out);
   gl(ctx, P.out, t, 'triangle', 140, 90, 60, 0.4 * k * P.pk * P.v, a, 0.09);
+  // P4: peso. Golpe sordo de seno 95 -> 48 Hz que solo entra con caídas fuertes (k > 0.6) y crece con ellas
+  const w = clamp((k - 0.6) / 0.4, 0, 1);
+  if (w > 0) gl(ctx, P.out, t, 'sine', 95 * P.d, 48, 80, 0.45 * w * P.pk * P.v, Math.max(0.004, P.atkMin), 0.12);
 }
 
 // Pieza recogida: sube en pentatónica con la racha (índice 0 a 4, luego se queda arriba)
