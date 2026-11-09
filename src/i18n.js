@@ -5,6 +5,8 @@ const ES = {
   'title.demo.kbd': 'Toca o presiona una tecla',
   'demo.word': 'Demo',
   'modo.reto': 'Reto del día',
+  'nov.probar': 'Pruébalo',
+  'nov.cerrar': 'Ahora no',
   'modo.reto.d': 'Toca para Libre',
   'modo.libre': 'Libre',
   'modo.libre.d': 'Toca para Reto',

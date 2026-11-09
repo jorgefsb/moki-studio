@@ -84,8 +84,10 @@ export const CONFIG = {
   },
   // Trampolín (NIVELES.md flow, mecánica #1): pisarlo lanza con vy fija y gravedad flotada; vuelo ~1.25 s, pico ~234 px.
   // Libra un obstáculo a 0.9 s (el nudo; torre con >= 52 px a 320 px/s) y pide 0.75 s libres al caer. Solo en Libre desde el nivel 3 del Cuaderno.
-  // reto: desde qué fecha entra al Reto del día para todos (una semana tras su estreno); null la saca
-  tramp: { velocity: 750, gravityK: 0.55, nudoSec: 0.9, caidaLibreSec: 0.75, nivel: 3, reto: '2026-11-09' },
+  // reto: estreno en el Reto del día (ley de Jorge 8-nov 22:23: nada producido espera al calendario). Es la fecha de HOY o
+  // una ya pasada, nunca futura: los Retos de antes quedan como se jugaron (marcas comparables, puerta Reto 2026-10-31 = 2362).
+  // null lo saca del Reto por diseño (no por fecha).
+  tramp: { velocity: 750, gravityK: 0.55, nudoSec: 0.9, caidaLibreSec: 0.75, nivel: 3, reto: '2026-11-08' },
   // Viento (NIVELES.md "#2 Viento"): despegar dentro de una zona estira (favor) o encoge (contra) el salto en x: el mundo
   // avanza a speed * k mientras Moki está en el aire. Zona de D - antesSec a D + despuesSec; al aterrizar con k != 1,
   // lo siguiente a >= salidaSec. Solo en Libre desde el nivel 5 del Cuaderno.

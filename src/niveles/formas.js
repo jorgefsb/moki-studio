@@ -3,8 +3,9 @@
 // semilla (seed:forma), así que no mueve el azar de los bloques. Apagado no se llama nada de aquí.
 import { rng, hashSeed } from './rng.js';
 
-// Interruptor por modo y fecha. libre: true o false. reto: fecha AAAA-MM-DD desde la que entra, o null. Para apagar: { libre: false, reto: null }.
-export const INTERRUPTOR = { libre: true, reto: '2026-11-10' };
+// Interruptor por modo. libre: true o false. reto: estreno AAAA-MM-DD (hoy o pasado, nunca futuro: ley de Jorge 8-nov 22:23;
+// los Retos de antes quedan como se jugaron), o null. Para apagar: { libre: false, reto: null }.
+export const INTERRUPTOR = { libre: true, reto: '2026-11-08' };
 export const formasActivas = (seed, modo) => (modo === 'libre' ? INTERRUPTOR.libre : modo === 'reto' && !!INTERRUPTOR.reto && /^\d{4}-\d\d-\d\d$/.test(seed) && seed >= INTERRUPTOR.reto);
 
 // Un valor al azar de a a b en pasos de 0.25 s

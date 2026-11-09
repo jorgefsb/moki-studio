@@ -1,12 +1,14 @@
 // Escaparate que enseña lo nuevo (DECISIONES 1-nov 19:00). Solo se importa con ?escaparate (import dinámico desde
-// escaparate.js): el juego normal ni baja este archivo ni pide public/novedades.json.
+// escaparate.js) y desde el título la primera visita del día (cartel con 'Pruébalo', RunScene.lucirNovedades).
 // novedades.json lo llena el cronista al integrar: { fecha, titulo, lineas: [1 a 3] }. Si el json falta o viene roto, no
 // pasa nada: el escaparate sigue con su guion de siempre.
 export async function cargar() {
   const r = await fetch(`${import.meta.env.BASE_URL}novedades.json`, { cache: 'no-store' });
   const d = await r.json();
   const lineas = Array.isArray(d.lineas) ? d.lineas.filter((x) => typeof x === 'string' && x.trim()).slice(0, 3) : [];
-  return { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo : 'Lo nuevo de hoy', lineas };
+  // ir: destino de la liga directa (ir.js DESTINOS) al que lleva 'Pruébalo'; sin él, el cartel solo informa
+  const ir = typeof d.ir === 'string' ? d.ir.trim().toLowerCase() : '';
+  return { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo : 'Lo nuevo de hoy', lineas, ir, fecha: typeof d.fecha === 'string' ? d.fecha : '' };
 }
 
 let cartel = null;

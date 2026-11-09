@@ -318,3 +318,20 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 @keyframes ui-tachado-out { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(-6px) rotate(-1.5deg); } }
 @keyframes ui-tachar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .ui-tachado, .ui-tachado.out, .ui-tachado .cu-stamp, .ui-tachado s::after { animation: none; } }
+
+/* LO NUEVO SE JUEGA: cartel "Lo nuevo de hoy" en el título (mismos tokens que el del escaparate: papel, tinta, canto kraft,
+   radio de tarjeta 12). Arriba al centro, bajo la fila del HUD; sus botones sí se tocan. */
+.ui-nov {
+  position: absolute; left: 50%; top: 76px; transform: translateX(-50%) rotate(-0.6deg); z-index: 40;
+  width: max-content; max-width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 12px 16px 14px;
+  background: #f4e8d5; color: #22211f; border: 3px solid #8f7254; border-radius: 12px; box-shadow: 3px 5px 0 rgba(34, 33, 31, 0.22);
+  text-align: left; pointer-events: auto;
+  animation: ui-nov-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.ui-nov .nov-t { margin: 0 0 4px; font: 700 20px/24px Outfit, sans-serif; }
+.ui-nov .nov-l { margin: 2px 0 0; font: 400 16px/22px Inter, sans-serif; }
+.ui-nov .nov-fila { display: flex; flex-wrap: wrap; gap: 8px; }
+.ui-nov .nov-fila .ui-btn + .ui-btn { margin-left: 0; }
+@keyframes ui-nov-in { from { opacity: 0; transform: translateX(-50%) translateY(-10px) rotate(-1.5deg); } to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-0.6deg); } }
+@media (prefers-reduced-motion: reduce) { .ui-nov { animation: none; } }
+html[data-juice='0'] .ui-nov { animation: none; }

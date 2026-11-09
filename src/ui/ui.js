@@ -190,7 +190,8 @@ export function createUI() {
       const h = s.offsetHeight;
       const w = s.offsetWidth;
       const tope = state.modo ? state.modo.offsetTop - 12 : root.clientHeight - 12;
-      const top = zonas.floorY + G + h <= tope ? zonas.floorY + G : zonas.floorY - G - h;
+      // 640x400: con tres chips la fila se parte en dos y sube sobre la línea del suelo; el saludo nunca baja de su tope
+      const top = Math.min(zonas.floorY + G + h <= tope ? zonas.floorY + G : zonas.floorY - G - h, tope - h);
       let cx = s.offsetLeft; // con translateX(-50%) el left es el centro
       if (cx - w / 2 < zonas.mokiR + G) cx = Math.min(zonas.mokiR + G + w / 2, W - 16 - w / 2);
       Object.assign(s.style, { top: `${Math.round(top)}px`, bottom: 'auto', left: `${Math.round(cx)}px` });
@@ -198,6 +199,55 @@ export function createUI() {
     hideSaludo() {
       if (state.saludo) state.saludo.remove();
       state.saludo = null;
+    },
+
+    // LO NUEVO SE JUEGA (Jorge 8-nov 21:56): cartel "Lo nuevo de hoy" en el título, la primera visita del día.
+    // n = { titulo, lineas, ir } de public/novedades.json. "Pruébalo" lleva a la liga ?ir= (solo si hay destino);
+    // "Ahora no" lo cierra. Mientras está abierto, el saludo no sale (no caben los dos a 640x400).
+    // Si se encima con los chips de modo (pantallas bajitas), suelta renglones desde el último hasta que quepa.
+    showNovedades(n, onProbar, onCerrar) {
+      ui.hideNovedades();
+      ui.hideSaludo();
+      const c = el('div', 'ui-nov');
+      c.setAttribute('role', 'dialog');
+      c.setAttribute('aria-label', n.titulo);
+      c.append(el('p', 'nov-t', n.titulo));
+      const lineas = n.lineas.map((l) => el('p', 'nov-l', l));
+      c.append(...lineas);
+      const fila = el('div', 'nov-fila');
+      const boton = (cls, txt, fn) => {
+        const b = el('button', cls, txt);
+        b.type = 'button';
+        b.addEventListener('pointerdown', (e) => e.stopPropagation());
+        b.addEventListener('keydown', (e) => e.stopPropagation());
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          fn();
+        });
+        return b;
+      };
+      if (onProbar) fila.append(boton('ui-btn primary nov-si', t('nov.probar'), onProbar));
+      fila.append(boton('ui-btn secondary nov-no', t('nov.cerrar'), onCerrar));
+      c.append(fila);
+      c.addEventListener('pointerdown', (e) => e.stopPropagation()); // tocar el cartel no arranca la partida
+      root.appendChild(c);
+      state.nov = c;
+      ui.placeNovedades();
+    },
+    placeNovedades() {
+      const c = state.nov;
+      if (!c) return;
+      const tope = state.modo ? state.modo.offsetTop - 8 : root.clientHeight - 8;
+      const ls = [...c.querySelectorAll('.nov-l')];
+      ls.forEach((l) => (l.style.display = ''));
+      for (let i = ls.length - 1; i >= 0 && c.offsetTop + c.offsetHeight > tope; i--) ls[i].style.display = 'none';
+    },
+    hideNovedades() {
+      if (state.nov) state.nov.remove();
+      state.nov = null;
+    },
+    get novedadesOpen() {
+      return !!state.nov;
     },
 
     showPauseButton(on) {

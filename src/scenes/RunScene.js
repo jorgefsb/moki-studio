@@ -14,8 +14,9 @@ import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
-import { registrarDia, saludo, leerRacha } from '../racha.js';
+import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
+import { IR, DESTINOS } from '../ir.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { abrirIntento, cerrarIntento } from '../contador.js';
 import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
@@ -95,7 +96,7 @@ export class RunScene extends Phaser.Scene {
     this.screen = 'demo';
     this.god = false;
     if (ESCAPARATE) this.esc = new Escaparate(this); // ?escaparate: el guion arranca su propio título
-    else if (START_SCREEN === 'play') this.startGame();
+    else if (START_SCREEN === 'play' || IR) this.startGame(); // ?ir=<destino>: directo a la partida donde vive lo nuevo
     else this.startDemo();
     // MOKI SE MUEVE: las 4 poses llegan en diferido; mientras, y si no cargan, corre el títere de siempre
     if (!Q.has('titere')) import('../art/mokiPoses.js').then((m) => m.montar(this)).catch(() => {});
@@ -392,9 +393,11 @@ export class RunScene extends Phaser.Scene {
     this.tutC.setScale(1 / z).setPosition(this.px - 34 / z, g - 232 - 60 / z); // 60 px de pantalla más arriba y a la izquierda: ni Moki ni el arco quedan tapados
     this.tutLabelC.setPosition(62, 0);
     if (this.ui && this.rig) this.ui.placeSaludo(this.saludoZonas());
+    if (this.ui) this.ui.placeNovedades();
   }
 
   saludar() {
+    if (this.ui.novedadesOpen) return; // con el cartel de lo nuevo abierto no caben los dos
     const hola = saludo();
     this.ui.showSaludo(t(hola.key, { n: hola.n }), nivelDe(leerCuaderno()).nivel, this.saludoZonas());
   }
@@ -556,13 +559,15 @@ export class RunScene extends Phaser.Scene {
     const modo = this.modo;
     // Mecánicas (NIVELES.md flow): en Libre, el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno; el Reto las toma de su fecha (generarNivel).
     const nv = nivelDe(leerCuaderno()).nivel;
-    const mecanicas = modo !== 'libre' ? undefined : ['tramp', 'viento', 'timbre'].filter((m) => MEC.includes(m) || nv >= C[m].nivel);
+    const pedidas = [...MEC, ...((IR && IR.mec) || [])]; // ?mec= (pruebas) o la liga ?ir=trampolin|viento|timbre
+    const mecanicas = modo !== 'libre' ? undefined : ['tramp', 'viento', 'timbre'].filter((m) => pedidas.includes(m) || nv >= C[m].nivel);
     if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
     return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
   }
 
   startGame() {
     this.ui.hideDemo();
+    this.ui.hideNovedades();
     this.ui.hideFinal();
     this.ui.hideAsi();
     this.ui.hideFail();
@@ -585,9 +590,15 @@ export class RunScene extends Phaser.Scene {
     this.porTachar = this.partida ? porTachar(this.partida) : []; // Día 2: encargos que se tachan a media partida
     registrarDia(); // Racha con perdón: jugar cuenta el día local, también en Paseo (brief del director, pieza 4, decisión b); el demo no cuenta
     this.vueltaOn = this.vuelta && !this.paseoRun && vueltaAbierta(); // sin el sello (cuaderno borrado) no aplica aunque esté guardada
-    this.resetRun(this.makeLevel(), 0);
+    const level = this.makeLevel();
+    // ?ir=<destino>: la primera partida arranca en la página del destino (como un reintento desde su checkpoint)
+    const salto = IR && !this.irHecho ? Math.min(IR.tramo, level.tramos.length - 1) : 0;
+    this.irHecho = true;
+    const dist0 = salto > 0 ? level.starts[salto] : 0;
+    this.resetRun(level, dist0);
+    if (salto > 0) this.cp = { idx: this.tramoIdx, dist: dist0, pieces: 0, pieceValue: 0 };
     this.vueltaTagC.setVisible(this.vueltaRun);
-    this.speed = FIXED_SPEED || this.tramoSpeed(0);
+    this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);
     this.accel = 0;
     // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
     this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun ? 4 : START_TUT, state: 'off' };
@@ -595,7 +606,7 @@ export class RunScene extends Phaser.Scene {
     this.ponZen(); // botón de sonido (sin él en Paseo con pantalla limpia)
     this.buzz(10); // "Jugar" se siente en la mano (feel.gestured lo pone el primer gesto real, ver feel.js)
     audio.unlock(); // el gesto que arranca la partida habilita el sonido
-    audio.setTramo(0);
+    audio.setTramo(this.tramoIdx);
     audio.setStreak(0);
     audio.setState(this.tut.stage < 4 ? 'tutorial' : 'playing');
     this.distLabel.set(`0 ${t('hud.m')}`);
@@ -645,6 +656,37 @@ export class RunScene extends Phaser.Scene {
     this.showModo();
     this.saludar(); // Moki saluda según la racha
     this.demoStripping = false;
+    this.lucirNovedades();
+  }
+
+  // LO NUEVO SE JUEGA (Jorge 8-nov 21:56): la primera vez del día en el título sale "Lo nuevo de hoy" (public/novedades.json)
+  // con "Pruébalo", que abre la liga ?ir= de lo nuevo. Se marca visto al mostrarse: sale una vez por día local.
+  // Ni en una liga ?ir= (ya está en lo nuevo), ni en el escaparate, ni en ?screen=play (pruebas).
+  lucirNovedades() {
+    if (IR || ESCAPARATE || START_SCREEN === 'play' || this.novPedidas) return;
+    const hoy = String(diaLocal());
+    if (load('moki.novedades.visto') === hoy) return;
+    this.novPedidas = true;
+    import('../novedades.js')
+      .then((m) => m.cargar())
+      .then((n) => {
+        if (this.screen !== 'demo' || !n.lineas.length) return;
+        save('moki.novedades.visto', hoy);
+        const ir = Object.hasOwn(DESTINOS, n.ir) ? n.ir : null;
+        const cerrar = () => {
+          this.ui.hideNovedades();
+          if (this.screen === 'demo') this.saludar();
+        };
+        const probar = ir
+          ? () => {
+              const u = new URL(window.location.href);
+              u.search = `?ir=${ir}`;
+              window.location.assign(u.toString());
+            }
+          : null;
+        this.ui.showNovedades(n, probar, cerrar);
+      })
+      .catch(() => {}); // sin novedades.json el título sigue como siempre
   }
 
   // Momento del puntaje (UX/DISENO): metros + piezas x 10
