@@ -119,7 +119,20 @@ export class RunScene extends Phaser.Scene {
     else this.startDemo();
     // ?ir=<destino>: directo a la partida donde vive lo nuevo, en cuanto baja el módulo diferido del atardecer (hora fija del
     // nivel 1, paisajes de Libre, boceto): sin él la Ciudad de cartón no entra. Mientras tanto corre el demo.
-    if (IR && !ESCAPARATE) this.diferido.then(() => this.screen === 'demo' && this.startGame());
+    // Si la página del destino tiene paisaje propio (Ciudad), se hornea antes de arrancar: la partida nace dentro de él.
+    // El paisaje tapa el fondo pintado del nivel 1 (capas.js, imágenes que bajan aparte): se esperan también, 8 s como máximo.
+    if (IR && !ESCAPARATE)
+      this.diferido.then(() => {
+        const conPaisaje = IR.modo === 'libre' && IR.tramo > 0 && this.hornearPaisaje;
+        if (conPaisaje) this.hornearPaisaje(Math.min(3, IR.tramo));
+        const t0 = performance.now();
+        const arranca = () => {
+          if (this.screen !== 'demo') return;
+          if (conPaisaje && this.capas && this.capas.cargando && performance.now() - t0 < 8000) return this.time.delayedCall(60, arranca);
+          this.startGame();
+        };
+        arranca();
+      });
     // MOKI SE MUEVE: las 4 poses llegan en diferido; mientras, y si no cargan, corre el títere de siempre
     if (!Q.has('titere')) import('../art/mokiPoses.js').then((m) => m.montar(this)).catch(() => {});
     // La portada HTML se retira cuando la escena ya está lista (Moki corriendo en el siguiente cuadro)
