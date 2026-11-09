@@ -2,7 +2,7 @@
   "id": "2026-11-09",
   "fecha": "2026-11-09",
   "borrador": true,
-  "borrador_nota": "Borrador 9-nov 13:10 CDMX, versión 013d626 (P5c). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
+  "borrador_nota": "Borrador 9-nov 14:45 CDMX, versión 9b5bad4 (P3d). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
   "titulo": {
     "es": "Ahora el juego te lleva directo a lo nuevo",
     "en": "Now the game takes you straight to what is new"
@@ -203,8 +203,54 @@
       "en": "Classic 2142 78/78, Free 2472 x2, console 0; the level 3 Challenge with the Oct 31 seed goes from 2362 to 2612 by design. Tested with bots."
     },
     "la_regamos": {
-      "es": "El ciego de 2 de 3 con video no se cumplió. El nivel 3 se ve igual al nivel 1 (lo arregla P5c2). No se verificó en juego real el viento, el timbre ni la zanja del nivel 6.",
+      "es": "El ciego de 2 de 3 con video no se cumplió. El nivel 3 se veía igual al nivel 1 (ya corregido en P5c2). No se verificó en juego real el viento, el timbre ni la zanja del nivel 6.",
       "en": "The 2-of-3 blind test with video was not done. Level 3 looks the same as level 1 (P5c2 fixes it). Wind, bell and the level 6 ditch were not checked in real play."
+    }
+  },
+  "p5c2": {
+    "donde": {
+      "es": [
+        "Reto del día en nivel 3 (Menú > Reto del día, desde el nivel 3 del Cuaderno): estrena viento solo, ya no repite el nivel 1",
+        "Liga directa ?ir=zanja: postes de zanja más gruesos",
+        "Trampolín sin el tinte de la hora del día"
+      ],
+      "en": [
+        "Daily Challenge at level 3 (Menu > Daily Challenge, from Notebook level 3): debuts wind alone, no longer repeats level 1",
+        "Direct link ?ir=zanja: thicker ditch posts",
+        "Trampoline without the time-of-day tint"
+      ]
+    },
+    "cifras": {
+      "es": "Clásico 2142 78/78, Reto 2362 x2, Libre 2242 x2, consola 0, 0 muertes en los niveles 1 a 10; JS +0.14 kB. Probado con bots.",
+      "en": "Classic 2142 78/78, Challenge 2362 x2, Free 2242 x2, console 0, 0 deaths in levels 1 to 10; JS +0.14 kB. Tested with bots."
+    },
+    "la_regamos": {
+      "es": "El trampolín sigue gris metálico y los postes de zanja mejoran poco. El chip '+8' no sabemos de dónde viene (¿ya estaba en master?). Libre dio 2242 y antes 2472: no es retroceso, porque con el script actual del probador master también da 2242; falta medir con el script anterior. Sin verificar en juego real: viento, timbre, nivel 6, trampolín de noche, Paseo, FPS y menú.",
+      "en": "The trampoline is still metallic gray and the ditch posts improve only a little. We do not know where the '+8' chip comes from (was it already in master?). Free play gave 2242 where it gave 2472 before: not a regression, since with the prober's current script master also gives 2242; not yet measured with the earlier script. Not checked in real play: wind, bell, level 6, night trampoline, Free-roam, FPS and menu."
+    }
+  },
+  "p3d": {
+    "donde": {
+      "es": [
+        "Menú de inicio desde la 2.ª visita: cada tarjeta de modo dice qué es y qué ganas (17 líneas, ES y EN)",
+        "Cómo llegar: termina una partida y vuelve al menú",
+        "Pausa: una línea de explicación si la pantalla mide 480 px de alto o más",
+        "Quien juega por primera vez no las ve: solo JUGAR y 'Vota lo que sigue' (el texto de Vota cambió)"
+      ],
+      "en": [
+        "Start menu from the 2nd visit: each mode card says what it is and what you gain (17 lines, ES and EN)",
+        "How to get there: finish a run and go back to the menu",
+        "Pause: one explanation line if the screen is 480 px tall or more",
+        "First-time players do not see them: only PLAY and 'Vote on what comes next' (Vote's text changed)"
+      ]
+    },
+    "cifras": {
+      "es": "Los bots dan igual que master, JS +0.17 kB, consola 0. Un lector sin contexto calificó las líneas con 4.0 de 5 de media, al borde de lo aceptable. Probado con bots.",
+      "en": "Bots match master, JS +0.17 kB, console 0. A reader with no context rated the lines 4.0 out of 5 on average, borderline. Tested with bots."
+    },
+    "la_regamos": {
+      "es": "Cuatro líneas flojas: el 'dónde' de Libre, 'notas', Nivel 4 'Se abre en nivel 5' y 'pruébalo', que contradice el bloqueo. Sin verificar: mouse real, celular, inglés y FPS. Dos defectos que ya venían de master (flecha › sobre la tarjeta de la orilla y pausa de 386 px a 660x372) van a P3f.",
+      "en": "Four weak lines: Free play's 'where', 'notes', Level 4 'Opens at level 5' and 'try it', which contradicts the lock. Not checked: real mouse, phone, English and FPS. Two defects that already came from master (arrow › over the edge card and a 386 px pause at 660x372) go to P3f."
     }
   }
 }
