@@ -21,6 +21,7 @@ import { IR, DESTINOS } from '../ir.js';
 import { EMBED } from '../embed.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { abrirIntento, cerrarIntento } from '../contador.js';
+import { contarPartida, votoFinal, votoMenu } from '../voto.js';
 import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump, vientoPaso } from '../jumpmodel.js';
@@ -528,7 +529,7 @@ export class RunScene extends Phaser.Scene {
     const version = n && n.lineas.length ? `${n.fecha}|${n.titulo}` : '';
     if (load('moki.primera') !== '1') {
       if (version) save('moki.nov.visita', version); // el jugador nuevo ya ve lo de hoy: el aviso es para cuando cambie
-      this.ui.showMenu({ hero: { titulo: t('menu.jugar'), sub: t(coarse ? 'menu.jugar.d' : 'menu.jugar.kbd'), onPick: () => this.startGame() }, cards: [] }, this.saludoZonas());
+      this.ui.showMenu({ hero: { titulo: t('menu.jugar'), sub: t(coarse ? 'menu.jugar.d' : 'menu.jugar.kbd'), onPick: () => this.startGame() }, cards: [], voto: votoMenu() }, this.saludoZonas());
       return;
     }
     const nv = nivelDe(leerCuaderno()).nivel;
@@ -624,6 +625,7 @@ export class RunScene extends Phaser.Scene {
       {
         hero: { titulo: t('menu.nuevo'), sub: n ? n.titulo : '', onPick: juegaNuevo },
         cards,
+        voto: votoMenu(),
         pie: corto ? t('menu.lienzo') : `${t('cu.nivel', { n: nv })} · ${t(hola.key, { n: hola.n })}`,
       },
       this.saludoZonas()
@@ -749,6 +751,7 @@ export class RunScene extends Phaser.Scene {
     this.barraD0 = this.dist; // P3b: desde aquí cuenta este intento para la barra
     this.barraP0 = this.pieces;
     abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx);
+    contarPartida();
   }
 
   startDemo() {
@@ -2563,7 +2566,7 @@ export class RunScene extends Phaser.Scene {
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
-      { isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { voto: d.paseo || this.demo ? null : votoFinal(), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => copiar(this.textoCompartir()), onMenu: () => this.goHome() },
       r
     );
