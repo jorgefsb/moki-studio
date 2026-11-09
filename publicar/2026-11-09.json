@@ -2,7 +2,7 @@
   "id": "2026-11-09",
   "fecha": "2026-11-09",
   "borrador": true,
-  "borrador_nota": "Borrador 9-nov 05:10 CDMX, versión 8bcf2b8 (LA SUMA B). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
+  "borrador_nota": "Borrador 9-nov 09:05 CDMX, versión 215c32b (P4B). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
   "titulo": {
     "es": "Ahora el juego te lleva directo a lo nuevo",
     "en": "Now the game takes you straight to what is new"
@@ -95,6 +95,20 @@
     "ajustar": {
       "es": "El invitado de arte pide ajustar los halos del sol y del farol, el mar de la Playa y una nube de base recta.",
       "en": "The art guest asks to adjust the sun and lantern halos, the Beach sea and a flat-based cloud."
+    }
+  },
+  "p4b": {
+    "donde": {
+      "es": "Cae desde muy alto en cualquier modo: sale polvo a los dos lados de la bota. Con movimiento reducido no sale.",
+      "en": "Land from a long fall in any mode: dust puffs out on both sides of the boot. Not shown with reduced motion."
+    },
+    "cifras": {
+      "es": "Tres críticos nuevos, a ciegas, prefirieron el aterrizaje nuevo. El primer intento, con trozos geométricos, lo leyeron como basura y lo tiramos.",
+      "en": "Three new blind critics preferred the new landing. The first try, with geometric chunks, read as trash and we threw it out."
+    },
+    "la_regamos": {
+      "es": "El aplastón del cuerpo está en el código pero nadie lo nota: 0 de 9 críticos. Falta decidir si lo hacemos más fuerte.",
+      "en": "The body squash is in the code but nobody notices it: 0 of 9 critics. We still have to decide whether to make it stronger."
     }
   }
 }

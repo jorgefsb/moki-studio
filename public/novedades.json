@@ -3,13 +3,13 @@
   "titulo": "Lo nuevo de hoy: cada nivel cambia de lugar",
   "lineas": [
     "Ciudad, Playa y Noche en cada nivel. Toca Pruébalo.",
-    "La Noche ahora es azul con estrellas. Abre el nivel 2.",
-    "Al cruzar de lugar entra una hoja de papel. Juega y mírala."
+    "La Noche es azul con estrellas y una hoja de papel marca el cruce.",
+    "Al caer de muy alto, Moki levanta polvo a los dos lados."
   ],
   "ir": "ciudad",
   "donde": [
     "ciudad",
     "nivel2",
-    "ciudad"
+    "libre"
   ]
 }
