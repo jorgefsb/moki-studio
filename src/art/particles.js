@@ -4,7 +4,7 @@ import { CONFIG as C } from '../config.js';
 
 const POOL = 90;
 const rand = (a, b) => a + Math.random() * (b - a);
-const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO' };
+const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvoC: 'chipPolvoC', polvoT: 'chipPolvoT' };
 
 export class Particles {
   constructor(scene) {
@@ -18,7 +18,9 @@ export class Particles {
     this.clock = 0;
     // Motas del casi-choque con canto (ARTE §4): crema con borde kraft y naranja con borde crema, para que se lean sobre
     // el casco crema, el traje naranja, el cielo del atardecer y la noche
-    for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {
+    // P4B: polvo del aterrizaje con contraste sobre el suelo naranja: crema con canto de tinta y tinta con canto crema
+    // (el crema/kraft liso de P4 se leía gris-beige, como textura del piso)
+    for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5'], ['chipPolvoC', '#F4E8D5', '#22211F'], ['chipPolvoT', '#22211F', '#F4E8D5']]) {
       if (scene.textures.exists(k)) continue;
       const t = scene.textures.createCanvas(k, 14, 12);
       const x = t.context;
@@ -119,10 +121,15 @@ export class Particles {
       }
       // P4: bocanada de polvo de papel a ras del suelo, a los dos lados de la bota; crece con la fuerza del golpe (0 a 1)
       const f = opt.fuerza; // solo el aterrizaje de Moki la manda (choque y torre del timbre quedan igual)
-      const m = f === undefined ? 0 : Math.round((L === 1 ? 2 : L === 2 ? 3 : 4) * (0.5 + f));
+      // P4B: crema con canto de tinta (2 de 3) y tinta (1 de 3), más grande y más tiempo opaco. Al frente se suma la
+      // velocidad del mundo (opt.v): sin eso el mundo se llevaba las del frente bajo la bota y solo se veía el lado de atrás
+      const m = f === undefined ? 0 : Math.max(3, Math.round((L === 1 ? 2 : L === 2 ? 3 : 4) * (0.5 + f)));
+      const v = opt.v || 0;
       for (let i = 0; i < m * 2; i++) {
         const s = i % 2 ? 1 : -1;
-        this.emit(i % 3 ? 'paper' : 'kraft', x + s * rand(6, 14), g - 1, { vx: s * rand(70, 150) * (0.6 + 0.6 * f), vy: -rand(15, 45), g: 60, life: rand(380, 480), spin: rand(40, 120), fadeFrom: 0.35, scale: rand(1.5, 2.1) });
+        const dx = s > 0 ? rand(14, 26) : -rand(8, 20);
+        const vx = s * rand(60, 130) * (0.7 + 0.6 * f) + (s > 0 ? v : 0);
+        this.emit(i % 3 === 2 ? 'polvoT' : 'polvoC', x + dx, g - 2, { vx, vy: -rand(20, 55), g: 90, life: rand(420, 520), spin: rand(40, 140), fadeFrom: 0.55, scale: rand(1.25, 1.7) * (0.85 + 0.3 * f) });
       }
     } else if (type === 'kick') {
       if (L < 2) return;

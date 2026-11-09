@@ -151,6 +151,9 @@ export const CONFIG = {
     retractMax: 7, // px de recogida de la pierna en balanceo
     tiltRunDeg: 3,
     squashPx: 3.3, // hundimiento máximo (3% de 110)
+    // P4B squash B (orden del director 9-nov 13:43): ancho x alto del títere entero, desde los pies, solo en aterrizaje
+    // fuerte (impacto > 600 px/s). Excepción declarada a ARTE §10/§13.6, como la del CHOQUE. Movimiento reducido: no.
+    squashB: { ms: 100, x: 1.08, y: 0.93 },
     hopPx: 14,
     hitStopMs: 60,
     recoilPx: 28, // Moki retrocede esto tras el choque (Cubic.out, 220 ms): la hitbox es 18 px más chica que el dibujo, con 12 se veía atravesar la caja

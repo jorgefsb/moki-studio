@@ -482,6 +482,7 @@ export class RunScene extends Phaser.Scene {
     this.jumpStartAt = 0;
     this.takeoffAt = -1e9;
     this.landAt = -1e9;
+    this.landHardAt = -1e9;
     this.t = 0;
     this.dead = false;
     this.deadFor = 0;
@@ -1442,10 +1443,11 @@ export class RunScene extends Phaser.Scene {
           if (this.combo > 0) this.lastPickAt = this.t; // arriba el combo no se rompe: la ventana corre desde que cae
         }
         if (impact > 260) {
-          this.particles.burst('land', this.px, C.world.groundY, { fuerza: clamp((impact - 260) / 530, 0, 1) }); // 790 px/s: caída del salto mantenido
+          this.particles.burst('land', this.px, C.world.groundY, { fuerza: clamp((impact - 260) / 530, 0, 1), v: this.speed }); // 790 px/s: caída del salto mantenido
           audio.sfx('land', { fall: impact / C.jumpVelocity });
           // Aterrizaje fuerte (salto mantenido): el pasto cercano se dobla, vibra un pelo y, en Hardcore, tiembla la cámara
           if (impact > 600) {
+            this.landHardAt = this.t; // P4B: squash B del títere (mokiRig), solo en aterrizaje fuerte
             this.bendGrass();
             this.buzz(8, 2);
             this.shake(1.5, 90);
@@ -1977,6 +1979,7 @@ export class RunScene extends Phaser.Scene {
         t: this.t,
         takeoffAt: this.takeoffAt,
         landAt: this.landAt,
+        landHardAt: this.landHardAt,
         dead: this.dead,
         deadMs: this.deadFor,
         reduced: this.reduced,
