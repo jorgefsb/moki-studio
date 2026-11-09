@@ -1,15 +1,15 @@
 {
   "fecha": "2026-11-09",
-  "titulo": "Lo nuevo de hoy: la música cambia y la noche brilla",
+  "titulo": "Lo nuevo de hoy: cada nivel cambia de lugar",
   "lineas": [
-    "Estrellas de papel en la noche del nivel 2. Toca Pruébalo.",
-    "Menú nuevo: abre el juego y toca Juega lo nuevo.",
-    "La música cambia pasados 80 segundos. No tiene botón: juega y escucha."
+    "Ciudad, Playa y Noche en cada nivel. Toca Pruébalo.",
+    "La Noche ahora es azul con estrellas. Abre el nivel 2.",
+    "Al cruzar de lugar entra una hoja de papel. Juega y mírala."
   ],
-  "ir": "noche",
+  "ir": "ciudad",
   "donde": [
-    "noche",
-    null,
-    null
+    "ciudad",
+    "nivel2",
+    "ciudad"
   ]
 }
