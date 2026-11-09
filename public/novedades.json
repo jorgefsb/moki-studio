@@ -1,15 +1,15 @@
 {
   "fecha": "2026-11-09",
-  "titulo": "Lo nuevo de hoy: cada nivel cambia de lugar",
+  "titulo": "Lo nuevo de hoy: escoge tu paisaje en Libre",
   "lineas": [
-    "Ciudad, Playa y Noche en cada nivel. Toca Pruébalo.",
-    "La Noche es azul con estrellas y una hoja de papel marca el cruce.",
-    "Al caer de muy alto, Moki levanta polvo a los dos lados."
+    "En Libre escoges el paisaje: Atardecer, Ciudad, Playa o Noche.",
+    "Si vuelves, un aviso te cuenta qué cambió. Toca Juega lo nuevo.",
+    "La Noche es azul y, al caer de muy alto, Moki levanta polvo."
   ],
-  "ir": "ciudad",
+  "ir": "libre-playa",
   "donde": [
-    "ciudad",
-    "nivel2",
-    "libre"
+    "libre",
+    "libre",
+    "nivel2"
   ]
 }
