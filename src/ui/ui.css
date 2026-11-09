@@ -386,3 +386,17 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-card.corto .ui-btn { min-height: 44px; margin-top: 6px; }
 .ui-card.corto .ui-link { min-height: 32px; margin-top: 2px; font-size: 14px; }
 .ui-card.corto p.meta { margin: 2px 0 0; font-size: 14px; line-height: 18px; }
+/* P3c VOTO: liga de papel al tablero de ideas. Secundaria (sin naranja: el naranja es de JUGAR y de "Otra vez") */
+.mn-voto {
+  pointer-events: auto; box-sizing: border-box; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 4px 10px;
+  color: #22211f; text-decoration: none; background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.3);
+}
+.mn-voto .tx { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.mn-voto b { font: 700 16px/19px Outfit, sans-serif; }
+.mn-voto span { font: 500 14px/17px Inter, sans-serif; color: #4a4038; }
+.mn-voto-ir { flex: none; font: 700 15px/19px Outfit, sans-serif; font-style: normal; text-decoration: underline; }
+.ui-menu.corto .mn-voto { min-height: 44px; padding: 2px 10px; }
+.ui-menu.corto .mn-voto span { display: none; }
+.ui-voto { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 44px; margin: 8px 0 0 !important; text-decoration: none; }
+.ui-voto-sub { margin: 10px 0 0; font: 400 16px/21px Inter, sans-serif; }
+.ui-card.corto .ui-voto-c { margin-right: 12px; font-weight: 600; }

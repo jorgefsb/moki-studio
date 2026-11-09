@@ -212,6 +212,11 @@ const ES = {
   'menu.volver': 'Menú',
   'menu.volver.aria': 'Volver al menú',
   'end.sigue': 'Qué sigue: Libre o el Reto del día',
+  'voto.titulo': 'Vota lo que sigue',
+  'voto.sub': 'Elige la idea que quieres ver en el juego.',
+  'voto.btn': 'Ver ideas',
+  'voto.menu': 'Un voto por idea, cada día',
+  'voto.gracias': 'Gracias. Vuelve cuando quieras.',
 };
 
 const EN = {
@@ -219,6 +224,11 @@ const EN = {
   'title.demo.touch': 'Tap to play',
   'tut.ok': 'Nice!',
   'fail.go.touch': 'Tap to continue',
+  'voto.titulo': "Vote for what's next",
+  'voto.sub': 'Pick the idea you want in the game.',
+  'voto.btn': 'See ideas',
+  'voto.menu': 'One vote per idea, each day',
+  'voto.gracias': 'Thanks. Come back anytime.',
 };
 void EN; // reservado: versión en inglés
 

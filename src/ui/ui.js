@@ -49,6 +49,19 @@ export function createUI() {
     }, C.tachadoMs);
     state.tachado = { node: n, timer };
   };
+  // P3c VOTO: liga al tablero de ideas en pestaña nueva (el iframe no navega); el juego se queda como estaba
+  const votoLink = (v, cls) => {
+    const a = el('a', cls);
+    a.href = v.href;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    for (const ev of ['pointerdown', 'keydown']) a.addEventListener(ev, (e) => e.stopPropagation());
+    a.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (v.onClick) v.onClick();
+    });
+    return a;
+  };
   const state = { menu: null, homeBtn: null, demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null, tachado: null, tachados: [] };
 
   // Todo botón suena (AUDIO §5): se engancha en la fase de captura, antes de que el botón actúe
@@ -154,6 +167,14 @@ export function createUI() {
         grid.addEventListener('scroll', ve, { passive: true });
         requestAnimationFrame(ve);
         carril.append(mas);
+      }
+      if (m.voto) {
+        // P3c: fila tranquila de papel bajo las tarjetas (fuera del carril: se ve sin deslizar), sin punto NUEVO
+        const v = votoLink(m.voto, 'mn-voto');
+        const tx = el('div', 'tx');
+        tx.append(el('b', '', t('voto.titulo')), el('span', '', t('voto.menu')));
+        v.append(tx, el('em', 'mn-voto-ir', t('voto.btn')));
+        p.append(v);
       }
       if (m.pie) p.append(el('p', 'mn-pie', m.pie));
       root.appendChild(p);
@@ -584,7 +605,16 @@ export function createUI() {
       const how = el('button', 'ui-btn secondary', t('end.how'));
       how.type = 'button';
       // LA SUMA A: al final dice qué sigue y lleva al menú en un toque
-      if (onMenu) card.append(el('p', 'ui-sigue', t('end.sigue')));
+      // P3c: en la tarjeta corta la liga de voto ocupa el lugar de 'Qué sigue'; en la grande va debajo con su línea
+      if (onMenu && !(d.voto && rect.corto)) card.append(el('p', 'ui-sigue', t('end.sigue')));
+      let voto = null; // va después de los botones: nunca empuja a 'Otra vez' fuera de la tarjeta
+      if (d.voto) {
+        // corta (vertical y bajito): liga de texto en la misma fila que jorgesuarez.com.mx; la tarjeta no crece (P3c arreglo)
+        const v = votoLink(d.voto, rect.corto ? 'ui-link ui-voto-c' : 'ui-btn secondary ui-voto');
+        v.textContent = rect.corto ? t('voto.titulo') : `${t('voto.titulo')} · ${t('voto.btn')}`;
+        v.addEventListener('click', () => (v.textContent = t('voto.gracias')));
+        voto = rect.corto ? [v] : [el('p', 'ui-voto-sub', t('voto.sub')), v];
+      }
       card.append(again);
       if (onMenu) {
         const menu = el('button', 'ui-btn secondary', t('menu.volver'));
@@ -614,12 +644,14 @@ export function createUI() {
         });
         card.append(copy, live);
       }
+      const fila = voto && rect.corto; // la liga corta comparte renglón con la de regreso
+      if (voto) card.append(...(fila ? [el('br')] : []), ...voto);
       if (!EMBED) {
         // En embed la página padre ya trae la liga de regreso
         const link = el('a', 'ui-link', t('end.link'));
         link.href = 'https://jorgesuarez.com.mx';
         link.rel = 'noopener';
-        card.append(el('br'), link);
+        card.append(...(fila ? [] : [el('br')]), link);
       }
       card.append(el('p', 'meta', t('contador.nota')));
       scrim.append(card);
