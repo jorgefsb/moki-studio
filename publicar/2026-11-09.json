@@ -2,7 +2,7 @@
   "id": "2026-11-09",
   "fecha": "2026-11-09",
   "borrador": true,
-  "borrador_nota": "Borrador 9-nov 15:40 CDMX, versión 7f20cfd (P5d). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
+  "borrador_nota": "Borrador 9-nov 16:10 CDMX, versión bb57a17 (P3f). Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
   "titulo": {
     "es": "Ahora el juego te lleva directo a lo nuevo",
     "en": "Now the game takes you straight to what is new"
@@ -275,6 +275,30 @@
     "la_regamos": {
       "es": "El trampolín de día queda taupe claro y se funde un poco con el suelo (el director lo aprobó con B, no con A). Sin verificar: ?ir=viento en captura, la racha x2 jugada, FPS y celular. El menú de la Ruta dice 'Se abre en nivel 3' en el nivel 3 Ciudad y el 4 Playa: va a P3f.",
       "en": "The daytime trampoline is a light taupe and blends a little with the ground (the director approved it as B, not A). Not checked: ?ir=viento in a capture, the x2 streak played, FPS and phone. The Route menu says 'Opens at level 3' on level 3 City and level 4 Beach: goes to P3f."
+    }
+  },
+  "p3f": {
+    "donde": {
+      "es": [
+        "Pausa: ahora mide 250 px y no tapa nada a 660x372, 640x400 y 390x844",
+        "Menú de inicio desde la 2.ª visita: la flecha › ya no queda sobre la tarjeta de la orilla",
+        "Menú de la Ruta: dice el nivel real (N3 Ciudad, N4 Playa) en vez de 'Se abre en nivel 3'",
+        "Quien juega por primera vez no ve las tarjetas: solo JUGAR y Vota"
+      ],
+      "en": [
+        "Pause: now 250 px tall and covers nothing at 660x372, 640x400 and 390x844",
+        "Start menu from the 2nd visit: the › arrow no longer sits on the edge card",
+        "Route menu: shows the real level (L3 City, L4 Beach) instead of 'Opens at level 3'",
+        "First-time players do not see the cards: only PLAY and Vote"
+      ]
+    },
+    "cifras": {
+      "es": "Pausa de 386 a 250 px, sin solapes en 3 tamaños. Probador PASS con observaciones; ARTE A del director. Un lector sin contexto calificó el texto con 3.5 de 5, por debajo de la puerta de 4.5. Probado con bots.",
+      "en": "Pause from 386 to 250 px, no overlaps at 3 sizes. Prober PASS with observations; art director A. A reader with no context rated the text 3.5 out of 5, below the 4.5 bar. Tested with bots."
+    },
+    "la_regamos": {
+      "es": "El texto de las tarjetas sigue flojo (3.5 contra 4.5) y se reescribe en P3g. La tarjeta de la orilla sigue cortada a 660 y 640. Dos frases se contradicen: 'Pista de hoy igual para todos' y 'reglas de tu nivel'.",
+      "en": "The card text is still weak (3.5 versus 4.5) and gets rewritten in P3g. The edge card is still cut off at 660 and 640. Two phrases contradict each other: 'Today's track is the same for everyone' and 'rules of your level'."
     }
   }
 }
