@@ -1,15 +1,15 @@
 {
   "fecha": "2026-11-09",
-  "titulo": "Lo nuevo de hoy: escoge tu paisaje en Libre",
+  "titulo": "Lo nuevo de hoy: una pantalla de inicio nueva",
   "lineas": [
+    "Abre el juego: el inicio es un atardecer de papel.",
     "En Libre escoges el paisaje: Atardecer, Ciudad, Playa o Noche.",
-    "Si vuelves, un aviso te cuenta qué cambió. Toca Juega lo nuevo.",
-    "La Noche es azul y, al caer de muy alto, Moki levanta polvo."
+    "Si vuelves, un aviso te cuenta qué cambió."
   ],
   "ir": "libre-playa",
   "donde": [
+    null,
     "libre",
-    "libre",
-    "nivel2"
+    "libre"
   ]
 }
