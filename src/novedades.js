@@ -8,7 +8,10 @@ export async function cargar() {
   const lineas = Array.isArray(d.lineas) ? d.lineas.filter((x) => typeof x === 'string' && x.trim()).slice(0, 3) : [];
   // ir: destino de la liga directa (ir.js DESTINOS) al que lleva 'Pruébalo'; sin él, el cartel solo informa
   const ir = typeof d.ir === 'string' ? d.ir.trim().toLowerCase() : '';
-  return { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo : 'Lo nuevo de hoy', lineas, ir, fecha: typeof d.fecha === 'string' ? d.fecha : '' };
+  // donde: destino de cada línea (paralelo a lineas) para el punto NUEVO del menú; normalizado, valor raro = null
+  const sin = (x) => (typeof x === 'string' ? x.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : null);
+  const donde = Array.isArray(d.donde) ? d.donde.slice(0, 3).map(sin) : [];
+  return { titulo: typeof d.titulo === 'string' && d.titulo.trim() ? d.titulo : 'Lo nuevo de hoy', lineas, ir: sin(ir) || '', donde, fecha: typeof d.fecha === 'string' ? d.fecha : '' };
 }
 
 let cartel = null;
