@@ -4,12 +4,12 @@
   "lineas": [
     "Abre el juego: atardecer de papel con cerros rosados.",
     "En Libre escoges el paisaje: Atardecer, Ciudad, Playa o Noche.",
-    "Si vuelves, un aviso te cuenta qué cambió."
+    "En el menú, 'Vota lo que sigue' te lleva a elegir la próxima idea."
   ],
   "ir": "libre-playa",
   "donde": [
     null,
     "libre",
-    "libre"
+    null
   ]
 }
