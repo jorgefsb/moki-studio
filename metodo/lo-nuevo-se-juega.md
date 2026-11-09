@@ -30,3 +30,6 @@ Jorge, 8-nov-2026 22:23: "La última versión siempre debe ser la suma de todo l
 5. Si algo nuevo empeora otra cosa, se arregla antes de publicar. La versión de hoy nunca retrocede.
 
 Ver [[puerta-de-integracion]] y [[errores-y-aprendizajes]].
+
+## Cómo se cumple hoy (9-nov)
+El menú de inicio tiene el botón **Juega lo nuevo**, que abre la liga `?ir=` del destino que marca novedades.json, y un punto "Nuevo" en las tarjetas señaladas por `donde[]`. Lo que no tiene liga (la música, que se oye pasados ~80 s) se dice así en el cartel, sin fingir un botón. Al terminar, ¡Llegaste! dice qué sigue.

@@ -1,0 +1,81 @@
+{
+  "id": "2026-11-09",
+  "fecha": "2026-11-09",
+  "borrador": true,
+  "borrador_nota": "Borrador 9-nov 01:50 CDMX, master 0e0b21b. Falta pasada de Spark/Jorge. Nada se publica desde el estudio.",
+  "titulo": {
+    "es": "Ahora el juego te lleva directo a lo nuevo",
+    "en": "Now the game takes you straight to what is new"
+  },
+  "historia": [
+    {
+      "es": "Llevábamos días anunciando mejoras que casi nadie veía: vivían en el nivel 2, de noche, o después de chocar. Hoy cambió la regla: lo nuevo se tiene que poder jugar al abrir el juego.",
+      "en": "For days we announced improvements that almost nobody saw: they lived in level 2, at night, or after a crash. Today the rule changed: what is new must be playable when you open the game."
+    },
+    {
+      "es": "Si vuelves a jugar, el menú tiene un botón: Juega lo nuevo. Te deja en la noche del nivel 2 con las estrellas de papel. Las tarjetas que traen novedades llevan un punto \"Nuevo\". Hay ligas directas para el trampolín, el viento, el timbre y la ciudad.",
+      "en": "If you come back to play, the menu has a button: Play what is new. It drops you in the level 2 night with the paper stars. Cards with news carry a \"New\" dot. There are direct links for the trampoline, the wind, the bell and the city."
+    },
+    {
+      "es": "Cada tarjeta del menú dice en una línea qué es. Al llegar a la meta, la pantalla dice qué sigue: Libre o el Reto del día. Un programa revisó 12 pantallas y no encontró textos encimados (antes de este cambio contó 10). También salieron bien 7 de 7 toques.",
+      "en": "Each menu card says in one line what it is. When you reach the finish, the screen says what is next: Free or the Daily Challenge. A program checked 12 screens and found no overlapping text (before this change it counted 10). Also 7 of 7 taps worked."
+    },
+    {
+      "es": "La música nueva no tiene botón: cambia algunas notas pasados unos 80 segundos de partida. No lo ha oído nadie todavía. Falta probar en un celular real y con personas.",
+      "en": "The new music has no button: it changes some notes after about 80 seconds of play. Nobody has heard it yet. It still needs a real phone and real people."
+    }
+  ],
+  "sigue": {
+    "es": "Juega a Moki en moki.jorgesuarez.com.mx. Contamos las partidas sin datos tuyos; entre más juegues, mejor sabemos qué arreglar.",
+    "en": "Play Moki at moki.jorgesuarez.com.mx. We count games without your data; the more you play, the better we know what to fix."
+  },
+  "imagen": "evidencia/diversion-3/pasada-bandera/capturas/j-def-375-bandera.png (bandera) y j-def-375-tarjeta.png (tarjeta); ya revisadas por el invitado de arte, no las abrí",
+  "imagen_alt": {
+    "es": "Pantalla de celular de Moki con una banderita de papel antes de la caja donde chocaste la vez pasada, y la tarjeta que dice cuántos metros te faltaron.",
+    "en": "Moki phone screen with a small paper flag before the box where you crashed last time, and the card saying how many meters you were short."
+  },
+  "fuente_datos": "BITACORA 8-nov 21:56 a 9-nov; commits d850e41 (LO NUEVO c1: solapes 0 contra 10, ligas 9/9) y 0e0b21b (SELECTOR + LA SUMA A: solapes 0 en 12 casos, toques 7/7, Clásico 2142 78/78, Reto 2362 x2, JS +1038 B gz). Todo de bots, sin celular real ni personas.",
+  "graficos": [
+    {
+      "titulo": {
+        "es": "Textos encimados que contó el programa en las pantallas del juego",
+        "en": "Overlapping texts the program counted on the game screens"
+      },
+      "datos": [
+        {
+          "etiqueta": "Antes",
+          "valor": 10
+        },
+        {
+          "etiqueta": "Ahora",
+          "valor": 0
+        }
+      ]
+    }
+  ],
+  "pregunta": {
+    "es": "¿Encontraste el botón Juega lo nuevo? ¿Te llevó a donde esperabas?",
+    "en": "Did you find the Play what is new button? Did it take you where you expected?"
+  },
+  "juega": {
+    "href": "https://moki.jorgesuarez.com.mx/?ir=noche",
+    "texto": {
+      "es": "Entra a la noche del nivel 2 con las estrellas de papel.",
+      "en": "Jump into the level 2 night with the paper stars."
+    }
+  },
+  "aprendimos": {
+    "es": "Una mejora que nadie puede encontrar no cuenta. Ahora cada mejora trae su liga o dice con honestidad que no la tiene.",
+    "en": "An improvement nobody can find does not count. Now each improvement brings its link or honestly says it has none."
+  },
+  "la_regamos": {
+    "es": "Casi dos semanas anunciando avances que el jugador no veía, y la pantalla de inicio no cambió desde el 31 de octubre. Jorge lo notó antes que nosotros.",
+    "en": "Almost two weeks announcing progress the player did not see, and the start screen did not change since October 31. Jorge noticed before we did."
+  },
+  "decisiones": [
+    {
+      "es": "Ninguna pieza cuenta como hecha si un jugador nuevo no la puede ver o llegar a ella con una liga.",
+      "en": "No piece counts as done if a new player cannot see it or reach it with a link."
+    }
+  ]
+}
