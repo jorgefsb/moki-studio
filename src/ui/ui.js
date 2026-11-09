@@ -609,8 +609,9 @@ export function createUI() {
       if (onMenu && !(d.voto && rect.corto)) card.append(el('p', 'ui-sigue', t('end.sigue')));
       let voto = null; // va después de los botones: nunca empuja a 'Otra vez' fuera de la tarjeta
       if (d.voto) {
-        const v = votoLink(d.voto, 'ui-btn secondary ui-voto');
-        v.textContent = `${t('voto.titulo')} · ${t('voto.btn')}`;
+        // corta (vertical y bajito): liga de texto en la misma fila que jorgesuarez.com.mx; la tarjeta no crece (P3c arreglo)
+        const v = votoLink(d.voto, rect.corto ? 'ui-link ui-voto-c' : 'ui-btn secondary ui-voto');
+        v.textContent = rect.corto ? t('voto.titulo') : `${t('voto.titulo')} · ${t('voto.btn')}`;
         v.addEventListener('click', () => (v.textContent = t('voto.gracias')));
         voto = rect.corto ? [v] : [el('p', 'ui-voto-sub', t('voto.sub')), v];
       }
@@ -643,13 +644,14 @@ export function createUI() {
         });
         card.append(copy, live);
       }
-      if (voto) card.append(...voto);
+      const fila = voto && rect.corto; // la liga corta comparte renglón con la de regreso
+      if (voto) card.append(...(fila ? [el('br')] : []), ...voto);
       if (!EMBED) {
         // En embed la página padre ya trae la liga de regreso
         const link = el('a', 'ui-link', t('end.link'));
         link.href = 'https://jorgesuarez.com.mx';
         link.rel = 'noopener';
-        card.append(el('br'), link);
+        card.append(...(fila ? [] : [el('br')]), link);
       }
       card.append(el('p', 'meta', t('contador.nota')));
       scrim.append(card);
