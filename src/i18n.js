@@ -204,6 +204,8 @@ const ES = {
   'menu.todo.d': 'Ir al menú',
   'menu.reto': 'Reto del día',
   'menu.reto.d': 'Hoy la misma pista para todos',
+  'menu.reto.nivel': 'La misma pista para todos los de tu nivel',
+  'modo.nivel': 'nivel {n}',
   'menu.clasico': 'Clásico',
   'menu.clasico.d': 'La pista de siempre',
   'menu.paseo.d': 'Sin choques, a tu ritmo',

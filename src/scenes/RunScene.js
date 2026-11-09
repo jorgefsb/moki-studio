@@ -14,7 +14,7 @@ import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
-import { abierto, siguiente, sumar } from '../barra.js';
+import { abierto, siguiente, sumar, mecanicasDeNivel } from '../barra.js';
 import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { IR, DESTINOS } from '../ir.js';
@@ -124,7 +124,7 @@ export class RunScene extends Phaser.Scene {
     // Si la página del destino tiene paisaje propio (Ciudad), se hornea antes de arrancar: la partida nace dentro de él.
     // El paisaje tapa el fondo pintado del nivel 1 (capas.js, imágenes que bajan aparte): se esperan también, 8 s como máximo.
     if (IR && !ESCAPARATE)
-      this.diferido.then(() => {
+      Promise.all([this.diferido, this.zanjaLista]).then(() => { // P5c: el Reto de nivel 2+ espera también a la zanja
         const conPaisaje = IR.modo === 'libre' && IR.tramo > 0 && this.hornearPaisaje;
         if (conPaisaje) this.hornearPaisaje(Math.min(3, IR.tramo));
         const t0 = performance.now();
@@ -575,7 +575,8 @@ export class RunScene extends Phaser.Scene {
       );
       return;
     }
-    const reto = { nombre: t('menu.reto'), linea: t('menu.reto.d'), nuevo: nuevos.has('reto'), onPick: jugar('reto', 'reto') };
+    const nvMec = mecanicasDeNivel(nv).length ? nv : 0; // P5c: desde el nivel 2 el Reto del día es por nivel
+    const reto = { nombre: nvMec ? `${t('menu.reto')} · ${t('modo.nivel', { n: nvMec })}` : t('menu.reto'), linea: t(nvMec ? 'menu.reto.nivel' : 'menu.reto.d'), nuevo: nuevos.has('reto'), onPick: jugar('reto', 'reto') };
     const libre = { nombre: t('menu.libre'), linea: t('menu.libre.elige'), nuevo: nuevos.has('libre'), onPick: () => ((this.vistaMenu = 'libre'), this.menu()) };
     const ruta = RUTA.map(([k, ir, abre], i) => {
       const a = abre();
@@ -649,9 +650,11 @@ export class RunScene extends Phaser.Scene {
     if (!l || !l.modo) return null;
     if (l.modo === 'libre') return t('modo.libre');
     const [y, m, d] = l.seed.split('-').map(Number);
-    if (!d) return t('modo.reto');
+    // P5c: el Reto con mecánicas de nivel ya no es igual para todos: la etiqueta (final y tarjeta) dice el nivel
+    const nv = l.nivel ? ` · ${t('modo.nivel', { n: l.nivel })}` : '';
+    if (!d) return t('modo.reto') + nv;
     const mes = new Date(y, m - 1, d).toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
-    return t('end.modo.reto', { d: `${d} ${mes}` });
+    return t('end.modo.reto', { d: `${d} ${mes}` }) + nv;
   }
 
   // Mejor marca por modo (director): clásico, reto del día y libre no se comparan entre sí.
@@ -670,7 +673,8 @@ export class RunScene extends Phaser.Scene {
   // Se arma una vez aquí; el reintento desde el checkpoint reusa this.level.
   // La zanja (src/zanja.js) baja solo en Libre: se pide al elegir el modo, mucho antes de su página 2
   pedirZanja() {
-    if (this.modo === 'libre' && C.zanja.on) this.zanjaLista = this.zanjaLista || import('../zanja.js').catch(() => {});
+    // P5c: el Reto también la usa desde su nivel del Cuaderno (C.zanja.nivel)
+    if (C.zanja.on && (this.modo === 'libre' || nivelDe(leerCuaderno()).nivel >= C.zanja.nivel)) this.zanjaLista = this.zanjaLista || import('../zanja.js').catch(() => {});
   }
 
   makeLevel(seed) {
@@ -686,7 +690,10 @@ export class RunScene extends Phaser.Scene {
     const pedidas = [...MEC, ...((IR && IR.mec) || [])]; // ?mec= (pruebas) o la liga ?ir=trampolin|viento|timbre
     const mecanicas = modo !== 'libre' ? undefined : ['tramp', 'viento', 'timbre'].filter((m) => pedidas.includes(m) || abierto(m, nv)); // nivel o barra (P3b)
     if (modo === 'libre' && EXT.z) mecanicas.push('zanja'); // la zanja no pide gesto nuevo: en Libre desde el inicio, si ya bajó su módulo
-    return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, { mecanicas });
+    // P5c: el Reto suma las mecánicas del nivel del Cuaderno (barra.js mecanicasDeNivel); nivel 1 = el Reto de siempre
+    const nivelMec = modo === 'libre' ? [] : mecanicasDeNivel(nv).filter((m) => m !== 'zanja' || EXT.z);
+    const opts = modo === 'libre' ? { mecanicas } : nivelMec.length ? { nivelMec, nivel: nv } : {};
+    return generarNivel(seed || SEED || (modo === 'libre' ? semillaLibre() : semillaReto()), modo, opts);
   }
 
   startGame() {
@@ -2586,6 +2593,7 @@ export class RunScene extends Phaser.Scene {
       floorY: (C.world.groundY - this.top) * z,
     };
     this.ui.showCuaderno(revisar(this.partida), zonas);
+    this.pedirZanja(); // P5c: si subió al nivel de la zanja, el módulo baja ya para la siguiente partida del Reto
   }
 
   // Tarjeta para compartir (GDD §3): modo, fecha local, una fila por página (sin caer / con tropiezo), sellos y racha
