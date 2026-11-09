@@ -38,12 +38,14 @@ const CLASICO = Q.get('nivel') === 'clasico';
 const MEC = (Q.get('mec') || '').split(','); // ?mec=tramp,viento,timbre destraba mecánicas en Libre sin el nivel del Cuaderno (pruebas)
 // Vuelta rápida se abre con el sello Coleccionista (>=80% de las piezas al terminar; cuaderno.js)
 const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
-// La Ruta (propuestas/ruta-de-moki.md): nodo, liga ?ir= y nivel del Cuaderno en que se abre (cerrado = se puede probar)
+// La Ruta (propuestas/ruta-de-moki.md): nodo, liga ?ir= y nivel del Cuaderno en que se abre (cerrado = se puede probar).
+// P3f: cada paisaje se abre en su propio nivel ("Nivel 4 · Playa" se abre en el 4). Antes N3 y N4 leían C.tramp.nivel
+// y C.viento.nivel, que desde P5d valen 3 los dos, y ambos decían "nivel 3".
 const RUTA = [
   ['n1', 'nivel1', () => 1],
   ['n2', 'noche', () => 2],
-  ['n3', 'ciudad', () => C.tramp.nivel],
-  ['n4', 'viento', () => C.viento.nivel],
+  ['n3', 'ciudad', () => 3],
+  ['n4', 'viento', () => 4],
 ];
 // "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
 const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto' };
