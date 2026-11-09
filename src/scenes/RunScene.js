@@ -548,6 +548,9 @@ export class RunScene extends Phaser.Scene {
     };
     const juegaNuevo = () => (visto(NODO_DE[destino]), irA(destino));
     const alMenu = () => ((this.vistaMenu = null), this.menu());
+    // P3g: el subtítulo del héroe "Lo nuevo" dice lo que abre el botón (la línea de novedades cuyo 'donde' es el destino),
+    // no el título del día. Una sola fuente para el aviso y el menú completo.
+    const subNuevo = n ? n.lineas[n.donde.indexOf(destino)] || n.titulo.replace(/^Lo nuevo de hoy:\s*/i, '') : '';
     // P3e (3) Lo nuevo desde tu última visita: el jugador que vuelve y no ha visto esta versión la ve primero, a 1 toque de jugarla.
     // Se marca vista al enseñarla (si toca el lienzo y juega, ya la vio). Las ligas ?ir= no lo enseñan.
     if (!this.vistaMenu && version && !IR && load('moki.nov.visita') !== version) {
@@ -558,8 +561,7 @@ export class RunScene extends Phaser.Scene {
       this.ui.showMenu(
         {
           aviso: { titulo: t('menu.visita'), lineas: n.lineas },
-          // P3g: el subtítulo dice lo que abre el botón (la línea de novedades cuyo 'donde' es el destino), no el título del día
-          hero: { titulo: t('menu.nuevo'), sub: n.lineas[n.donde.indexOf(destino)] || n.titulo.replace(/^Lo nuevo de hoy:\s*/i, ''), onPick: juegaNuevo },
+          hero: { titulo: t('menu.nuevo'), sub: subNuevo, onPick: juegaNuevo },
           cards: [{ nombre: t('menu.todo'), linea: t('menu.todo.d'), onPick: alMenu }],
         },
         this.saludoZonas()
@@ -627,7 +629,7 @@ export class RunScene extends Phaser.Scene {
     const corto = this.scale.height < 480;
     this.ui.showMenu(
       {
-        hero: { titulo: t('menu.nuevo'), sub: n ? n.titulo : '', onPick: juegaNuevo },
+        hero: { titulo: t('menu.nuevo'), sub: subNuevo, onPick: juegaNuevo },
         cards,
         voto: votoMenu(),
         pie: corto ? t('menu.lienzo') : `${t('cu.nivel', { n: nv })} · ${t(hola.key, { n: hola.n })}`,
