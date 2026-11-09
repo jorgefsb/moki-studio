@@ -308,6 +308,13 @@ export function createUI() {
       }
       scrim.append(card);
       root.appendChild(scrim);
+      // Pantallas bajas (embed 660x372, 640x400): si el contenido no cabe en maxHeight, se aprieta por pasos para que el
+      // botón de reintento siempre se vea: 1) barra en una línea, 2) sin la línea de meta, 3) la barra queda en texto
+      // ("Lo siguiente: ..." o "¡Abriste ...!") sin dibujo ni tubo, 4) sin la barra
+      for (const k of ['apretada', 'apretada2', 'apretada3', 'apretada4']) {
+        if (card.scrollHeight <= card.clientHeight + 1) break;
+        card.classList.add(k);
+      }
       let fired = false;
       const go = () => {
         if (fired || pill.disabled) return;

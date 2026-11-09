@@ -158,6 +158,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-barra .tit { display: block; color: #22211F; }
 .ui-barra .falta { display: block; color: rgba(34, 33, 31, 0.84); font-size: 14px; line-height: 18px; }
 .ui-barra .tubo { display: block; height: 8px; margin-top: 4px; border-radius: 4px; background: #E6D3B6; border: 1px solid #B99168; overflow: hidden; }
+.ui-fail.apretada .ui-barra { margin: 2px 0 0; }
+.ui-fail.apretada .ui-barra .falta, .ui-fail.apretada2 .meta, .ui-fail.apretada3 .ui-barra .dib, .ui-fail.apretada3 .ui-barra .tubo { display: none; }
+.ui-fail.apretada4 .ui-barra { display: none; }
+.ui-fail.apretada3 .ui-barra .abrio + .fila { display: none; }
+.ui-fail.apretada .ui-barra .dib { width: 22px; height: 22px; background-size: 22px; }
+.ui-fail.apretada .ui-barra .tubo { margin-top: 2px; }
 .ui-barra .lleno { display: block; height: 100%; background: #FF6B35; transition: width 600ms cubic-bezier(0.25, 0.5, 0.45, 1); }
 
 /* Embed (?embed=1): los paneles con scroll no lo pasan a la página padre al llegar al borde. */
