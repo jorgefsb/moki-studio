@@ -2458,7 +2458,8 @@ export class RunScene extends Phaser.Scene {
     let r = wide ? rect : { ...rect, compact: true };
     // LA SUMA A: bajito y ancho (660x372 embebido, 640x400) la tarjeta va completa a la derecha de Moki, de arriba abajo
     const zonas = this.saludoZonas();
-    const top = Math.round(Math.max(rect.top, zonas.hudB + 8)); // nunca sobre los metros y las piezas
+    const sb = this.ui.state.soundBtn; // a 390 el sonido baja bajo la pausa: la tarjeta tampoco lo pisa
+    const top = Math.round(Math.max(rect.top, zonas.hudB + 8, sb ? sb.offsetTop + sb.offsetHeight + 8 : 0)); // nunca sobre los metros y las piezas
     if (H < 480 && W > H) {
       const left = Math.round(zonas.mokiR + 20);
       r = { left, top, width: Math.min(460, W - left - 12), maxHeight: H - top - 8, compact: true, corto: true };
