@@ -485,8 +485,19 @@ export function createMokiRig(scene) {
       }
       debug.angles = { nearLeg: nTh, farLeg: fTh, nearArm: armN, farArm: armF, tilt };
 
-      // Escala SIEMPRE positiva y uniforme (nunca espejado)
-      root.setScale(k);
+      // Escala SIEMPRE positiva (nunca espejado). Uniforme salvo el squash B del aterrizaje fuerte (P4B, excepción
+      // declarada a ARTE §10/§13.6): ancho/alto desde los pies (el origen del contenedor), sostenido y luego suelta
+      let qx = 1;
+      let qy = 1;
+      const QB = C.art.squashB;
+      const lh = s.t - (s.landHardAt ?? -1e9);
+      if (QB && !reduced && !s.dead && s.grounded && lh >= 0 && lh < QB.ms) {
+        const u = lh / QB.ms;
+        const e = 1 - u * u;
+        qx = 1 + (QB.x - 1) * e;
+        qy = 1 + (QB.y - 1) * e;
+      }
+      root.setScale(k * qx, k * qy);
       const baseX = s.x;
       const baseY = s.y + 2 - 2 * k - hopY;
       if (pivotFoot) {
