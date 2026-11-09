@@ -134,7 +134,16 @@ export function createUI() {
           if (c.nuevo) b.append(punto());
           grid.append(b);
         }
-        p.append(grid);
+        const carril = el('div', 'mn-carril');
+        carril.append(grid);
+        p.append(carril);
+        // Carril (alto < 480): flecha en la orilla derecha que avisa "hay más" y lo corre una tarjeta; se va al llegar al final
+        const mas = tap(el('button', 'mn-mas', '›'), () => grid.scrollBy({ left: 184, behavior: 'smooth' }));
+        mas.setAttribute('aria-label', t('menu.mas'));
+        const ve = () => mas.classList.toggle('fin', grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 4);
+        grid.addEventListener('scroll', ve, { passive: true });
+        requestAnimationFrame(ve);
+        carril.append(mas);
       }
       if (m.pie) p.append(el('p', 'mn-pie', m.pie));
       root.appendChild(p);
@@ -161,7 +170,8 @@ export function createUI() {
       const full = Math.min(W - 32, 560);
       let h = pon((W - full) / 2, full);
       const piso = zonas.floorY + 22; // bajo la línea del suelo, con aire para el aplastado de Moki al aterrizar
-      if (piso + h <= H - 12) return (p.style.top = `${Math.round(piso)}px`);
+      // con aire de sobra, a la mitad del hueco bajo el suelo (a 660x372 el botón solo quedaba pegado a la línea del suelo)
+      if (piso + h <= H - 12) return (p.style.top = `${Math.round(piso + Math.max(0, Math.min(24, (H - 12 - piso - h) / 2)))}px`);
       const L = zonas.mokiR + 16;
       const wd = Math.min(W - L - 16, 880);
       if (wd >= 300) {

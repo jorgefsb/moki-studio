@@ -413,6 +413,13 @@ export function montarPaisajes(s, pintadas, gy) {
   [1, 2, 3].forEach((i) => NOMBRES.forEach((n) => cola.push(() => add(llave(i, n), TRAMOS[i][n]))));
   cola.push(() => add('paisajeLuna', luna));
   s.paisajeCostos = []; // ms de cada horneada, solo lectura, para medir
+  // ?ir=ciudad: la partida arranca ya en la página i; sus capas se hornean de golpe antes de empezar (aún corre el demo), no de a una
+  s.hornearPaisaje = (i) => {
+    const t0 = performance.now();
+    NOMBRES.forEach((n) => add(llave(i, n), TRAMOS[i][n]));
+    if (TRAMOS[i].astro) add('paisajeLuna', luna);
+    s.paisajeCostos.push(Math.round(performance.now() - t0));
+  };
   let horneando = false;
   const hornea = () => {
     if (horneando || !cola.length) return;
@@ -478,7 +485,8 @@ export function montarPaisajes(s, pintadas, gy) {
     }
     encendido = true;
     const quiere = Math.min(3, s.tramoIdx);
-    const brinco = antes !== null && Math.abs(s.dist - antes) > 400; // reaparecer o ir a otra página: sin fundido
+    // reaparecer, ir a otra página o arrancar ya en ella (?ir=ciudad, primer cuadro de la partida): sin fundido
+    const brinco = antes === null || Math.abs(s.dist - antes) > 400;
     antes = s.dist;
     if (quiere !== cur && (quiere === 0 || lista(quiere))) {
       k = quiere < cur || brinco || s.reduced ? 1 : 0;

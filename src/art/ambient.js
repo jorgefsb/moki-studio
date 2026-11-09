@@ -236,7 +236,7 @@ export class Ambient {
     return this.scene.paseoRun && this.scene.textures.exists(`${k}_p`) ? `${k}_p` : k; // Paseo: cartón atenuado sin contorno de vidrio
   }
 
-  spawnStars() {
+  spawnStars(quietas) {
     const s = this.scene;
     this.fired.stars = true;
     const band = this.flightY();
@@ -272,7 +272,7 @@ export class Ambient {
       const sp = s.add.image(x, y, 'ambStar').setOrigin(24 / 56, 0).setDepth(near ? 1.96 : 1.95).setScale(0.001);
       if (!near) sp.setTint(toTint(hex(mix(PAL.paper, PAL.border, 0.45))));
       this.stars.push({ s: sp, x0: x, d0: s.dist, k });
-      if (s.reduced) sp.setScale(k);
+      if (s.reduced || quietas) sp.setScale(k);
       else {
         const rot = (this.r() < 0.5 ? -1 : 1) * 1.5;
         sp.setAngle(rot);
@@ -502,7 +502,12 @@ export class Ambient {
   update(dtMs, ctx) {
     const s = this.scene;
     if (this.day.t < 1) this.applyDay(dtMs / this.day.dur);
-    else if (this.day.to === 3 && !this.night) this.setNight(true); // las texturas de noche se generan después: reintenta
+    else if (this.day.to === 3) {
+      if (!this.night) this.setNight(true); // las texturas de noche se generan después: reintenta
+      // ?ir=noche (y reaparecer de noche) pone la hora sin fundido: applyDay corre una vez, antes de que exista ambStar; reintenta aquí
+      if (!this.stars.length && !this.fired.stars && !s.textures.exists('ambStar') && s.texQueue) s.texQueue.ya('ambStar');
+      if (!this.stars.length && !this.fired.stars && s.textures.exists('ambStar')) this.spawnStars(true); // ya colgadas: la noche ya estaba
+    }
     if (s.reduced) {
       this.stars.forEach((st) => (st.s.x = st.x0)); // versiones fijas: sin eventos que viajen
       return;

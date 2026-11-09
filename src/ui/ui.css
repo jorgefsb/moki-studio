@@ -317,6 +317,21 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 }
 .ui-menu.corto .mn-card { flex: none; width: 176px; min-height: 56px; scroll-snap-align: start; }
 .ui-menu.corto .mn-pie { font-size: 14px; line-height: 17px; padding: 1px 10px; }
+.mn-mas { display: none; }
+.mn-carril { position: relative; }
+.ui-menu.corto .mn-mas {
+  display: flex; align-items: center; justify-content: center; position: absolute; right: 0; top: 50%; margin-top: -22px; width: 36px; height: 48px;
+  padding: 0; pointer-events: auto; cursor: pointer; background: #f4e8d5; color: #22211f; border: 3px solid #22211f;
+  border-radius: 12px 0 0 12px; border-right: 0; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.3); font: 800 28px/1 Outfit, sans-serif;
+}
+.ui-menu.corto .mn-mas.fin { display: none; }
+/* Angosto y alto (390x844): tarjetas más bajas para que la lista no se coma la pantalla */
+@media (max-width: 480px) and (min-height: 480px) {
+  .ui-menu:not(.corto) { gap: 6px; }
+  .ui-menu:not(.corto) .mn-grid { gap: 6px; }
+  .ui-menu:not(.corto) .mn-card { min-height: 52px; padding: 4px 8px; }
+  .ui-menu:not(.corto) .mn-card span { font-size: 13px; line-height: 15px; }
+}
 .ui-homebtn {
   position: absolute; top: 12px; left: calc(50% + 32px); z-index: 2; width: 48px; height: 48px; padding: 0; margin: 0;
   pointer-events: auto; cursor: pointer; background: #f4e8d5; border: 3px solid #b99168; border-radius: 12px;

@@ -1200,6 +1200,11 @@ export function buildTextures(scene) {
   defer('viga_n_p', () => viga(C.atmosphere.night.vigaDim, soft));
   return {
     lazy,
+    // genera ya una textura pendiente por su clave (se salta la fila); nada si ya salió
+    ya(key) {
+      const i = lazy.findIndex((it) => it[0] === key);
+      if (i >= 0) add(key, lazy.splice(i, 1)[0][1]());
+    },
     // genera la siguiente textura pendiente; devuelve su clave o null cuando no queda ninguna
     next() {
       const item = lazy.shift();

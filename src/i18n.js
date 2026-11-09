@@ -188,6 +188,7 @@ const ES = {
   'menu.clasico.d': 'La pista de siempre',
   'menu.paseo.d': 'Sin choques, a tu ritmo',
   'menu.lienzo': 'o toca la pantalla para jugar',
+  'menu.mas': 'Ver más opciones',
   'menu.volver': 'Menú',
   'menu.volver.aria': 'Volver al menú',
   'end.sigue': 'Qué sigue: Libre o el Reto del día',
