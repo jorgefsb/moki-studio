@@ -2110,3 +2110,16 @@ Nada espera a Jorge. Pregunta con opción recomendada y hora límite; a los 30 m
 3. Un candado de progreso (nivel del Cuaderno, sello, Vuelta rápida) solo vale si lo nuevo tiene además una liga o botón "Pruébalo" que lleva directo ahí sin jugar horas.
 4. El highlight del día es lo principal: la pantalla de inicio y el cartel "Lo nuevo de hoy" enseñan y llevan a lo último que se mejoró.
 5. Si una mejora nueva hace peor otra cosa, gana la suma mejor: se arregla antes de publicar, no se publica una versión que retrocede.
+
+## Mejoras en todas las áreas (Jorge, 8-nov 23:32, canon)
+
+"Quisiera ver cambios y mejoras en diferentes áreas del juego: arte, meta juego, game feel; no siempre mejoras en las mismas áreas." Y: "si no logramos mejores mecánicas y game feel estamos jodidos: caer, saltar, acelerar, verlo, que sea lindo, los sonidos incidentales".
+
+1. Cada pieza de COLA lleva su área entre corchetes: [feel], [mecánica], [arte], [meta] (progresión, modos, logros, menú), [audio], [ux].
+2. Cada día entra al menos una pieza de [feel] o [mecánica], una de [arte] y una de [meta] o [ux]. El director no toma dos seguidas de la misma área si hay de otra lista.
+3. [feel] base nunca se da por terminado: caer, saltar, acelerar, aterrizar, chocar y los sonidos incidentales de cada uno. El asiento feel tiene siempre una pieza abierta.
+4. La bitácora del día dice qué áreas se movieron.
+
+## Bitácora con historia y gráficos (Jorge, 8-nov 23:32, canon)
+
+Cada entrada del día usa la skill papacitoos-storytelling (una persona que juega, su creencia, un solo punto, escena concreta, aha con porqué) y trae, además de su gráfico: otra gráfica o una imagen de antes y después, una disyuntiva (opción A, opción B, qué elegimos y por qué), "en qué la regamos" (honesto), una pregunta para el que lee y una liga "Juega esto" que lleva directo a lo nuevo. El sitio ya pinta esos campos (graficos, imagenes, disyuntiva, la_regamos, pregunta, juega).

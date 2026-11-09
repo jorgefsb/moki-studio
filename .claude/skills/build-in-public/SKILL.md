@@ -85,3 +85,7 @@ Toda pieza pública cierra con dos cosas, en palabras sencillas:
 1. Dónde jugar: moki.jorgesuarez.com.mx
 2. Que medimos de forma anónima cómo se juega para mejorarlo: "Contamos las partidas sin datos tuyos. Entre más juegues, mejor sabemos qué arreglar."
 Cuando haya un número de juego nuevo (cuántos se salen, cuántos pasan el nivel 2, cuántos juegan otra), se cuenta con su antes y después. Solo números de público: nunca mezclar partidas del equipo ni de bots.
+
+## Bitácora con historia y gráficos (Jorge, 8-nov 23:32)
+
+Cada entrada usa papacitoos-storytelling y llena, además de titulo, historia, aprendimos, sigue, imagen y grafico: `graficos` (al menos una gráfica más), `imagenes` (antes y después cuando aplique, con `pie`), `disyuntiva` ({titulo, a, b, elegimos: "a"|"b", porque}), `la_regamos`, `pregunta` y `juega` ({href directo a lo nuevo, texto}). Todos en {es, en}. Ejemplo vivo: entrada 2026-11-08-noche de bitacora.json.
