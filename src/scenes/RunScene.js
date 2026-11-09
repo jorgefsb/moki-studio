@@ -96,8 +96,11 @@ export class RunScene extends Phaser.Scene {
     this.screen = 'demo';
     this.god = false;
     if (ESCAPARATE) this.esc = new Escaparate(this); // ?escaparate: el guion arranca su propio título
-    else if (START_SCREEN === 'play' || IR) this.startGame(); // ?ir=<destino>: directo a la partida donde vive lo nuevo
+    else if (START_SCREEN === 'play') this.startGame();
     else this.startDemo();
+    // ?ir=<destino>: directo a la partida donde vive lo nuevo, en cuanto baja el módulo diferido del atardecer (hora fija del
+    // nivel 1, paisajes de Libre, boceto): sin él la Ciudad de cartón no entra. Mientras tanto corre el demo.
+    if (IR && !ESCAPARATE) this.diferido.then(() => this.screen === 'demo' && this.startGame());
     // MOKI SE MUEVE: las 4 poses llegan en diferido; mientras, y si no cargan, corre el títere de siempre
     if (!Q.has('titere')) import('../art/mokiPoses.js').then((m) => m.montar(this)).catch(() => {});
     // La portada HTML se retira cuando la escena ya está lista (Moki corriendo en el siguiente cuadro)
@@ -166,7 +169,7 @@ export class RunScene extends Phaser.Scene {
     // SALTO NOCHE pieza 3: recortes de tinta abajo a la izquierda (solo de noche), módulo diferido
     this.primerPlano = null;
     // SALTO ATARDECER: la tarde viaja en el mismo chunk diferido (un import dinámico más partía config del chunk inicial)
-    import('../art/primerPlano.js').then((m) => (this.primerPlano = new m.PrimerPlano(this, C), m.montarTarde(this))).catch(() => {});
+    this.diferido = import('../art/primerPlano.js').then((m) => (this.primerPlano = new m.PrimerPlano(this, C), m.montarTarde(this))).catch(() => {});
     audio.nt = () => this.ambient.nt || 0; // de noche las capas del Cuaderno cierran el filtro y dejan la escala abierta
     this.strip = this.add.rectangle(0, 0, 10, 10, 0xf4e8d5, 1).setOrigin(0, 0).setDepth(11.9).setAlpha(0); // tira de papel del demo (bajo Moki)
     if (ANIM_DEBUG) {
@@ -393,7 +396,7 @@ export class RunScene extends Phaser.Scene {
     this.tutC.setScale(1 / z).setPosition(this.px - 34 / z, g - 232 - 60 / z); // 60 px de pantalla más arriba y a la izquierda: ni Moki ni el arco quedan tapados
     this.tutLabelC.setPosition(62, 0);
     if (this.ui && this.rig) this.ui.placeSaludo(this.saludoZonas());
-    if (this.ui) this.ui.placeNovedades();
+    if (this.ui && this.rig) this.ui.placeNovedades(this.saludoZonas());
   }
 
   saludar() {
@@ -409,7 +412,9 @@ export class RunScene extends Phaser.Scene {
     const z = this.zoom;
     const c = this.rig.container;
     const b = c.getBounds();
-    return { floorY: (C.world.groundY - 8 - this.top) * z, mokiR: (this.px + b.right - c.x) * z };
+    const floorY = (C.world.groundY - 8 - this.top) * z;
+    // mokiL y mokiT: caja de Moki parado en el suelo (alto del títere), para que el cartel de lo nuevo no le toque la cabeza
+    return { floorY, mokiR: (this.px + b.right - c.x) * z, mokiL: (this.px + b.left - c.x) * z, mokiT: floorY - b.height * z };
   }
 
   // ---------- Estado de la partida ----------
@@ -594,9 +599,17 @@ export class RunScene extends Phaser.Scene {
     // ?ir=<destino>: la primera partida arranca en la página del destino (como un reintento desde su checkpoint)
     const salto = IR && !this.irHecho ? Math.min(IR.tramo, level.tramos.length - 1) : 0;
     this.irHecho = true;
-    const dist0 = salto > 0 ? level.starts[salto] : 0;
+    let dist0 = salto > 0 ? level.starts[salto] : 0;
+    // liga de mecánica: arranca 3 s antes de su primera pieza en esa página (si no, el timbre tardaba hasta 39 s en salir);
+    // el reintento sigue saliendo del inicio de la página
+    const mec = IR && salto > 0 && IR.mec && IR.mec[0];
+    if (mec) {
+      const tope = level.starts[salto + 1] ?? Infinity;
+      const D = mec === 'viento' ? ((level.vientos || []).find((z) => z.D0 >= dist0 && z.D0 < tope) || {}).D0 : (level.entities.find((e) => e.D >= dist0 && e.D < tope && e.type === mec) || {}).D;
+      if (D != null) dist0 = Math.max(dist0, D - 3 * level.tramos[salto].speed);
+    }
     this.resetRun(level, dist0);
-    if (salto > 0) this.cp = { idx: this.tramoIdx, dist: dist0, pieces: 0, pieceValue: 0 };
+    if (salto > 0) this.cp = { idx: this.tramoIdx, dist: level.starts[this.tramoIdx], pieces: 0, pieceValue: 0 };
     this.vueltaTagC.setVisible(this.vueltaRun);
     this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);
     this.accel = 0;
@@ -684,7 +697,7 @@ export class RunScene extends Phaser.Scene {
               window.location.assign(u.toString());
             }
           : null;
-        this.ui.showNovedades(n, probar, cerrar);
+        this.ui.showNovedades(n, probar, cerrar, this.saludoZonas());
       })
       .catch(() => {}); // sin novedades.json el título sigue como siempre
   }

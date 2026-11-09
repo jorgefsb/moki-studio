@@ -205,7 +205,7 @@ export function createUI() {
     // n = { titulo, lineas, ir } de public/novedades.json. "Pruébalo" lleva a la liga ?ir= (solo si hay destino);
     // "Ahora no" lo cierra. Mientras está abierto, el saludo no sale (no caben los dos a 640x400).
     // Si se encima con los chips de modo (pantallas bajitas), suelta renglones desde el último hasta que quepa.
-    showNovedades(n, onProbar, onCerrar) {
+    showNovedades(n, onProbar, onCerrar, zonas) {
       ui.hideNovedades();
       ui.hideSaludo();
       const c = el('div', 'ui-nov');
@@ -232,12 +232,15 @@ export function createUI() {
       c.addEventListener('pointerdown', (e) => e.stopPropagation()); // tocar el cartel no arranca la partida
       root.appendChild(c);
       state.nov = c;
-      ui.placeNovedades();
+      ui.placeNovedades(zonas);
     },
-    placeNovedades() {
+    placeNovedades(zonas) {
       const c = state.nov;
       if (!c) return;
-      const tope = state.modo ? state.modo.offsetTop - 8 : root.clientHeight - 8;
+      let tope = state.modo ? state.modo.offsetTop - 8 : root.clientHeight - 8;
+      // si el cartel queda sobre Moki, tampoco baja de su cabeza (12 px de aire)
+      const L = c.offsetLeft - c.offsetWidth / 2;
+      if (zonas && zonas.mokiT != null && L < zonas.mokiR && L + c.offsetWidth > zonas.mokiL) tope = Math.min(tope, zonas.mokiT - 12);
       const ls = [...c.querySelectorAll('.nov-l')];
       ls.forEach((l) => (l.style.display = ''));
       for (let i = ls.length - 1; i >= 0 && c.offsetTop + c.offsetHeight > tope; i--) ls[i].style.display = 'none';
