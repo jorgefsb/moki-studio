@@ -2090,3 +2090,13 @@ Nada espera a Jorge. Pregunta con opción recomendada y hora límite; a los 30 m
 2. Esto reemplaza cualquier regla anterior de "todo propio", "nada descargado" o "sin archivos de terceros" (agente de audio, AUDIO.md §19 y similares).
 3. Lo que sigue igual: la licencia debe permitir uso comercial y no meter marcas ajenas; Moki sigue su biblia (parche MOKI en la oreja derecha anatómica, nunca espejado, nunca en pose T); el peso y los FPS siguen siendo puerta.
 4. Se escoge lo que haga el juego más divertido y más rápido. Primero divertido, luego bonito.
+
+## Lo nuevo se juega (Jorge, 8-nov 21:56, canon)
+
+"Lo que sea que se vaya mejorando, siempre integrado en la última versión y jugable." Llevamos casi dos semanas anunciando avances que el jugador no veía: vivían en el nivel 2 de noche, en Libre, en el Reto o después de chocar, y la pantalla de inicio era la misma desde el 31-oct.
+
+1. Ninguna pieza cuenta como hecha si un jugador nuevo no la puede ver: o se ve en los primeros segundos de una partida normal, o el juego tiene un botón o liga que lleva directo a ella.
+2. El probador agrega a su PASS una captura de cómo lo ve un jugador nuevo (sin localStorage) y escribe DÓNDE se ve y CÓMO llegar (liga directa).
+3. El cronista, en cada integración: actualiza public/novedades.json (fecha, 3 líneas, dónde se ve), GDD.md (la sección que cambió) y el wiki metodo/ (ver metodo/SCHEMA.md). Sin eso la pieza no se marca [x] en COLA.
+4. La lista de cambios de la publicación lleva el "dónde" de cada cambio.
+5. Antes de cada deploy, la puerta de QA del sitio (herramientas/qa-sitio.py en la laptop) revisa versión, portada, novedades, menú y ligas. Si falla, no se publica.
