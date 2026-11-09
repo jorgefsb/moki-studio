@@ -70,7 +70,7 @@ for (const [gname, niveles] of Object.entries(grupos)) {
     h += 1;
     const r = rng(0xc0ffee ^ (h * 2654435761));
     const per = Math.ceil(N / niveles.length);
-    const S = { partidas: 0, terminan: 0, limpiaT1: 0, limpia: 0, cinta2: 0, choquesTramo: [0, 0, 0, 0], porTipo: [{}, {}, {}, {}], enc: [{}, {}, {}, {}], choquesHastaP3: 0, choquesTotal: 0, sinChoqueT1a2: 0 };
+    const S = { partidas: 0, terminan: 0, limpiaT1: 0, limpia: 0, cinta2: 0, choquesTramo: [0, 0, 0, 0], porTipo: [{}, {}, {}, {}], enc: [{}, {}, {}, {}], choquesHastaP3: 0, choquesTotal: 0, sinChoqueT1a2: 0, sinCaerV1: 0 };
     for (const L of niveles)
       for (let k = 0; k < per; k++) {
         const p = partida(L, perfil, r);
@@ -79,6 +79,7 @@ for (const [gname, niveles] of Object.entries(grupos)) {
         if (p.choques[0] === 0) S.limpiaT1++;
         if (p.termino && p.choques.every((c) => c === 0)) S.limpia++;
         if (p.rachaMax >= 5) S.cinta2++;
+        if (p.termino && p.choques.reduce((a, b) => a + b, 0) <= (C.sinCaerMax ?? 0)) S.sinCaerV1++; // P3b V1
         p.choques.forEach((c, i) => {
           S.choquesTramo[i] += c;
           S.choquesTotal += c;
@@ -95,6 +96,7 @@ for (const [gname, niveles] of Object.entries(grupos)) {
       limpiaT1Pct: pc(S.limpiaT1),
       limpiaPct: pc(S.limpia),
       partidasParaLimpia: S.limpia ? +(S.partidas / S.limpia).toFixed(1) : null,
+      sinCaerV1Pct: pc(S.sinCaerV1), // encargo sinCaer con <= CONFIG.sinCaerMax choques
       cinta2ProxyPct: pc(S.cinta2),
       choquesMediosHastaP3: m(S.choquesHastaP3),
       choquesMediosTotal: m(S.choquesTotal),

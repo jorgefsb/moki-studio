@@ -277,4 +277,8 @@ export const CONFIG = {
   // sun.y: px sobre el suelo (en vertical se multiplica por portrait.farScale, como los cerros).
   ridge: { scale: 1.45, mix: 0.3, parallax: 0.15, lift: 34 },
   sun: { x: 0.68, y: 270, r: 44 },
+  // P3b (director 9-nov 05:05, propuestas/p3b-sincaer-n5.md V1): el encargo 'sinCaer' del nivel 5 del Cuaderno se
+  // cumple llegando a la meta con <= sinCaerMax choques (era 0: el bot humano limpiaba 8-19%, el novato ~0%). El sello
+  // de partida 'sinCaerme' (perfecto, 0 choques) no se toca. 0 regresa al criterio viejo.
+  sinCaerMax: 2,
 };

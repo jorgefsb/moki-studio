@@ -6,6 +6,7 @@
 // Cada cantidad sale del inventario (evidencia/v2-e1-inventario.md): solo se pide lo que el tramo garantiza en
 // Clásico, Reto y Libre. Páginas: tramo 0-3 = página 1-4.
 import { load, save } from './storage.js';
+import { CONFIG } from './config.js';
 
 const KEY = 'moki.cuaderno';
 
@@ -39,11 +40,12 @@ export const NIVELES = [
     { id: 'viga1', goal: 1, val: (st) => st.passed.viga },
     { id: 'vigas2', goal: 2, val: (st) => st.passed.viga },
   ],
-  // 5 · sin caerse
+  // 5 · casi sin caerse (P3b: el perfecto vive en el sello sinCaerme)
   [
     { id: 'sinCaerP1', goal: 1, val: (st) => paginaLimpia(st, 0) },
     { id: 'meta', goal: 1, val: (st) => (st.finished ? 1 : 0) },
-    { id: 'sinCaer', goal: 1, val: (st) => (st.finished && st.crashes === 0 ? 1 : 0) },
+    // P3b V1: el id se queda (lo guardado no cambia); llega con <= CONFIG.sinCaerMax choques
+    { id: 'sinCaer', goal: 1, val: (st) => (st.finished && st.crashes <= CONFIG.sinCaerMax ? 1 : 0) },
   ],
   // 6 · encadenar y juntar
   [

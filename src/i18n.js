@@ -122,7 +122,7 @@ const ES = {
   'cu.nota.vigas2': 'Pasa bajo 2 vigas',
   'cu.nota.sinCaerP1': 'Página 1 sin caerte',
   'cu.nota.meta': 'Llega a la meta',
-  'cu.nota.sinCaer': 'Llega sin caerte',
+  'cu.nota.sinCaer': 'Llega con 2 choques o menos',
   'cu.nota.cinta2': 'Cobra una cinta x2',
   'cu.nota.piezas30': 'Junta 30 piezas',
   'cu.nota.arcos3P1': '3 arcos en la página 1',
