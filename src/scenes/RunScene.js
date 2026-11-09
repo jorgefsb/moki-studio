@@ -144,11 +144,15 @@ export class RunScene extends Phaser.Scene {
       this.distLabel.set(`${Math.floor((this.dist || 0) / 100)} ${t('hud.m')}`);
     });
     performance.mark('moki-ready');
+    // P5 TÍTULO: espera al atardecer (módulo diferido) para no enseñar la mañana un instante; 1.2 s como máximo
     const boot = document.getElementById('boot');
-    if (boot) {
+    const fuera = () => {
+      if (!boot || boot.classList.contains('gone')) return;
       boot.classList.add('gone');
       setTimeout(() => boot.remove(), 320);
-    }
+    };
+    this.diferido.then(fuera);
+    setTimeout(fuera, 1200);
   }
 
   // ---------- Construcción ----------

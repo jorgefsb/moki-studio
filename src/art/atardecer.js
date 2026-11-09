@@ -29,6 +29,7 @@ const tintTo = (src, dst) => {
 // Perillas (ESPEC §1). Hex del video C (study.json); día 1b abre los escalones: lejos claro, cerca oscuro.
 export const TARDE = {
   horaFija: true, // nivel 1 = atardecer toda la partida (DECISIONES 3-nov 19:13); en false vuelve el ciclo de horas
+  titulo: true, // P5 TÍTULO: el título de quien va al nivel 1 (todo jugador nuevo) nace en el atardecer, sin el beige de la mañana; en false vuelve Mañana → Tarde a los 31 s
   capas: true, // SALTO CAPAS: fondo en capas pintadas; en false vuelve el de código
   bokeh: true, // dirección C de Jorge (ESPEC §3), fuera de la banda de juego; en false no se crea ni un círculo
   cieloAlto: '#F79E52', // arriba, un paso más naranja
@@ -270,9 +271,10 @@ export function montar(s) {
   amb.n1 = nivel1();
   // La hora fija solo la pide el juego. Los medidores siguen pudiendo poner cualquier hora con setDay(i, true).
   const fija = () => TARDE.horaFija && amb.n1 && !s.demo;
+  const titulo = () => TARDE.titulo && amb.n1 && s.demo && !s.esc; // el escaparate lleva su propio guion de horas
   const sd = amb.setDay;
   amb.setDay = function (i, instant) {
-    if (!instant && fija()) return; // checkpoint: la hora no cambia
+    if (!instant && (fija() || titulo())) return; // checkpoint (o Mañana → Tarde del demo): la hora no cambia
     sd.call(this, i, instant);
   };
   // Del atardecer a la hora del nivel 2: el fundido de siempre, al empezar la primera partida ya sin nivel 1
@@ -292,7 +294,7 @@ export function montar(s) {
     if (this.demo || !this.partidaEmpezada) amb.n1 = nivel1();
     this.partidaEmpezada = !this.demo;
     const r = rr.apply(this, a);
-    if (fija()) sd.call(amb, 2, true);
+    if (fija() || titulo()) sd.call(amb, 2, true);
     return r;
   };
   const sgN = s.startGame;
@@ -567,6 +569,7 @@ export function montar(s) {
   }
   amb.applyDay(0);
   if (fija() && s.screen === 'play') sd.call(amb, 2); // el chunk llegó con la partida ya corriendo: fundido, sin transición
+  else if (titulo() && s.screen === 'demo') sd.call(amb, 2, true); // el chunk llegó con el título en pantalla: atardecer ya
   calienta([hornoBanda, () => hornoCapa('ridge'), () => hornoCapa('far'), () => hornoCapa('mid')]);
   montarBoceto(s, o, colocar, TARDE.sol.r);
   if (TARDE.bokeh) montarBokeh(s);
