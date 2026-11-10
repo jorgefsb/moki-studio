@@ -365,5 +365,19 @@
       "es": "Es el primer shader y casi no se ve en pantallas chicas. Lo decimos tal cual: es un paso chico, no un cambio grande.",
       "en": "It is the first shader and barely shows on small screens. We say it as it is: a small step, not a big change."
     }
+  },
+  "voto660": {
+    "donde": {
+      "es": "Menú de inicio de un jugador nuevo con el juego en pantalla baja (660x372 o 640x400): ahora se lee 'Escoge qué le agregamos al juego'. Liga: moki.jorgesuarez.com.mx/?debug&seed=2142 con la ventana a 660x372.",
+      "en": "Start menu for a new player with the game in a short screen (660x372 or 640x400): it now reads 'Choose what we add to the game'. Link: moki.jorgesuarez.com.mx/?debug&seed=2142 with the window at 660x372."
+    },
+    "cifras": {
+      "es": "Probador PASS: bots igual que master, consola 0, 0 solapes nuevos, a 1280 px igual que master, JS igual. ARTE A del director.",
+      "en": "Prober PASS: bots match master, console 0, 0 new overlaps, same as master at 1280 px, JS unchanged. Art director A."
+    },
+    "la_regamos": {
+      "es": "Era un defecto nuestro: la línea estaba oculta en pantalla baja desde que se escribió. Es un arreglo de claridad, no un cambio que se note a simple vista.",
+      "en": "This was our own defect: the line was hidden on short screens since it was written. It is a clarity fix, not a change you notice at a glance."
+    }
   }
 }
