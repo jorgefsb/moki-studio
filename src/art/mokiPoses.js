@@ -69,6 +69,9 @@ class MokiPoses {
     if (!s.grounded) {
       key = s.vy < 0 ? 'pose-rise' : 'pose-fall';
       frame = Math.floor((s.t * FPS_AIRE) / 1000) % TIRAS[key][1];
+      // P4f patada de empuje: al despegar sostiene el cuadro de zancada con la pierna de atrás estirada (el de pies más abiertos)
+      const P = C.feelP4f, tk = s.t - s.takeoffAt;
+      if (P.on[C.juice] && tk >= 0 && tk < P.holdMs) (key = 'pose-run'), (frame = P.frame);
     } else if (ld >= 0 && ld < LAND_MS) {
       key = 'pose-land';
       frame = Math.min(5, Math.floor((ld / LAND_MS) * 6));

@@ -116,9 +116,9 @@ export const CONFIG = {
   // sube de tono al empezar la rampa del checkpoint. Movimiento reducido apaga la inclinación
   // Opción C del director (10-nov): las líneas de viento fallaron QA en tres vueltas y se quitaron; quedan inclinación y soplido
   // Vuelta chica (ARTE del director, 10-nov): inclinación 4 -> 6°, líneas 1.5-2x más largas y más (>= 3 a la vez en cámara)
-  // P4f (feel base, despegue; caso propuestas/p4-corte6-caso.md): la pierna cercana sostiene la pose de empuje (empuje°,
-  // punta de bota +bota°) holdMs tras despegar y se recoge hasta foldMs; en ese tramo su filtro baja a tauMs. Por nivel de juice
-  feelP4f: { empuje: [0, -20, -38, -38], bota: 10, holdMs: 80, foldMs: 150, tauMs: [55, 30, 18, 18] },
+  // P4f (feel base, despegue; caso propuestas/p4-corte6-caso.md). Vuelta 2: en partida se ven las poses pixel (mokiPoses), no el
+  // títere; al despegar se sostiene holdMs el cuadro de zancada `frame` (pierna de atrás estirada, 11 px más atrás que la subida). Por nivel de juice
+  feelP4f: { on: [0, 1, 1, 1], frame: 2, holdMs: 80 },
   feelP4d: { inclinaMax: 6, accelRef: 15, entraSec: 0.18, saleSec: 0.4 },
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de

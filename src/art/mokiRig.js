@@ -394,10 +394,6 @@ export function createMokiRig(scene) {
       if (s.dead) tgt = deadTarget(s.deadMs !== undefined ? s.deadMs : st.deadT + C.art.hitStopMs);
       else if (hopping) tgt = airTarget(clamp(-248 + C.gravity * (st.hopT - 80) / 1000, -248, 248), st.hopT);
       else tgt = airTarget(s.vy, s.t - s.takeoffAt);
-      // P4f patada de empuje: la pierna cercana sostiene la pose de despegue de la zancada y luego se recoge
-      const P = C.feelP4f;
-      const tk = s.t - s.takeoffAt;
-      const pE = !reduced && !hopping && !s.dead && tk >= 0 && tk < P.foldMs && P.empuje[C.juice];
       if (reduced) tgt = { ...tgt, dy: s.dead ? 8 : 0, tilt: 0, nR: 0, fR: 0, nB: 0, fB: 0 };
       // Tropiezo: el brazo cercano ~20° adelante; el lejano casi pegado (<= 6°) para que no asome como cinta
       Object.assign(tgt, s.dead ? { nA: 20, fA: 4 } : hopping ? armAir(-200, st.hopT) : armAir(s.vy, s.t - s.takeoffAt));
@@ -408,29 +404,16 @@ export function createMokiRig(scene) {
       const a = s.dead ? 1 : 1 - Math.exp(-dtMs / 55); // el tropiezo va directo a su curva (sin suavizar)
       for (const key of Object.keys(tgt)) st.air[key] += (tgt[key] - st.air[key]) * a;
       const air = st.air;
-      // P4f patada de empuje: capa sobre el aire de master. La pierna cercana va a la pose de despegue de la zancada con
-      // filtro rápido, la sostiene holdMs y se funde al aire de master hasta foldMs; desde ahí es master exacto
-      let aNT = air.nT;
-      let aNB = air.nB;
-      if (pE) {
-        const e = 1 - Math.exp(-dtMs / P.tauMs[C.juice]);
-        if (st.eT === undefined) (st.eT = air.nT), (st.eB = air.nB);
-        st.eT += (pE - st.eT) * e;
-        st.eB += (P.bota - st.eB) * e;
-        const u = tk < P.holdMs ? 0 : sineIO((tk - P.holdMs) / (P.foldMs - P.holdMs));
-        aNT = lerp(st.eT, air.nT, u);
-        aNB = lerp(st.eB, air.nB, u);
-      } else st.eT = undefined;
 
       // Mezcla aire <-> carrera
       const onGround = s.grounded && !s.dead && !hopping;
       st.w = clamp(st.w + (onGround ? dtMs / 60 : -dtMs / 40), 0, 1);
       const w = st.w;
-      const nTh = lerp(aNT, near.th, w);
+      const nTh = lerp(air.nT, near.th, w);
       const fTh = lerp(air.fT, far.th, w);
       const nR = lerp(air.nR / k, near.r, w);
       const fR = lerp(air.fR / k, far.r, w);
-      const nBw = lerp(aNB, near.bw, w);
+      const nBw = lerp(air.nB, near.bw, w);
       const fBw = lerp(air.fB, far.bw, w);
       const airHip = G.hipRestY + air.dy / k;
       const hipY = lerp(airHip, runHip, w);
