@@ -2,8 +2,11 @@
 // webp solo se piden si el jugador está en el nivel 1; si no cargan, se queda el fondo de código. Encima siguen obstáculos, fichas, Moki, hojas y bokeh.
 // Las sale de evidencia/salto-capas/herramientas/hacer-capas.py: solo fondo. Moki nunca pasa por ahí.
 import cieloUrl from '../../assets/capas/capa-cielo.webp';
-import lejosUrl from '../../assets/capas/capa-lejos-malva.webp'; // P5 MALVA (9-nov): el archivo malva ya es cálido, tono Oklch 0 a 33 con la misma L y croma (evidencia/p5-malva/herramientas/recolor.py). capa-lejos.webp es el cálido del 4-nov que falló por Moki comido
-import medioUrl from '../../assets/capas/capa-medio.webp';
+// P18 (10-nov): cerros y pinos se leían malva gris contra el cielo ámbar (croma Oklch 0.064 y 0.070 contra 0.10 a 0.16 del cielo).
+// Cerros: tono 34 -> 44.5 (durazno) y croma x1.35; pinos: croma x1.5. Misma L en los dos; los cerros siguen más claros y menos cálidos
+// que los pinos. Hechos con evidencia/p5-malva/herramientas/recolor.py; medidas en evidencia/p18-lejos. Regresar: capa-lejos-malva / capa-medio.
+import lejosUrl from '../../assets/capas/capa-lejos-durazno.webp';
+import medioUrl from '../../assets/capas/capa-medio-vivo.webp';
 import sueloUrl from '../../assets/capas/capa-suelo.webp';
 
 const TEX = { w: 2048, h: 512 };
