@@ -272,14 +272,17 @@ export function boing(ctx, dest, t, o = {}) {
 
 // Viento (placeholder para audio): ruido filtrado de 260 ms, el filtro sube a favor (800 -> 2000 Hz) y baja en contra
 // (2000 -> 700 Hz), 6 dB bajo el boing.
+// P4d: o.rampa = soplido de acelerar (420 ms, 600 -> 2600 Hz, entra más suave), sube de tono al empezar la rampa.
 export function soplido(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
-  const nz = noise(ctx, t, 0.27);
-  const f = lp(ctx, o.favor ? 800 : 2000, 0.9);
-  f.frequency.setValueAtTime(o.favor ? 800 : 2000, t);
-  f.frequency.exponentialRampToValueAtTime(o.favor ? 2000 : 700, t + 0.24);
+  const R = o.rampa;
+  const nz = noise(ctx, t, R ? 0.43 : 0.27);
+  const f0 = R ? 600 : o.favor ? 800 : 2000;
+  const f = lp(ctx, f0, 0.9);
+  f.frequency.setValueAtTime(f0, t);
+  f.frequency.exponentialRampToValueAtTime(R ? 2600 : o.favor ? 2000 : 700, t + (R ? 0.36 : 0.24));
   const g = ctx.createGain();
-  shape(g, t, Math.max(0.02, P.atkMin), 0.15 * P.pk * P.v * (o.suave ? 0.45 : 1), t + 0.26);
+  shape(g, t, Math.max(R ? 0.09 : 0.02, P.atkMin), 0.15 * P.pk * P.v * (o.suave ? 0.45 : R ? 1.3 : 1), t + (R ? 0.42 : 0.26));
   nz.connect(f);
   f.connect(g);
   g.connect(P.out);

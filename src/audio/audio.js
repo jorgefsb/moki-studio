@@ -343,6 +343,7 @@ const A = {
     if (!fn) return;
     if (name === 'popAviso') this.popTics = (this.popTics || 0) + 1; // para las pruebas: tics del pop-up que sí sonaron
     if (name === 'casi') this.casiTics = (this.casiTics || 0) + 1; // para las pruebas: casi-choques que sí sonaron
+    if (name === 'soplido' && o.rampa) this.rampaTics = (this.rampaTics || 0) + 1; // P4d, para las pruebas
     // El sonido va fuera del juice (decisión del líder): racha x2/x3, arco completo, ámbar y tarjeta suenan siempre.
     // Solo lo visual depende del juice.
     const extra = {};

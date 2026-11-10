@@ -4,7 +4,7 @@ import { CONFIG as C } from '../config.js';
 
 const POOL = 90;
 const rand = (a, b) => a + Math.random() * (b - a);
-const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo', polvoK: 'chipPolvoK' };
+const KEYS = { viento: 'chipViento', kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo', polvoK: 'chipPolvoK' };
 
 export class Particles {
   constructor(scene) {
@@ -40,6 +40,24 @@ export class Particles {
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + C.feelP4c.contornoPx, 0, Math.PI * 2), x.fill();
       x.fillStyle = '#F4E8D5';
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
+      t.refresh();
+    }
+    // P4d: línea de viento de papel, tira crema #F4E8D5 con canto kraft, gorda a la derecha y en punta a la izquierda
+    // (el aire pasa hacia atrás). 48x8; se estira con scaleX al emitir
+    if (!scene.textures.exists('chipViento')) {
+      const t = scene.textures.createCanvas('chipViento', 48, 8);
+      const x = t.context;
+      x.beginPath();
+      x.moveTo(2, 4);
+      x.lineTo(44, 1.6);
+      x.arc(44, 4, 2.4, -Math.PI / 2, Math.PI / 2);
+      x.lineTo(2, 4);
+      x.closePath();
+      x.fillStyle = '#F4E8D5';
+      x.fill();
+      x.lineWidth = 1.3;
+      x.strokeStyle = '#B99168';
+      x.stroke();
       t.refresh();
     }
     for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {
@@ -88,7 +106,7 @@ export class Particles {
     p.fadeFrom = o.fadeFrom ?? 0.6;
     p.estela = o.estela ? o.scale : 0; // escala inicial de la estela (0 = no es estela)
     p.infla = 0; // polvo del aterrizaje (P4B): lo pone burst('land')
-    p.sprite.setTexture(KEYS[color]).setPosition(x, y).setAngle(Math.random() * 360).setAlpha(1).setScale(o.scale || 1).setVisible(true);
+    p.sprite.setTexture(KEYS[color]).setDepth(13).setPosition(x, y).setAngle(Math.random() * 360).setAlpha(1).setScale(o.scale || 1).setVisible(true);
     return p;
   }
 
@@ -129,6 +147,15 @@ export class Particles {
     this.k = (this.k || 0) + 1;
     const H = L >= 3 && C.crece.estelaHC; // Hardcore: más grande, vive más y más naranja que Mucho
     this.emit((H ? H.colores : ['paper', 'kraft', 'orange'])[this.k % 3], x + rand(-4, 4), y + rand(-3, 3), { vx: v - rand(...C.crece.estelaAtras), vy: rand(-4, 4), g: 30, life: rand(780, 940) * (H ? H.vida : 1), spin: rand(90, 220), osc: 2, fadeFrom: 0.55, scale: H ? H.escala : 2.4, estela: true });
+  }
+
+  // P4d: una línea de viento detrás de Moki mientras acelera. Quieta respecto al suelo (vx 0): el mundo la jala hacia
+  // atrás a la velocidad de carrera, así se lee como aire que pasa. Horizontal, sin giro; solo toma lugares libres.
+  viento(x, y) {
+    if (this.scene.reduced || C.juice <= 0 || !this.items.some((q) => !q.alive)) return;
+    const [a, b] = C.feelP4d.largo;
+    const p = this.emit('viento', x + rand(-6, 6), y + rand(-4, 4), { vx: 0, vy: 0, g: 0, life: 560, spin: 0, fadeFrom: 0.45 });
+    p.sprite.setAngle(0).setDepth(11.9).setScale(rand(a, b) / 48, 1); // detrás de Moki (12)
   }
 
   // Reglas por nivel de juice (ANIMACION.md §5). Con movimiento reducido no se emite nada.

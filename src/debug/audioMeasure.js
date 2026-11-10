@@ -143,6 +143,8 @@ const SFX_CASES = {
   stumble: (c, d, t) => SFX.stumble(c, d, t),
   ui: (c, d, t) => SFX.ui(c, d, t, {}),
   caida: (c, d, t) => SFX.caida(c, d, t, { k: 1 }), // P4c
+  soplido: (c, d, t) => SFX.soplido(c, d, t, { favor: true }),
+  rampa: (c, d, t) => SFX.soplido(c, d, t, { rampa: true }), // P4d
 };
 
 export async function measureSfx(cfg = C.audio) {
