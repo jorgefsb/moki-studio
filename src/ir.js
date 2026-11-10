@@ -16,6 +16,7 @@ export const DESTINOS = {
   timbre: { modo: 'libre', tramo: 1, nivel: null, mec: ['timbre'] },
   zanja: { modo: 'reto', tramo: 1, nivel: 2, mec: ['zanja'] }, // P5c: primer nivel del Cuaderno con mecánica nueva (Reto nivel 2)
   formas: { modo: 'reto', tramo: 0, nivel: null }, // formas de página: Libre siempre y el Reto desde hoy
+  mega: { modo: 'reto', tramo: 0, nivel: null, mega: true }, // P8: MODO MEGA (el Clásico a x1.5) aunque el nivel 1 no esté terminado
   // P3e (7): Libre escoge paisaje. Fila del nivel 1 del mapa de arte (paisajes.js RUTA[0]): Atardecer, Ciudad, Playa, Noche
   'libre-atardecer': { modo: 'libre', tramo: 0, nivel: 1 },
   'libre-playa': { modo: 'libre', tramo: 2, nivel: 1 },

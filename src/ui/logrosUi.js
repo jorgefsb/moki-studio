@@ -21,6 +21,7 @@ const TX = {
   coleccionista: ['Coleccionista', 'Llega a la meta con 8 de cada 10 piezas'],
   todas: ['Todas las piezas', 'Llega a la meta con todas las piezas'],
   reto3: ['Tres días de Reto', 'Juega el Reto del día 3 días seguidos'],
+  mega15: ['MEGA x1.5', 'Llega a la meta en MODO MEGA x1.5'],
   nivel5: ['Nivel 5', 'Sube a Moki al nivel 5 del Cuaderno'],
   cuaderno: ['Cuaderno lleno', 'Termina los 10 niveles del Cuaderno'],
 };
@@ -93,6 +94,10 @@ export function revisarLogros(st) {
   let { l } = leerLogros();
   if (st && st.finished && st.pieceTotal > 0 && st.maxPieces >= st.pieceTotal && !l.ganados.includes('todas')) {
     l.ganados.push('todas');
+    guardar(l);
+  }
+  if (st && st.finished && st.mega && !l.ganados.includes('mega15')) {
+    l.ganados.push('mega15');
     guardar(l);
   }
   return avisar();

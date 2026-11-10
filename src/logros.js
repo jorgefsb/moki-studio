@@ -19,6 +19,7 @@ export const LOGROS = [
   { id: 'reto3', gana: (c, l) => l.ganados.includes('reto3') },
   { id: 'nivel5', gana: (c) => nivelDe(c).hechos >= 4 },
   { id: 'cuaderno', gana: (c) => nivelDe(c).completo },
+  { id: 'mega15', gana: (c, l) => l.ganados.includes('mega15') }, // P8: llegar a la meta en MODO MEGA x1.5
 ];
 const IDS = new Set(LOGROS.map((x) => x.id));
 
