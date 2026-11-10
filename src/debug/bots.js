@@ -8,6 +8,26 @@ import { CONFIG as C } from '../config.js';
 
 const DT = 16.667;
 
+// P15: el bucle del bot llama a s.update() a mano y el gestor de tweens de Phaser (que mide con el reloj real) no corre:
+// cada pieza cobrada se quedaba con su tween de cobro congelado, a escala 1 y pegada a Moki. Aquí cada tween avanza el
+// mismo DT que el juego, igual que haría TweenManager.step. Solo cosmético: no toca física, puntaje ni azar.
+function pasoTweens(s, dt) {
+  const m = s.tweens;
+  if (m.paused) return;
+  const list = m.tweens;
+  const fin = [];
+  m.processing = true;
+  for (let i = 0; i < list.length; i++) if (list[i].update(dt * m.timeScale)) fin.push(list[i]);
+  m.processing = false;
+  for (const tw of fin) {
+    const i = list.indexOf(tw);
+    if (i > -1 && (tw.isPendingRemove() || tw.isDestroyed())) {
+      list.splice(i, 1);
+      tw.destroy();
+    }
+  }
+}
+
 // seed (opcional): juega ese nivel generado (NIVELES.md §10), p.ej. '2026-10-29' o '123'
 export function runBot(s, kind, maxSec = 150, seed = null) {
   s.startGame();
@@ -45,6 +65,7 @@ export function runBot(s, kind, maxSec = 150, seed = null) {
       if (q.plan === 'skip' && q.x < s.px + 400) q.handled = true;
     });
     s.update(0, DT);
+    pasoTweens(s, DT);
   }
   if (s.screen === 'dead') hit.type = s.cause;
   return {
