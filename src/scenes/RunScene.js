@@ -801,7 +801,6 @@ export class RunScene extends Phaser.Scene {
     this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);
     this.accel = 0;
     this.inclina = 0;
-    this.rampaAt = undefined; // P4d
     // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
     this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
@@ -1506,8 +1505,8 @@ export class RunScene extends Phaser.Scene {
     const target = this.tramoSpeed(this.tramoIdx);
     if (this.accel === 0 && this.speed !== target) {
       this.accel = Math.abs(target - this.speed) / C.tramoEaseSec;
-      // P4d: empieza la rampa de subida del checkpoint: soplido que sube de tono y arrancan las líneas de viento
-      if (this.speed < target && this.screen === 'play' && !this.demo && !this.dead) (this.rampaAt = this.t), (this.lineasN = 0), audio.sfx('soplido', { rampa: true });
+      // P4d: empieza la rampa de subida del checkpoint: soplido que sube de tono (las líneas de viento se quitaron, opción C del director)
+      if (this.speed < target && this.screen === 'play' && !this.demo && !this.dead) audio.sfx('soplido', { rampa: true });
     }
     if (this.speed < target) this.speed = Math.min(target, this.speed + this.accel * dt);
     else if (this.speed > target) this.speed = Math.max(target, this.speed - this.accel * dt);
@@ -2129,15 +2128,6 @@ export class RunScene extends Phaser.Scene {
     const tau = inc > (this.inclina || 0) ? A.entraSec : A.saleSec;
     this.inclina = (this.inclina || 0) + (inc - (this.inclina || 0)) * Math.min(1, dtMs / 1000 / tau);
     if (this.inclina > 0.02) this.rig.container.setAngle(this.rig.container.angle + this.inclina);
-    // Líneas de viento de papel detrás de Moki en la rampa del checkpoint, repartidas en sus primeros lineasSec
-    if (subiendo && this.rampaAt !== undefined && this.screen === 'play') {
-      const n = A.lineas[C.juice] || 0;
-      if (this.lineasN < n && this.t - this.rampaAt >= (this.lineasN * A.lineasSec * 1000) / n) {
-        this.lineasN++;
-        this.particles.viento(this.px - 38, this.y - 20 - Math.random() * 68, this.speed); // la punta redonda pegada a la espalda (el reparto de 18 px lo pone viento())
-      }
-    }
-
     let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {
       const ld = this.t - this.landAt;

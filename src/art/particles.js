@@ -4,7 +4,7 @@ import { CONFIG as C } from '../config.js';
 
 const POOL = 90;
 const rand = (a, b) => a + Math.random() * (b - a);
-const KEYS = { viento: 'chipViento', kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo', polvoK: 'chipPolvoK' };
+const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo', polvoK: 'chipPolvoK' };
 
 export class Particles {
   constructor(scene) {
@@ -40,28 +40,6 @@ export class Particles {
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + C.feelP4c.contornoPx, 0, Math.PI * 2), x.fill();
       x.fillStyle = '#F4E8D5';
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
-      t.refresh();
-    }
-    // P4d: línea de viento de papel, tira crema #F4E8D5 opaca con canto de tinta cálida opaca (sin gris), en punta hacia
-    // atrás (el aire pasa hacia la izquierda). Vuelta 2 (director, 10-nov): el grosor iba en px de juego y el lienzo se
-    // encoge (zoom 0.68 a 660), salían rayitas de ~2 px. La textura se dibuja con cuerpo de 8 px y canto de 1.5, y al emitir
-    // se escala por 1/zoom para que el cuerpo mida feelP4d.cuerpoPx EN PANTALLA. 80 px de largo a escala 1 (scaleX).
-    if (!scene.textures.exists('chipViento')) {
-      const t = scene.textures.createCanvas('chipViento', 88, 14);
-      const x = t.context;
-      x.beginPath();
-      x.moveTo(2, 7);
-      x.lineTo(30, 3);
-      x.lineTo(80, 3);
-      x.arc(80, 7, 4, -Math.PI / 2, Math.PI / 2);
-      x.lineTo(30, 11);
-      x.closePath();
-      x.lineJoin = 'round';
-      x.lineWidth = 3; // el relleno tapa la mitad de adentro: queda 1.5 px de canto por fuera
-      x.strokeStyle = C.feelP4d.canto;
-      x.stroke();
-      x.fillStyle = '#F4E8D5';
-      x.fill();
       t.refresh();
     }
     for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {
@@ -151,29 +129,6 @@ export class Particles {
     this.k = (this.k || 0) + 1;
     const H = L >= 3 && C.crece.estelaHC; // Hardcore: más grande, vive más y más naranja que Mucho
     this.emit((H ? H.colores : ['paper', 'kraft', 'orange'])[this.k % 3], x + rand(-4, 4), y + rand(-3, 3), { vx: v - rand(...C.crece.estelaAtras), vy: rand(-4, 4), g: 30, life: rand(780, 940) * (H ? H.vida : 1), spin: rand(90, 220), osc: 2, fadeFrom: 0.55, scale: H ? H.escala : 2.4, estela: true });
-  }
-
-  // P4d: una línea de viento detrás de Moki mientras acelera. Va a lineasV de la velocidad del mundo (v): se queda atrás
-  // ~110 px/s, se lee como aire que pasa y no sale de cuadro en vertical (ahí Moki va al 28 % del ancho). Horizontal,
-  // sin giro; solo toma lugares libres.
-  // Vuelta 3 (director, 10-nov): a 390 Moki va al 15 % del ancho y las líneas nacían en x=15..33 de mundo; a 600 ms sus
-  // centros ya estaban en -32..10 px de pantalla (media línea). Ahora el centro nace dentro de la cámara: piso = lo mayor
-  // entre 15 % del ancho visible y lo que deja la línea entera adentro hasta morir (media línea + lo que se queda atrás en
-  // su vida); techo 60 % del ancho. Se conserva el reparto de 18 px. Misma deriva (lineasV) y misma vida. A 660 y 1280 el
-  // piso del 15 % casi coincide con donde ya nacían (14-16 %).
-  viento(x, y, v) {
-    if (this.scene.reduced || C.juice <= 0 || !this.items.some((q) => !q.alive)) return;
-    const A = C.feelP4d;
-    const [a, b] = A.largo;
-    const sx = rand(a, b) / 80;
-    const vw = this.scene.vw || C.world.width;
-    const atras = v * (1 - A.lineasV) * (A.lineasVida / 1000); // lo que se queda atrás respecto al suelo en su vida
-    const piso = Math.max(0.15 * vw, (88 * sx) / 2 + atras);
-    const reparto = Math.random() * 18;
-    const cx = Math.min(0.6 * vw, Math.max(x + reparto, piso + 18) - reparto);
-    const p = this.emit('viento', cx, y, { vx: v * A.lineasV, vy: 0, g: 0, life: A.lineasVida, spin: 0, fadeFrom: 0.7 });
-    const sy = A.cuerpoPx / (8 * (this.scene.zoom || 1)); // cuerpo de 8 px en la textura -> cuerpoPx en pantalla
-    p.sprite.setAngle(0).setDepth(11.9).setScale(sx, sy); // detrás de Moki (12)
   }
 
   // Reglas por nivel de juice (ANIMACION.md §5). Con movimiento reducido no se emite nada.
