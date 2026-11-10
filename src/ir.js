@@ -36,6 +36,8 @@ const pide = (() => {
 })();
 
 export const IR = Object.hasOwn(DESTINOS, pide) ? { id: pide, ...DESTINOS[pide] } : null;
+// P7: ?ir=logros no es una partida: abre la pantalla de Logros con lo guardado del propio jugador (no pasa a memoria).
+export const IR_PANTALLA = pide === 'logros' ? 'logros' : null;
 
 // Estado con el que nace la memoria de una liga: sin tutorial ni partida clásica obligatoria, en el modo del destino
 // y, si el destino lo pide, en ese nivel del Cuaderno. Lo demás (sonido, juice, Cuaderno propio) se copia del jugador.

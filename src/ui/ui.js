@@ -97,7 +97,7 @@ export function createUI() {
     soundBtnEl: null,
     onSound: null,
     get modalOpen() {
-      return !!(state.fail || state.final || state.asi || state.pause || state.foto);
+      return !!(state.fail || state.final || state.asi || state.pause || state.foto || state.logros);
     },
     // Gesto "seguir" (Espacio, Enter, ↑) con una tarjeta abierta.
     primary() {
@@ -713,6 +713,38 @@ export function createUI() {
       state.asi.remove();
       state.asi = null;
       primary = state.final ? state.final.primary : null;
+    },
+
+    // P7 LOGROS: la pantalla y el aviso viven en un módulo diferido (logrosUi.js con su CSS y textos): el JS inicial
+    // solo lleva estos ganchos. state.logros se marca al instante para que el teclado y el lienzo no arranquen la partida.
+    showLogros(d, onBack) {
+      ui.hideLogros();
+      const tok = (state.logros = { tok: true });
+      import('./logrosUi.js')
+        .then((m) => {
+          if (state.logros !== tok) return;
+          const lg = m.pantalla(el, d, onBack);
+          root.appendChild(lg);
+          state.logros = lg;
+          primary = onBack;
+          lg.querySelector('button').focus({ preventScroll: true });
+        })
+        .catch(() => state.logros === tok && ((state.logros = null), onBack()));
+    },
+    hideLogros() {
+      if (!state.logros) return;
+      if (state.logros.remove) state.logros.remove();
+      state.logros = null;
+      primary = null;
+    },
+    get logrosOpen() {
+      return !!state.logros;
+    },
+    avisoLogro(ids, zona) {
+      if (!ids.length) return;
+      import('./logrosUi.js')
+        .then((m) => m.aviso(el, root, ids, ui.sfx, zona))
+        .catch(() => {});
     },
 
     // Pausa (UX §6)

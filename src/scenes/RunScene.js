@@ -17,7 +17,9 @@ import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, 
 import { abierto, siguiente, sumar, mecanicasDeNivel, estrenoSolo } from '../barra.js';
 import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
-import { IR, DESTINOS } from '../ir.js';
+import { IR, DESTINOS, IR_PANTALLA } from '../ir.js';
+import { leerLogros } from '../logros.js';
+const logrosUi = () => import('../ui/logrosUi.js'); // P7: pantalla, aviso y lo que gana logros (diferido)
 import { EMBED } from '../embed.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { abrirIntento, cerrarIntento } from '../contador.js';
@@ -121,6 +123,7 @@ export class RunScene extends Phaser.Scene {
     if (ESCAPARATE) this.esc = new Escaparate(this); // ?escaparate: el guion arranca su propio título
     else if (START_SCREEN === 'play') this.startGame();
     else this.startDemo();
+    if (IR_PANTALLA === 'logros' && !ESCAPARATE) this.abrirLogros(); // P7: ?ir=logros abre la pantalla de Logros
     // ?ir=<destino>: directo a la partida donde vive lo nuevo, en cuanto baja el módulo diferido del atardecer (hora fija del
     // nivel 1, paisajes de Libre, boceto): sin él la Ciudad de cartón no entra. Mientras tanto corre el demo.
     // Si la página del destino tiene paisaje propio (Ciudad), se hornea antes de arrancar: la partida nace dentro de él.
@@ -525,13 +528,14 @@ export class RunScene extends Phaser.Scene {
   //  JUEGA LO NUEVO primero, luego Reto y Libre (cada uno dice en una línea qué es), la Ruta 1 a 4, Clásico y Paseo.
   //  Punto NUEVO en la tarjeta que cambió en 7 días (novedades.json "donde"); se apaga al jugarla.
   menu() {
+    if (this.ui.logrosOpen) return; // P7: con Logros abierto el menú no se redibuja encima (novedades llega tarde)
     const coarse = this.coarse;
     const n = this.nov;
     // P3e (3): la versión de lo nuevo es la entrada de novedades.json (fecha + título, la cambia el cronista al integrar)
     const version = n && n.lineas.length ? `${n.fecha}|${n.titulo}` : '';
     if (load('moki.primera') !== '1') {
       if (version) save('moki.nov.visita', version); // el jugador nuevo ya ve lo de hoy: el aviso es para cuando cambie
-      this.ui.showMenu({ hero: { titulo: t('menu.jugar'), sub: t(coarse ? 'menu.jugar.d' : 'menu.jugar.kbd'), onPick: () => this.startGame() }, cards: [], voto: votoMenu() }, this.saludoZonas());
+      this.ui.showMenu({ hero: { titulo: t('menu.jugar'), sub: t(coarse ? 'menu.jugar.d' : 'menu.jugar.kbd'), onPick: () => this.startGame() }, cards: [this.tarjetaLogros()], voto: votoMenu() }, this.saludoZonas());
       return;
     }
     const nv = nivelDe(leerCuaderno()).nivel;
@@ -594,7 +598,9 @@ export class RunScene extends Phaser.Scene {
         onPick: () => (visto(k), irA(ir)),
       };
     });
-    const cards = [...(nv >= 5 ? [libre, reto] : [reto, libre]), ...ruta, { nombre: t('menu.clasico'), linea: t('menu.clasico.d'), onPick: () => irA(null, 'nivel=clasico') }];
+    // P7: Logros con "Nuevo" va primero (a 660 la tercera tarjeta queda bajo la flecha del carril); si no, tercera
+    const lg = this.tarjetaLogros();
+    const cards = [...(lg.nuevo ? [lg] : []), ...(nv >= 5 ? [libre, reto] : [reto, libre]), ...(lg.nuevo ? [] : [lg]), ...ruta, { nombre: t('menu.clasico'), linea: t('menu.clasico.d'), onPick: () => irA(null, 'nivel=clasico') }];
     cards.push({
       nombre: t('paseo.name'),
       linea: t('menu.paseo.d'),
@@ -637,6 +643,43 @@ export class RunScene extends Phaser.Scene {
       },
       this.saludoZonas()
     );
+  }
+
+  // P7 LOGROS: tarjeta del menú (1 toque) con su cuenta; punto "Nuevo" mientras haya un logro ganado sin ver
+  tarjetaLogros() {
+    const d = leerLogros();
+    return { nombre: t('lg.titulo'), linea: t('lg.menu', { n: d.n, de: d.de }), nuevo: d.sinVer, onPick: () => this.abrirLogros() };
+  }
+
+  // Hueco del aviso de logro (px de pantalla): arriba, entre los metros (izq.) y las piezas (der.), sin el botón de
+  // sonido si cae en ese renglón. Nada de Moki, carril, tarjeta final ni tira del Cuaderno vive ahí.
+  zonaAviso() {
+    const cam = this.cameras.main;
+    const x = (v) => (v - cam.worldView.x) * cam.zoom;
+    const L = this.hudL && this.hudL.visible ? x(this.hudL.getBounds().right) : 0;
+    const R = this.hudR && this.hudR.visible ? x(this.hudR.getBounds().left) : this.scale.width;
+    const sb = this.ui.state.soundBtn;
+    let left = L + 10;
+    if (sb && sb.offsetTop < 64) left = Math.max(left, sb.offsetLeft + sb.offsetWidth + 10);
+    if (R - 18 - left >= 200) return { left: Math.round(left), right: Math.round(R - 18), top: 8 };
+    // Vertical (390): ese hueco no alcanza. Con tarjeta abierta, bajo la tarjeta a la derecha de Moki; en partida, en el
+    // cielo bajo el botón de sonido (el carril va abajo, junto al suelo).
+    const W = this.scale.width;
+    const st = this.ui.state;
+    const card = (st.final && st.final.card) || (st.fail && st.fail.card);
+    if (card) return { left: Math.round(this.saludoZonas().mokiR + 12), right: W - 16, top: Math.round(card.getBoundingClientRect().bottom + 8) };
+    return { left: 16, right: W - 16, top: Math.round(sb ? sb.offsetTop + sb.offsetHeight + 10 : 72) };
+  }
+
+  abrirLogros() {
+    if (this.screen !== 'demo') return;
+    const d = leerLogros();
+    logrosUi().then((m) => m.marcarVistos()).catch(() => {}); // abrirla apaga el "Nuevo"
+    this.ui.hideMenu(true);
+    this.ui.showLogros(d, () => {
+      this.ui.hideLogros();
+      this.menu();
+    });
   }
 
   // Vuelta rápida en la partida en curso: pedida al empezar y solo en Reto del día o Libre (el clásico no cambia)
@@ -708,6 +751,7 @@ export class RunScene extends Phaser.Scene {
     this.ui.hideAsi();
     this.ui.hideFail();
     this.ui.hidePause();
+    this.ui.hideLogros();
     this.demo = false;
     this.screen = 'play';
     this.god = GOD; // invulnerable solo en dev o con ?debug&god (igual que window.__moki)
@@ -724,9 +768,11 @@ export class RunScene extends Phaser.Scene {
     this.paseoTagC.setVisible(this.paseoRun);
     this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
     this.porTachar = this.partida ? porTachar(this.partida) : []; // Día 2: encargos que se tachan a media partida
+    leerLogros(); // P7: la primera lectura fija lo ganado antes (no se avisa lo viejo); antes de que la partida gane nada
     registrarDia(); // Racha con perdón: jugar cuenta el día local, también en Paseo (brief del director, pieza 4, decisión b); el demo no cuenta
     this.vueltaOn = this.vuelta && !this.paseoRun && vueltaAbierta(); // sin el sello (cuaderno borrado) no aplica aunque esté guardada
     const level = this.makeLevel();
+    if (level.modo === 'reto' && !this.paseoRun) logrosUi().then((m) => this.ui.avisoLogro(m.contarReto(), this.zonaAviso())).catch(() => {}); // P7: Reto 3 días seguidos
     // ?ir=<destino>: la primera partida arranca en la página del destino (como un reintento desde su checkpoint)
     const salto = IR && !this.irHecho ? Math.min(IR.tramo, level.tramos.length - 1) : 0;
     this.irHecho = true;
@@ -2607,6 +2653,8 @@ export class RunScene extends Phaser.Scene {
       floorY: (C.world.groundY - this.top) * z,
     };
     this.ui.showCuaderno(revisar(this.partida), zonas);
+    const st = this.partida; // P7: después de revisar(), que guarda los sellos de partida
+    logrosUi().then((m) => this.ui.avisoLogro(m.revisarLogros(st), this.zonaAviso())).catch(() => {});
     this.pedirZanja(); // P5c: si subió al nivel de la zanja, el módulo baja ya para la siguiente partida del Reto
   }
 
