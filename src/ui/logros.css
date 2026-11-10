@@ -1,0 +1,29 @@
+/* P7 LOGROS: rejilla de sellos. Ganado = sello ámbar (recompensa) con tinta; faltante = lápiz punteado y su pista. */
+.ui-logros .lg-cab { display: flex; align-items: baseline; gap: 12px; }
+.ui-logros .lg-cuenta { font: 700 22px Outfit, sans-serif; }
+.lg-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+@media (max-width: 520px) { .lg-grid { grid-template-columns: 1fr; } }
+.lg-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 2px dashed #8a7e70; border-radius: 14px; background: rgba(244, 232, 213, 0.75); color: rgba(34, 33, 31, 0.88); }
+.lg-item.ganado { border: 3px solid #22211f; background: #fff7ea; color: #22211f; box-shadow: 0 3px 0 rgba(34, 33, 31, 0.22); }
+.lg-item.sigue { border-color: #22211f; border-style: dashed; color: #22211f; }
+.lg-item .tx { display: flex; flex-direction: column; min-width: 0; }
+.lg-item b { font: 700 17px/22px Outfit, sans-serif; }
+.lg-item span { font: 400 15px/20px Inter, sans-serif; }
+.lg-sigue { margin-left: 8px; padding: 1px 8px; border: 2px solid #22211f; border-radius: 999px; font: 700 12px/16px Outfit, sans-serif; font-style: normal; text-transform: uppercase; vertical-align: 2px; }
+.lg-sello { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 2px dashed #8a7e70; box-sizing: border-box; position: relative; }
+.lg-sello::after { content: ''; position: absolute; left: 11px; top: 7px; width: 8px; height: 14px; border: solid #8a7e70; border-width: 0 3px 3px 0; transform: rotate(45deg); opacity: 0.45; }
+.ganado .lg-sello, .ui-logro .lg-sello { background: #ffa500; border: 3px solid #22211f; transform: rotate(-8deg); }
+.ganado .lg-sello::after, .ui-logro .lg-sello::after { border-color: #22211f; opacity: 1; left: 10px; top: 5px; }
+@media (max-height: 420px) { .ui-logros .wrap { padding-top: 10px; } .ui-logros h2 { font-size: 24px; line-height: 28px; } .ui-logros .sub { margin: 0 0 6px; font-size: 14px; line-height: 18px; } .lg-item { padding: 4px 10px; } .lg-item b { font-size: 15px; line-height: 19px; } .lg-item span { font-size: 13px; line-height: 17px; } .lg-sello { width: 28px; height: 28px; } .lg-sello::after { left: 8px; top: 4px; } .ganado .lg-sello::after { left: 7px; top: 2px; } .ui-logros .foot { padding-top: 6px; padding-bottom: 8px; } }
+
+.ui-logro { position: absolute; right: 16px; top: 8px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: #f4e8d5; border: 3px solid #22211f; border-radius: 12px; box-shadow: 0 4px 0 rgba(34, 33, 31, 0.24); color: #22211f; pointer-events: none; z-index: 30; animation: lg-baja 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.ui-logro .tx { display: flex; flex-direction: column; min-width: 0; }
+.ui-logro b { font: 700 15px/19px Outfit, sans-serif; }
+.ui-logro span { font: 400 14px/18px Inter, sans-serif; }
+.ui-logro .lg-sello { width: 30px; height: 30px; animation: lg-estampa 420ms 180ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.ui-logro .lg-sello::after { left: 9px; top: 4px; }
+.ui-logro.out { animation: lg-sube 260ms ease-in both; }
+@keyframes lg-baja { from { transform: translateY(-80px); } to { transform: translateY(0); } }
+@keyframes lg-sube { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-30px); opacity: 0; } }
+@keyframes lg-estampa { 0% { transform: scale(1.8) rotate(-30deg); opacity: 0; } 60% { transform: scale(0.9) rotate(-4deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); } }
+@media (prefers-reduced-motion: reduce) { .ui-logro, .ui-logro .lg-sello, .ui-logro.out { animation: none; } }

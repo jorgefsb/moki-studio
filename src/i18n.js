@@ -96,6 +96,9 @@ const ES = {
   'how.jorge.one': 'Jorge intervino {n} vez',
   'how.jorge.many': 'Jorge intervino {n} veces',
   'how.back': 'Volver',
+  // P7 Logros: lo del menú vive aquí; los textos de la pantalla y el aviso van en ui/logrosUi.js (módulo diferido)
+  'lg.titulo': 'Logros',
+  'lg.menu': '{n} de {de} ganados',
   'how.credito': 'Moki por JorgeSuarez.com.mx · Licencia CC BY-NC', // poses de Moki Pixel (licencia del arte)
   'pause.title': 'Pausa',
   'cu.title': 'Cuaderno de Moki',

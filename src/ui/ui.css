@@ -347,10 +347,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .mn-card[aria-pressed='true'] .mn-casilla::after { content: ''; width: 9px; height: 5px; margin-top: -3px; border: solid #f4e8d5; border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg); }
 .mn-hecho { display: inline-block; width: 10px; height: 5px; margin: 0 7px 4px 1px; border: solid #22211f; border-width: 0 0 3px 3px; transform: rotate(-45deg); }
 .mn-punto {
-  position: absolute; top: -9px; right: 6px; padding: 0 7px 0 5px; display: flex; align-items: center; gap: 4px;
+  position: absolute; top: -6px; right: 6px; padding: 0 7px 0 5px; /* P7: -9 la pegaba al botón de arriba y se leía cortada */ display: flex; align-items: center; gap: 4px;
   background: #f4e8d5; border: 2px solid #22211f; border-radius: 999px; font: 700 12px/18px Outfit, sans-serif; font-style: normal;
 }
 .mn-punto::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #ff6b35; border: 1.5px solid #22211f; }
+/* P7: flecha en tinta de las tarjetas que abren pantalla (Logros), pegada a la derecha */
+.mn-ver { flex: none; margin-left: auto; font: 800 24px/1 Outfit, sans-serif; font-style: normal; color: #22211f; }
 .mn-pie {
   align-self: center; margin: 0; padding: 3px 12px; background: #f4e8d5; border: 2px solid #8a7e70; border-radius: 12px;
   font: 600 14px/19px Inter, sans-serif; color: #22211f; text-align: center;
@@ -361,7 +363,7 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-menu.corto .mn-hero b { font-size: 20px; line-height: 24px; }
 .ui-menu.corto .mn-hero span { font-size: 14px; line-height: 17px; }
 .ui-menu.corto .mn-grid {
-  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; pointer-events: auto; padding: 10px 2px 6px; margin-top: -8px;
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; pointer-events: auto; padding: 10px 2px 6px; margin-top: -6px;
   scrollbar-width: thin; /* sin desvanecido: la tarjeta del borde se asoma opaca y avisa que hay más */
 }
 .ui-menu.corto .mn-card { flex: none; width: 176px; min-height: 56px; scroll-snap-align: start; }
