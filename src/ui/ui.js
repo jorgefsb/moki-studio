@@ -160,7 +160,7 @@ export function createUI() {
           if (c.nuevo) b.append(punto());
           grid.append(b);
         }
-        const carril = el('div', 'mn-carril');
+        const carril = el('div', `mn-carril${m.cards.length < 4 ? ' pocas' : ''}`);
         carril.append(grid);
         p.append(carril);
         // Carril (alto < 480): flecha en la orilla derecha que avisa "hay más" y lo corre una tarjeta; se va al llegar al final

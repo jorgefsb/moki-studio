@@ -367,11 +367,13 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
   scrollbar-width: thin; /* sin desvanecido: la tarjeta del borde se asoma opaca y avisa que hay más */
 }
 .ui-menu.corto .mn-card { flex: none; width: 176px; min-height: 56px; scroll-snap-align: start; }
+.ui-menu.corto .mn-grid[style*='--n'] .mn-card { flex: 1 1 0; width: auto; min-width: 0; } /* P8: con 2 o 3 tarjetas no hay carril: llenan el ancho */
 .ui-menu.corto .mn-pie { font-size: 14px; line-height: 17px; padding: 1px 10px; }
 .mn-mas { display: none; }
 .mn-carril { position: relative; }
 /* P3f: la flecha tenía su propia orilla encima de la última tarjeta visible; ahora el carril le deja un canal de 40 px */
 .ui-menu.corto .mn-carril { padding-right: 40px; }
+.ui-menu.corto .mn-carril.pocas { padding-right: 0; } /* P8: sin carril no hace falta el canal de la flecha */
 .ui-menu.corto .mn-mas {
   display: flex; align-items: center; justify-content: center; position: absolute; right: 0; top: 50%; margin-top: -22px; width: 36px; height: 48px;
   padding: 0; pointer-events: auto; cursor: pointer; background: #f4e8d5; color: #22211f; border: 3px solid #22211f;
