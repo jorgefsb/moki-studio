@@ -4,7 +4,7 @@ import { CONFIG as C } from '../config.js';
 
 const POOL = 90;
 const rand = (a, b) => a + Math.random() * (b - a);
-const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo' };
+const KEYS = { kraft: 'chipKraft', paper: 'chipPaper', orange: 'chipOrange', amber: 'chipAmber', casiP: 'chipCasiP', casiO: 'chipCasiO', polvo: 'chipPolvo', polvoK: 'chipPolvoK' };
 
 export class Particles {
   constructor(scene) {
@@ -26,6 +26,18 @@ export class Particles {
       const bolas = [[7, 10, 5.5], [14, 9, 6], [11, 6, 4.5]];
       x.fillStyle = 'rgba(34, 33, 31, 0.55)';
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + 1.4, 0, Math.PI * 2), x.fill();
+      x.fillStyle = '#F4E8D5';
+      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
+      t.refresh();
+    }
+    // P4c vuelta 2 (ARTE del director, 10-nov): el polvo del DESPEGUE va en crema cálida con contorno kraft, nada de gris
+    // (ARTE.md l.137). El de aterrizaje de P4B se queda con su textura
+    if (!scene.textures.exists('chipPolvoK')) {
+      const t = scene.textures.createCanvas('chipPolvoK', 26, 20);
+      const x = t.context;
+      const bolas = [[9, 12, 5.5], [16, 11, 6], [13, 8, 4.5]];
+      x.fillStyle = '#B99168';
+      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + C.feelP4c.contornoPx, 0, Math.PI * 2), x.fill();
       x.fillStyle = '#F4E8D5';
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
       t.refresh();
@@ -152,7 +164,7 @@ export class Particles {
       const n = C.feelP4c.despegue[L] || 0;
       const v = this.scene.speed || 0;
       for (let i = 0; i < n; i++) {
-        const p = this.emit('polvo', x + rand(-12, 6), g - 3, { vx: v - rand(40, 110), vy: -rand(50, 100), g: 180, life: rand(340, 420), spin: rand(-40, 40), fadeFrom: 0.45, scale: rand(1.25, 1.6) });
+        const p = this.emit('polvoK', x + rand(-12, 6), g - 3, { vx: v - rand(40, 110), vy: -rand(50, 100), g: 180, life: rand(340, 420), spin: rand(-40, 40), fadeFrom: 0.45, scale: rand(1.25, 1.6) });
         p.infla = p.sprite.scaleX;
       }
       if (L >= 2) this.emit('kraft', x - 10, g - 2, { vx: -60, vy: -50, g: 520, life: 240, spin: 180 });
