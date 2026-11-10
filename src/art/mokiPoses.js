@@ -62,7 +62,8 @@ class MokiPoses {
     if (!on) return false;
     if (s.dead) return this.golpe();
     this.y0 = null;
-    this.sprite.setScale(ESCALA).setAngle(0);
+    const ang = s.inclinaVista || 0; // P4g viento + acelerar (0 con movimiento reducido)
+    this.sprite.setScale(ESCALA).setAngle(ang);
     let key = 'pose-run';
     let frame = 0;
     const ld = s.t - s.landAt;
@@ -86,7 +87,7 @@ class MokiPoses {
       this.pose = key;
     } else this.sprite.setFrame(frame);
     this.sprite.setPosition(s.px, s.y + 2);
-    this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAlpha(s.rimA || 0);
+    this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAngle(ang).setAlpha(s.rimA || 0);
     return true;
   }
 
