@@ -14,6 +14,7 @@ import { montarCapas } from './capas.js';
 import { montarKit } from './kitAmbiente.js';
 import { montarPaisajes } from './paisajes.js';
 import { SOMBRA_K, conFibra, conSombra, hornear, sombra, labioSuelo, sombraSuelo } from './cantoPapel.js';
+import { hornearPapel } from './papelShader.js';
 
 const hex = (s) => parseInt(s.slice(1), 16);
 const lerp = (a, b, k) => {
@@ -368,6 +369,15 @@ export function montar(s) {
     mid: s.add.tileSprite(0, 0, 10, 10, '__DEFAULT').setOrigin(0, 0).setDepth(3.055),
     suelo: s.add.image(0, 0, 'tardeSombraSuelo').setOrigin(0, 0).setDepth(3.95),
   };
+  // P6a PRIMER SHADER: grano y fibra de papel sobre todo el fondo (debajo del suelo de juego, obstáculos y Moki) y viñeta cálida en vez de la
+  // gris de la capa de luz. Horneados una vez (papelShader.js): 0 en FPS. Solo nivel 1; sin WebGL suelto, el papel de siempre.
+  const papel = amb.n1 ? hornearPapel() : null;
+  if (papel) {
+    s.textures.addCanvas('tardeGrano', papel.grano);
+    s.textures.addCanvas('tardeLuz', papel.luz);
+  }
+  const grano = papel ? s.add.tileSprite(0, 0, 10, 10, 'tardeGrano').setOrigin(0, 0).setDepth(4.95).setBlendMode('MULTIPLY').setVisible(false) : null;
+  const luzTarde = (si) => s.light && papel && s.light.setTexture(si ? 'tardeLuz' : 'light');
   const all = [...Object.values(o), ...Object.values(sb)];
   all.forEach((v) => v.setAlpha(0).setVisible(false));
   const capasV = { ridge: s.ridge.visible, farVeil: s.farVeil.visible };
@@ -405,6 +415,7 @@ export function montar(s) {
   // posición: cada cuadro, después del update de la escena (capas, salto y tamaño ya resueltos)
   const colocar = () => {
     if (!amb.st) return;
+    if (grano) grano.setPosition(0, s.top).setSize(s.vw, s.vh);
     hornoLibre = true;
     const fs = s.farS || 1;
     const g = gy();
@@ -521,6 +532,8 @@ export function montar(s) {
     amb.st = st;
     const on = st > 0;
     all.forEach((v) => v.setVisible(on).setAlpha(st));
+    if (grano) grano.setVisible(on).setAlpha(st);
+    luzTarde(st >= 0.5);
     // Con la tarde completa la silueta plana tapa la capa media de siempre y su velo, pero la misma línea del mosaico asomaría de ellos
     s.mid.setVisible(st < 1);
     s.midVeil.setVisible(st < 1 && veloVisible);
