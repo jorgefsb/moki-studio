@@ -109,6 +109,13 @@ export const CONFIG = {
   // nivel (P5c): en el Reto se estrena en el nivel 2 del Cuaderno (en Libre sale desde el inicio, como antes)
   // P4c (feel base): despegue que se ve (bocanadas junto a la bota, por nivel de juice) y "fiuu" al caer de alto (cuando el salto pasa de caidaPx sobre el suelo y empieza a bajar). Vuelta 2 (director, 10-nov): 90 -> 65 para que suenen los mantenidos bajos (66-77 px); los toques de 58-60 px siguen sin sonar
   feelP4c: { despegue: [0, 2, 3, 4], caidaPx: 65, contornoPx: 2.6 },
+  // P4d (feel base, acelerar): solo cosmético, no toca la física. Mientras la velocidad sube (rampa del checkpoint o del
+  // regreso) Moki se inclina hasta inclinaMax° hacia adelante, proporcional a la aceleración (accelRef px/s² = tope; la
+  // rampa normal de checkpoint da 15-17), entra en entraSec y se asienta en saleSec. Soplido que
+  // sube de tono al empezar la rampa del checkpoint. Movimiento reducido apaga la inclinación
+  // Opción C del director (10-nov): las líneas de viento fallaron QA en tres vueltas y se quitaron; quedan inclinación y soplido
+  // Vuelta chica (ARTE del director, 10-nov): inclinación 4 -> 6°, líneas 1.5-2x más largas y más (>= 3 a la vez en cámara)
+  feelP4d: { inclinaMax: 6, accelRef: 15, entraSec: 0.18, saleSec: 0.4 },
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro

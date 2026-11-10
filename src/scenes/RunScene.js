@@ -800,6 +800,7 @@ export class RunScene extends Phaser.Scene {
     this.vueltaTagC.setVisible(this.vueltaRun);
     this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);
     this.accel = 0;
+    this.inclina = 0;
     // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
     this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
@@ -1502,7 +1503,11 @@ export class RunScene extends Phaser.Scene {
   controlSpeed(dt) {
     if (FIXED_SPEED) return;
     const target = this.tramoSpeed(this.tramoIdx);
-    if (this.accel === 0 && this.speed !== target) this.accel = Math.abs(target - this.speed) / C.tramoEaseSec;
+    if (this.accel === 0 && this.speed !== target) {
+      this.accel = Math.abs(target - this.speed) / C.tramoEaseSec;
+      // P4d: empieza la rampa de subida del checkpoint: soplido que sube de tono (las líneas de viento se quitaron, opción C del director)
+      if (this.speed < target && this.screen === 'play' && !this.demo && !this.dead) audio.sfx('soplido', { rampa: true });
+    }
     if (this.speed < target) this.speed = Math.min(target, this.speed + this.accel * dt);
     else if (this.speed > target) this.speed = Math.max(target, this.speed - this.accel * dt);
     if (this.speed === target) this.accel = 0;
@@ -2115,7 +2120,14 @@ export class RunScene extends Phaser.Scene {
     // (entra y sale con vientoV, encima del ángulo que ya puso el títere); nunca se espeja
     const V = this.vientoV - 1;
     if (V && !this.reduced) this.rig.container.setAngle(this.rig.container.angle + (3 * V) / (V > 0 ? C.viento.favor - 1 : 1 - C.viento.contra));
-
+    // P4d acelerar: mientras la velocidad sube, Moki se inclina hacia adelante (hasta inclinaMax°, 6 tras la vuelta chica; proporcional a la aceleración),
+    // entra rápido y se asienta despacio al terminar la rampa. Encima del ángulo del títere y del viento; nunca se espeja
+    const A = C.feelP4d;
+    const subiendo = !this.dead && this.accel > 0 && this.speed < this.tramoSpeed(this.tramoIdx);
+    const inc = subiendo && !this.reduced ? A.inclinaMax * Math.min(1, this.accel / A.accelRef) : 0;
+    const tau = inc > (this.inclina || 0) ? A.entraSec : A.saleSec;
+    this.inclina = (this.inclina || 0) + (inc - (this.inclina || 0)) * Math.min(1, dtMs / 1000 / tau);
+    if (this.inclina > 0.02) this.rig.container.setAngle(this.rig.container.angle + this.inclina);
     let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {
       const ld = this.t - this.landAt;

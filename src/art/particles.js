@@ -88,7 +88,7 @@ export class Particles {
     p.fadeFrom = o.fadeFrom ?? 0.6;
     p.estela = o.estela ? o.scale : 0; // escala inicial de la estela (0 = no es estela)
     p.infla = 0; // polvo del aterrizaje (P4B): lo pone burst('land')
-    p.sprite.setTexture(KEYS[color]).setPosition(x, y).setAngle(Math.random() * 360).setAlpha(1).setScale(o.scale || 1).setVisible(true);
+    p.sprite.setTexture(KEYS[color]).setDepth(13).setPosition(x, y).setAngle(Math.random() * 360).setAlpha(1).setScale(o.scale || 1).setVisible(true);
     return p;
   }
 
