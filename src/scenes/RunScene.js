@@ -2121,7 +2121,7 @@ export class RunScene extends Phaser.Scene {
     // (entra y sale con vientoV, encima del ángulo que ya puso el títere); nunca se espeja
     const V = this.vientoV - 1;
     if (V && !this.reduced) this.rig.container.setAngle(this.rig.container.angle + (3 * V) / (V > 0 ? C.viento.favor - 1 : 1 - C.viento.contra));
-    // P4d acelerar: mientras la velocidad sube, Moki se inclina hacia adelante (hasta 4°, proporcional a la aceleración),
+    // P4d acelerar: mientras la velocidad sube, Moki se inclina hacia adelante (hasta inclinaMax°, 6 tras la vuelta chica; proporcional a la aceleración),
     // entra rápido y se asienta despacio al terminar la rampa. Encima del ángulo del títere y del viento; nunca se espeja
     const A = C.feelP4d;
     const subiendo = !this.dead && this.accel > 0 && this.speed < this.tramoSpeed(this.tramoIdx);
@@ -2134,7 +2134,7 @@ export class RunScene extends Phaser.Scene {
       const n = A.lineas[C.juice] || 0;
       if (this.lineasN < n && this.t - this.rampaAt >= (this.lineasN * A.lineasSec * 1000) / n) {
         this.lineasN++;
-        this.particles.viento(this.px - 16 - Math.random() * 20, this.y - 24 - Math.random() * 64, this.speed); // pegadas a la espalda
+        this.particles.viento(this.px - 38 - Math.random() * 18, this.y - 20 - Math.random() * 68, this.speed); // la punta redonda pegada a la espalda
       }
     }
 

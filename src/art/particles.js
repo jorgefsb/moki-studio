@@ -42,21 +42,24 @@ export class Particles {
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
       t.refresh();
     }
-    // P4d: línea de viento de papel, tira crema #F4E8D5 con canto kraft, gorda a la derecha y en punta a la izquierda
-    // (el aire pasa hacia atrás). 48x12 con canto de 2.4 px para que se lea a 660 (zoom ~0.5); se estira con scaleX al emitir
+    // P4d: línea de viento de papel, tira crema #F4E8D5 con canto de tinta suave (el mismo del polvo de P4B, ~40 %, sin
+    // gris), en punta hacia atrás (el aire pasa hacia la izquierda). Vuelta chica (ARTE del director, 10-nov): el kraft se
+    // fundía con el cielo ocre; cuerpo de 5 px de mundo (3.4 px en pantalla a 660, 4.3 a 390) con canto de 1.5 (1 px a 660).
+    // 80 px de largo a escala 1; se estira con scaleX al emitir
     if (!scene.textures.exists('chipViento')) {
-      const t = scene.textures.createCanvas('chipViento', 48, 12);
+      const t = scene.textures.createCanvas('chipViento', 84, 10);
       const x = t.context;
       x.beginPath();
-      x.moveTo(3, 6);
-      x.lineTo(42, 2.5);
-      x.arc(42, 6, 3.5, -Math.PI / 2, Math.PI / 2);
-      x.lineTo(3, 6);
+      x.moveTo(1.5, 5);
+      x.lineTo(28, 2.5);
+      x.lineTo(79.5, 2.5);
+      x.arc(79.5, 5, 2.5, -Math.PI / 2, Math.PI / 2);
+      x.lineTo(28, 7.5);
       x.closePath();
       x.fillStyle = '#F4E8D5';
       x.fill();
-      x.lineWidth = 2.4;
-      x.strokeStyle = '#B99168';
+      x.lineWidth = 1.5;
+      x.strokeStyle = 'rgba(34, 33, 31, 0.4)';
       x.stroke();
       t.refresh();
     }
@@ -149,14 +152,14 @@ export class Particles {
     this.emit((H ? H.colores : ['paper', 'kraft', 'orange'])[this.k % 3], x + rand(-4, 4), y + rand(-3, 3), { vx: v - rand(...C.crece.estelaAtras), vy: rand(-4, 4), g: 30, life: rand(780, 940) * (H ? H.vida : 1), spin: rand(90, 220), osc: 2, fadeFrom: 0.55, scale: H ? H.escala : 2.4, estela: true });
   }
 
-  // P4d: una línea de viento detrás de Moki mientras acelera. Va a 60 % de la velocidad del mundo (v): se queda atrás
-  // ~140 px/s, se lee como aire que pasa y no sale de cuadro en vertical (ahí Moki va al 28 % del ancho). Horizontal,
+  // P4d: una línea de viento detrás de Moki mientras acelera. Va a lineasV de la velocidad del mundo (v): se queda atrás
+  // ~110 px/s, se lee como aire que pasa y no sale de cuadro en vertical (ahí Moki va al 28 % del ancho). Horizontal,
   // sin giro; solo toma lugares libres.
   viento(x, y, v) {
     if (this.scene.reduced || C.juice <= 0 || !this.items.some((q) => !q.alive)) return;
     const [a, b] = C.feelP4d.largo;
-    const p = this.emit('viento', x, y, { vx: v * 0.6, vy: 0, g: 0, life: 560, spin: 0, fadeFrom: 0.45 });
-    p.sprite.setAngle(0).setDepth(11.9).setScale(rand(a, b) / 48, 1.25); // detrás de Moki (12)
+    const p = this.emit('viento', x, y, { vx: v * C.feelP4d.lineasV, vy: 0, g: 0, life: C.feelP4d.lineasVida, spin: 0, fadeFrom: 0.5 });
+    p.sprite.setAngle(0).setDepth(11.9).setScale(rand(a, b) / 80, 1); // detrás de Moki (12)
   }
 
   // Reglas por nivel de juice (ANIMACION.md §5). Con movimiento reducido no se emite nada.
