@@ -115,7 +115,7 @@ export const CONFIG = {
   // canto kraft detrás de Moki: lineas[nivel de juice] en la rampa, repartidas en los primeros lineasSec. Soplido que
   // sube de tono al empezar la rampa del checkpoint. Movimiento reducido apaga inclinación y líneas
   // Vuelta chica (ARTE del director, 10-nov): inclinación 4 -> 6°, líneas 1.5-2x más largas y más (>= 3 a la vez en cámara)
-  feelP4d: { inclinaMax: 6, accelRef: 15, entraSec: 0.18, saleSec: 0.4, lineas: [0, 5, 7, 9], lineasSec: 0.9, lineasVida: 700, lineasV: 0.7, largo: [60, 90] },
+  feelP4d: { inclinaMax: 6, accelRef: 15, entraSec: 0.18, saleSec: 0.4, lineas: [0, 5, 7, 9], lineasSec: 0.9, lineasVida: 700, lineasV: 0.7, largo: [60, 90], cuerpoPx: 5.5, canto: '#5A4030' },
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro

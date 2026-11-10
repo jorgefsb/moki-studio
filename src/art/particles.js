@@ -42,25 +42,26 @@ export class Particles {
       for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
       t.refresh();
     }
-    // P4d: línea de viento de papel, tira crema #F4E8D5 con canto de tinta suave (el mismo del polvo de P4B, ~40 %, sin
-    // gris), en punta hacia atrás (el aire pasa hacia la izquierda). Vuelta chica (ARTE del director, 10-nov): el kraft se
-    // fundía con el cielo ocre; cuerpo de 5 px de mundo (3.4 px en pantalla a 660, 4.3 a 390) con canto de 1.5 (1 px a 660).
-    // 80 px de largo a escala 1; se estira con scaleX al emitir
+    // P4d: línea de viento de papel, tira crema #F4E8D5 opaca con canto de tinta cálida opaca (sin gris), en punta hacia
+    // atrás (el aire pasa hacia la izquierda). Vuelta 2 (director, 10-nov): el grosor iba en px de juego y el lienzo se
+    // encoge (zoom 0.68 a 660), salían rayitas de ~2 px. La textura se dibuja con cuerpo de 8 px y canto de 1.5, y al emitir
+    // se escala por 1/zoom para que el cuerpo mida feelP4d.cuerpoPx EN PANTALLA. 80 px de largo a escala 1 (scaleX).
     if (!scene.textures.exists('chipViento')) {
-      const t = scene.textures.createCanvas('chipViento', 84, 10);
+      const t = scene.textures.createCanvas('chipViento', 88, 14);
       const x = t.context;
       x.beginPath();
-      x.moveTo(1.5, 5);
-      x.lineTo(28, 2.5);
-      x.lineTo(79.5, 2.5);
-      x.arc(79.5, 5, 2.5, -Math.PI / 2, Math.PI / 2);
-      x.lineTo(28, 7.5);
+      x.moveTo(2, 7);
+      x.lineTo(30, 3);
+      x.lineTo(80, 3);
+      x.arc(80, 7, 4, -Math.PI / 2, Math.PI / 2);
+      x.lineTo(30, 11);
       x.closePath();
+      x.lineJoin = 'round';
+      x.lineWidth = 3; // el relleno tapa la mitad de adentro: queda 1.5 px de canto por fuera
+      x.strokeStyle = C.feelP4d.canto;
+      x.stroke();
       x.fillStyle = '#F4E8D5';
       x.fill();
-      x.lineWidth = 1.5;
-      x.strokeStyle = 'rgba(34, 33, 31, 0.4)';
-      x.stroke();
       t.refresh();
     }
     for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {
@@ -158,8 +159,9 @@ export class Particles {
   viento(x, y, v) {
     if (this.scene.reduced || C.juice <= 0 || !this.items.some((q) => !q.alive)) return;
     const [a, b] = C.feelP4d.largo;
-    const p = this.emit('viento', x, y, { vx: v * C.feelP4d.lineasV, vy: 0, g: 0, life: C.feelP4d.lineasVida, spin: 0, fadeFrom: 0.5 });
-    p.sprite.setAngle(0).setDepth(11.9).setScale(rand(a, b) / 80, 1); // detrás de Moki (12)
+    const p = this.emit('viento', x, y, { vx: v * C.feelP4d.lineasV, vy: 0, g: 0, life: C.feelP4d.lineasVida, spin: 0, fadeFrom: 0.7 });
+    const sy = C.feelP4d.cuerpoPx / (8 * (this.scene.zoom || 1)); // cuerpo de 8 px en la textura -> cuerpoPx en pantalla
+    p.sprite.setAngle(0).setDepth(11.9).setScale(rand(a, b) / 80, sy); // detrás de Moki (12)
   }
 
   // Reglas por nivel de juice (ANIMACION.md §5). Con movimiento reducido no se emite nada.
