@@ -9,6 +9,7 @@ import { DAY } from './ambient.js';
 import { leerCuaderno, nivelDe } from '../cuaderno.js';
 import { montarBoceto } from './boceto.js';
 import { montarBokeh } from './bokeh.js';
+import { montarVida } from './vida.js';
 import { montarHojas } from './hojas.js';
 import { montarCapas } from './capas.js';
 import { montarKit } from './kitAmbiente.js';
@@ -33,6 +34,7 @@ export const TARDE = {
   titulo: true, // P5 TÍTULO: el título de quien va al nivel 1 (todo jugador nuevo) nace en el atardecer, sin el beige de la mañana; en false vuelve Mañana → Tarde a los 31 s
   capas: true, // SALTO CAPAS: fondo en capas pintadas; en false vuelve el de código
   bokeh: true, // dirección C de Jorge (ESPEC §3), fuera de la banda de juego; en false no se crea ni un círculo
+  vida: true, // P6c: Moki chiquito en la cresta de los cerros y papalote en el cielo (vida.js); solo con las capas pintadas; en false no se crea nada
   cieloAlto: '#F79E52', // arriba, un paso más naranja
   cieloMedio: '#FBA956',
   cieloBajo: '#FCB646',
@@ -586,6 +588,7 @@ export function montar(s) {
   calienta([hornoBanda, () => hornoCapa('ridge'), () => hornoCapa('far'), () => hornoCapa('mid')]);
   montarBoceto(s, o, colocar, TARDE.sol.r);
   if (TARDE.bokeh) montarBokeh(s);
+  if (TARDE.vida && pintadas) montarVida(s, pintadas);
   if (TARDE.hojas) montarHojas(s);
   montarPaisajes(s, pintadas, gy);
 }

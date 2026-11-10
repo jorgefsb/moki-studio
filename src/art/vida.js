@@ -1,0 +1,182 @@
+// P6c MUNDO VIVO, VIDA EN EL FONDO (propuestas/p6c-vida-fondo-caso.md): un Moki chiquito corre por la cresta de los cerros del atardecer,
+// brinca con los brazos arriba (el saludo) y sigue; un papalote de papel con 3 moñitos cruza el cielo alto. Solo nivel 1 con las capas
+// pintadas, solo en partida. Movimiento reducido o juice Nada: ningún objeto. Azar propio. 0 KB de imagen: Moki sale de las tiras de
+// mokiPoses (sin espejar, escala positiva: el parche queda en la oreja derecha anatómica) y el papalote se dibuja al vuelo.
+// Capa (paso 1 del director, evidencia/p6c/cresta.py): en la cresta de 'lejos' la capa 'medio' tapa más de la mitad de Moki el 25 % del
+// tiempo; de 6 salidas se escoge la que menos se tapa (se puede predecir: todo depende de la distancia). Va entre las dos (2.065).
+import { rng } from './palette.js';
+import { mk } from './textures.js';
+
+const N = 256; // columnas del perfil de cada capa
+// Moki: corre 3.5 s, brinca 0.7, se queda con los brazos arriba 0.35 y sigue 2 (desvanece el último 0.5); 40 px/s del mundo sobre su capa
+const CORRE = 3.5;
+const BRINCA = 4.2;
+const SIGUE = 4.55;
+const FIN = 6.55;
+const VEL = 40;
+const KRAFT = '#B99168';
+
+// Textura de canvas hecha una vez; dibuja recibe el contexto
+function tex(s, k, w, h, dibuja) {
+  if (!s.textures.exists(k)) {
+    const [c, x] = mk(w, h);
+    dibuja(x);
+    s.textures.addCanvas(k, c);
+  }
+  return s.textures.get(k);
+}
+
+// Borde de arriba (parte del alto) por columna, leído del alfa de la textura de la capa
+function perfil(s, key) {
+  const [, x] = mk(N, 128);
+  x.drawImage(s.textures.get(key).getSourceImage(), 0, 0, N, 128);
+  const d = x.getImageData(0, 0, N, 128).data;
+  const t = [];
+  for (let i = 0, r; i < N; t[i++] = r / 128) for (r = 0; r < 127 && d[(r * N + i) * 4 + 3] < 128; ) r++;
+  return t;
+}
+
+// y del mundo del borde de arriba de la capa L en la x de pantalla x; dx adelanta el mosaico (para predecir)
+const tope = (L, t, x, dx = 0) => {
+  const u = ((x + dx) / L.tileScaleX + L.tilePositionX) / 2048;
+  return L.y + t[((u - Math.floor(u)) * N) | 0] * L.height;
+};
+
+// Las tiras se hornean a la mitad (64 px por cuadro) con suavizado bueno: sin parpadeo de pixel al achicarlas
+const hornear = (s, key, n) =>
+  tex(s, `v${key}`, 64 * n, 64, (x) => {
+    x.imageSmoothingQuality = 'high';
+    x.drawImage(s.textures.get(key).getSourceImage(), 0, 0, 64 * n, 64);
+  });
+
+// Rombo de papel de 22x28 con cruz kraft y cola de 12 con 3 moñitos, al doble para que no se pixelee
+const papalote = (x) => {
+  const L = (...p) => {
+    x.beginPath();
+    for (let i = 0; i < p.length; i += 2) x.lineTo(p[i], p[i + 1]);
+  };
+  x.scale(2, 2);
+  x.lineJoin = 'round';
+  x.strokeStyle = x.fillStyle = KRAFT;
+  [31.5, 35.5, 39.5].forEach((y, i) => {
+    const m = i === 1 ? 14.5 : 12.5;
+    L(m, y, m - 3, y - 1.6, m - 3, y + 1.6, m + 3, y - 1.6, m + 3, y + 1.6);
+    x.fill();
+  });
+  x.fillStyle = '#F4E8D5';
+  L(12, 1, 23, 11, 12, 29, 1, 11, 12, 1);
+  x.fill();
+  x.stroke();
+  L(12, 1, 12, 29);
+  x.moveTo(1, 11);
+  x.lineTo(23, 11);
+  x.moveTo(12, 29);
+  x.quadraticCurveTo(16, 34, 12, 41);
+  x.stroke();
+};
+
+export function montarVida(s, capas) {
+  const amb = s.ambient;
+  const azar = rng(624);
+  let T = null; // perfiles de lejos y medio
+  let t = 0; // s de partida (sin pausas)
+  let antes = '';
+  let distAntes = null;
+  let m = null; // Moki chico
+  let p = null; // papalote
+  let otroM = 3; // Moki a los 3 s y luego cada 20-30
+  let otroP = 6; // papalote a los 6 s y luego cada 24-36
+
+  const quita = () => {
+    if (m) m.im.destroy(), m.sb.destroy();
+    if (p) p.im.destroy();
+    m = p = distAntes = null;
+  };
+  // parte del cuerpo de Moki (25.5 del mundo) que asoma sobre la capa medio
+  const visible = (ms, x, dx = 0) => (tope(capas.medio, T.m, x, dx * 2) - tope(capas.lejos, T.l, x, dx)) / (25.5 * ms) + 1;
+
+  const nuevoMoki = () => {
+    if (!s.textures.exists('pose-rise')) return void (otroM = t + 0.5); // las poses aún no llegan
+    const ms = s.midS || 1;
+    const v = (s.speed || 320) * 0.3;
+    const c = VEL * ms;
+    let x0 = 0;
+    let peor = 99;
+    for (let k = 0; k < 6; k++) {
+      const x = (0.5 + 0.45 * azar()) * s.vw;
+      let malos = 0;
+      for (let q = 0, tt; q <= 16; q++) {
+        tt = (q / 16) * FIN;
+        if (visible(ms, x + (c - v) * tt - c * Math.min(SIGUE - CORRE, Math.max(0, tt - CORRE)), v * tt) < 0.5) malos++;
+      }
+      if (malos < peor) (peor = malos), (x0 = x);
+    }
+    ['pose-run', 'pose-rise'].forEach((k, i) => {
+      const T2 = hornear(s, k, 7 - 2 * i);
+      if (!T2.has(0)) for (let j = 0; j < 7 - 2 * i; j++) T2.add(j, 0, j * 64, 0, 64, 64);
+    });
+    // sombra de contacto: elipse #22211F al 20 %, 14x3 del mundo (al doble)
+    tex(s, 'vsombra', 28, 6, (x) => {
+      x.fillStyle = 'rgba(34,33,31,0.2)';
+      x.ellipse(14, 3, 14, 3, 0, 0, 7);
+      x.fill();
+    });
+    m = {
+      x: x0,
+      t: 0,
+      im: s.add.image(x0, 0, 'vpose-run', 0).setOrigin(66 / 128, 123 / 128).setScale(ms / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
+      sb: s.add.image(x0, 0, 'vsombra').setScale(ms / 2).setDepth(2.0645),
+    };
+    otroM = t + 20 + 10 * azar();
+  };
+
+  const nuevoP = () => {
+    otroP = t + 24 + 12 * azar();
+    const ms = s.midS || 1;
+    // del centro del rombo: 14 arriba, 28 hasta la punta de la cola; 5 de vaivén y giro por lado. Cabe entre el HUD (90 px) y y 106 del mundo
+    const hud = s.top + 90 / s.zoom;
+    const f = Math.min(1, (106 - hud - 10 * ms) / (42 * ms));
+    if (f < 0.65) return; // a 1280 sale al 0.68; a 660 no hay cielo libre entre el HUD y la banda (caso §2): no se dibuja
+    const lo = hud + (14 * f + 5) * ms;
+    tex(s, 'vpapa', 48, 84, papalote);
+    p = { x: s.vw + 30, y: lo + (106 - (28 * f + 5) * ms - lo) * azar() * 0.6, t: 0 };
+    p.im = s.add.image(p.x, 0, 'vpapa').setOrigin(0.5, 1 / 3).setScale((ms * f) / 2).setDepth(1.6);
+  };
+
+  const paso = (_t, delta) => {
+    const sc = s.screen;
+    if (sc === 'pause' || sc === 'dead') return void (antes = sc);
+    if (s.reduced || s.calm || sc !== 'play' || (antes !== 'play' && antes !== 'pause')) quita(), (t = 0), (otroM = 3), (otroP = 6);
+    antes = sc;
+    if (s.reduced || s.calm || sc !== 'play') return;
+    const dt = Math.min(delta, 50) / 1000;
+    t += dt; // desde que arranca la partida, aunque la tarde todavía esté entrando
+    if (amb.st < 1 || !capas.activa) return void quita();
+    T = T || { l: perfil(s, 'capa_lejos'), m: perfil(s, 'capa_medio') };
+    const ms = s.midS || 1;
+    const a0 = distAntes === null ? 0 : s.dist - distAntes;
+    const d = Math.abs(a0) < 120 ? a0 : 0;
+    distAntes = s.dist;
+    if (!m && t >= otroM) nuevoMoki();
+    if (!p && t >= otroP) nuevoP();
+    if (m) {
+      const k = (m.t += dt) < CORRE || m.t > SIGUE ? -1 : Math.min(1, (m.t - CORRE) / 0.7);
+      m.x += (k < 0 ? VEL * ms * dt : 0) - d * 0.3;
+      const hop = k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms;
+      m.im.setTexture(k < 0 ? 'vpose-run' : 'vpose-rise', k < 0 ? Math.floor(m.t * 12) % 7 : Math.min(4, Math.floor(k * 5)));
+      const pies = tope(capas.lejos, T.l, m.x);
+      const a = Math.min(1, m.t / 0.3, Math.max(0, (FIN - m.t) * 2));
+      m.im.setPosition(m.x, pies - hop).setAlpha(a);
+      m.sb.setPosition(m.x, pies).setAlpha(a * (1 - (hop / (8 * ms + 1)) * 0.6));
+      if (m.t > FIN || m.x < -30) m.im.destroy(), m.sb.destroy(), (m = null);
+    }
+    if (p) {
+      p.x -= ((s.vw + 60) / 14) * (p.t += dt, dt) + d * 0.05;
+      p.im.setPosition(p.x, p.y + Math.sin(p.t * 1.1) * 4 * ms).setAngle(Math.sin(p.t * 1.7) * 8);
+      if (p.x < -30) p.im.destroy(), (p = null);
+    }
+  };
+  s.vida = { m: () => m, p: () => p, vis: (x) => T && visible(s.midS || 1, x) }; // solo lectura, para medir
+  s.events.on('postupdate', paso);
+  s.events.once('shutdown', () => (s.events.off('postupdate', paso), quita()));
+}
