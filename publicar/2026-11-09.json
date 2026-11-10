@@ -341,5 +341,29 @@
     "captura": "evidencia/p3f-probador/pausa-A-660x372.png",
     "dato": "Pausa de 386 a 250 px a 660x372",
     "master": "8d088b4"
+  },
+  "p4c": {
+    "donde": {
+      "es": "Cualquier partida desde el primer salto: polvo crema junto a la bota (2, 3 o 4 bocanadas según los efectos; con Nada o movimiento reducido no sale). Si mantienes el salto y caes de alto (desde 65 px) suena aire; los toques cortos no suenan y el mute lo apaga. Liga: moki.jorgesuarez.com.mx/?debug&seed=2142",
+      "en": "Any run from the first jump: cream dust next to the boot (2, 3 or 4 puffs depending on effects; none with Off or reduced motion). Hold the jump and fall from high (from 65 px) and you hear air; short taps are silent and mute turns it off. Link: moki.jorgesuarez.com.mx/?debug&seed=2142"
+    },
+    "cifras": {
+      "es": "Probador PASS: bots igual que master, consola 0, JS +0.38 kB, el sonido suena en 44 de 44 saltos mantenidos y en 0 de 18 toques. Invitado: el polvo se lee a 660 px (4 de 5).",
+      "en": "Prober PASS: bots match master, console 0, JS +0.38 kB, the sound plays on 44 of 44 held jumps and 0 of 18 taps. Guest: the dust reads at 660 px (4 of 5)."
+    },
+    "la_regamos": {
+      "es": "Nadie ha oído el sonido a ciegas: el navegador de pruebas no graba audio, así que falta el oído de Jorge. Tampoco medimos los cuadros por segundo contra P6a (12 contra 12 no cumplido); los cuadros largos a 375 px pasan a P6b. Probamos polvo de pisada y se leía como piedra: lo quitamos.",
+      "en": "Nobody has heard the sound blind: the test browser cannot record audio, so Jorge's ear is still missing. We also did not meet the frame-rate check against P6a (12 vs 12 not met); long frames at 375 px go to P6b. We tried footstep dust and it read as a stone: we removed it."
+    }
+  },
+  "p6a": {
+    "donde": {
+      "es": "Atardecer del nivel 1: grano de papel y una viñeta cálida en los bordes. Se nota leve a 1280 px y casi nada a 660 px.",
+      "en": "Level 1 sunset: paper grain and a warm vignette at the edges. Slightly visible at 1280 px and almost nothing at 660 px."
+    },
+    "la_regamos": {
+      "es": "Es el primer shader y casi no se ve en pantallas chicas. Lo decimos tal cual: es un paso chico, no un cambio grande.",
+      "en": "It is the first shader and barely shows on small screens. We say it as it is: a small step, not a big change."
+    }
   }
 }
