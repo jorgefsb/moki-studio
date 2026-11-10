@@ -6,6 +6,7 @@
 // tiempo; de 6 salidas se escoge la que menos se tapa (se puede predecir: todo depende de la distancia). Va entre las dos (2.065).
 import { rng } from './palette.js';
 import { mk } from './textures.js';
+import { CONFIG as C } from '../config.js';
 
 const N = 256; // columnas del perfil de cada capa
 // Moki: corre 3.5 s, brinca 0.7, se queda con los brazos arriba 0.35 y sigue 2 (desvanece el último 0.5); 40 px/s del mundo sobre su capa
@@ -84,7 +85,8 @@ export function montarVida(s, capas) {
   let distAntes = null;
   let m = null; // Moki chico
   let p = null; // papalote
-  let otroM = 3; // Moki a los 3 s y luego cada 20-30
+  let otroM = 2; // P22: el primero a los 2 s, fijo en la x menos tapada; luego cada 20-30 al azar
+  let primero = true;
   let otroP = 6; // papalote a los 6 s y luego cada 24-36
 
   const quita = () => {
@@ -93,7 +95,9 @@ export function montarVida(s, capas) {
     m = p = distAntes = null;
   };
   // parte del cuerpo de Moki (25.5 del mundo) que asoma sobre la capa medio
-  const visible = (ms, x, dx = 0) => (tope(capas.medio, T.m, x, dx * 2) - tope(capas.lejos, T.l, x, dx)) / (25.5 * ms) + 1;
+  const visible = (ms, x, dx = 0) => (tope(capas.medio, T.m, x, dx * 2) - tope(capas.lejos, T.l, x, dx)) / (25.5 * ms * gm()) + 1;
+  // en vertical el Moki lejano crece (22 -> ~30 px a 390); 660 y 1280 igual
+  const gm = () => (s.scale.width / s.scale.height <= C.portrait.maxAspect ? C.portrait.vidaMoki : 1);
 
   const nuevoMoki = () => {
     if (!s.textures.exists('pose-rise')) return void (otroM = t + 0.5); // las poses aún no llegan
@@ -102,11 +106,13 @@ export function montarVida(s, capas) {
     const c = VEL * ms;
     let x0 = 0;
     let peor = 99;
-    for (let k = 0; k < 6; k++) {
-      const x = (0.5 + 0.45 * azar()) * s.vw;
+    // el primero barre 14 x fijas y mide sus primeros 4 s (a la vista antes de los 5 s de partida); los demás, 6 al azar en toda su vida
+    const n = primero ? 14 : 6;
+    for (let k = 0; k < n; k++) {
+      const x = (primero ? 0.3 + (0.65 * k) / (n - 1) : 0.5 + 0.45 * azar()) * s.vw;
       let malos = 0;
       for (let q = 0, tt; q <= 16; q++) {
-        tt = (q / 16) * FIN;
+        tt = (q / 16) * (primero ? 4 : FIN);
         if (visible(ms, x + (c - v) * tt - c * Math.min(SIGUE - CORRE, Math.max(0, tt - CORRE)), v * tt) < 0.5) malos++;
       }
       if (malos < peor) (peor = malos), (x0 = x);
@@ -124,10 +130,11 @@ export function montarVida(s, capas) {
     m = {
       x: x0,
       t: 0,
-      im: s.add.image(x0, 0, 'vpose-run', 0).setOrigin(66 / 128, 123 / 128).setScale(ms / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
-      sb: s.add.image(x0, 0, 'vsombra').setScale(ms / 2).setDepth(2.0645),
+      im: s.add.image(x0, 0, 'vpose-run', 0).setOrigin(66 / 128, 123 / 128).setScale((ms * gm()) / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
+      sb: s.add.image(x0, 0, 'vsombra').setScale((ms * gm()) / 2).setDepth(2.0645),
     };
     otroM = t + 20 + 10 * azar();
+    primero = false;
   };
 
   const nuevoP = () => {
@@ -146,7 +153,7 @@ export function montarVida(s, capas) {
   const paso = (_t, delta) => {
     const sc = s.screen;
     if (sc === 'pause' || sc === 'dead') return void (antes = sc);
-    if (s.reduced || s.calm || sc !== 'play' || (antes !== 'play' && antes !== 'pause')) quita(), (t = 0), (otroM = 3), (otroP = 6);
+    if (s.reduced || s.calm || sc !== 'play' || (antes !== 'play' && antes !== 'pause')) quita(), (t = 0), (otroM = 2), (primero = true), (otroP = 6);
     antes = sc;
     if (s.reduced || s.calm || sc !== 'play') return;
     const dt = Math.min(delta, 50) / 1000;
@@ -162,12 +169,12 @@ export function montarVida(s, capas) {
     if (m) {
       const k = (m.t += dt) < CORRE || m.t > SIGUE ? -1 : Math.min(1, (m.t - CORRE) / 0.7);
       m.x += (k < 0 ? VEL * ms * dt : 0) - d * 0.3;
-      const hop = k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms;
+      const hop = k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms * gm();
       m.im.setTexture(k < 0 ? 'vpose-run' : 'vpose-rise', k < 0 ? Math.floor(m.t * 12) % 7 : Math.min(4, Math.floor(k * 5)));
       const pies = tope(capas.lejos, T.l, m.x);
       const a = Math.min(1, m.t / 0.3, Math.max(0, (FIN - m.t) * 2));
       m.im.setPosition(m.x, pies - hop).setAlpha(a);
-      m.sb.setPosition(m.x, pies).setAlpha(a * (1 - (hop / (8 * ms + 1)) * 0.6));
+      m.sb.setPosition(m.x, pies).setAlpha(a * (1 - (hop / (8 * ms * gm() + 1)) * 0.6));
       if (m.t > FIN || m.x < -30) m.im.destroy(), m.sb.destroy(), (m = null);
     }
     if (p) {
