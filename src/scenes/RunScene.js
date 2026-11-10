@@ -841,6 +841,7 @@ export class RunScene extends Phaser.Scene {
     this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);
     this.accel = 0;
     this.inclina = 0;
+    this.inclinaVista = 0;
     // En Paseo no hay lección: sin choques no hay nada que enseñar y la mano detendría al que nunca salta
     this.tut = { stage: load('moki.tutorial') === '1' || this.paseoRun || this.megaOn ? 4 : START_TUT, state: 'off' };
     this.ui.showPauseButton(true);
@@ -2166,7 +2167,8 @@ export class RunScene extends Phaser.Scene {
     // viento: Moki se inclina hasta 3° hacia adelante (a favor) o atrás (en contra), al paso de la rampa del mundo
     // (entra y sale con vientoV, encima del ángulo que ya puso el títere); nunca se espeja
     const V = this.vientoV - 1;
-    if (V && !this.reduced) this.rig.container.setAngle(this.rig.container.angle + (3 * V) / (V > 0 ? C.viento.favor - 1 : 1 - C.viento.contra));
+    const vAng = V && !this.reduced ? (3 * V) / (V > 0 ? C.viento.favor - 1 : 1 - C.viento.contra) : 0;
+    if (vAng) this.rig.container.setAngle(this.rig.container.angle + vAng);
     // P4d acelerar: mientras la velocidad sube, Moki se inclina hacia adelante (hasta inclinaMax°, 6 tras la vuelta chica; proporcional a la aceleración),
     // entra rápido y se asienta despacio al terminar la rampa. Encima del ángulo del títere y del viento; nunca se espeja
     const A = C.feelP4d;
@@ -2175,6 +2177,8 @@ export class RunScene extends Phaser.Scene {
     const tau = inc > (this.inclina || 0) ? A.entraSec : A.saleSec;
     this.inclina = (this.inclina || 0) + (inc - (this.inclina || 0)) * Math.min(1, dtMs / 1000 / tau);
     if (this.inclina > 0.02) this.rig.container.setAngle(this.rig.container.angle + this.inclina);
+    // P4g: en partida se pinta el sprite de poses, no el títere; ahí va la misma inclinación (pivote en los pies)
+    this.inclinaVista = vAng + (this.inclina > 0.02 ? this.inclina : 0);
     let sink = 0; // hundimiento de aterrizaje (px), solo para ensanchar la sombra
     if (!this.reduced) {
       const ld = this.t - this.landAt;
