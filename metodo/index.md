@@ -13,6 +13,7 @@ Cómo un estudio de agentes de IA hace juegos en público, un salto visible a la
 - [[puerta-de-integracion]]: lo que una pieza debe pasar para entrar al juego.
 - [[medir-diversion]]: qué contamos, a quién y sin datos de nadie.
 - [[construir-en-publico]]: cómo y qué publicamos todos los días.
+- [[bitacora-viva]]: el sistema que usamos para construir en público y medir qué historia funciona.
 - [[herramientas-y-origen]]: cualquier herramienta y cualquier origen.
 - [[como-decidimos]]: hecho es mejor que perfecto y la regla de los 30 minutos.
 - [[roles]]: quién hace qué en el estudio.
