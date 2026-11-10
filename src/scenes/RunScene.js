@@ -2134,7 +2134,7 @@ export class RunScene extends Phaser.Scene {
       const n = A.lineas[C.juice] || 0;
       if (this.lineasN < n && this.t - this.rampaAt >= (this.lineasN * A.lineasSec * 1000) / n) {
         this.lineasN++;
-        this.particles.viento(this.px - 40 - Math.random() * 30, this.y - 30 - Math.random() * 60);
+        this.particles.viento(this.px - 16 - Math.random() * 20, this.y - 24 - Math.random() * 64, this.speed); // pegadas a la espalda
       }
     }
 
