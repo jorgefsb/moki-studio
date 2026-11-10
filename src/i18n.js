@@ -18,7 +18,7 @@ const ES = {
   'mega.name': 'MEGA x1.5',
   'mega.d': 'El Clásico a velocidad x1.5',
   'mega.best': 'Tu marca MEGA: {n}',
-  'mega.lock': 'Pruébalo. Se abre al terminar el nivel 1',
+  'mega.lock': 'Todo 1.5 veces más rápido · Pruébalo',
   'vuelta.name': 'Vuelta rápida',
   'vuelta.d': 'Más veloz, puntos x1.25',
   'vuelta.lock': 'Junta 80% de las piezas',

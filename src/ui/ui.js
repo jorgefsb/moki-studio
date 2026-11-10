@@ -142,6 +142,7 @@ export function createUI() {
       p.append(hero);
       if (m.cards.length) {
         const grid = el('div', 'mn-grid');
+        if (m.cards.length < 4) grid.style.setProperty('--n', m.cards.length); // P8: 2 o 3 tarjetas llenan el ancho como JUGAR
         grid.addEventListener('pointerdown', (e) => e.stopPropagation()); // el carril se desliza sin arrancar
         for (const c of m.cards) {
           const b = tap(el('button', `mn-card${c.cerrado ? ' cerrado' : ''}${c.pressed !== undefined ? ' toggle' : ''}`), c.onPick);

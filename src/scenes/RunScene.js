@@ -238,6 +238,7 @@ export class RunScene extends Phaser.Scene {
     const val = this.add.text(0, 0, '', { fontFamily: FONT_NUM, fontStyle: '700', fontSize: '22px', color: PAL.ink });
     container.add(icon ? [gfx, icon, val] : [gfx, val]);
     const label = {
+      fill: 0xf4e8d5, // P8: MEGA pinta la píldora en ámbar (PAL.warm) para que se lea como modo, no como etiqueta
       set(text) {
         val.setText(text);
         const pad = 12;
@@ -248,7 +249,7 @@ export class RunScene extends Phaser.Scene {
         gfx.clear();
         gfx.fillStyle(0x22211f, 0.22);
         gfx.fillRoundedRect(x0 + 3, 5, w, h, 12);
-        gfx.fillStyle(0xf4e8d5, 1);
+        gfx.fillStyle(label.fill, 1);
         gfx.fillRoundedRect(x0, 0, w, h, 12);
         gfx.lineStyle(3, Phaser.Display.Color.HexStringToColor(TONE.kraftDark).color, 1);
         gfx.strokeRoundedRect(x0 + 1.5, 1.5, w - 3, h - 3, 11);
@@ -665,7 +666,7 @@ export class RunScene extends Phaser.Scene {
       this.megaSel = true;
       this.startGame();
     };
-    return { nombre: t('mega.name'), linea: !abierto ? t('mega.lock') : best > 0 ? t('mega.best', { n: best }) : t('mega.d'), cerrado: !abierto, nuevo: nov, onPick: jugar };
+    return { nombre: t('mega.name'), linea: !abierto ? t('mega.lock') : best > 0 ? t('mega.best', { n: best }) : t('mega.d'), cerrado: false, nuevo: nov, onPick: jugar }; // borde sólido: cerrado también se juega ya
   }
 
   // P7 LOGROS: tarjeta del menú (1 toque) con su cuenta; punto "Nuevo" mientras haya un logro ganado sin ver
@@ -834,6 +835,7 @@ export class RunScene extends Phaser.Scene {
     }
     this.resetRun(level, dist0);
     if (salto > 0) this.cp = { idx: this.tramoIdx, dist: level.starts[this.tramoIdx], pieces: 0, pieceValue: 0 };
+    this.vueltaTag.fill = this.megaRun ? Phaser.Display.Color.HexStringToColor(PAL.warm).color : 0xf4e8d5;
     this.vueltaTag.set(t(this.megaRun ? 'mega.name' : 'vuelta.name'));
     this.vueltaTagC.setVisible(this.vueltaRun || this.megaRun);
     this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);

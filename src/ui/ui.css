@@ -332,7 +332,7 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-menu.corto .mn-aviso { padding: 4px 10px; }
 .ui-menu.corto .mn-aviso b { font-size: 16px; line-height: 19px; }
 .ui-menu.corto .mn-aviso li { font-size: 13px; line-height: 16px; }
-.mn-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mn-grid { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: 8px; }
 @media (max-width: 700px) { .mn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ui-menu.una .mn-grid { grid-template-columns: 1fr; }
 .ui-menu.una .mn-card { min-height: 56px; }
