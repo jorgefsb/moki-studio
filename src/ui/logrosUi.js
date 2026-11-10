@@ -65,6 +65,7 @@ export function aviso(el, root, ids, sfx, zona) {
 }
 
 function uno(el, root, titulo, linea, sfx, ms, zona) {
+  const espera = zona && zona.espera > 0 ? Math.min(zona.espera, 4000) : 0; // letrero del centro a la vista
   setTimeout(() => {
     const a = el('div', 'ui-logro');
     if (zona) Object.assign(a.style, { top: `${zona.top}px`, right: `${root.clientWidth - zona.right}px`, maxWidth: `${Math.max(140, zona.right - zona.left)}px` });
@@ -76,7 +77,7 @@ function uno(el, root, titulo, linea, sfx, ms, zona) {
     if (sfx) sfx('sello');
     setTimeout(() => a.classList.add('out'), 2400);
     setTimeout(() => a.remove(), 2700);
-  }, ms);
+  }, ms + espera);
 }
 
 // Al abrir la pantalla: todo lo ganado queda visto y la etiqueta "Nuevo" se apaga.

@@ -648,7 +648,7 @@ export class RunScene extends Phaser.Scene {
   // P7 LOGROS: tarjeta del menú (1 toque) con su cuenta; punto "Nuevo" mientras haya un logro ganado sin ver
   tarjetaLogros() {
     const d = leerLogros();
-    return { nombre: t('lg.titulo'), linea: t('lg.menu', { n: d.n, de: d.de }), nuevo: d.sinVer, onPick: () => this.abrirLogros() };
+    return { nombre: t('lg.titulo'), linea: t('lg.menu', { n: d.n, de: d.de }), nuevo: d.sinVer, ver: true, onPick: () => this.abrirLogros() };
   }
 
   // Hueco del aviso de logro (px de pantalla): arriba, entre los metros (izq.) y las piezas (der.), sin el botón de
@@ -661,7 +661,17 @@ export class RunScene extends Phaser.Scene {
     const sb = this.ui.state.soundBtn;
     let left = L + 10;
     if (sb && sb.offsetTop < 64) left = Math.max(left, sb.offsetLeft + sb.offsetWidth + 10);
-    if (R - 18 - left >= 200) return { left: Math.round(left), right: Math.round(R - 18), top: 8 };
+    // El letrero del centro ("Aprendizaje guardado") vive en ese mismo renglón: el aviso va a su derecha si cabe; si no,
+    // espera a que el letrero se vaya (nunca encima de él).
+    let espera = 0;
+    const bn = this.hudC && this.hudC.alpha > 0.02 && this.hudC.getBounds();
+    const y = (v) => (v - cam.worldView.y) * cam.zoom;
+    if (bn && x(bn.right) > left && x(bn.x) < R - 18 && y(bn.y) < 8 + 64 && y(bn.bottom) > 8) {
+      const der = x(bn.right) + 10;
+      if (R - 18 - der >= 190) left = der;
+      else espera = Math.max(0, (this.bannerHasta || 0) - this.time.now) + 200;
+    }
+    if (R - 18 - left >= 190) return { left: Math.round(left), right: Math.round(R - 18), top: 8, espera };
     // Vertical (390): ese hueco no alcanza. Con tarjeta abierta, bajo la tarjeta a la derecha de Moki; en partida, en el
     // cielo bajo el botón de sonido (el carril va abajo, junto al suelo).
     const W = this.scale.width;
@@ -910,10 +920,12 @@ export class RunScene extends Phaser.Scene {
     this.hudC.setScale(this.calm ? s : s * 0.9);
     if (!this.calm) this.tweens.add({ targets: this.hudC, scale: s, duration: 180, ease: 'Back.easeOut' });
     if (ms) this.time.delayedCall(ms, () => this.hideBanner());
+    this.bannerHasta = ms ? this.time.now + ms + 160 : Infinity; // P7: el aviso de logro espera a que se vaya
   }
 
   hideBanner(instant) {
     this.tweens.killTweensOf(this.hudC);
+    this.bannerHasta = this.time.now + (instant ? 0 : 160);
     if (instant) this.hudC.setAlpha(0);
     else this.tweens.add({ targets: this.hudC, alpha: 0, duration: 160, ease: 'Cubic.easeIn' });
   }

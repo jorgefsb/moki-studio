@@ -155,6 +155,7 @@ export function createUI() {
           tx.append(nom, el('span', '', c.linea));
           b.title = c.linea; // P3d: misma línea como ayuda del mouse en escritorio
           b.append(tx);
+          if (c.ver) b.append(el('i', 'mn-ver', '›')); // P7: pista de que la tarjeta abre una pantalla
           if (c.nuevo) b.append(punto());
           grid.append(b);
         }
