@@ -50,7 +50,7 @@ const RUTA = [
   ['n4', 'viento', () => 4],
 ];
 // "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
-const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto' };
+const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto', logros: 'logros' };
 // Cambia de dirección: ?ir=<destino> (partida en memoria), otra consulta, o la página limpia; el embebido se conserva
 function irA(ir, q) {
   const u = new URL(window.location.href);
@@ -648,7 +648,13 @@ export class RunScene extends Phaser.Scene {
   // P7 LOGROS: tarjeta del menú (1 toque) con su cuenta; punto "Nuevo" mientras haya un logro ganado sin ver
   tarjetaLogros() {
     const d = leerLogros();
-    return { nombre: t('lg.titulo'), linea: t('lg.menu', { n: d.n, de: d.de }), nuevo: d.sinVer, ver: true, onPick: () => this.abrirLogros() };
+    // P16: donde:['logros'] en novedades.json (fresco, 7 días como las otras tarjetas) también prende el punto Nuevo,
+    // también en el menú corto del jugador nuevo; se apaga al abrir la tarjeta
+    const n = this.nov;
+    const fresco = n && n.fecha && diaLocal() - Math.floor(Date.parse(`${n.fecha}T12:00:00Z`) / 864e5) <= 7;
+    const nov = !!fresco && n.donde.some((w) => NODO_DE[w] === 'logros') && load('moki.nuevo.visto.logros') !== n.fecha;
+    const abrir = () => (nov && save('moki.nuevo.visto.logros', n.fecha), this.abrirLogros());
+    return { nombre: t('lg.titulo'), linea: t('lg.menu', { n: d.n, de: d.de }), nuevo: d.sinVer || nov, ver: true, onPick: abrir };
   }
 
   // Hueco del aviso de logro (px de pantalla): arriba, entre los metros (izq.) y las piezas (der.), sin el botón de
