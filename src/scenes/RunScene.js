@@ -1467,6 +1467,7 @@ export class RunScene extends Phaser.Scene {
       this.pressedAt = -1e9;
       this.highPlayed = false;
       this.highGood = false;
+      this.caidaPlayed = false;
       audio.sfx('jump');
       this.particles.burst('kick', this.px, C.world.groundY); // chip de cartón al despegar (Mucho o más)
       // Ya lo soltó antes de que empezara el salto (tap muy corto con buffer).
@@ -1477,6 +1478,13 @@ export class RunScene extends Phaser.Scene {
     const impact = this.vy;
     const y0 = this.y;
     this.y += this.vy * dt;
+    // P4c: caer de alto se oye. Una vez por salto, al empezar a bajar desde más de caidaPx sobre el suelo (el salto
+    // mantenido; el toque llega a 62-66 px y no suena). k = qué tan alto (90 a 118 px). caidaPlayed se arma al despegar
+    // (no se usa jumping: soltar lo apaga en plena subida). Solo audio: la física no cambia
+    if (this.caidaPlayed === false && !this.grounded && !this.vuelo && this.vy > 0 && C.world.groundY - this.y >= C.feelP4c.caidaPx) {
+      this.caidaPlayed = true;
+      audio.sfx('caida', { k: clamp((C.world.groundY - this.y - C.feelP4c.caidaPx) / 28, 0, 1) });
+    }
     // Zanja (NIVELES.md §10.1): sin suelo bajo los pies sigue cayendo; a caePx bajo el suelo, choque. Si llega a la
     // orilla de enfrente hasta subePx abajo, se sube. Quien venía de arriba aterriza aunque el cuadro lento lo pase de
     // largo (DECISIONES 5-nov 10:35): si no, volvía a pasarse en cada cuadro y Moki no aterrizaba ni saltaba nunca más.

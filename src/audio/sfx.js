@@ -297,6 +297,24 @@ export function paso(ctx, dest, t, o = {}) {
   nz.connect(lp(ctx, 1800, 0.5)).connect(g).connect(P.out);
 }
 
+// Caída de alto (P4c, especial 260 ms): aire que baja, ruido con bandpass 1600 -> 520 Hz, crece y se apaga justo antes
+// del aterrizaje para dejarle el golpe al "tok". o.k (0 a 1) = qué tan alto venía. Sin agudos (< 2 kHz)
+export function caida(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const k = clamp(o.k === undefined ? 1 : o.k, 0, 1);
+  const nz = noise(ctx, t, 0.27);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(1600 * P.d, t);
+  bp.frequency.exponentialRampToValueAtTime(520 * P.d, t + 0.25);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime((0.13 + 0.13 * k) * P.pk * P.v, t + Math.max(0.12, P.atkMin));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26);
+  nz.connect(bp).connect(g).connect(P.out);
+}
+
 // Sello con golpe (CRECE nivel 6, tarjeta): tok grave de cartón y una campanita encima
 export function sello(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
@@ -329,5 +347,5 @@ export function casi(ctx, dest, t, o = {}) {
   carton(ctx, P.out, t + 0.03, CASI_SCALE[i], 0.03, 0.14, { atkMin: P.atkMin, vol: P.v * P.pk, detune: P.d });
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello, festejo, casi };
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello, festejo, casi, caida };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

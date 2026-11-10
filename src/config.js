@@ -107,6 +107,8 @@ export const CONFIG = {
   // Zanja (NIVELES.md §10): hueco en el suelo, solo en Libre. Anchos en s (W = ancho * velocidad del tramo); pie: medio
   // apoyo de Moki; cae a caePx bajo el suelo = choque; sube si va <= subePx abajo; libreSec tras aterrizar de cruzarla
   // nivel (P5c): en el Reto se estrena en el nivel 2 del Cuaderno (en Libre sale desde el inicio, como antes)
+  // P4c (feel base): despegue que se ve (bocanadas junto a la bota, por nivel de juice) y "fiuu" al caer de alto (cuando el salto pasa de caidaPx sobre el suelo y empieza a bajar: el toque llega a 62-66 px, el mantenido a 100-118)
+  feelP4c: { despegue: [0, 2, 3, 4], caidaPx: 90 },
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro
