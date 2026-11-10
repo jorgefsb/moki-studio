@@ -29,11 +29,14 @@ const ANCHO = [
   V(1, 88, 0.2, 0.2, PAPEL, 0.22, 7.2, 3.3),
   V(1, 62, 0.72, 0.5, CALIDO, 0.28, 8.2, 5.1),
 ];
+// P17: a 390 tres invitados leyeron los círculos como manchas grises. PAPEL (R-B 31) es más frío que el suelo (R-B ~80) y que el
+// cielo de la tarde (~190): al mezclarse apagaba el color y solo subía la luz. En vertical todo va en ámbar (R-B 186: no lava el cielo) y
+// sobre el suelo oscuro queda un solo círculo, más tenue. 660 y 1280 usan ANCHO y no cambian.
+const AMBAR = 0xffa445;
 const VERTICAL = [
-  V(0, 76, 0.14, 0.45, PAPEL, 0.22, 8.3, 0.7),
-  V(0, 42, 0.74, 0.8, CALIDO, 0.3, 6.6, 3.8),
-  V(1, 58, 0.3, 0.35, CALIDO, 0.26, 7.4, 2.4),
-  V(1, 28, 0.82, 0.6, PAPEL, 0.32, 8.8, 5.3),
+  V(0, 76, 0.14, 0.45, AMBAR, 0.22, 8.3, 0.7),
+  V(0, 42, 0.74, 0.8, AMBAR, 0.3, 6.6, 3.8),
+  V(1, 58, 0.3, 0.35, AMBAR, 0.2, 7.4, 2.4),
 ];
 const easeOut = (k) => 1 - (1 - k) ** 3;
 
