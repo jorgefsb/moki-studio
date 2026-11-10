@@ -142,6 +142,7 @@ const SFX_CASES = {
   pickup: (c, d, t) => SFX.pickup(c, d, t, { index: 2 }),
   stumble: (c, d, t) => SFX.stumble(c, d, t),
   ui: (c, d, t) => SFX.ui(c, d, t, {}),
+  caida: (c, d, t) => SFX.caida(c, d, t, { k: 1 }), // P4c
 };
 
 export async function measureSfx(cfg = C.audio) {
