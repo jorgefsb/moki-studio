@@ -16,3 +16,9 @@ Spark revisó los repos públicos de gokayfem (Head of Creative Engineering en f
 - **Mutantes** (método de video-to-css, MIT): una puerta se prueba rompiendo algo a propósito; si no falla, no mide nada.
 - **Contrato de estilo** (método de reference-to-game, MIT): lo innegociable del look se escribe antes de crecer el mundo y se compara una escena chica contra la referencia.
 - **No entró:** image-to-sculpt (fal de pago), lo de Blender y los demos de H3 Max. Detalle en la Biblioteca de Cosas Chidas.
+
+## Lo que no se usa, se archiva (11-nov-2026)
+
+Del 9 al 11-nov vimos que lo que entró a la COLA se hizo (el primer shader, P6a, quedó en master el mismo día) y lo que solo quedó como regla casi no se usó: el video de antes y después nunca salió en un post y los mutantes se usaron una vez.
+
+Por eso cada herramienta o método que adopta el estudio entra a `herramientas/ADOPTADAS.tsv` con su dueño y cuándo se usa. Cada viernes, sin IA, `herramientas/uso-herramientas.sh --cola` cuenta su uso de la semana. Lo que esté en 0 entra a la COLA como pieza KAIZEN: o una pieza lo usa con evidencia, o el director lo archiva con su razón. Así ninguna herramienta vive de adorno.

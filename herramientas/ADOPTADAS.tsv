@@ -1,0 +1,5 @@
+# nombre	tipo	patron (ERE)	dueno	se usa cuando	desde
+antes-despues	herramienta	antes-despues	cronista	cada post con un cambio visible	2026-11-09
+mutantes	metodo	mutante	probador	cada puerta nueva o que cambia	2026-11-09
+shader-art-coding	metodo	shader-art-coding|moki-shaders|glsl_tools|shader	director y constructor	piezas de arte con papel, luz o cielo	2026-11-09
+contrato-de-estilo	metodo	contrato de estilo	director	antes de crecer un paisaje o un juego nuevo	2026-11-09

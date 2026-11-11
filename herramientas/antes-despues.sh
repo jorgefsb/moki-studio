@@ -43,3 +43,6 @@ SSIM=$(nice -n 10 ffmpeg -hide_banner -i "$ANTES" -i "$AHORA" \
   -f null - 2>&1 | grep -o 'All:[0-9.]*' | cut -d: -f2)
 echo "Listo: $SALIDA"
 echo "SSIM=${SSIM}"
+# Rastro de uso (lo cuenta herramientas/uso-herramientas.sh cada viernes).
+mkdir -p "$DIR/evidencia/uso-herramientas"
+printf '%s\tantes-despues\t%s\t%s\n' "$(date +%F)" "$SALIDA" "${SSIM}" >> "$DIR/evidencia/uso-herramientas/log.tsv"
