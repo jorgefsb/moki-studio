@@ -231,6 +231,10 @@ const ES = {
   'voto.btn': 'Ver ideas',
   'voto.menu': 'Escoge qué le agregamos al juego',
   'voto.gracias': 'Gracias. Vuelve cuando quieras.',
+  'ruta.sigue': 'Sigue: {a} abre {x}',
+  'ruta.fin': 'Ruta lista: te espera Libre',
+  'ruta.aria': 'Camino: parada {n} de 4',
+  'ruta.zanja': 'zanja',
 };
 
 const EN = {

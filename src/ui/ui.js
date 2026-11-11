@@ -8,6 +8,17 @@ import festejoUrl from '../../assets/moki/pixel/moki_jump_rise_right_strip5.png'
 
 const reducedMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+// P9b: pone en la tira del pie la primera frase que cabe entera en el ancho del panel (sin elipsis ni recorte)
+function ajustaCamino(p) {
+  const pie = p.querySelector('.mn-camino');
+  if (!pie) return;
+  const ancho = p.clientWidth - 6; // .ui-menu lleva padding de 3 px por lado
+  for (const x of pie.textos) {
+    pie.lastChild.textContent = x;
+    if (pie.getBoundingClientRect().width <= ancho + 0.01) return;
+  }
+}
+
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -209,7 +220,17 @@ export function createUI() {
         v.title = t('voto.menu');
         p.append(v);
       }
-      if (m.pie) {
+      if (m.camino) {
+        // P9b: la frase se escoge midiendo (ajustaCamino), no por breakpoint: la larga si cabe, si no la corta
+        const c = m.camino;
+        const pie = el('p', 'mn-pie mn-camino');
+        pie.setAttribute('role', 'img'); // una sola etiqueta lee todo el camino en orden
+        pie.setAttribute('aria-label', c.aria);
+        for (const e of c.marcas) pie.append(el('i', `mn-paso ${e}`));
+        pie.append(el('span'));
+        pie.textos = c.textos;
+        p.append(pie);
+      } else if (m.pie) {
         const pie = el('p', 'mn-pie', m.pie);
         if (m.pieTitle) pie.title = m.pieTitle;
         p.append(pie);
@@ -217,6 +238,7 @@ export function createUI() {
       root.appendChild(p);
       state.menu = p;
       ui.placeMenu(zonas);
+      if (m.camino && document.fonts) document.fonts.ready.then(() => state.menu === p && ajustaCamino(p)); // la fuente llega tarde: se vuelve a medir
     },
     // Dónde va el panel (px de pantalla): 1) bajo la línea del suelo, a todo lo ancho; 2) a la derecha de Moki;
     // 3) arriba de su cabeza con aire para el salto del demo. Si nada alcanza, a la derecha con scroll.
@@ -233,6 +255,7 @@ export function createUI() {
       const pon = (left, width) => {
         Object.assign(p.style, { left: `${Math.round(left)}px`, width: `${Math.round(width)}px` });
         p.classList.toggle('una', width < 320); // columna angosta junto a Moki: una tarjeta por renglón, cada una en 1 línea
+        ajustaCamino(p);
         return p.offsetHeight;
       };
       const full = Math.min(W - 32, 560);
