@@ -39,7 +39,8 @@
 }
 .ui-pill, .ui-btn.primary { background: #ff6b35; color: #22211f; }
 .ui-btn.secondary { background: #f4e8d5; color: #22211f; border-color: #b99168; }
-.ui-pill[disabled] { cursor: default; }
+.ui-pill[disabled] { cursor: default; background: linear-gradient(#f4e8d5, #f4e8d5) 100%/100% no-repeat #ff6b35; border-color: #b99168; animation: ui-llena var(--lock) linear forwards; }
+@keyframes ui-llena { to { background-size: 0; } }
 .ui-btn + .ui-btn { margin-left: 8px; }
 #ui button:focus-visible, #ui a:focus-visible { outline: 3px solid #22211f; outline-offset: 2px; }
 .dark #ui button:focus-visible { outline-color: #f4e8d5; }
@@ -148,7 +149,7 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 @media (prefers-reduced-motion: reduce) {
   .ui-pill, .ui-btn, .ui-soundbtn, .ui-homebtn, .mn-hero, .mn-card { transform: none !important; }
   .ui-pausebtn { transform: translateX(-50%) !important; }
-  .ui-pill.ready, .ui-tag.pop, .ui-menu, .ui-menu.out { animation: none; }
+  .ui-pill.ready, .ui-pill[disabled], .ui-tag.pop, .ui-menu, .ui-menu.out { animation: none; }
 }
 
 .ui-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }

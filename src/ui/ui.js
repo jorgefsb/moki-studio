@@ -324,7 +324,7 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect, isNew, barra, bandera, voto }, onGo, onBandera) {
+    showFail({ hint, meta, prompt, rect, isNew, barra, bandera, voto, lock }, onGo, onBandera) {
       ui.hideFail();
       ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
@@ -365,6 +365,7 @@ export function createUI() {
       const pill = el('button', 'ui-pill', `↻ ${prompt}`);
       pill.type = 'button';
       pill.disabled = true;
+      pill.style.setProperty('--lock', `${lock}ms`); // P27: el llenado crema -> naranja dura justo lo que queda del candado
       card.append(pill);
       // P3b ayuda tras 3 caídas en el mismo tramo: segundo botón, sin castigo; el toque en el fondo sigue siendo reintentar
       let alt = null;
