@@ -42,6 +42,8 @@ const MEC = (Q.get('mec') || '').split(','); // ?mec=tramp,viento,timbre destrab
 const vueltaAbierta = () => leerCuaderno().sellos.includes('coleccionista');
 // P8 MODO MEGA: el Clásico a x1.5, abierto al terminar el nivel 1 del Cuaderno (cerrado, la tarjeta lleva a ?ir=mega)
 const megaAbierto = () => nivelDe(leerCuaderno()).nivel >= C.mega.nivel;
+// P8b: x2.0 se abre con el logro MEGA x1.5 (llegar a la meta en x1.5); cerrado, el botón lleva a ?ir=mega2
+const mega2Abierto = () => leerLogros().l.ganados.includes('mega15');
 // La Ruta (propuestas/ruta-de-moki.md): nodo, liga ?ir= y nivel del Cuaderno en que se abre (cerrado = se puede probar).
 // P3f: cada paisaje se abre en su propio nivel ("Nivel 4 · Playa" se abre en el 4). Antes N3 y N4 leían C.tramp.nivel
 // y C.viento.nivel, que desde P5d valen 3 los dos, y ambos decían "nivel 3".
@@ -52,7 +54,7 @@ const RUTA = [
   ['n4', 'viento', () => 4],
 ];
 // "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
-const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto', logros: 'logros', mega: 'mega' };
+const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto', logros: 'logros', mega: 'mega', mega2: 'mega' };
 // Cambia de dirección: ?ir=<destino> (partida en memoria), otra consulta, o la página limpia; el embebido se conserva
 function irA(ir, q) {
   const u = new URL(window.location.href);
@@ -651,22 +653,35 @@ export class RunScene extends Phaser.Scene {
     );
   }
 
-  // P8 MODO MEGA: tarjeta con su mejor marca. Abierto (nivel 1 terminado) juega MEGA y guarda marca; cerrado, "Pruébalo"
-  // lleva a ?ir=mega (partida en memoria, Ley de la última versión: candado con liga). Punto Nuevo por novedades.json.
+  // P8 MODO MEGA: tarjeta con sus marcas. P8b: selector x1.5 / x2.0 en la misma tarjeta, cada botón juega su velocidad
+  // y tiene su marca (moki.best.mega y moki.best.mega2). Cerrado, el botón lleva a su liga (?ir=mega / ?ir=mega2): partida
+  // en memoria, Ley de la última versión. Punto Nuevo por novedades.json.
   tarjetaMega() {
     const n = this.nov;
     const fresco = n && n.fecha && diaLocal() - Math.floor(Date.parse(`${n.fecha}T12:00:00Z`) / 864e5) <= 7;
     const nov = !!fresco && n.donde.some((w) => NODO_DE[w] === 'mega') && load('moki.nuevo.visto.mega') !== n.fecha;
-    const abierto = megaAbierto();
-    const best = num('moki.best.mega', 0);
-    const visto = () => nov && save('moki.nuevo.visto.mega', n.fecha);
-    const jugar = () => {
-      visto();
-      if (!abierto) return irA('mega');
-      this.megaSel = true;
-      this.startGame();
+    const a2 = mega2Abierto();
+    const b1 = num('moki.best.mega', 0);
+    const b2 = num('moki.best.mega2', 0);
+    // punteado = candado (solo x2.0); x1.5 queda sólido como en P8 (cerrado también se juega ya, por su liga)
+    const vel = (txt, abierto, ir, reloj, best, lock) => ({
+      txt,
+      cerrado: !abierto && lock !== 'mega.lock',
+      title: best > 0 ? t('mega.best', { n: best }) : t(abierto ? 'mega.d' : lock),
+      onPick: () => {
+        if (nov) save('moki.nuevo.visto.mega', n.fecha);
+        if (!abierto) return irA(ir);
+        this.megaSel = reloj;
+        this.startGame();
+      },
+    });
+    const marcas = b1 > 0 ? `x1.5: ${b1}${b2 > 0 ? ` · x2.0: ${b2}` : ''}` : '';
+    return {
+      nombre: 'MEGA',
+      linea: !a2 ? t('mega2.lock') : marcas || t('mega.d'),
+      nuevo: nov,
+      sel: [vel('x1.5', megaAbierto(), 'mega', C.mega.reloj, b1, 'mega.lock'), vel('x2.0', a2, 'mega2', C.mega.reloj2, b2, 'mega2.lock')],
     };
-    return { nombre: t('mega.name'), linea: !abierto ? t('mega.lock') : best > 0 ? t('mega.best', { n: best }) : t('mega.d'), cerrado: false, nuevo: nov, onPick: jugar }; // borde sólido: cerrado también se juega ya
   }
 
   // P7 LOGROS: tarjeta del menú (1 toque) con su cuenta; punto "Nuevo" mientras haya un logro ganado sin ver
@@ -754,7 +769,7 @@ export class RunScene extends Phaser.Scene {
   // Mejor marca por modo (director): clásico, reto del día y libre no se comparan entre sí.
   // La marca vieja (moki.best, de antes de separar por modo) se copia a moki.best.clasico la primera vez (decisión del director).
   bestMode() {
-    if (this.megaRun) return 'mega'; // P8: marca aparte (moki.best.mega)
+    if (this.megaRun) return this.megaOn >= C.mega.reloj2 ? 'mega2' : 'mega'; // P8: marca aparte (moki.best.mega); P8b: x2.0 en moki.best.mega2
     const m = this.level && this.level.modo;
     const base = !m ? 'clasico' : m === 'libre' ? 'libre' : 'dia';
     return this.vueltaRun ? `${base}.rapida` : base; // Vuelta rápida: marca aparte (moki.best.dia.rapida / libre.rapida)
@@ -810,14 +825,14 @@ export class RunScene extends Phaser.Scene {
     this.pieceValue = 0;
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
     // Paseo: sin choques y sin mérito (no avanza el Cuaderno ni escribe mejor marca); la decisión es del director, pieza 4
-    this.megaOn = !!this.megaSel; // P8: pedida desde la tarjeta MEGA o ?ir=mega; Paseo no aplica en MEGA
+    this.megaOn = this.megaSel || 0; // P8: reloj MEGA (0 = apagado) pedido desde la tarjeta o ?ir=mega / ?ir=mega2; Paseo no aplica en MEGA
     this.paseoRun = this.paseo && !this.megaOn;
     this.paseoTagC.setVisible(this.paseoRun);
     this.partida = this.paseoRun ? null : nuevaPartida(); // Cuaderno de Moki: avance de esta partida (los reintentos siguen en la misma)
     this.porTachar = this.partida ? porTachar(this.partida) : []; // Día 2: encargos que se tachan a media partida
     leerLogros(); // P7: la primera lectura fija lo ganado antes (no se avisa lo viejo); antes de que la partida gane nada
     registrarDia(); // Racha con perdón: jugar cuenta el día local, también en Paseo (brief del director, pieza 4, decisión b); el demo no cuenta
-    if (this.partida) this.partida.mega = this.megaOn; // P8: el logro MEGA x1.5 se gana al llegar a la meta en MEGA
+    if (this.partida) this.partida.mega = this.megaOn; // P8: los logros MEGA x1.5 / x2.0 se ganan al llegar a la meta en su velocidad
     this.vueltaOn = this.vuelta && !this.paseoRun && !this.megaOn && vueltaAbierta(); // sin el sello (cuaderno borrado) no aplica aunque esté guardada
     const level = this.makeLevel();
     if (level.modo === 'reto' && !this.paseoRun) logrosUi().then((m) => this.ui.avisoLogro(m.contarReto(), this.zonaAviso())).catch(() => {}); // P7: Reto 3 días seguidos
@@ -836,7 +851,7 @@ export class RunScene extends Phaser.Scene {
     this.resetRun(level, dist0);
     if (salto > 0) this.cp = { idx: this.tramoIdx, dist: level.starts[this.tramoIdx], pieces: 0, pieceValue: 0 };
     this.vueltaTag.fill = this.megaRun ? Phaser.Display.Color.HexStringToColor(PAL.warm).color : 0xf4e8d5;
-    this.vueltaTag.set(t(this.megaRun ? 'mega.name' : 'vuelta.name'));
+    this.vueltaTag.set(this.megaRun ? `MEGA x${this.megaOn.toFixed(1)}` : t('vuelta.name'));
     this.vueltaTagC.setVisible(this.vueltaRun || this.megaRun);
     this.speed = FIXED_SPEED || this.tramoSpeed(this.tramoIdx);
     this.accel = 0;
@@ -881,8 +896,8 @@ export class RunScene extends Phaser.Scene {
     this.paseoTagC.setVisible(false);
     [this.hudL, this.hudR, this.hudC].forEach((h) => h.setVisible(true));
     this.vueltaOn = false;
-    this.megaOn = false;
-    this.megaSel = !!(IR && IR.mega); // P8: la liga ?ir=mega arranca en MEGA; la tarjeta lo pide al tocarla
+    this.megaOn = 0;
+    this.megaSel = IR && IR.mega ? C.mega[IR.mega] : 0; // P8: ?ir=mega arranca en x1.5 y ?ir=mega2 en x2.0 (sin candado); la tarjeta lo pide al tocarla
     this.vueltaTagC.setVisible(false);
     this.god = true; // el bot juega bien; la invulnerabilidad es solo la red de seguridad
     const variant = ['A', 'B', 'C'][this.demoVariant % 3];
@@ -1451,8 +1466,8 @@ export class RunScene extends Phaser.Scene {
     if (this.screen === 'dead') this.updateDead(dtMs);
     else if (this.screen === 'final') this.updateFinal(dtMs);
     else if (this.megaRun) {
-      // P8 MODO MEGA: el reloj de la partida x1.5 en dos subpasos (cada uno <= 37.5 ms, nunca un paso más largo que el normal)
-      const h = (dtMs * C.mega.reloj) / 2;
+      // P8 MODO MEGA: el reloj de la partida x1.5 / x2.0 en dos subpasos (cada uno <= 50 ms, nunca un paso más largo que el normal)
+      const h = (dtMs * this.megaOn) / 2;
       this.updateRun(h);
       if (this.screen !== 'dead' && this.screen !== 'final' && this.screen !== 'pause') this.updateRun(h);
     } else this.updateRun(dtMs);

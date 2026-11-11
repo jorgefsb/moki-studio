@@ -61,7 +61,7 @@ export const CONFIG = {
 
   // Tutorial (UX.md §4)
   vuelta: { speedMult: 1.12, scoreMult: 1.25 }, // Vuelta rápida (GDD §3, DISENO §81): tramos x1.12 con tope runSpeedMax y puntaje x1.25; solo Reto y Libre, se abre con el sello Coleccionista
-  mega: { reloj: 1.5, nivel: 2 }, // P8 MODO MEGA: el Clásico con el reloj de la partida x1.5 (dos subpasos por cuadro: misma geometría de saltos y huecos, justicia igual). Se abre en el nivel 2 del Cuaderno (nivel 1 terminado); cerrado se prueba con ?ir=mega
+  mega: { reloj: 1.5, reloj2: 2, nivel: 2 }, // P8 MODO MEGA: el Clásico con el reloj de la partida x1.5 (dos subpasos por cuadro: misma geometría de saltos y huecos, justicia igual). Se abre en el nivel 2 del Cuaderno (nivel 1 terminado); cerrado se prueba con ?ir=mega. P8b: reloj2 = x2.0, se abre con el logro MEGA x1.5 (meta en x1.5); cerrado se prueba con ?ir=mega2
   paseo: { obstacleAlpha: 0.5, edgeSoft: 0.5, dia: { darken: 0.3, soft: 1, ink: 1.5 }, lampDx: 110 }, // Modo Paseo: alfa de los obstáculos (cruzarlos se lee a propósito, no como fallo); edgeSoft: contorno, perfil y cinta bajan con el cartón para que no parezca vidrio (noche y viga); dia: caja y torre de día con cartón oscurecido, tinta x1.5 (perfil 0.6, canto 0.75) y cinta entera (a la mitad en pantalla)
   tutorial: { lookaheadPx: 240, stopMs: 450, handPulseMs: 1200, handPulses: 4, repeatMs: 10000, rewindMs: 180, okMs: 900 },
   // leadTap/leadHold: px extra respecto de la mitad del recorrido aéreo al despegar (se calibra contra la física real, sin god)
