@@ -120,18 +120,27 @@ export function montarVida(s, capas) {
     const c = VEL * ms;
     let x0 = 0;
     let peor = 99;
+    const tr = segundo || (!primero && azar() < 1 / 3);
     // el primero barre 14 x fijas y mide sus primeros 4 s (a la vista antes de los 5 s de partida); los demás, 6 al azar en toda su vida
+    // P6g: el que tropieza se mide SOLO en su tropiezo (+0.2 s), sin nada de la capa medio encima (pino, poste); si ninguna de sus 6 x
+    // queda limpia, sale 0.2 s después con otras 6 (el mundo ya se movió), hasta los 14 s
+    const z = vb ? 0.3 : TROPIEZA;
     const n = primero ? 14 : 6;
     for (let k = 0; k < n; k++) {
       const f = primero ? k / (n - 1) : azar();
       const x = vb ? x1 + (x2 - x1) * f : (primero ? 0.3 + 0.65 * f : 0.5 + 0.45 * f) * s.vw;
       let malos = 0;
       for (let q = 0, tt; q <= 16; q++) {
-        tt = (q / 16) * (primero ? 4 : FIN);
-        if (visible(ms, x + (c - v) * tt - c * Math.min(SIGUE - CORRE, Math.max(0, tt - CORRE)), v * tt) < 0.5) malos++;
+        tt = tr ? z + q * 0.085 : (q / 16) * (primero ? 4 : FIN); // 1.36 s = cae + agachado (1.06) + 0.2 y sobra (en vertical sobran 0.2 más)
+        // en el tropiezo el mundo lo arrastra (quieto AN + cae + agachado, luego vuelve a correr): 17 muestras barren la capa medio
+        // cada ~8 px, todo su ancho
+        const xm = x + (c - v) * tt - c * Math.min(tr ? (vb ? 0.86 : 1.06) : SIGUE - CORRE, Math.max(0, tt - (tr ? z : CORRE)));
+        // en el tropiezo mide también sus dos orillas (±12 del mundo: la sombra ancha del aterrizaje): un pino puede no tocar el centro y comerse medio Moki
+        malos += tr ? Math.min(visible(ms, xm - 12 * ms * gm(), v * tt), visible(ms, xm, v * tt), visible(ms, xm + 12 * ms * gm(), v * tt)) < 1 : visible(ms, xm, v * tt) < 0.5;
       }
       if (malos < peor) (peor = malos), (x0 = x);
     }
+    if (tr && peor && t < 14) return void ((segundo = 1), (otroM = t + 0.2)); // el reintento sigue siendo el que tropieza
     [['pose-run', 7], ['pose-rise', 5], ['pose-fall', 1], ['pose-land', 6]].forEach(([k, n]) => {
       const T2 = hornear(s, k, n, vb);
       if (!T2.has(0)) for (let j = 0; j < n; j++) T2.add(j, 0, j * 64, 0, 64, 64);
@@ -145,7 +154,7 @@ export function montarVida(s, capas) {
     m = {
       x: x0,
       t: 0,
-      tr: segundo || (!primero && azar() < 1 / 3),
+      tr,
       im: s.add.image(x0, 0, `v${vb}pose-run`, 0).setOrigin(66 / 128, 123 / 128).setScale((ms * gm()) / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
       sb: s.add.image(x0, 0, `v${vb}sombra`).setScale((ms * gm() * (vb ? 1.3 : 1)) / 2).setDepth(2.0645),
     };
