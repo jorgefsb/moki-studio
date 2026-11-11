@@ -342,6 +342,9 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 @media (max-width: 700px) { .mn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ui-menu.una .mn-grid { grid-template-columns: 1fr; }
 .ui-menu.una .mn-card { min-height: 56px; }
+/* P26: con alto tope (390 junto a Moki) JUGAR, Vota y el pie no se aplastan; la lista de tarjetas es la que se desliza */
+.ui-menu:not(.corto) > * { flex-shrink: 0; }
+.ui-menu:not(.corto) > .mn-carril { flex-shrink: 1; min-height: 0; overflow-y: auto; margin: -7px -3px -4px; padding: 7px 3px 4px; }
 .mn-card { min-height: 64px; padding: 6px 10px; background: #f4e8d5; border-color: #b99168; display: flex; align-items: center; gap: 8px; }
 .mn-card .tx { display: flex; flex-direction: column; min-width: 0; }
 .mn-card b { font: 700 16px/19px Outfit, sans-serif; }

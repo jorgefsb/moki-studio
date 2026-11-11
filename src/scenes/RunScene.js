@@ -611,7 +611,11 @@ export class RunScene extends Phaser.Scene {
     const lg = this.tarjetaLogros();
     const mg = this.tarjetaMega(); // P8: MEGA va junto a Logros (con Nuevo, al frente)
     const frente = [lg, mg].filter((c) => c.nuevo);
-    const cards = [...frente, ...(nv >= 5 ? [libre, reto] : [reto, libre]), ...[lg, mg].filter((c) => !c.nuevo), ...ruta, { nombre: t('menu.clasico'), linea: t('menu.clasico.d'), onPick: () => irA(null, 'nivel=clasico') }];
+    const corto = this.scale.height < 480;
+    const modos = nv >= 5 ? [libre, reto] : [reto, libre];
+    // P26: en el carril de 660x372 caben dos tarjetas; MEGA va segunda y Logros cuarta (la tercera se asoma bajo la flecha)
+    const medio = corto && !mg.nuevo ? [modos[0], mg, modos[1], ...[lg].filter((c) => !c.nuevo)] : [...modos, ...[lg, mg].filter((c) => !c.nuevo)];
+    const cards = [...frente, ...medio, ...ruta, { nombre: t('menu.clasico'), linea: t('menu.clasico.d'), onPick: () => irA(null, 'nivel=clasico') }];
     cards.push({
       nombre: t('paseo.name'),
       linea: t('menu.paseo.d'),
@@ -643,7 +647,6 @@ export class RunScene extends Phaser.Scene {
         },
       });
     const hola = saludo();
-    const corto = this.scale.height < 480;
     this.ui.showMenu(
       {
         hero: { titulo: t('menu.nuevo'), sub: subNuevo, onPick: juegaNuevo },
