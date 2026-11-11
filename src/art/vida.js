@@ -20,6 +20,8 @@ const KRAFT = '#B99168';
 // agachado (cuadros 0-1 de pose-land, 0.5 s) y se levanta (2-5); luego sigue su vida normal. Después, uno de cada tres
 const TROPIEZA = 1.9; // a los 12 s nace: corre 12-13.9, cae 13.9-14.2, agachado 14.2-14.8, se levanta y sigue (capturas del caso §4)
 const TRIP = 1.06;
+// vertical (390): P22b lo desvanece antes del jugador y parado se le acerca rápido; tropieza al terminar de aparecer y se agacha 0.3 s
+const TRIPV = [0.3, 0.7, 0.86];
 
 // Textura de canvas hecha una vez; dibuja recibe el contexto
 function tex(s, k, w, h, dibuja) {
@@ -185,16 +187,17 @@ export function montarVida(s, capas) {
     if (m) {
       // u: reloj de su vida normal; en el tropiezo se congela y j dice cuánto lleva (0-0.3 cae, 0.3-1.06 agachado y se levanta)
       let u = (m.t += dt);
-      const j = m.tr && u > TROPIEZA ? u - TROPIEZA : -1;
-      if (j >= TRIP) u -= TRIP;
-      const tr = j >= 0 && j < TRIP;
+      const [z0, z1, z2] = vb ? TRIPV : [TROPIEZA, 0.9, TRIP];
+      const j = m.tr && u > z0 ? u - z0 : -1;
+      if (j >= z2) u -= z2;
+      const tr = j >= 0 && j < z2;
       const k = tr || u < CORRE || u > SIGUE ? -1 : Math.min(1, (u - CORRE) / 0.7);
       m.x += (tr ? (j < 0.3 ? (5 / 0.3) * ms * dt : 0) : k < 0 ? VEL * ms * dt : 0) - d * 0.3;
       const hop = tr ? (j < 0.3 ? Math.sin((Math.PI * j) / 0.3) * 3 * ms * gm() : 0) : k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms * gm();
-      const ag = tr && j >= 0.3 && j < 0.9; // agachado: sombra más ancha
+      const ag = tr && j >= 0.3 && j < z1; // agachado: sombra más ancha
       m.im.setTexture(
         tr ? `v${vb}pose-${j < 0.3 ? 'fall' : 'land'}` : k < 0 ? `v${vb}pose-run` : `v${vb}pose-rise`,
-        tr ? (j < 0.3 ? 0 : j < 0.9 ? Math.min(1, Math.floor((j - 0.3) * 23)) : Math.min(5, 2 + Math.floor((j - 0.9) * 23))) : k < 0 ? Math.floor(u * 12) % 7 : Math.min(4, Math.floor(k * 5)),
+        tr ? (j < 0.3 ? 0 : j < z1 ? Math.min(1, Math.floor((j - 0.3) * 23)) : Math.min(5, 2 + Math.floor((j - z1) * 23))) : k < 0 ? Math.floor(u * 12) % 7 : Math.min(4, Math.floor(k * 5)),
       );
       m.sb.scaleX = m.im.scaleY * (vb ? 1.3 : 1) * (ag ? 1.35 : 1);
       // vertical: los pies se hunden 1 px en la cresta (asentado) y se desvanece antes de llegar a 60 px de pantalla del jugador
