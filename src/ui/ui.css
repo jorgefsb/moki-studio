@@ -39,7 +39,7 @@
 }
 .ui-pill, .ui-btn.primary { background: #ff6b35; color: #22211f; }
 .ui-btn.secondary { background: #f4e8d5; color: #22211f; border-color: #b99168; }
-.ui-pill[disabled] { opacity: 0.45; cursor: default; }
+.ui-pill[disabled] { cursor: default; }
 .ui-btn + .ui-btn { margin-left: 8px; }
 #ui button:focus-visible, #ui a:focus-visible { outline: 3px solid #22211f; outline-offset: 2px; }
 .dark #ui button:focus-visible { outline-color: #f4e8d5; }
@@ -134,6 +134,13 @@
 .ui-card.pop { animation: ui-edge 320ms ease-out 1; }
 @keyframes ui-pop { 0% { transform: scale(0.85); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
 @keyframes ui-edge { 0%, 100% { border-color: #8a7e70; } 40% { border-color: #ff6b35; } }
+.ui-card.rev .ui-tag:not(.pop) { animation: ui-asx 200ms cubic-bezier(0.2, 0.9, 0.3, 1.15) 40ms backwards; }
+.ui-card.rev dd, .ui-card.rev .meta span { overflow: hidden; }
+.ui-card.rev .as { display: inline-block; animation: ui-asy 150ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(20ms + min(var(--i), 4) * 18ms) backwards; }
+.ui-card.rev .secondary { animation: ui-btin 130ms ease-out calc(40ms + min(var(--i), 3) * 25ms) backwards; }
+@keyframes ui-asx { from { transform: translateX(calc(100% + 44px)); } }
+@keyframes ui-asy { from { transform: translateY(105%); } }
+@keyframes ui-btin { from { opacity: 0; transform: translateY(10px); } }
 html[data-juice='0'] #ui * { transition: none !important; animation: none !important; }
 html[data-juice='0'] #ui button:not(.ui-pausebtn):active, html[data-juice='0'] #ui button:not(.ui-pausebtn):hover { transform: none; }
 html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
