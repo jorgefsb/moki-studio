@@ -277,7 +277,6 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 /* Tarjeta compacta (vertical): las tres acciones en una fila; Copiar es un cuadro de 48 px con ícono */
 .ui-card.compact .ui-btn { padding: 0 14px; }
 .ui-card.compact .ui-btn + .ui-btn { margin-left: 6px; }
-.ui-btn.ui-copy.icon { width: 48px; padding: 0; vertical-align: top; }
 /* Nivel de Moki (E1): etiqueta de cartón ladeada, Outfit 700 en tinta (ARTE §5: sin texto naranja chico, sin fuente nueva) */
 .cu-nivel {
   display: inline-block; margin-right: 8px; padding: 0 7px; transform: rotate(-3deg);
@@ -432,4 +431,8 @@ div.mn-card { cursor: default; }
 .ui-menu.corto .mn-voto span { font-size: 14px; line-height: 17px; }
 .ui-voto { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 44px; margin: 8px 0 0 !important; text-decoration: none; }
 .ui-voto-sub { margin: 10px 0 0; font: 400 16px/21px Inter, sans-serif; }
-.ui-card.corto .ui-voto-c { margin-right: 12px; font-weight: 600; }
+.ui-chicas { display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; margin-top: 4px; }
+.ui-card .ui-chica { min-height: 36px; margin: 0; padding: 0 2px; border: 0; background: none; font-size: 14px; cursor: pointer; }
+.ui-card.compact .ui-voto-sub { margin-top: 8px; font-size: 13px; line-height: 16px; }
+.ui-voto-pie { top: auto; bottom: 12px; }
+.ui-chicas .meta { margin: 0; }

@@ -78,6 +78,13 @@ export function createUI() {
     });
     return a;
   };
+  // P28: las dos líneas de Jorge y el botón ancho 'Vota lo que sigue' (final y fallo)
+  const votoBloque = (v) => {
+    const a = votoLink(v, 'ui-btn secondary ui-voto');
+    a.textContent = t('voto.titulo');
+    a.addEventListener('click', () => (a.textContent = t('voto.gracias')));
+    return [el('p', 'ui-voto-sub', t('voto.sub')), a];
+  };
   const state = { menu: null, homeBtn: null, demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null, tachado: null, tachados: [] };
 
   // Todo botón suena (AUDIO §5): se engancha en la fase de captura, antes de que el botón actúe
@@ -96,14 +103,6 @@ export function createUI() {
       on
         ? '<path d="M18 10c2 2.5 2 5.5 0 8M21 7c3.6 4.2 3.6 9.8 0 14" fill="none" stroke="#22211F" stroke-width="2.2" stroke-linecap="round"/>'
         : '<path d="M19 10l7 8M26 10l-7 8" fill="none" stroke="#22211F" stroke-width="2.4" stroke-linecap="round"/>'
-    }</svg>`;
-
-  // Copiar: dos hojas de papel encimadas en tinta; copiado = palomita de tinta (el estado no depende del color)
-  const copyIcon = (done) =>
-    `<svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true" focusable="false">${
-      done
-        ? '<path d="M6 14.5l5 5 11-12" fill="none" stroke="#22211F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
-        : '<rect x="9" y="4" width="14" height="17" rx="3" fill="#F4E8D5" stroke="#22211F" stroke-width="2.4"/><rect x="5" y="8" width="14" height="17" rx="3" fill="#F4E8D5" stroke="#22211F" stroke-width="2.4"/>'
     }</svg>`;
 
   const ui = {
@@ -318,7 +317,7 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect, isNew, barra, bandera }, onGo, onBandera) {
+    showFail({ hint, meta, prompt, rect, isNew, barra, bandera, voto }, onGo, onBandera) {
       ui.hideFail();
       ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
@@ -369,9 +368,21 @@ export function createUI() {
         alt.addEventListener('pointerdown', (e) => e.stopPropagation());
         card.append(alt);
       }
+      const vb = voto && votoBloque(voto);
+      if (vb) card.append(...vb);
       if (!reducedMQ.matches && feel.level) revela(card, [...card.querySelectorAll('.meta span')]);
       scrim.append(card);
       root.appendChild(scrim);
+      // P28 (director, A): en vertical bajito el voto no cabe sobre la cabeza de Moki; va en una tira de papel sobre
+      // el suelo, en el lugar del Cuaderno (que ahí no sale). La tarjeta se aprieta igual que sin voto.
+      let pie = null;
+      if (vb && card.scrollHeight > card.clientHeight + 1) {
+        pie = el('div', 'ui-card compact ui-voto-pie');
+        Object.assign(pie.style, { left: `${rect.left}px`, width: `${rect.width}px` });
+        pie.append(...vb);
+        pie.addEventListener('pointerdown', (e) => e.stopPropagation());
+        scrim.append(pie);
+      }
       // Pantallas bajas (embed 660x372, 640x400): si el contenido no cabe en maxHeight, se aprieta por pasos para que el
       // botón de reintento siempre se vea: 1) barra en una línea, 2) sin la línea de meta, 3) la barra queda en texto
       // ("Lo siguiente: ..." o "¡Abriste ...!") sin dibujo ni tubo, 4) sin la barra. Con bandera, antes que nada los dos
@@ -398,7 +409,7 @@ export function createUI() {
       });
       pill.addEventListener('click', go);
       primary = go;
-      state.fail = { scrim, card, pill, alt };
+      state.fail = { scrim, card, pill, alt, pie };
       requestAnimationFrame(() => {
         card.style.opacity = '1';
         card.style.transform = 'translateY(0)';
@@ -439,7 +450,7 @@ export function createUI() {
     showCuaderno(tira, zonas) {
       ui.hideCuaderno();
       const host = (state.fail || state.final);
-      if (!host) return;
+      if (!host || host.pie) return;
       const { card, scrim } = host;
       const strip = el('div', 'ui-cuaderno');
       strip.setAttribute('role', 'status');
@@ -636,19 +647,10 @@ export function createUI() {
       card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));
       again.type = 'button';
-      const how = el('button', 'ui-btn secondary', t('end.how'));
+      // P28 (Jorge, 11-nov): Así lo hicimos y copiar bajan a enlaces chicos en una fila; el voto sube bajo 'Otra vez'
+      const how = el('button', 'ui-link ui-chica', t('end.how'));
       how.type = 'button';
-      // LA SUMA A: al final dice qué sigue y lleva al menú en un toque
-      // P3c: en la tarjeta corta la liga de voto ocupa el lugar de 'Qué sigue'; en la grande va debajo con su línea
-      if (onMenu && !(d.voto && rect.corto)) card.append(el('p', 'ui-sigue', t('end.sigue')));
-      let voto = null; // va después de los botones: nunca empuja a 'Otra vez' fuera de la tarjeta
-      if (d.voto) {
-        // corta (vertical y bajito): liga de texto en la misma fila que jorgesuarez.com.mx; la tarjeta no crece (P3c arreglo)
-        const v = votoLink(d.voto, rect.corto ? 'ui-link ui-voto-c' : 'ui-btn secondary ui-voto');
-        v.textContent = rect.corto ? t('voto.titulo') : `${t('voto.titulo')} · ${t('voto.btn')}`;
-        v.addEventListener('click', () => (v.textContent = t('voto.gracias')));
-        voto = rect.corto ? [v] : [el('p', 'ui-voto-sub', t('voto.sub')), v];
-      }
+      if (onMenu && !d.voto) card.append(el('p', 'ui-sigue', t('end.sigue')));
       card.append(again);
       if (onMenu) {
         const menu = el('button', 'ui-btn secondary', t('menu.volver'));
@@ -656,38 +658,30 @@ export function createUI() {
         menu.addEventListener('click', onMenu);
         card.append(menu);
       }
-      card.append(how);
+      if (d.voto) card.append(...votoBloque(d.voto));
+      const chicas = el('div', 'ui-chicas');
+      chicas.append(how);
       if (onCopy) {
         // Tarjeta para compartir (GDD §3): copia texto al portapapeles; el aviso es tinta sobre papel, sin naranja chico
-        // En la tarjeta compacta (vertical) no cabe una segunda fila: el botón es un cuadro de 48 px con dos hojas
-        // de papel (y palomita al copiar), en la misma fila que "Otra vez" y "Así lo hicimos".
-        const icon = !!rect.compact;
-        const copy = el('button', icon ? 'ui-btn secondary ui-copy icon' : 'ui-btn secondary ui-copy', icon ? undefined : t('share.btn'));
+        const copy = el('button', 'ui-link ui-chica ui-copy', t('share.btn'));
         copy.type = 'button';
         copy.setAttribute('aria-label', t('share.aria'));
-        copy.title = t('share.btn');
-        if (icon) copy.innerHTML = copyIcon(false);
         const live = el('span', 'ui-copied');
         live.setAttribute('role', 'status');
         copy.addEventListener('click', () => {
-          Promise.resolve(onCopy()).then((ok) => {
-            live.textContent = t(ok ? 'share.ok' : 'share.no');
-            if (icon) copy.innerHTML = copyIcon(ok);
-            else copy.textContent = live.textContent;
-          });
+          Promise.resolve(onCopy()).then((ok) => (copy.textContent = live.textContent = t(ok ? 'share.ok' : 'share.no')));
         });
-        card.append(copy, live);
+        chicas.append(copy, live);
       }
-      const fila = voto && rect.corto; // la liga corta comparte renglón con la de regreso
-      if (voto) card.append(...(fila ? [el('br')] : []), ...voto);
       if (!EMBED) {
         // En embed la página padre ya trae la liga de regreso
-        const link = el('a', 'ui-link', t('end.link'));
+        const link = el('a', 'ui-link ui-chica', t('end.link'));
         link.href = 'https://jorgesuarez.com.mx';
         link.rel = 'noopener';
-        card.append(...(fila ? [] : [el('br')]), link);
+        chicas.append(link);
       }
-      card.append(el('p', 'meta', t('contador.nota')));
+      chicas.append(el('p', 'meta', t('contador.nota')));
+      card.append(chicas);
       if (!still) revela(card, [...rows.querySelectorAll('dd')]);
       scrim.append(card);
       root.appendChild(scrim);
