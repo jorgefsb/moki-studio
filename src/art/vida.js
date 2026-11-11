@@ -44,10 +44,12 @@ const tope = (L, t, x, dx = 0) => {
 };
 
 // Las tiras se hornean a la mitad (64 px por cuadro) con suavizado bueno: sin parpadeo de pixel al achicarlas
-const hornear = (s, key, n) =>
-  tex(s, `v${key}`, 64 * n, 64, (x) => {
+// P22b: en vertical se hornea con bruma (pintar encima el durazno claro de los cerros al 40 % baja saturación y contraste: plano lejano)
+const hornear = (s, key, n, b) =>
+  tex(s, `v${b ? 'b' : ''}${key}`, 64 * n, 64, (x) => {
     x.imageSmoothingQuality = 'high';
     x.drawImage(s.textures.get(key).getSourceImage(), 0, 0, 64 * n, 64);
+    if (b) (x.globalCompositeOperation = 'source-atop'), (x.fillStyle = 'rgba(222,170,140,.4)'), x.fillRect(0, 0, 64 * n, 64);
   });
 
 // Rombo de papel de 22x28 con cruz kraft y cola de 12 con 3 moñitos, al doble para que no se pixelee
@@ -99,9 +101,14 @@ export function montarVida(s, capas) {
   // en vertical el Moki lejano crece (22 -> ~30 px a 390); 660 y 1280 igual
   const gm = () => (s.scale.width / s.scale.height <= C.portrait.maxAspect ? C.portrait.vidaMoki : 1);
 
+  let vb = ''; // 'b' en vertical (P22b): bruma, sombra asentada, nace a la derecha y se va antes de la columna del jugador
   const nuevoMoki = () => {
     if (!s.textures.exists('pose-rise')) return void (otroM = t + 0.5); // las poses aún no llegan
     const ms = s.midS || 1;
+    vb = s.scale.width / s.scale.height <= C.portrait.maxAspect ? 'b' : '';
+    // vertical: x desde ~240 px de pantalla (a 390) y el borde menos medio Moki, para que no nazca cortado ni sobre el jugador
+    const x1 = vb ? Math.max(0.62 * s.vw, s.px + 150 / s.zoom) : 0;
+    const x2 = vb ? s.vw - 14 * ms * gm() : 0;
     const v = (s.speed || 320) * 0.3;
     const c = VEL * ms;
     let x0 = 0;
@@ -109,7 +116,8 @@ export function montarVida(s, capas) {
     // el primero barre 14 x fijas y mide sus primeros 4 s (a la vista antes de los 5 s de partida); los demás, 6 al azar en toda su vida
     const n = primero ? 14 : 6;
     for (let k = 0; k < n; k++) {
-      const x = (primero ? 0.3 + (0.65 * k) / (n - 1) : 0.5 + 0.45 * azar()) * s.vw;
+      const f = primero ? k / (n - 1) : azar();
+      const x = vb ? x1 + (x2 - x1) * f : (primero ? 0.3 + 0.65 * f : 0.5 + 0.45 * f) * s.vw;
       let malos = 0;
       for (let q = 0, tt; q <= 16; q++) {
         tt = (q / 16) * (primero ? 4 : FIN);
@@ -118,20 +126,20 @@ export function montarVida(s, capas) {
       if (malos < peor) (peor = malos), (x0 = x);
     }
     ['pose-run', 'pose-rise'].forEach((k, i) => {
-      const T2 = hornear(s, k, 7 - 2 * i);
+      const T2 = hornear(s, k, 7 - 2 * i, vb);
       if (!T2.has(0)) for (let j = 0; j < 7 - 2 * i; j++) T2.add(j, 0, j * 64, 0, 64, 64);
     });
-    // sombra de contacto: elipse #22211F al 20 %, 14x3 del mundo (al doble)
-    tex(s, 'vsombra', 28, 6, (x) => {
-      x.fillStyle = 'rgba(34,33,31,0.2)';
+    // sombra de contacto: elipse #22211F al 20 %, 14x3 del mundo (al doble). P22b, vertical: al 32 % y x1.3 (18x4) para que pise la cresta
+    tex(s, `v${vb}sombra`, 28, 6, (x) => {
+      x.fillStyle = `rgba(34,33,31,${vb ? 0.32 : 0.2})`;
       x.ellipse(14, 3, 14, 3, 0, 0, 7);
       x.fill();
     });
     m = {
       x: x0,
       t: 0,
-      im: s.add.image(x0, 0, 'vpose-run', 0).setOrigin(66 / 128, 123 / 128).setScale((ms * gm()) / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
-      sb: s.add.image(x0, 0, 'vsombra').setScale((ms * gm()) / 2).setDepth(2.0645),
+      im: s.add.image(x0, 0, `v${vb}pose-run`, 0).setOrigin(66 / 128, 123 / 128).setScale((ms * gm()) / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
+      sb: s.add.image(x0, 0, `v${vb}sombra`).setScale((ms * gm() * (vb ? 1.3 : 1)) / 2).setDepth(2.0645),
     };
     otroM = t + 20 + 10 * azar();
     primero = false;
@@ -170,12 +178,14 @@ export function montarVida(s, capas) {
       const k = (m.t += dt) < CORRE || m.t > SIGUE ? -1 : Math.min(1, (m.t - CORRE) / 0.7);
       m.x += (k < 0 ? VEL * ms * dt : 0) - d * 0.3;
       const hop = k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms * gm();
-      m.im.setTexture(k < 0 ? 'vpose-run' : 'vpose-rise', k < 0 ? Math.floor(m.t * 12) % 7 : Math.min(4, Math.floor(k * 5)));
-      const pies = tope(capas.lejos, T.l, m.x);
-      const a = Math.min(1, m.t / 0.3, Math.max(0, (FIN - m.t) * 2));
+      m.im.setTexture(k < 0 ? `v${vb}pose-run` : `v${vb}pose-rise`, k < 0 ? Math.floor(m.t * 12) % 7 : Math.min(4, Math.floor(k * 5)));
+      // vertical: los pies se hunden 1 px en la cresta (asentado) y se desvanece antes de llegar a 60 px de pantalla del jugador
+      const pies = tope(capas.lejos, T.l, m.x) + (vb ? ms * gm() : 0);
+      const ir = vb ? Math.max(0, (m.x - s.px - 60 / s.zoom) / (16 * ms)) : 9;
+      const a = Math.min(1, m.t / 0.3, Math.max(0, (FIN - m.t) * 2), ir);
       m.im.setPosition(m.x, pies - hop).setAlpha(a);
       m.sb.setPosition(m.x, pies).setAlpha(a * (1 - (hop / (8 * ms * gm() + 1)) * 0.6));
-      if (m.t > FIN || m.x < -30) m.im.destroy(), m.sb.destroy(), (m = null);
+      if (m.t > FIN || m.x < -30 || (ir <= 0 && m.t > 0.3)) m.im.destroy(), m.sb.destroy(), (m = null);
     }
     if (p) {
       p.x -= ((s.vw + 60) / 14) * (p.t += dt, dt) + d * 0.05;
