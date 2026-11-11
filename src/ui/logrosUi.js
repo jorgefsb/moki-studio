@@ -16,6 +16,8 @@ const TX = {
   volver: 'Volver',
   aria: 'Logros: {n} de {de} ganados',
   llegue: ['Primera meta', 'Llega a la meta de un nivel'],
+  disenador: ['Diseñador', 'Toca Vota lo que sigue al terminar una partida', 'Abriste la votación de lo que sigue'],
+  embajador: ['Embajador', 'Comparte el juego desde el botón Copiar', 'Compartiste el juego'],
   arcos3: ['Tres arcos', 'Junta 3 arcos completos en una partida'],
   sinCaerme: ['Sin un rasguño', 'Termina un nivel sin chocar'],
   coleccionista: ['Coleccionista', 'Llega a la meta con 8 de cada 10 piezas'],
@@ -43,7 +45,7 @@ export function pantalla(el, d, onBack) {
     const tx = el('div', 'tx');
     const nom = el('b', '', TX[x.id][0]);
     if (x.sigue) nom.append(el('em', 'lg-sigue', TX.sigue));
-    tx.append(nom, el('span', '', x.ganado ? TX.ganado : TX[x.id][1]));
+    tx.append(nom, el('span', '', x.ganado ? TX[x.id][2] || TX.ganado : TX[x.id][1]));
     li.append(tx);
     grid.append(li);
   }
@@ -66,8 +68,11 @@ export function aviso(el, root, ids, sfx, zona) {
   ids.forEach((id, i) => uno(el, root, TX.aviso, TX[id][0], sfx, 500 + i * 2900, zona));
 }
 
+let libre = 0; // P29: los avisos van en fila (votar justo tras la meta no encima su etiqueta sobre la de la partida)
 function uno(el, root, titulo, linea, sfx, ms, zona) {
   const espera = zona && zona.espera > 0 ? Math.min(zona.espera, 4000) : 0; // letrero del centro a la vista
+  const t = Math.max(Date.now() + ms + espera, libre);
+  libre = t + 2900;
   setTimeout(() => {
     const a = el('div', 'ui-logro');
     if (zona) Object.assign(a.style, { top: `${zona.top}px`, right: `${root.clientWidth - zona.right}px`, maxWidth: `${Math.max(140, zona.right - zona.left)}px` });
@@ -79,7 +84,7 @@ function uno(el, root, titulo, linea, sfx, ms, zona) {
     if (sfx) sfx('sello');
     setTimeout(() => a.classList.add('out'), 2400);
     setTimeout(() => a.remove(), 2700);
-  }, ms + espera);
+  }, t - Date.now());
 }
 
 // Al abrir la pantalla: todo lo ganado queda visto y la etiqueta "Nuevo" se apaga.
@@ -115,6 +120,13 @@ export function contarReto(hoy = diaLocal()) {
   if (gana) l.ganados.push('reto3'), l.avisados.push('reto3'); // solo avisa el suyo; lo demás lo avisa revisarLogros
   guardar(l);
   return gana ? ['reto3'] : [];
+}
+
+// P29 sellos de gamedev: logro propio por una acción del jugador (votar, compartir). Devuelve el aviso si es nuevo.
+export function ganar(id) {
+  const { l } = leerLogros();
+  if (!l.ganados.includes(id)) l.ganados.push(id), guardar(l);
+  return avisar();
 }
 
 function avisar() {

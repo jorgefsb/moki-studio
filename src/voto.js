@@ -8,6 +8,6 @@ let partidas = 0; // partidas empezadas en esta visita (memoria, como el contado
 export const contarPartida = () => partidas++;
 
 // P28 (Jorge, 11-nov): el voto va siempre en la tarjeta final y en la de fallo, arriba del pliegue
-export const votoTarjeta = (desde) => (ESCAPARATE ? null : { href: liga(desde) });
+export const votoTarjeta = (desde, onClick) => (ESCAPARATE ? null : { href: liga(desde), onClick }); // P29: onClick gana DISEÑADOR
 
 export const votoMenu = () => (ESCAPARATE ? null : { href: liga('menu') });
