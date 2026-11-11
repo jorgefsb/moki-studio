@@ -66,6 +66,7 @@ class MokiPoses {
     this.sprite.setScale(ESCALA).setAngle(ang);
     let key = 'pose-run';
     let frame = 0;
+    let sq = [ESCALA, ESCALA];
     const ld = s.t - s.landAt;
     if (!s.grounded) {
       key = s.vy < 0 ? 'pose-rise' : 'pose-fall';
@@ -76,6 +77,13 @@ class MokiPoses {
     } else if (ld >= 0 && ld < LAND_MS) {
       key = 'pose-land';
       frame = Math.min(5, Math.floor((ld / LAND_MS) * 6));
+      // P4h squash B del aterrizaje fuerte (el mismo del títere, P4B): desde los pies (ORIGEN), escala siempre positiva
+      const QB = C.art.squashB, lh = s.t - (s.landHardAt ?? -1e9);
+      if (QB && !s.reduced && lh >= 0 && lh < QB.ms) {
+        const e = 1 - (lh / QB.ms) ** 2;
+        sq = [ESCALA * (1 + (QB.x - 1) * e), ESCALA * (1 + (QB.y - 1) * e)];
+        this.sprite.setScale(...sq);
+      }
     } else {
       // zancada por distancia: un ciclo de 7 cuadros cada lo que mide el paso del títere (los pies no patinan)
       const ciclo = (s.rig.debug && s.rig.debug.cyclePx) || 120;
@@ -87,7 +95,7 @@ class MokiPoses {
       this.pose = key;
     } else this.sprite.setFrame(frame);
     this.sprite.setPosition(s.px, s.y + 2);
-    this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAngle(ang).setAlpha(s.rimA || 0);
+    this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAngle(ang).setScale(...sq).setAlpha(s.rimA || 0);
     return true;
   }
 
