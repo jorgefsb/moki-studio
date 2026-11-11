@@ -18,28 +18,18 @@ export class Particles {
     this.clock = 0;
     // Motas del casi-choque con canto (ARTE §4): crema con borde kraft y naranja con borde crema, para que se lean sobre
     // el casco crema, el traje naranja, el cielo del atardecer y la noche
-    // P4B: nubecita de polvo del aterrizaje: tres bolitas crema con canto de tinta suave, para que se lea sobre el suelo
-    // naranja (el crema/kraft liso de P4 pasaba como textura; los trozos con canto se leían como íconos)
-    if (!scene.textures.exists('chipPolvo')) {
-      const t = scene.textures.createCanvas('chipPolvo', 22, 16);
+    // Polvo de papel: tres bolitas crema con canto kraft #B99168, nada de gris (ARTE.md l.137). P4B aterrizaje (chipPolvo,
+    // canto 1.4) y P4c v2 despegue (chipPolvoK, canto C.feelP4c.contornoPx). P31: el canto del aterrizaje era tinta al 55 %,
+    // que sobre el suelo naranja se leía gris; ahora es el mismo kraft del despegue, misma forma y tamaño
+    for (const [k, w, h, o, c] of [['chipPolvo', 22, 16, 0, 1.4], ['chipPolvoK', 26, 20, 2, C.feelP4c.contornoPx]]) {
+      if (scene.textures.exists(k)) continue;
+      const t = scene.textures.createCanvas(k, w, h);
       const x = t.context;
-      const bolas = [[7, 10, 5.5], [14, 9, 6], [11, 6, 4.5]];
-      x.fillStyle = 'rgba(34, 33, 31, 0.55)';
-      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + 1.4, 0, Math.PI * 2), x.fill();
-      x.fillStyle = '#F4E8D5';
-      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
-      t.refresh();
-    }
-    // P4c vuelta 2 (ARTE del director, 10-nov): el polvo del DESPEGUE va en crema cálida con contorno kraft, nada de gris
-    // (ARTE.md l.137). El de aterrizaje de P4B se queda con su textura
-    if (!scene.textures.exists('chipPolvoK')) {
-      const t = scene.textures.createCanvas('chipPolvoK', 26, 20);
-      const x = t.context;
-      const bolas = [[9, 12, 5.5], [16, 11, 6], [13, 8, 4.5]];
-      x.fillStyle = '#B99168';
-      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + C.feelP4c.contornoPx, 0, Math.PI * 2), x.fill();
-      x.fillStyle = '#F4E8D5';
-      for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r, 0, Math.PI * 2), x.fill();
+      const bolas = [[7 + o, 10 + o, 5.5], [14 + o, 9 + o, 6], [11 + o, 6 + o, 4.5]];
+      for (const [f, d] of [['#B99168', c], ['#F4E8D5', 0]]) {
+        x.fillStyle = f;
+        for (const [cx, cy, r] of bolas) x.beginPath(), x.arc(cx, cy, r + d, 0, Math.PI * 2), x.fill();
+      }
       t.refresh();
     }
     for (const [k, f, b] of [['chipCasiP', '#F4E8D5', '#B99168'], ['chipCasiO', '#FF6B35', '#F4E8D5']]) {

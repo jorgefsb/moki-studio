@@ -65,7 +65,7 @@ const acabar = (c, x, sombra) => {
   return conSombra(c, { color: PAL.ink, ...sombra });
 };
 
-// Mariposa doblada por el cuerpo: alas de arriba crema, de abajo kraft, y el lado izquierdo un paso más oscuro. Sin círculos: no se lee como ficha.
+// Mariposa doblada por el cuerpo: alas de arriba crema, de abajo kraft, y el lado izquierdo un paso más oscuro y cálido. Sin círculos: no se lee como ficha.
 function mariposa() {
   const [c, x] = mk(36, 28);
   const r = rng(171);
@@ -73,8 +73,10 @@ function mariposa() {
   const doblez = [[19, 13.5], [32.5, 9], [32, 13], [28, 16], [19, 15]]; // la mitad baja del ala de arriba, doblada: un paso abajo de valor
   const abajo = [[19, 15], [28, 16], [29, 21], [25, 25], [21, 23], [19, 18]];
   const espejo = (pts) => pts.map(([a, b]) => [36 - a, b]).reverse();
-  const canto = mix(PAL.kraft, PAL.ink, 0.55);
-  cara(x, orilla(espejo(abajo), r, 0.7), mix(PAL.kraft, PAL.ink, 0.22), { grueso: 1.6, canto });
+  // P31: lo oscuro sale de kraft con ámbar antes de la tinta (canto S 41 %, ala S 45 %, tono 35°); kraft con tinta sola daba gris
+  const tibio = mix(PAL.kraft, PAL.warm, 0.3);
+  const canto = mix(tibio, PAL.ink, 0.45);
+  cara(x, orilla(espejo(abajo), r, 0.7), mix(tibio, PAL.ink, 0.22), { grueso: 1.6, canto });
   cara(x, orilla(espejo(arriba), r, 0.7), mix(PAL.paper, PAL.kraft, 0.5), { grueso: 1.6, canto });
   cara(x, espejo(doblez), mix(PAL.kraft, PAL.ink, 0.08), { grueso: 0, filo: 0 });
   cara(x, orilla(abajo, r, 0.7), mix(PAL.kraft, PAL.ink, 0.06), { grueso: 1.6, canto });
