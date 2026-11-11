@@ -106,7 +106,8 @@ class MokiPoses {
       const d = (123 - cu) * (ESCALA - sq[1]), r = (ang * Math.PI) / 180;
       this.casco.setTexture(key, frame).setCrop(0, 0, 128, cu + 1).setAngle(ang).setPosition(s.px - d * Math.sin(r), s.y + 2 + d * Math.cos(r)).setVisible(true);
     } else if (this.sprite.isCropped) this.sprite.setCrop();
-    this.rim.setTexture(key, frame).setCrop(0, 0, 128, RIM_Y).setPosition(s.px - RIM_PX, s.y + 2).setAngle(ang).setScale(...sq).setAlpha(s.rimA || 0);
+    // P4i: en el squash el rim se recorta al cuello (el casco no aplastado lo tapaba mal: asomaba una banda durazno)
+    this.rim.setTexture(key, frame).setCrop(0, cu | 0, 128, RIM_Y - (cu | 0)).setPosition(s.px - RIM_PX, s.y + 2).setAngle(ang).setScale(...sq).setAlpha(s.rimA || 0);
     return true;
   }
 
