@@ -168,6 +168,11 @@ export const CONFIG = {
     // P4B squash B (orden del director 9-nov 13:43): ancho x alto del títere entero, desde los pies, solo en aterrizaje
     // fuerte (impacto > 600 px/s). Excepción declarada a ARTE §10/§13.6, como la del CHOQUE. Movimiento reducido: no.
     squashB: { ms: 100, x: 1.08, y: 0.93 },
+    // P4i casco rígido (ciego de P4h: "el casco se aplasta, se lee goma"): en el squash B la cabeza va en capa aparte a
+    // escala fija y baja con el cuerpo. cuello: fila (de 128) donde empieza el cuerpo en cada cuadro de 'pose-land'
+    cascoCuello: [72, 72, 69, 69, 69, 69],
+    // P4i: en el aterrizaje fuerte las bocanadas nacen más abiertas a los lados (x ancho), ni más altas ni más largas
+    polvoAnchoDuro: 2.2,
     hopPx: 14,
     hitStopMs: 60,
     recoilPx: 28, // Moki retrocede esto tras el choque (Cubic.out, 220 ms): la hitbox es 18 px más chica que el dibujo, con 12 se veía atravesar la caja

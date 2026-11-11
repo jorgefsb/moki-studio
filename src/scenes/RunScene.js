@@ -1635,7 +1635,7 @@ export class RunScene extends Phaser.Scene {
           if (this.combo > 0) this.lastPickAt = this.t; // arriba el combo no se rompe: la ventana corre desde que cae
         }
         if (impact > 260) {
-          this.particles.burst('land', this.px, C.world.groundY, { fuerza: clamp((impact - 260) / 530, 0, 1), v: this.speed }); // 790 px/s: caída del salto mantenido
+          this.particles.burst('land', this.px, C.world.groundY, { fuerza: clamp((impact - 260) / 530, 0, 1), v: this.speed, duro: impact > 600 }); // 790 px/s: caída del salto mantenido
           audio.sfx('land', { fall: impact / C.jumpVelocity });
           // Aterrizaje fuerte (salto mantenido): el pasto cercano se dobla, vibra un pelo y, en Hardcore, tiembla la cámara
           if (impact > 600) {
