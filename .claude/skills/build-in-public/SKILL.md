@@ -106,3 +106,10 @@ Menú de tomas. Nunca la misma dos veces seguidas y máximo una de cada tipo por
 10. **¿A o B?** Dos opciones lado a lado para que voten en /ideas/.
 
 Gancho de la primera mirada: lo más importante se entiende en un segundo sin leer; texto encima de 6 palabras máximo y grande; formato 4:5 (1080x1350) para el feed en vez de 16:9 chiquito.
+
+## 20. Lo feo también se cuenta, y se mete al sistema (Jorge, 11-nov 13:15)
+«Build in public no es solo para decir lo bueno, también lo feo y dónde ya la regamos, pero qué aprendimos, cómo lo metemos al sistema y lo corregimos.» «Que retengas está bien, pero que no publiques en redes está mal. Si algo falla, nunca dejar de contar la historia.»
+1. Cada avance cuenta también lo que salió mal cuando lo hubo: qué falló, qué aprendimos (con número si hay) y qué cambiamos en el sistema (skill, regla, herramienta, prueba). Si aún no se cambió, qué se va a cambiar y quién.
+2. Vale para todo: una pieza que no entró, un ciego mal hecho, la máquina en ROJO, un asiento caído, un post que salió tarde o que retuvimos de más.
+3. Un FALLA del revisor nunca deja el día sin post: se arregla, y si sigue fallando sale la mejor versión (skill publicar-siempre). Solo frena la seguridad: otra empresa, secretos, personas sin permiso.
+4. Para el cronista: en publicar/<fecha>.json cada bloque ya trae `la_regamos`; úsalo en los posts, no solo en la bitácora. Si además se cambió el sistema por ese error, agrega `lo_cambiamos` {es,en}.
