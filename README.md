@@ -118,7 +118,7 @@ Reglas que lo sostienen:
 
 | | | | |
 |---|---|---|---|
-| <img src="https://moki.jorgesuarez.com.mx/bitacora/lejano-1900.jpg" width="200" alt="Moki se inclina y el fondo despierta antes"> | <img src="https://moki.jorgesuarez.com.mx/bitacora/patada-1558.jpg" width="200" alt="La patada de Moki ya se ve"> | <img src="https://moki.jorgesuarez.com.mx/bitacora/mega-1258.jpg" width="200" alt="Moki estrena un modo más rápido"> | <img src="https://moki.jorgesuarez.com.mx/bitacora/pausa-1900.jpg" width="200" alt="Lo que contamos en la tarde ya se juega"> |
+| <img src="https://moki.jorgesuarez.com.mx/bitacora/lejano-1900.jpg" height="150" alt="Moki se inclina y el fondo despierta antes"> | <img src="https://moki.jorgesuarez.com.mx/bitacora/patada-1558.jpg" height="150" alt="La patada de Moki ya se ve"> | <img src="https://moki.jorgesuarez.com.mx/bitacora/mega-1258.jpg" height="150" alt="Moki estrena un modo más rápido"> | <img src="https://moki.jorgesuarez.com.mx/bitacora/pausa-1900.jpg" height="150" alt="Lo que contamos en la tarde ya se juega"> |
 | Moki se inclina y el fondo despierta antes · 10 nov | La patada de Moki ya se ve · 10 nov | Modo más rápido · 10 nov | Lo de la tarde ya se juega · 9 nov |
 
 La galería completa y al día vive en [/progreso](https://moki.jorgesuarez.com.mx/progreso/?ref=github).
@@ -126,7 +126,7 @@ La galería completa y al día vive en [/progreso](https://moki.jorgesuarez.com.
 ### Cuándo y dónde
 
 - Arrancó el **28 de octubre de 2026** en Guadalajara, México.
-- Corre todos los días. Este repo se actualiza solo varias veces al día desde el repo de trabajo.
+- Corre todos los días. Este repo es un espejo del repo de trabajo y se pone al día con las publicaciones del estudio.
 
 ### Lo que no está aquí
 
@@ -242,7 +242,7 @@ Most files are in Spanish. The studio thinks in Spanish.
 ### When and where
 
 - Started on **October 28, 2026** in Guadalajara, Mexico.
-- Runs every day. This repo updates itself several times a day from the working repo.
+- Runs every day. This repo mirrors the working repo and catches up with the studio's releases.
 
 ### What's not here
 
