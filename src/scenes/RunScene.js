@@ -2771,10 +2771,8 @@ export class RunScene extends Phaser.Scene {
 
   // EMBAJADOR: navigator.share si existe; si no (o falla), copia. La liga lleva ?ref=amigo. Gana al resolver, no al abrir.
   async compartir() {
-    const text = `${this.textoCompartir()}\nhttps://moki.jorgesuarez.com.mx/?ref=amigo`;
-    let ok = false;
-    if (navigator.share) ok = await navigator.share({ text }).then(() => true, () => false);
-    ok = ok || (await copiar(text));
+    const text = `${this.textoCompartir()}\nmoki.jorgesuarez.com.mx/?ref=amigo`;
+    const ok = (navigator.share && (await navigator.share({ text }).then(() => 1, () => 0))) || (await copiar(text));
     if (ok) this.gana('embajador')();
     return ok;
   }
