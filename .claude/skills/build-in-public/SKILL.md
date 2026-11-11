@@ -89,3 +89,20 @@ Cuando haya un número de juego nuevo (cuántos se salen, cuántos pasan el nive
 ## Bitácora con historia y gráficos (Jorge, 8-nov 23:32)
 
 Cada entrada usa papacitoos-storytelling y llena, además de titulo, historia, aprendimos, sigue, imagen y grafico: `graficos` (al menos una gráfica más), `imagenes` (antes y después cuando aplique, con `pie`), `disyuntiva` ({titulo, a, b, elegimos: "a"|"b", porque}), `la_regamos`, `pregunta` y `juega` ({href directo a lo nuevo, texto}). Todos en {es, en}. Ejemplo vivo: entrada 2026-11-08-noche de bitacora.json.
+
+## 19. Cada post, una toma distinta (Jorge, 11-nov 01:07)
+"Todos los posts deben de ser diferentes." Si todas las imágenes son el mismo plano naranja con Moki chiquito a la izquierda, la gente sigue scrolleando aunque el aprendizaje sea bueno. El revisor ya compara cada imagen con las últimas 4 publicadas y frena la que se ve casi igual (regla dura "toma repetida"), y frena el texto que arranca igual que uno de los últimos 10.
+
+Menú de tomas. Nunca la misma dos veces seguidas y máximo una de cada tipo por día:
+1. **Primer plano.** Moki ocupa la mitad del cuadro haciendo lo nuevo (patada, inclinación, aterrizaje). Captura con zoom de cámara, no recorte borroso.
+2. **Antes y después.** Dos mitades con la misma escena y una etiqueta grande: Antes / Hoy.
+3. **El número manda.** Un solo dato enorme (metros, partidas, votos, fps) sobre fondo del brandkit, con la gráfica chiquita abajo.
+4. **En movimiento.** Clip de 3 a 6 s del momento exacto, en bucle, en vez de foto fija.
+5. **En tu cel.** El juego dentro de un teléfono, para que se entienda que se juega ahí.
+6. **El estudio por dentro.** El tablero, la cola o una decisión del director, pasada por la frontera (sin rutas ni nombres de máquinas).
+7. **Lo que no entró.** La captura del intento con el sello NO ENTRÓ y el número que lo tumbó.
+8. **Interfaz en macro.** Un botón, un sello del Cuaderno o la tarjeta final, bien de cerca.
+9. **Otro mundo.** Noche, ciudad, nieve: el nivel o la paleta que menos ha salido.
+10. **¿A o B?** Dos opciones lado a lado para que voten en /ideas/.
+
+Gancho de la primera mirada: lo más importante se entiende en un segundo sin leer; texto encima de 6 palabras máximo y grande; formato 4:5 (1080x1350) para el feed en vez de 16:9 chiquito.
