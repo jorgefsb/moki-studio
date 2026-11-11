@@ -16,6 +16,12 @@ const SIGUE = 4.55;
 const FIN = 6.55;
 const VEL = 40;
 const KRAFT = '#B99168';
+// P6d: el segundo (a los 12 s) tropieza a los 1.9 s de correr: 1 cuadro de caída 0.3 s con arco de 5 px hacia adelante, aterriza
+// agachado (cuadros 0-1 de pose-land, 0.5 s) y se levanta (2-5); luego sigue su vida normal. Después, uno de cada tres
+const TROPIEZA = 1.9; // a los 12 s nace: corre 12-13.9, cae 13.9-14.2, agachado 14.2-14.8, se levanta y sigue (capturas del caso §4)
+const TRIP = 1.06;
+// vertical (390): P22b lo desvanece antes del jugador y parado se le acerca rápido; tropieza al terminar de aparecer y se agacha 0.3 s
+const TRIPV = [0.3, 0.7, 0.86];
 
 // Textura de canvas hecha una vez; dibuja recibe el contexto
 function tex(s, k, w, h, dibuja) {
@@ -89,6 +95,7 @@ export function montarVida(s, capas) {
   let p = null; // papalote
   let otroM = 2; // P22: el primero a los 2 s, fijo en la x menos tapada; luego cada 20-30 al azar
   let primero = true;
+  let segundo = false;
   let otroP = 6; // papalote a los 6 s y luego cada 24-36
 
   const quita = () => {
@@ -125,9 +132,9 @@ export function montarVida(s, capas) {
       }
       if (malos < peor) (peor = malos), (x0 = x);
     }
-    ['pose-run', 'pose-rise'].forEach((k, i) => {
-      const T2 = hornear(s, k, 7 - 2 * i, vb);
-      if (!T2.has(0)) for (let j = 0; j < 7 - 2 * i; j++) T2.add(j, 0, j * 64, 0, 64, 64);
+    [['pose-run', 7], ['pose-rise', 5], ['pose-fall', 1], ['pose-land', 6]].forEach(([k, n]) => {
+      const T2 = hornear(s, k, n, vb);
+      if (!T2.has(0)) for (let j = 0; j < n; j++) T2.add(j, 0, j * 64, 0, 64, 64);
     });
     // sombra de contacto: elipse #22211F al 20 %, 14x3 del mundo (al doble). P22b, vertical: al 32 % y x1.3 (18x4) para que pise la cresta
     tex(s, `v${vb}sombra`, 28, 6, (x) => {
@@ -138,10 +145,13 @@ export function montarVida(s, capas) {
     m = {
       x: x0,
       t: 0,
+      tr: segundo || (!primero && azar() < 1 / 3),
       im: s.add.image(x0, 0, `v${vb}pose-run`, 0).setOrigin(66 / 128, 123 / 128).setScale((ms * gm()) / 2).setDepth(2.065).setTint(0xffe8d6), // bruma cálida de lejos
       sb: s.add.image(x0, 0, `v${vb}sombra`).setScale((ms * gm() * (vb ? 1.3 : 1)) / 2).setDepth(2.0645),
     };
-    otroM = t + 20 + 10 * azar();
+    otroM = t + 20 + 10 * azar(); // el azar se gasta igual que antes: el papalote sale donde mismo
+    if (primero) otroM = 12;
+    segundo = primero;
     primero = false;
   };
 
@@ -161,7 +171,7 @@ export function montarVida(s, capas) {
   const paso = (_t, delta) => {
     const sc = s.screen;
     if (sc === 'pause' || sc === 'dead') return void (antes = sc);
-    if (s.reduced || s.calm || sc !== 'play' || (antes !== 'play' && antes !== 'pause')) quita(), (t = 0), (otroM = 2), (primero = true), (otroP = 6);
+    if (s.reduced || s.calm || sc !== 'play' || (antes !== 'play' && antes !== 'pause')) quita(), (t = 0), (otroM = 2), (primero = true), (segundo = false), (otroP = 6);
     antes = sc;
     if (s.reduced || s.calm || sc !== 'play') return;
     const dt = Math.min(delta, 50) / 1000;
@@ -175,17 +185,28 @@ export function montarVida(s, capas) {
     if (!m && t >= otroM) nuevoMoki();
     if (!p && t >= otroP) nuevoP();
     if (m) {
-      const k = (m.t += dt) < CORRE || m.t > SIGUE ? -1 : Math.min(1, (m.t - CORRE) / 0.7);
-      m.x += (k < 0 ? VEL * ms * dt : 0) - d * 0.3;
-      const hop = k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms * gm();
-      m.im.setTexture(k < 0 ? `v${vb}pose-run` : `v${vb}pose-rise`, k < 0 ? Math.floor(m.t * 12) % 7 : Math.min(4, Math.floor(k * 5)));
+      // u: reloj de su vida normal; en el tropiezo se congela y j dice cuánto lleva (0-0.3 cae, 0.3-1.06 agachado y se levanta)
+      let u = (m.t += dt);
+      const [z0, z1, z2] = vb ? TRIPV : [TROPIEZA, 0.9, TRIP];
+      const j = m.tr && u > z0 ? u - z0 : -1;
+      if (j >= z2) u -= z2;
+      const tr = j >= 0 && j < z2;
+      const k = tr || u < CORRE || u > SIGUE ? -1 : Math.min(1, (u - CORRE) / 0.7);
+      m.x += (tr ? (j < 0.3 ? (5 / 0.3) * ms * dt : 0) : k < 0 ? VEL * ms * dt : 0) - d * 0.3;
+      const hop = tr ? (j < 0.3 ? Math.sin((Math.PI * j) / 0.3) * 3 * ms * gm() : 0) : k < 0 ? 0 : Math.sin(Math.PI * k) * 8 * ms * gm();
+      const ag = tr && j >= 0.3 && j < z1; // agachado: sombra más ancha
+      m.im.setTexture(
+        tr ? `v${vb}pose-${j < 0.3 ? 'fall' : 'land'}` : k < 0 ? `v${vb}pose-run` : `v${vb}pose-rise`,
+        tr ? (j < 0.3 ? 0 : j < z1 ? Math.min(1, Math.floor((j - 0.3) * 23)) : Math.min(5, 2 + Math.floor((j - z1) * 23))) : k < 0 ? Math.floor(u * 12) % 7 : Math.min(4, Math.floor(k * 5)),
+      );
+      m.sb.scaleX = m.im.scaleY * (vb ? 1.3 : 1) * (ag ? 1.35 : 1);
       // vertical: los pies se hunden 1 px en la cresta (asentado) y se desvanece antes de llegar a 60 px de pantalla del jugador
       const pies = tope(capas.lejos, T.l, m.x) + (vb ? ms * gm() : 0);
       const ir = vb ? Math.max(0, (m.x - s.px - 60 / s.zoom) / (16 * ms)) : 9;
-      const a = Math.min(1, m.t / 0.3, Math.max(0, (FIN - m.t) * 2), ir);
+      const a = Math.min(1, m.t / 0.3, Math.max(0, (FIN - u) * 2), ir);
       m.im.setPosition(m.x, pies - hop).setAlpha(a);
       m.sb.setPosition(m.x, pies).setAlpha(a * (1 - (hop / (8 * ms * gm() + 1)) * 0.6));
-      if (m.t > FIN || m.x < -30 || (ir <= 0 && m.t > 0.3)) m.im.destroy(), m.sb.destroy(), (m = null);
+      if (u > FIN || m.x < -30 || (ir <= 0 && m.t > 0.3)) m.im.destroy(), m.sb.destroy(), (m = null);
     }
     if (p) {
       p.x -= ((s.vw + 60) / 14) * (p.t += dt, dt) + d * 0.05;
