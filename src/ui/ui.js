@@ -15,17 +15,20 @@ function el(tag, cls, text) {
   return e;
 }
 
-// P23 tarjeta que se revela: la marca entra desde el borde de la tarjeta (que la recorta), cada número sube detrás de
-// su renglón (máscara) y los botones llegan encadenados cada 50 ms. Solo CSS: el control responde desde el cuadro 0.
+// P23 tarjeta que se revela: la tarjeta y su botón principal se ven completos desde el cuadro 0 (solo suben 18 px);
+// la marca entra desde el borde (la tarjeta la recorta), cada número sube detrás de su renglón (máscara) y lo
+// secundario llega después. Todo termina antes de 250 ms. Solo CSS: el control responde desde el cuadro 0.
 function revela(card, nums) {
   card.classList.add('rev');
+  card.style.opacity = '1';
+  card.style.transition = 'transform 200ms ease-out';
   nums.forEach((n, i) => {
     const s = el('span', 'as');
     s.append(...n.childNodes);
     s.style.setProperty('--i', i);
     n.append(s);
   });
-  card.querySelectorAll('button').forEach((b, i) => b.style.setProperty('--i', i));
+  card.querySelectorAll('.secondary').forEach((b, i) => b.style.setProperty('--i', i));
 }
 
 export function createUI() {
