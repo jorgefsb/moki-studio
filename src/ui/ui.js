@@ -79,11 +79,18 @@ export function createUI() {
     return a;
   };
   // P28: las dos líneas de Jorge y el botón ancho 'Vota lo que sigue' (final y fallo)
+  // Tras votar, el foco regresa al botón principal: Espacio y Enter reinician como en master (vuelta 2, B)
+  // Embed horizontal bajito (660x372, 640x400): solo el botón, sin las 2 líneas (vuelta 2, A)
+  const horiz = () => innerWidth > innerHeight && innerHeight < 480;
   const votoBloque = (v) => {
     const a = votoLink(v, 'ui-btn secondary ui-voto');
     a.textContent = t('voto.titulo');
-    a.addEventListener('click', () => (a.textContent = t('voto.gracias')));
-    return [el('p', 'ui-voto-sub', t('voto.sub')), a];
+    a.addEventListener('click', () => {
+      a.textContent = t('voto.gracias');
+      const p = a.closest('.ui-scrim')?.querySelector('.ui-btn.primary, .ui-pill');
+      if (p) setTimeout(() => p.focus({ preventScroll: true }));
+    });
+    return horiz() ? [a] : [el('p', 'ui-voto-sub', t('voto.sub')), a];
   };
   const state = { menu: null, homeBtn: null, demo: null, fail: null, final: null, cuaderno: null, asi: null, pause: null, pauseBtn: null, soundBtn: null, pauseSound: null, tachado: null, tachados: [] };
 
@@ -376,7 +383,7 @@ export function createUI() {
       // P28 (director, A): en vertical bajito el voto no cabe sobre la cabeza de Moki; va en una tira de papel sobre
       // el suelo, en el lugar del Cuaderno (que ahí no sale). La tarjeta se aprieta igual que sin voto.
       let pie = null;
-      if (vb && card.scrollHeight > card.clientHeight + 1) {
+      if (vb && !horiz() && card.scrollHeight > card.clientHeight + 1) {
         pie = el('div', 'ui-card compact ui-voto-pie');
         Object.assign(pie.style, { left: `${rect.left}px`, width: `${rect.width}px` });
         pie.append(...vb);
@@ -387,9 +394,19 @@ export function createUI() {
       // botón de reintento siempre se vea: 1) barra en una línea, 2) sin la línea de meta, 3) la barra queda en texto
       // ("Lo siguiente: ..." o "¡Abriste ...!") sin dibujo ni tubo, 4) sin la barra. Con bandera, antes que nada los dos
       // botones van lado a lado (el alto lo topa la cabeza de Moki: la tarjeta no puede crecer)
-      for (const k of [...(alt ? ['lado'] : []), 'apretada', 'apretada2', 'apretada3', 'apretada4']) {
-        if (card.scrollHeight <= card.clientHeight + 1) break;
-        card.classList.add(k);
+      const pasos = [...(alt ? ['lado'] : []), 'apretada', 'apretada2', 'apretada3', 'apretada4'];
+      const apretar = () => {
+        for (const k of pasos) {
+          if (card.scrollHeight <= card.clientHeight + 1) break;
+          card.classList.add(k);
+        }
+      };
+      apretar();
+      // Embed: si con el voto se llega a quitar la barra (apretada4) o aun así no cabe, el voto se oculta y se aprieta como master
+      if (vb && !pie && (card.classList.contains('apretada4') || card.scrollHeight > card.clientHeight + 1)) {
+        vb.forEach((n) => n.remove());
+        card.classList.remove(...pasos);
+        apretar();
       }
       let fired = false;
       const go = () => {
@@ -658,7 +675,9 @@ export function createUI() {
         menu.addEventListener('click', onMenu);
         card.append(menu);
       }
-      if (d.voto) card.append(...votoBloque(d.voto));
+      const vf = d.voto && votoBloque(d.voto);
+      if (vf) card.append(...vf);
+      if (vf && horiz()) card.classList.add('horiz'); // embed: Vota en la fila de Otra vez
       const chicas = el('div', 'ui-chicas');
       chicas.append(how);
       if (onCopy) {
@@ -685,6 +704,7 @@ export function createUI() {
       if (!still) revela(card, [...rows.querySelectorAll('dd')]);
       scrim.append(card);
       root.appendChild(scrim);
+      if (vf && horiz() && card.scrollHeight > card.clientHeight + 1) vf.forEach((n) => n.remove()); // no cabe: se oculta
       again.addEventListener('click', onAgain);
       how.addEventListener('click', onHow);
       primary = onAgain;

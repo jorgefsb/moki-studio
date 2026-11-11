@@ -435,4 +435,5 @@ div.mn-card { cursor: default; }
 .ui-card .ui-chica { min-height: 36px; margin: 0; padding: 0 2px; border: 0; background: none; font-size: 14px; cursor: pointer; }
 .ui-card.compact .ui-voto-sub { margin-top: 8px; font-size: 13px; line-height: 16px; }
 .ui-voto-pie { top: auto; bottom: 12px; }
+.ui-card.horiz .ui-voto { display: inline-flex; width: auto; margin: 8px 0 0 6px !important; vertical-align: top; }
 .ui-chicas .meta { margin: 0; }
