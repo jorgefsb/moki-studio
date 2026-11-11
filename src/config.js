@@ -121,6 +121,9 @@ export const CONFIG = {
   // P4f (feel base, despegue; caso propuestas/p4-corte6-caso.md). Vuelta 2: en partida se ven las poses pixel (mokiPoses), no el
   // títere; al despegar se sostiene holdMs el cuadro de zancada `frame` (pierna de atrás estirada, 11 px más atrás que la subida). Por nivel de juice
   feelP4f: { on: [0, 1, 1, 1], frame: 2, holdMs: 80 },
+  // P4k (feel base, aterrizaje; propuestas/p4k-caso.md): los cuadros 0-1 del aterrizaje (cabeza 8 filas abajo) se sostienen
+  // holdMs (fuerte / normal) y luego corren 2..5 hasta los 260 ms. Antes duraban 86 ms. Por nivel de juice
+  feelP4k: { on: [0, 1, 1, 1], hold: [125, 130] }, // hold: [normal, fuerte] en ms
   feelP4d: { inclinaMax: 6, accelRef: 15, entraSec: 0.18, saleSec: 0.4 },
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de

@@ -80,6 +80,9 @@ class MokiPoses {
     } else if (ld >= 0 && ld < LAND_MS) {
       key = 'pose-land';
       frame = Math.min(5, Math.floor((ld / LAND_MS) * 6));
+      // P4k agachado: sostiene los cuadros bajos (0-1) y luego corre 2..5 hasta LAND_MS
+      const K = C.feelP4k, h = K.hold[+(s.landHardAt === s.landAt)];
+      if (K.on[C.juice]) frame = ld < h ? +(ld * 2 > h) : 2 + (((ld - h) / (LAND_MS - h)) * 4) | 0;
       // P4h squash B del aterrizaje fuerte (el mismo del títere, P4B): desde los pies (ORIGEN), escala siempre positiva
       const QB = C.art.squashB, lh = s.t - (s.landHardAt ?? -1e9);
       if (QB && !s.reduced && lh >= 0 && lh < QB.ms) {
