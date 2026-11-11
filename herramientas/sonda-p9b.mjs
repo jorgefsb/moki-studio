@@ -6,7 +6,7 @@ const require = createRequire('/home/jorgefsb/.local/share/mise/installs/npm-pla
 const { chromium } = require('playwright');
 const [base, nivArg] = process.argv.slice(2);
 const NIVS = (nivArg || '1,2,3,4,5,8').split(',').map(Number);
-const TAMS = [[390, 844], [660, 372], [1280, 720]];
+const TAMS = [[375, 812], [390, 844], [660, 372], [1280, 720]];
 const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new'] });
 const errores = [];
 

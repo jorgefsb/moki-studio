@@ -14,8 +14,8 @@ import { t } from '../i18n.js';
 import { feel } from '../feel.js';
 import { load, save, num } from '../storage.js';
 import { nuevaPartida, revisar, leerCuaderno, nivelDe, porTachar, contarSellos, TOTAL_SELLOS } from '../cuaderno.js';
-import { abierto, siguiente, sumar, mecanicasDeNivel, estrenoSolo } from '../barra.js';
-import { registrarDia, saludo, leerRacha, diaLocal } from '../racha.js';
+import { abierto, siguiente, sumar, mecanicasDeNivel, estrenoSolo, REGALOS } from '../barra.js';
+import { registrarDia, leerRacha, diaLocal } from '../racha.js';
 import { ESCAPARATE, Escaparate } from '../escaparate.js';
 import { IR, DESTINOS, IR_PANTALLA } from '../ir.js';
 import { leerLogros } from '../logros.js';
@@ -53,6 +53,22 @@ const RUTA = [
   ['n3', 'ciudad', () => 3],
   ['n4', 'viento', () => 4],
 ];
+// P9b RUTA VISIBLE: tira del pie del menú. Marcas de las 4 paradas de RUTA (hecho, actual, sigue) y qué abre el
+// siguiente nivel que trae algo, sacado de config (zanja, MEGA) y de REGALOS (barra.js); nada escrito a mano.
+// textos = [larga, corta]: el pie se queda con la primera que cabe (ui.js ajustaCamino).
+function camino(nv) {
+  const abre = (n) => [C.zanja.nivel === n && t('ruta.zanja'), C.mega.nivel === n && 'MEGA', ...REGALOS.filter((r) => r.nivel() === n).map((r) => t(`regalo.${r.id}`).replace(/^\S+ /, ''))].filter(Boolean);
+  let n = nv + 1;
+  while (n <= 10 && !abre(n).length) n++;
+  const marcas = RUTA.map((r) => (r[2]() < nv ? 'hecho' : r[2]() === nv ? 'actual' : 'sigue'));
+  const aria = t('ruta.aria', { n: Math.min(nv, RUTA.length) });
+  if (n > 10) return { marcas, aria, textos: [t('ruta.fin'), t('ruta.fin.c')] };
+  const a = abre(n);
+  const x = a.length > 1 ? `${a.slice(0, -1).join(', ')} y ${a.at(-1)}` : a[0];
+  const r = RUTA.find((q) => q[2]() === n);
+  const nodo = r ? t(`menu.${r[0]}`) : '';
+  return { marcas, aria, textos: [t('ruta.sigue', { a: t('cu.nivel', { n }) + (nodo ? ` · ${nodo}` : ''), x }), `${nodo || t('cu.nivel', { n })}: ${x}`] };
+}
 // "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
 const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto', logros: 'logros', mega: 'mega', mega2: 'mega' };
 // Cambia de dirección: ?ir=<destino> (partida en memoria), otra consulta, o la página limpia; el embebido se conserva
@@ -646,14 +662,12 @@ export class RunScene extends Phaser.Scene {
           this.menu();
         },
       });
-    const hola = saludo();
     this.ui.showMenu(
       {
         hero: { titulo: t('menu.nuevo'), sub: subNuevo, onPick: juegaNuevo },
         cards,
         voto: votoMenu(),
-        pie: corto ? t('menu.lienzo') : `${t('cu.nivel', { n: nv })} · ${t(hola.key, { n: hola.n })}`,
-        pieTitle: corto ? '' : t('cu.nivel.d'),
+        camino: camino(nv),
       },
       this.saludoZonas()
     );
