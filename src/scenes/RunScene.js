@@ -386,7 +386,10 @@ export class RunScene extends Phaser.Scene {
     this.vh = H / z;
     // Lo que se ve delante de Moki nunca baja de lo que se ve con minVisibleWidth (misma reacción).
     const ahead = minW - Math.min(C.player.xMax, minW * C.player.xRatio);
-    this.px = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio, this.vw - ahead));
+    this.pxBase = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio, this.vw - ahead));
+    this.adMax = portrait ? 0 : Math.max(0, Math.min(C.adelanto.px, this.pxBase - C.adelanto.pisoX)); // P24: en vertical no hay adelanto (P4j)
+    this.adX = Math.min(this.adX || 0, this.adMax);
+    this.px = this.pxBase - this.adX;
     const spare = Math.max(0, this.vh - C.world.height);
     // En vertical el suelo queda a groundAt del alto, sin sacar de cuadro ninguna parte de la banda jugable
     this.top = portrait ? Math.min(0, Math.max(-spare, g - P.groundAt * this.vh)) : -spare * 0.6;
@@ -1463,6 +1466,7 @@ export class RunScene extends Phaser.Scene {
     if (this.esc) this.esc.tick(dtMs); // el guion del escaparate maneja pantallas y bot
     else this.idleCheck();
 
+    if (this.screen === 'play' || this.screen === 'demo') this.stepAdelanto(dtMs);
     if (this.screen === 'dead') this.updateDead(dtMs);
     else if (this.screen === 'final') this.updateFinal(dtMs);
     else if (this.megaRun) {
@@ -1473,6 +1477,19 @@ export class RunScene extends Phaser.Scene {
     } else this.updateRun(dtMs);
     this.cinta.update(dtMs, this.px, this.y, this.dist, this.reduced || C.juice === 0);
     if (this.poses) this.poses.update(); // con poses listas, el sprite reemplaza al títere (calma, zanja y meta: títere)
+  }
+
+  // P24 CÁMARA CON ADELANTO: a más velocidad efectiva (speed x reloj MEGA), Moki se corre a la izquierda y se ve más camino.
+  // Todo se coloca con px + D - dist, así que física, choques y guion no cambian; se mueve antes del paso (un solo px por cuadro).
+  stepAdelanto(dtMs) {
+    const A = C.adelanto;
+    const v = this.speed * (this.megaRun ? this.megaOn : 1);
+    const k = this.reduced || C.juice === 0 ? 0 : clamp((v - A.vLo) / (A.vHi - A.vLo), 0, 1);
+    const want = this.adMax * k * k * (3 - 2 * k);
+    const d = (want - this.adX) * (1 - Math.exp(-dtMs / 1000 / A.tau));
+    const cap = A.paso / this.zoom;
+    this.adX += clamp(d, -cap, cap);
+    this.px = this.pxBase - this.adX;
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
