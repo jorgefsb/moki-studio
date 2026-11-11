@@ -2599,7 +2599,7 @@ export class RunScene extends Phaser.Scene {
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
     const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
-      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo') },
+      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo', this.gana('disenador')) },
       () => this.respawn(),
       () => this.respawn(true)
     );
@@ -2738,8 +2738,8 @@ export class RunScene extends Phaser.Scene {
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
-      { voto: d.paseo || this.demo ? null : votoTarjeta('final'), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
-      { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => copiar(this.textoCompartir()), onMenu: () => this.goHome() },
+      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => this.compartir(), onMenu: () => this.goHome() },
       r
     );
     this.showCuaderno();
@@ -2764,6 +2764,19 @@ export class RunScene extends Phaser.Scene {
   }
 
   // Tarjeta para compartir (GDD §3): modo, fecha local, una fila por página (sin caer / con tropiezo), sellos y racha
+  // P29 sellos de gamedev: votar o compartir desde el juego gana su logro (aviso una sola vez, lo cuida logrosUi)
+  gana(id) {
+    return () => logrosUi().then((m) => this.ui.avisoLogro(m.ganar(id), this.zonaAviso())).catch(() => {});
+  }
+
+  // EMBAJADOR: navigator.share si existe; si no (o falla), copia. La liga lleva ?ref=amigo. Gana al resolver, no al abrir.
+  async compartir() {
+    const text = `${this.textoCompartir()}\nmoki.jorgesuarez.com.mx/?ref=amigo`;
+    const ok = (navigator.share && (await navigator.share({ text }).then(() => 1, () => 0))) || (await copiar(text));
+    if (ok) this.gana('embajador')();
+    return ok;
+  }
+
   textoCompartir() {
     const l = this.level;
     const P = this.partida || { crashesByTramo: {} };

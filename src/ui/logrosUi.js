@@ -16,6 +16,8 @@ const TX = {
   volver: 'Volver',
   aria: 'Logros: {n} de {de} ganados',
   llegue: ['Primera meta', 'Llega a la meta de un nivel'],
+  disenador: ['Diseñador', 'Toca Vota lo que sigue al terminar'],
+  embajador: ['Embajador', 'Comparte con el botón Copiar'],
   arcos3: ['Tres arcos', 'Junta 3 arcos completos en una partida'],
   sinCaerme: ['Sin un rasguño', 'Termina un nivel sin chocar'],
   coleccionista: ['Coleccionista', 'Llega a la meta con 8 de cada 10 piezas'],
@@ -115,6 +117,13 @@ export function contarReto(hoy = diaLocal()) {
   if (gana) l.ganados.push('reto3'), l.avisados.push('reto3'); // solo avisa el suyo; lo demás lo avisa revisarLogros
   guardar(l);
   return gana ? ['reto3'] : [];
+}
+
+// P29 sellos de gamedev: logro propio por una acción del jugador (votar, compartir). Devuelve el aviso si es nuevo.
+export function ganar(id) {
+  const { l } = leerLogros();
+  if (!l.ganados.includes(id)) l.ganados.push(id), guardar(l);
+  return avisar();
 }
 
 function avisar() {

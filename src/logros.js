@@ -12,6 +12,8 @@ const KEY = 'moki.logros';
 // gana(c, l) con c = Cuaderno leído y l = estado propio.
 export const LOGROS = [
   { id: 'llegue', gana: (c) => c.sellos.includes('llegue') },
+  { id: 'disenador', gana: (c, l) => l.ganados.includes('disenador') }, // P29: tocar 'Vota lo que sigue' desde el juego
+  { id: 'embajador', gana: (c, l) => l.ganados.includes('embajador') }, // P29: compartir o copiar la liga desde el juego
   { id: 'arcos3', gana: (c) => c.sellos.includes('arcos3') },
   { id: 'sinCaerme', gana: (c) => c.sellos.includes('sinCaerme') },
   { id: 'coleccionista', gana: (c) => c.sellos.includes('coleccionista') },
