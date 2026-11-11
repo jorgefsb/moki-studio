@@ -1466,7 +1466,7 @@ export class RunScene extends Phaser.Scene {
     if (this.esc) this.esc.tick(dtMs); // el guion del escaparate maneja pantallas y bot
     else this.idleCheck();
 
-    if (this.screen === 'play' || this.screen === 'demo') this.stepAdelanto(dtMs);
+    if (this.screen === 'play' || this.screen === 'demo') this.stepAdelanto();
     if (this.screen === 'dead') this.updateDead(dtMs);
     else if (this.screen === 'final') this.updateFinal(dtMs);
     else if (this.megaRun) {
@@ -1481,14 +1481,12 @@ export class RunScene extends Phaser.Scene {
 
   // P24 CÁMARA CON ADELANTO: a más velocidad efectiva (speed x reloj MEGA), Moki se corre a la izquierda y se ve más camino.
   // Todo se coloca con px + D - dist, así que física, choques y guion no cambian; se mueve antes del paso (un solo px por cuadro).
-  stepAdelanto(dtMs) {
+  // El objetivo sube con la velocidad (rampa lisa) y Moki lo sigue a lo más paso px de pantalla por cuadro: sin tirones.
+  stepAdelanto() {
     const A = C.adelanto;
-    const v = this.speed * (this.megaRun ? this.megaOn : 1);
-    const k = this.reduced || C.juice === 0 ? 0 : clamp((v - A.vLo) / (A.vHi - A.vLo), 0, 1);
-    const want = this.adMax * k * k * (3 - 2 * k);
-    const d = (want - this.adX) * (1 - Math.exp(-dtMs / 1000 / A.tau));
+    const k = this.reduced || !C.juice ? 0 : clamp((this.speed * (this.megaRun ? this.megaOn : 1) - A.vLo) / (A.vHi - A.vLo), 0, 1);
     const cap = A.paso / this.zoom;
-    this.adX += clamp(d, -cap, cap);
+    this.adX += clamp(this.adMax * k - this.adX, -cap, cap);
     this.px = this.pxBase - this.adX;
   }
 

@@ -82,7 +82,7 @@ export const CONFIG = {
   // x: posición horizontal (28% del ancho visible, tope xMax) para dejar tiempo de reacción en celular.
   player: { xMax: 190, xRatio: 0.28, width: 38, height: 92, spriteHeight: 110 },
   // P24 cámara con adelanto: con velocidad efectiva (speed x reloj MEGA) de vLo a vHi, Moki se corre hasta px a la izquierda (mundo), nunca bajo pisoX ni en vertical; paso <= paso px de pantalla por cuadro
-  adelanto: { px: 130, pisoX: 60, vLo: 470, vHi: 640, tau: 0.5, paso: 1.5 },
+  adelanto: { px: 130, pisoX: 60, vLo: 470, vHi: 640, paso: 1.5 },
   obstacleSizes: {
     caja: { width: 60, height: 56 },
     torre: { width: 60, height: 92 }, // exige 76 de salto: se libra manteniendo desde ~130 ms; el toque (apex 62-72) no la libra

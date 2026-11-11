@@ -34,6 +34,9 @@ async function corre(nombre, w, h, q) {
     let maxDpx = 0;
     let minPx = 1e9;
     const vis = new Map();
+    const visto = new WeakSet();
+    let nacenDentro = 0;
+    let minNace = 1e9;
     const SZ = { caja: 60, torre: 60, viga: 91, tramp: 88 };
     s.update = (t, d) => {
       orig(t, d);
@@ -42,6 +45,12 @@ async function corre(nombre, w, h, q) {
       if (lastPx !== null) maxDpx = Math.max(maxDpx, Math.abs(s.px - lastPx) * s.zoom);
       lastPx = s.px;
       minPx = Math.min(minPx, s.px);
+      for (const k of [...s.obstacles, ...s.pickups]) {
+        if (visto.has(k)) continue;
+        visto.add(k);
+        const L = k.x - (k.W || 60) / 2;
+        if (real > 0) { minNace = Math.min(minNace, L - s.vw); if (L <= s.vw) nacenDentro++; }
+      }
       for (const o of s.obstacles) {
         const W = o.W || SZ[o.type] || 60;
         const left = o.x - W / 2;
@@ -57,7 +66,7 @@ async function corre(nombre, w, h, q) {
     ms.sort((a, b) => a - b);
     const med = ms.length ? ms[Math.floor(ms.length / 2)] : null;
     const prom = ms.length ? ms.reduce((a, b) => a + b, 0) / ms.length : null;
-    return { result: res.result, score: res.score, n: ms.length, medMs: med, promMs: prom, primeros: ms.slice(0, 3), maxDpxPantalla: maxDpx, minPx, pxFinal: s.px, pxBase: s.pxBase, zoom: s.zoom, vw: s.vw, mega: s.megaOn };
+    return { result: res.result, score: res.score, n: ms.length, medMs: med, promMs: prom, primeros: ms.slice(0, 3), maxDpxPantalla: maxDpx, nacenDentro, minNaceSobreBorde: minNace, minPx, pxFinal: s.px, pxBase: s.pxBase, zoom: s.zoom, vw: s.vw, mega: s.megaOn };
   });
   console.log(nombre, JSON.stringify(r));
   casos.push({ caso: nombre, ...r });
