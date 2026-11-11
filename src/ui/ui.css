@@ -134,6 +134,13 @@
 .ui-card.pop { animation: ui-edge 320ms ease-out 1; }
 @keyframes ui-pop { 0% { transform: scale(0.85); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
 @keyframes ui-edge { 0%, 100% { border-color: #8a7e70; } 40% { border-color: #ff6b35; } }
+.ui-card.rev .ui-tag:not(.pop) { animation: ui-asx 300ms cubic-bezier(0.2, 0.9, 0.3, 1.15) 90ms backwards; }
+.ui-card.rev dd, .ui-card.rev .meta span { overflow: hidden; }
+.ui-card.rev .as { display: inline-block; animation: ui-asy 240ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(60ms + var(--i) * 50ms) backwards; }
+.ui-card.rev button:not(.ready) { animation: ui-btin 200ms ease-out calc(110ms + var(--i) * 50ms) backwards; }
+@keyframes ui-asx { from { transform: translateX(calc(100% + 44px)); } }
+@keyframes ui-asy { from { transform: translateY(105%); } }
+@keyframes ui-btin { from { opacity: 0; transform: translateY(10px); } }
 html[data-juice='0'] #ui * { transition: none !important; animation: none !important; }
 html[data-juice='0'] #ui button:not(.ui-pausebtn):active, html[data-juice='0'] #ui button:not(.ui-pausebtn):hover { transform: none; }
 html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }

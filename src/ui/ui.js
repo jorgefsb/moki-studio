@@ -15,6 +15,19 @@ function el(tag, cls, text) {
   return e;
 }
 
+// P23 tarjeta que se revela: la marca entra desde el borde de la tarjeta (que la recorta), cada número sube detrás de
+// su renglón (máscara) y los botones llegan encadenados cada 50 ms. Solo CSS: el control responde desde el cuadro 0.
+function revela(card, nums) {
+  card.classList.add('rev');
+  nums.forEach((n, i) => {
+    const s = el('span', 'as');
+    s.append(...n.childNodes);
+    s.style.setProperty('--i', i);
+    n.append(s);
+  });
+  card.querySelectorAll('button').forEach((b, i) => b.style.setProperty('--i', i));
+}
+
 export function createUI() {
   const root = el('div');
   root.id = 'ui';
@@ -353,6 +366,7 @@ export function createUI() {
         alt.addEventListener('pointerdown', (e) => e.stopPropagation());
         card.append(alt);
       }
+      if (!reducedMQ.matches && feel.level) revela(card, [...card.querySelectorAll('.meta span')]);
       scrim.append(card);
       root.appendChild(scrim);
       // Pantallas bajas (embed 660x372, 640x400): si el contenido no cabe en maxHeight, se aprieta por pasos para que el
@@ -671,6 +685,7 @@ export function createUI() {
         card.append(...(fila ? [] : [el('br')]), link);
       }
       card.append(el('p', 'meta', t('contador.nota')));
+      if (!still) revela(card, [...rows.querySelectorAll('dd')]);
       scrim.append(card);
       root.appendChild(scrim);
       again.addEventListener('click', onAgain);
