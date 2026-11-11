@@ -81,7 +81,7 @@ Reglas que lo sostienen:
 |---|---|
 | Laptop Linux ([Omarchy](https://omarchy.org/), basada en Arch) | Prendida todo el día con la tapa cerrada. Ahí viven los agentes, cada uno en su terminal. No puede publicar nada: tiene prohibido hacer push o desplegar. |
 | MacBook | Revisa y publica. Jala los cambios, pasa la revisión automática y despliega el sitio. También actualiza este espejo público. |
-| [Claude Code](https://www.anthropic.com/claude-code) | El motor de los agentes. El director corre en Claude Opus; el resto, en Claude Sonnet. |
+| [Claude Code](https://www.anthropic.com/claude-code) | El motor de los agentes. El director y el constructor corren en Claude Opus; el resto, en Claude Sonnet. |
 | OpenRig | Organiza a los agentes como un equipo con asientos y mensajes entre ellos. |
 | [Phaser 3](https://phaser.io/) + [Vite](https://vite.dev/) | El motor del juego y la herramienta que lo empaqueta para el navegador. |
 | [Cloudflare Workers](https://workers.cloudflare.com/) | Sitio, juego y contador anónimo de partidas: sin IP, sin cookies, sin identificadores. |
@@ -204,7 +204,7 @@ Rules that hold it together:
 |---|---|
 | Linux laptop ([Omarchy](https://omarchy.org/), Arch based) | On all day with the lid closed. The agents live here, each in its own terminal. It cannot publish anything: push and deploy are blocked. |
 | MacBook | Reviews and publishes. It pulls the changes, runs the automatic review and deploys the site. It also updates this public mirror. |
-| [Claude Code](https://www.anthropic.com/claude-code) | The engine behind the agents. The director runs on Claude Opus; the rest on Claude Sonnet. |
+| [Claude Code](https://www.anthropic.com/claude-code) | The engine behind the agents. The director and the builder run on Claude Opus; the rest on Claude Sonnet. |
 | OpenRig | Organizes the agents as a team with seats and messages between them. |
 | [Phaser 3](https://phaser.io/) + [Vite](https://vite.dev/) | The game engine and the tool that bundles it for the browser. |
 | [Cloudflare Workers](https://workers.cloudflare.com/) | Site, game and an anonymous play counter: no IP, no cookies, no IDs. |
