@@ -23,7 +23,7 @@ const logrosUi = () => import('../ui/logrosUi.js'); // P7: pantalla, aviso y lo 
 import { EMBED } from '../embed.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { abrirIntento, cerrarIntento } from '../contador.js';
-import { contarPartida, votoFinal, votoMenu } from '../voto.js';
+import { contarPartida, votoTarjeta, votoMenu } from '../voto.js';
 import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump, vientoPaso } from '../jumpmodel.js';
@@ -2584,7 +2584,7 @@ export class RunScene extends Phaser.Scene {
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
     const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
-      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null },
+      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo') },
       () => this.respawn(),
       () => this.respawn(true)
     );
@@ -2719,11 +2719,11 @@ export class RunScene extends Phaser.Scene {
     if (H < 480 && W > H) {
       const left = Math.round(zonas.mokiR + 20);
       r = { left, top, width: Math.min(460, W - left - 12), maxHeight: H - top - 8, compact: true, corto: true };
-    } else if (!wide) r = { ...r, top, maxHeight: Math.max(150, Math.round(this.cabezaY() - top - 12)), corto: true }; // vertical: datos en 2 columnas para que quepa sin scroll
+    } else if (!wide) r = { ...r, top, maxHeight: H - top - 8, corto: true }; // P28: la final puede tapar a Moki parado (director); el fallo no // vertical: datos en 2 columnas para que quepa sin scroll
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
-      { voto: d.paseo || this.demo ? null : votoFinal(), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { voto: d.paseo || this.demo ? null : votoTarjeta('final'), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => copiar(this.textoCompartir()), onMenu: () => this.goHome() },
       r
     );
