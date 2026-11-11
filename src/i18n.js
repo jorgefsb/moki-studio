@@ -232,8 +232,7 @@ const ES = {
   'voto.menu': 'Escoge qué le agregamos al juego',
   'voto.gracias': 'Gracias. Vuelve cuando quieras.',
   'ruta.sigue': 'Sigue: {a} abre {x}',
-  'ruta.fin': 'Ruta recorrida: Moki te espera en Libre',
-  'ruta.fin.c': 'Ruta lista: te espera Libre',
+  'ruta.fin': 'Ruta lista: te espera Libre',
   'ruta.aria': 'Camino: parada {n} de 4',
   'ruta.zanja': 'zanja',
 };

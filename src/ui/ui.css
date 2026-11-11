@@ -386,11 +386,10 @@ div.mn-card { cursor: default; }
 .ui-menu.corto .mn-grid[style*='--n'] .mn-card { flex: 1 1 0; width: auto; min-width: 0; } /* P8: con 2 o 3 tarjetas no hay carril: llenan el ancho */
 .ui-menu.corto .mn-pie { font-size: 14px; line-height: 17px; padding: 1px 10px; }
 /* P9b RUTA VISIBLE: el pie es la tira del camino (4 marcas + qué abre la siguiente); no es botón, sin animación */
-.mn-camino { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.mn-pasos { display: flex; align-items: center; gap: 4px; }
+.mn-camino { display: flex; align-items: center; gap: 4px; white-space: nowrap; padding: 3px 6px; }
 .mn-paso { width: 10px; height: 10px; box-sizing: border-box; border: 2px solid #22211f; border-radius: 50%; }
-.mn-paso[data-e='actual'] { background: #22211f; }
-.mn-paso[data-e='hecho'] { height: 6px; margin-bottom: 3px; border-width: 0 0 3px 3px; border-radius: 0; transform: rotate(-45deg); }
+.mn-paso.hecho { background: #22211f; }
+.mn-paso.actual { width: 12px; height: 12px; background: #22211f; }
 .mn-mas { display: none; }
 .mn-carril { position: relative; }
 /* P3f: la flecha tenía su propia orilla encima de la última tarjeta visible; ahora el carril le deja un canal de 40 px */

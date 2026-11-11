@@ -61,7 +61,7 @@ try {
           corto: menu?.classList.contains('corto'),
           menu: r(menu), menuSW: menu && [menu.scrollWidth, menu.clientWidth],
           pie: r(pie), pieTxt: pie?.textContent, pieSW: pie && [pie.scrollWidth, pie.clientWidth], pieAria: pie?.getAttribute('aria-label'),
-          marcas: pie ? [...pie.querySelectorAll('.mn-paso')].map((p) => p.dataset.e) : [],
+          marcas: pie ? [...pie.querySelectorAll('.mn-paso')].map((p) => p.classList[1]) : [], aria: pie?.getAttribute('aria-label'),
           hero: r(q('.mn-hero')), voto: r(q('.mn-voto')), mega: r(mega),
           vis: { pie: vis(pie), hero: vis(q('.mn-hero')), voto: vis(q('.mn-voto')), mega: vis(mega) },
           menus: document.querySelectorAll('.ui-menu').length, texto: menu?.innerText.replace(/\s+/g, ' ').slice(0, 300), hijos: menu && [...menu.children].map((c) => c.className),

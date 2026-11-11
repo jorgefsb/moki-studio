@@ -55,19 +55,16 @@ const RUTA = [
 ];
 // P9b RUTA VISIBLE: tira del pie del menú. Marcas de las 4 paradas de RUTA (hecho, actual, sigue) y qué abre el
 // siguiente nivel que trae algo, sacado de config (zanja, MEGA) y de REGALOS (barra.js); nada escrito a mano.
-// textos = [larga, corta]: el pie se queda con la primera que cabe (ui.js ajustaCamino).
+// RUTA va en orden de nivel (parada i = nivel i+1). textos = [larga, corta, solo qué abre]: el pie usa la primera que cabe (ui.js ajustaCamino).
 function camino(nv) {
-  const abre = (n) => [C.zanja.nivel === n && t('ruta.zanja'), C.mega.nivel === n && 'MEGA', ...REGALOS.filter((r) => r.nivel() === n).map((r) => t(`regalo.${r.id}`).replace(/^\S+ /, ''))].filter(Boolean);
+  const abre = (n) => [C.zanja.nivel === n && t('ruta.zanja'), C.mega.nivel === n && 'MEGA', ...REGALOS.filter((r) => r.nivel() === n).map((r) => t(`regalo.${r.id}`).replace(/^\S+ /, ''))].filter(Boolean).join(' y ');
   let n = nv + 1;
-  while (n <= 10 && !abre(n).length) n++;
-  const marcas = RUTA.map((r) => (r[2]() < nv ? 'hecho' : r[2]() === nv ? 'actual' : 'sigue'));
-  const aria = t('ruta.aria', { n: Math.min(nv, RUTA.length) });
-  if (n > 10) return { marcas, aria, textos: [t('ruta.fin'), t('ruta.fin.c')] };
-  const a = abre(n);
-  const x = a.length > 1 ? `${a.slice(0, -1).join(', ')} y ${a.at(-1)}` : a[0];
-  const r = RUTA.find((q) => q[2]() === n);
-  const nodo = r ? t(`menu.${r[0]}`) : '';
-  return { marcas, aria, textos: [t('ruta.sigue', { a: t('cu.nivel', { n }) + (nodo ? ` · ${nodo}` : ''), x }), `${nodo || t('cu.nivel', { n })}: ${x}`] };
+  while (n <= 10 && !abre(n)) n++;
+  const r = RUTA[n - 1];
+  const nivel = t('cu.nivel', { n });
+  const nodo = r ? t(`menu.${r[0]}`) : nivel;
+  const textos = n > 10 ? [t('ruta.fin')] : [t('ruta.sigue', { a: r ? `${nivel} · ${nodo}` : nivel, x: abre(n) }), `${nodo}: ${abre(n)}`, abre(n)];
+  return { marcas: RUTA.map((q, i) => (i + 1 < nv ? 'hecho' : i + 1 > nv ? 'sigue' : 'actual')), textos, aria: `${t('ruta.aria', { n: Math.min(nv, RUTA.length) })}. ${textos[0]}` };
 }
 // "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
 const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto', logros: 'logros', mega: 'mega', mega2: 'mega' };

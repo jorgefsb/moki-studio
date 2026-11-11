@@ -12,8 +12,7 @@ const reducedMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 function ajustaCamino(p) {
   const pie = p.querySelector('.mn-camino');
   if (!pie) return;
-  const cs = getComputedStyle(p);
-  const ancho = p.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const ancho = p.clientWidth - 6; // .ui-menu lleva padding de 3 px por lado
   for (const x of pie.textos) {
     pie.lastChild.textContent = x;
     if (pie.getBoundingClientRect().width <= ancho + 0.01) return;
@@ -225,16 +224,10 @@ export function createUI() {
         // P9b: la frase se escoge midiendo (ajustaCamino), no por breakpoint: la larga si cabe, si no la corta
         const c = m.camino;
         const pie = el('p', 'mn-pie mn-camino');
-        const pasos = el('span', 'mn-pasos');
-        pasos.setAttribute('role', 'img');
-        pasos.setAttribute('aria-label', c.aria);
-        for (const e of c.marcas) {
-          const i = el('i', 'mn-paso');
-          i.dataset.e = e;
-          pasos.append(i);
-        }
-        pie.append(pasos, el('span'));
-        pie.title = c.textos[0];
+        pie.setAttribute('role', 'img'); // una sola etiqueta lee todo el camino en orden
+        pie.setAttribute('aria-label', c.aria);
+        for (const e of c.marcas) pie.append(el('i', `mn-paso ${e}`));
+        pie.append(el('span'));
         pie.textos = c.textos;
         p.append(pie);
       } else if (m.pie) {
