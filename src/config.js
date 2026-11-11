@@ -192,7 +192,7 @@ export const CONFIG = {
   // visibleWidth 460 en 390x844: zoom 0.72 -> 0.85, Moki 79 -> 93 px, x de Moki 151 -> 71.
   // Composición (director, opción C): groundAt = altura del suelo en pantalla (0.66 = 66% desde arriba);
   // farScale/midScale agrandan los cerros lejanos y la capa media para llenar el cielo (el paralaje corre igual).
-  portrait: { maxAspect: 0.75, visibleWidth: 460, groundAt: 0.66, farScale: 1.8, midScale: 1.3, vidaMoki: 1.4 }, // vidaMoki: el Moki lejano de vida.js, 22 -> ~30 px a 390 (P22)
+  portrait: { maxAspect: 0.75, visibleWidth: 460, groundAt: 0.66, farScale: 1.8, midScale: 1.3, vidaMoki: 0.8 }, // vidaMoki: el Moki lejano de vida.js; P22 lo subió a x1.4 (medido ~39 px a 390), P22b lo baja a ~22 de figura con bruma (pide 18-24)
 
   // Luz de lámpara (director, P1a): textura multiplicada sobre el cuadro, bajo el HUD.
   // halo: cuánto se acerca a #FFA500 el centro del halo (arriba a la izquierda); vignette: tinta en las esquinas.
