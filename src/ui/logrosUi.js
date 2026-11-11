@@ -22,6 +22,7 @@ const TX = {
   todas: ['Todas las piezas', 'Llega a la meta con todas las piezas'],
   reto3: ['Tres días de Reto', 'Juega el Reto del día 3 días seguidos'],
   mega15: ['MEGA x1.5', 'Llega a la meta en MODO MEGA x1.5'],
+  mega20: ['MEGA x2.0', 'Llega a la meta en MODO MEGA x2.0'],
   nivel5: ['Nivel 5', 'Sube a Moki al nivel 5 del Cuaderno'],
   cuaderno: ['Cuaderno lleno', 'Termina los 10 niveles del Cuaderno'],
 };
@@ -96,8 +97,9 @@ export function revisarLogros(st) {
     l.ganados.push('todas');
     guardar(l);
   }
-  if (st && st.finished && st.mega && !l.ganados.includes('mega15')) {
-    l.ganados.push('mega15');
+  const mg = st && st.finished && st.mega ? (st.mega >= 2 ? 'mega20' : 'mega15') : ''; // P8b: cada velocidad gana su logro
+  if (mg && !l.ganados.includes(mg)) {
+    l.ganados.push(mg);
     guardar(l);
   }
   return avisar();

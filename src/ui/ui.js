@@ -145,7 +145,8 @@ export function createUI() {
         if (m.cards.length < 4) grid.style.setProperty('--n', m.cards.length); // P8: 2 o 3 tarjetas llenan el ancho como JUGAR
         grid.addEventListener('pointerdown', (e) => e.stopPropagation()); // el carril se desliza sin arrancar
         for (const c of m.cards) {
-          const b = tap(el('button', `mn-card${c.cerrado ? ' cerrado' : ''}${c.pressed !== undefined ? ' toggle' : ''}`), c.onPick);
+          // P8b: con selector (c.sel) la tarjeta no es botón: cada velocidad es su propio botón dentro de la fila del nombre
+          const b = c.sel ? el('div', 'mn-card') : tap(el('button', `mn-card${c.cerrado ? ' cerrado' : ''}${c.pressed !== undefined ? ' toggle' : ''}`), c.onPick);
           if (c.pressed !== undefined) {
             b.setAttribute('aria-pressed', String(c.pressed));
             b.append(el('i', 'mn-casilla'));
@@ -153,6 +154,12 @@ export function createUI() {
           const tx = el('div', 'tx');
           const nom = el('b', '', c.nombre);
           if (c.hecho) nom.prepend(el('i', 'mn-hecho'));
+          for (const v of c.sel || []) {
+            const vb = tap(el('button', `mn-vel${v.cerrado ? ' cerrado' : ''}`, v.txt), v.onPick);
+            vb.title = v.title;
+            vb.setAttribute('aria-label', `${c.nombre} ${v.txt}: ${v.title}`);
+            nom.append(vb);
+          }
           tx.append(nom, el('span', '', c.linea));
           b.title = c.linea; // P3d: misma línea como ayuda del mouse en escritorio
           b.append(tx);

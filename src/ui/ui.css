@@ -341,6 +341,12 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .mn-card b { font: 700 16px/19px Outfit, sans-serif; }
 .mn-card span { font: 500 14px/17px Inter, sans-serif; color: #4a4038; }
 .mn-card.cerrado { border-style: dashed; border-color: #8a7e70; }
+/* P8b: selector de velocidad MEGA dentro de la tarjeta (x1.5 / x2.0), cada uno con borde de papel; cerrado punteado */
+.mn-vel { margin-left: 4px; min-width: 44px; min-height: 36px; padding: 4px; font: 700 14px/20px Outfit, sans-serif; color: #22211f; background: #ffa500; border: 2px solid #22211f; border-radius: 8px; cursor: pointer; pointer-events: auto; }
+.mn-vel.cerrado { background: #f4e8d5; border-style: dashed; border-color: #8a7e70; }
+.mn-vel:active { transform: translateY(2px); }
+div.mn-card { cursor: default; }
+.ui-menu.corto .mn-grid:not([style*='--n']) div.mn-card { width: 216px; } /* P8b: en el carril el nombre y los dos botones caben en una línea */
 .mn-casilla { flex: none; box-sizing: border-box; width: 22px; height: 22px; border: 2.5px solid #22211f; border-radius: 5px; background: #f4e8d5; display: flex; align-items: center; justify-content: center; }
 .mn-card[aria-pressed='true'] { border-color: #22211f; }
 .mn-card[aria-pressed='true'] .mn-casilla { background: #22211f; }
