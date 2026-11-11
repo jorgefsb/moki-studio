@@ -87,7 +87,7 @@ export class Particles {
     p.osc = o.osc || 0;
     p.fadeFrom = o.fadeFrom ?? 0.6;
     p.estela = o.estela ? o.scale : 0; // escala inicial de la estela (0 = no es estela)
-    p.infla = 0; // polvo del aterrizaje (P4B): lo pone burst('land')
+    p.infla = p.borde = 0; // polvo del aterrizaje (P4B) y su tope al borde (P4j): los pone burst('land')
     p.sprite.setTexture(KEYS[color]).setDepth(13).setPosition(x, y).setAngle(Math.random() * 360).setAlpha(1).setScale(o.scale || 1).setVisible(true);
     return p;
   }
@@ -113,6 +113,9 @@ export class Particles {
       s.setAlpha(u < p.fadeFrom ? 1 : Math.pow(1 - (u - p.fadeFrom) / (1 - p.fadeFrom), 3));
       if (p.estela) s.setScale(p.estela * (1 - 0.5 * u));
       else if (p.infla) s.setScale(p.infla * (1 + 0.7 * Math.sqrt(u)));
+      // P4j: a 390 Moki pisa a ~35 px del borde. Si la caja de la nube izquierda sale de la cámara, se recorre adentro y
+      // se queda pegada al borde en vez de cortarse
+      if (p.borde) s.x -= Math.min(0, s.getBounds().left - this.scene.cameras.main.worldView.x);
     }
   }
 
@@ -157,7 +160,9 @@ export class Particles {
         const p = this.emit('polvo', x + dx, g - 4, { vx, vy: -rand(10, 35), g: 40, life: rand(380, 480), spin: rand(-30, 30), fadeFrom: 0.5, scale: rand(1.0, 1.3) * (0.85 + 0.3 * f) });
         p.infla = p.sprite.scaleX; // crece x1.7 en su vida: bocanada, no trozo
         p.sprite.setAngle(rand(-12, 12));
+        p.borde = s < 0;
       }
+      this.update(0, 0); // P4j: con dt 0 solo aplica el tope al borde; así el cuadro en que nacen tampoco se corta
     } else if (type === 'kick') {
       // P4c: el despegue se ve. Bocanadas de polvo que la bota empuja hacia atrás y arriba (2/3/4 según juice), y en Mucho
       // o más el chip de cartón de antes. Se llevan la velocidad del mundo menos 40-110 px/s: en pantalla se abren poquito
