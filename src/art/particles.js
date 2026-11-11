@@ -149,9 +149,10 @@ export class Particles {
       // suma la velocidad del mundo (opt.v): sin eso el mundo se llevaba las del frente bajo la bota
       const m = f === undefined ? 0 : Math.max(3, Math.round((L === 1 ? 2 : L === 2 ? 3 : 4) * (0.5 + f)));
       const v = opt.v || 0;
+      const a = opt.duro ? C.art.polvoAnchoDuro : 1; // P4i: el fuerte nace más abierto a los lados
       for (let i = 0; i < m * 2; i++) {
         const s = i % 2 ? 1 : -1;
-        const dx = s > 0 ? rand(10, 20) : -rand(6, 16);
+        const dx = (s > 0 ? rand(10, 20) : -rand(6, 16)) * a;
         const vx = s * rand(70, 140) * (0.7 + 0.6 * f) + (s > 0 ? v : 0);
         const p = this.emit('polvo', x + dx, g - 4, { vx, vy: -rand(10, 35), g: 40, life: rand(380, 480), spin: rand(-30, 30), fadeFrom: 0.5, scale: rand(1.0, 1.3) * (0.85 + 0.3 * f) });
         p.infla = p.sprite.scaleX; // crece x1.7 en su vida: bocanada, no trozo
