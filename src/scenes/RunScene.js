@@ -2602,7 +2602,7 @@ export class RunScene extends Phaser.Scene {
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
     const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
-      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo', this.gana('disenador')) },
+      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo', this.gana('disenador')), lock: C.retryLockoutMs - this.deadFor },
       () => this.respawn(),
       () => this.respawn(true)
     );
