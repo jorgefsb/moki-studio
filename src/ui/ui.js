@@ -691,7 +691,9 @@ export function createUI() {
       // P28 (Jorge, 11-nov): Así lo hicimos y copiar bajan a enlaces chicos en una fila; el voto sube bajo 'Otra vez'
       const how = el('button', 'ui-link ui-chica', t('end.how'));
       how.type = 'button';
-      if (onMenu && !d.voto) card.append(el('p', 'ui-sigue', t('end.sigue')));
+      // P32: 'Qué sigue' vuelve siempre (texto y estilo de antes de P28); si no cabe sin scroll, se quita antes que Vota
+      const sigue = onMenu ? el('p', 'ui-sigue', t('end.sigue')) : null;
+      if (sigue) card.append(sigue);
       card.append(again);
       if (onMenu) {
         const menu = el('button', 'ui-btn secondary', t('menu.volver'));
@@ -728,7 +730,9 @@ export function createUI() {
       if (!still) revela(card, [...rows.querySelectorAll('dd')]);
       scrim.append(card);
       root.appendChild(scrim);
-      if (vf && horiz() && card.scrollHeight > card.clientHeight + 1) vf.forEach((n) => n.remove()); // no cabe: se oculta
+      const sobra = () => card.scrollHeight > card.clientHeight + 1;
+      if (sigue && sobra()) sigue.remove();
+      if (vf && horiz() && sobra()) vf.forEach((n) => n.remove()); // no cabe: se oculta
       again.addEventListener('click', onAgain);
       how.addEventListener('click', onHow);
       primary = onAgain;
