@@ -616,7 +616,7 @@ export class RunScene extends Phaser.Scene {
         linea: nv < a ? t('menu.nodo.lock', { n: a }) : nv > a ? t('menu.nodo.hecho') : t('menu.nodo.d'),
         cerrado: nv < a,
         hecho: nv > a,
-        nuevo: nuevos.has(k),
+        nuevo: nv <= a && nuevos.has(k), // P9f: en una parada hecha manda la palomita; lo nuevo sigue en el héroe
         onPick: () => (visto(k), irA(ir)),
       };
     });
