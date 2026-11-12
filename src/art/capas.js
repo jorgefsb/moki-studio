@@ -6,7 +6,10 @@ import cieloUrl from '../../assets/capas/capa-cielo.webp';
 // Cerros: tono 34 -> 44.5 (durazno) y croma x1.35; pinos: croma x1.5. Misma L en los dos; los cerros siguen más claros y menos cálidos
 // que los pinos. Hechos con evidencia/p5-malva/herramientas/recolor.py; medidas en evidencia/p18-lejos. Regresar: capa-lejos-malva / capa-medio.
 import lejosUrl from '../../assets/capas/capa-lejos-durazno.webp';
-import medioUrl from '../../assets/capas/capa-medio-vivo.webp';
+// P19 (11-nov): la costura del mosaico de pinos fundía dos copias al 50 % en 260 px: pinos encimados translúcidos y sucios. Ahora corta
+// en la columna donde cabeza y cola se parecen (evidencia/p19-pinos). Mismo color P18. Los cerros no: ahí el corte dejaba un borde de tono.
+// Regresar: capa-medio-vivo.
+import medioUrl from '../../assets/capas/capa-medio-recorte.webp';
 import sueloUrl from '../../assets/capas/capa-suelo.webp';
 
 const TEX = { w: 2048, h: 512 };
