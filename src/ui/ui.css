@@ -390,6 +390,10 @@ div.mn-card { cursor: default; }
 .mn-paso { width: 10px; height: 10px; box-sizing: border-box; border: 2px solid #22211f; border-radius: 50%; }
 .mn-paso.hecho { background: #22211f; }
 .mn-paso.actual { width: 12px; height: 12px; background: #22211f; }
+/* P9c: la siguiente parada es un triángulo que apunta a su nombre; la frase va junto a ella y las de después, al final */
+.mn-paso.prox { width: 9px; height: 12px; border: 6px solid transparent; border-left: 9px solid #22211f; border-right: 0; border-radius: 0; }
+.mn-camino span { order: 1; }
+.mn-paso.luego { order: 2; }
 .mn-mas { display: none; }
 .mn-carril { position: relative; }
 /* P3f: la flecha tenía su propia orilla encima de la última tarjeta visible; ahora el carril le deja un canal de 40 px */

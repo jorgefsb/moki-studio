@@ -64,7 +64,7 @@ function camino(nv) {
   const nivel = t('cu.nivel', { n });
   const nodo = r ? t(`menu.${r[0]}`) : nivel;
   const textos = n > 10 ? [t('ruta.fin')] : [t('ruta.sigue', { a: r ? `${nivel} · ${nodo}` : nivel, x: abre(n) }), `${nodo}: ${abre(n)}`, abre(n)];
-  return { marcas: RUTA.map((q, i) => (i + 1 < nv ? 'hecho' : i + 1 > nv ? 'sigue' : 'actual')), textos, aria: `${t('ruta.aria', { n: Math.min(nv, RUTA.length) })}. ${textos[0]}` };
+  return { marcas: RUTA.map((q, i) => (i + 1 < nv ? 'hecho' : i + 1 > nv ? (i + 1 < n ? 'sigue' : i + 1 > n ? 'luego' : 'prox') : 'actual')), textos, aria: `${t('ruta.aria', { n: Math.min(nv, RUTA.length) })}. ${textos[0]}` };
 }
 // "donde" de novedades.json -> tarjeta que lleva el punto NUEVO
 const NODO_DE = { nivel1: 'n1', nivel2: 'n1', noche: 'n2', ciudad: 'n3', trampolin: 'n3', viento: 'n4', libre: 'libre', formas: 'libre', timbre: 'libre', reto: 'reto', logros: 'logros', mega: 'mega', mega2: 'mega' };
