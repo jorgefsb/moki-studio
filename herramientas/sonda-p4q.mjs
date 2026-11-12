@@ -3,6 +3,7 @@
 // En cada cuadro en el aire pinta a mano y copia el lienzo con y sin la cinta (arcoG oculta): cuenta solo los px naranja
 // (por tono, la luz del día la deja ~240,98,47) que aparecen con la cinta. Largo = diagonal de esos px; grueso = columna
 // más alta. En el pico: contraste WCAG del naranja contra el fondo real bajo esos px (cFondo) y contra el cielo (fila y=40).
+// Vuelta 2 (12-nov): además MIDE el canto crema contra lo que tiene detrás en cada cuadro en el aire (ver r.canto).
 // Uso: flock /tmp/moki-pesado.lock node herramientas/sonda-p4q.mjs <url> <salida.json> [segundos]
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
@@ -69,6 +70,21 @@ async function caso(nombre, w, h, juice) {
           if (esNar(d, i) && cambia(i)) { n++; col[x]++; idx.push(i); ln += L(d[i], d[i + 1], d[i + 2]); xmin = Math.min(xmin, x); xmax = Math.max(xmax, x); ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); }
         }
       const r = { n, ancho: xmax >= 0 ? xmax - xmin + 1 : 0, largo: xmax >= 0 ? Math.round(Math.hypot(xmax - xmin + 1, ymax - ymin + 1)) : 0, grueso: Math.max(0, ...col) };
+      // vuelta 2: CANTO MEDIDO. Px del canto = los que cambian con la cinta y no son del relleno naranja. Por px: contraste WCAG
+      // entre lo que se pinta (d, canto con la luz del día) y lo que había detrás en el mismo cuadro repintado sin cinta (f0).
+      if (f0) {
+        const cs = [];
+        let lc = 0, lb = 0;
+        for (let i = 0; i < d.length; i += 4)
+          if (cambia(i) && !esNar(d, i)) {
+            const a = L(d[i], d[i + 1], d[i + 2]), b = L(f0[i], f0[i + 1], f0[i + 2]);
+            lc += a; lb += b; cs.push((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05));
+          }
+        if (cs.length) {
+          cs.sort((x, y) => x - y);
+          r.canto = { n: cs.length, med: +cs[cs.length >> 1].toFixed(2), p25: +cs[cs.length >> 2].toFixed(2), Lc: +(lc / cs.length).toFixed(3), Lb: +(lb / cs.length).toFixed(3), pasa2: +(cs.filter((v) => v >= 2).length / cs.length).toFixed(2) };
+        }
+      }
       if (fondo && n && sc.arcoG) {
         const f = f0;
         let lf = 0; for (const i of idx) lf += L(f[i], f[i + 1], f[i + 2]);
@@ -114,6 +130,12 @@ async function caso(nombre, w, h, juice) {
     saltos: r.saltos, zoom: r.zoom, cuadrosAire: a.length,
     narMax: Math.max(0, ...a.map((m) => m.n)), narMedia: a.length ? Math.round(a.reduce((s, m) => s + m.n, 0) / a.length) : 0,
     picos: r.picos,
+    canto: (() => {
+      const cc = a.filter((m) => m.canto).map((m) => m.canto), ok = cc.filter((c) => c.med >= 2).length;
+      const meds = cc.map((c) => c.med).sort((x, y) => x - y);
+      return { cuadros: cc.length, pasan: ok, frac: cc.length ? +(ok / cc.length).toFixed(3) : 0, medMin: meds[0], medMediana: meds[meds.length >> 1], medMax: meds[meds.length - 1],
+        LcMedia: cc.length ? +(cc.reduce((s, c) => s + c.Lc, 0) / cc.length).toFixed(3) : 0, LbMedia: cc.length ? +(cc.reduce((s, c) => s + c.Lb, 0) / cc.length).toFixed(3) : 0 };
+    })(),
   };
 }
 const out = { url, errores };
@@ -129,4 +151,7 @@ for (const k of ['390', '1280']) {
   console.log(k, `zoom ${o.zoom.toFixed(2)} saltos ${o.saltos} aire ${o.cuadrosAire} naranja max ${o.narMax} media ${o.narMedia}`);
   for (const p of o.picos) console.log('  pico', p.alto ? 'alto' : 'toque', `largo ${p.largo} grueso ${p.grueso} px ${p.n}`, `cFondo ${p.cFondo} cCielo ${p.cCielo} Lnar ${p.Lnar} Lfondo ${p.Lfondo} Lcielo ${p.Lcielo} xext ${p.ancho}`, JSON.stringify(p.prof), JSON.stringify(p.dbg));
 }
+for (const k of ['390', '1280']) console.log('CANTO', k, JSON.stringify(out[k].canto));
+const tc = out['390'].canto.cuadros + out['1280'].canto.cuadros, tp = out['390'].canto.pasan + out['1280'].canto.pasan;
+console.log('PUERTA canto >= 2.0 en', tp, 'de', tc, '=', tc ? (100 * tp / tc).toFixed(1) : 0, '% (pide >= 80 %)');
 console.log('errores', errores.length, errores.slice(0, 6).join(' | '));
