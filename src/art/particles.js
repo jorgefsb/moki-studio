@@ -185,10 +185,11 @@ export class Particles {
       // P36e: corona del arco alto. Nace detrás y arriba de Moki (donde iba el pico) y sale SOLO hacia atrás y arriba:
       // Moki mira a la derecha, así que nada cruza la visera ni la cara. Reemplaza al abanico en este arco
       // Se lleva la velocidad del mundo (como la chispa del casi-choque): si no, a 390 sale de cuadro en un cuadro
-      const n = L === 1 ? 6 : L === 2 ? 14 : 22;
+      // P36e-2: el ciego no la vio; doble de papeles, cada papel ~2x y vida más larga
+      const n = L === 1 ? 12 : L === 2 ? 28 : 44;
       const v = this.scene.speed || 0;
       for (let i = 0; i < n; i++) {
-        this.emit(['orange', 'amber', 'paper'][i % 3], x + rand(-4, 4), y + rand(-6, 6), { vx: v - rand(20, 120), vy: -rand(160, 280), g: 420, life: 700, spin: 300, osc: 8, fadeFrom: 0.6 });
+        this.emit(['orange', 'amber', 'paper'][i % 3], x + rand(-8, 6), y - rand(0, 12), { vx: v - rand(20, 120), vy: -rand(170, 300), g: 380, life: 950, spin: 300, osc: 8, fadeFrom: 0.65, scale: rand(1.7, 2.3) });
       }
     } else if (type === 'confetti') {
       if (L < 2) return;
