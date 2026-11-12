@@ -4,13 +4,12 @@
 // Va bajo los obstáculos (depth 9.8) y solo hacia atrás de Moki, así nunca tapa a Moki ni lo que viene.
 import Phaser from 'phaser';
 import { CONFIG as C } from '../config.js';
-import { PAL, TONE } from './palette.js';
+import { PAL } from './palette.js';
 
 const hex = (h) => Phaser.Display.Color.HexStringToColor(h).color;
 const INK = hex(PAL.ink);
-const KRAFT = hex(PAL.kraft);
-const DARK = hex(TONE.kraftDark);
 const PAPER = hex(PAL.paper);
+const ACCENT = hex(PAL.accent);
 const K = {
   back: 14, // px detrás del centro de Moki donde se pega la cinta
   lift: 50, // altura del ancla sobre los pies (la espalda)
@@ -169,18 +168,19 @@ export class Cinta {
       bot.push({ x: p.x - p.nx, y: p.y - p.ny });
     });
     this.mid = mid; // centro del camino (las pruebas sacan de aquí la caja contra Moki y los obstáculos)
-    // Sombra suave (tinta 18%) y cuerpo kraft con canto oscuro; punta recta
+    // Sombra suave (tinta 18%) y cuerpo papel crema con canto naranja (P4r-b, 12-nov): en kraft se leía como palito
+    // café pegado al hombro; en naranja con canto crema se confundía con el arco del salto (P4q). Punta recta
     const pts = [...top, ...bot.reverse()];
     const poly = (dy) => pts.map((p) => ({ x: p.x, y: p.y + dy }));
     g.fillStyle(INK, 0.18);
     g.fillPoints(poly(4), true);
-    g.fillStyle(KRAFT, 1);
+    g.fillStyle(PAPER, 1);
     g.fillPoints(poly(0), true);
-    g.lineStyle(lw, DARK, 1);
+    g.lineStyle(lw, ACCENT, 1);
     g.strokePoints(poly(0), true);
-    // x2: hilo de papel al centro; x3: además una marca de tinta por pieza
+    // x2: hilo naranja al centro (sobre el crema el hilo de papel ya no se vería); x3: además una marca de tinta por pieza
     if (m >= 2) {
-      g.lineStyle(lw * 1.5, PAPER, 1);
+      g.lineStyle(lw * 1.5, ACCENT, 1);
       g.strokePoints(mid.slice(0, -1), false);
     }
     // marcas de tinta de x3: casi opacas y de 3 px (al 45% no se veían, probador 2-nov)
