@@ -3,7 +3,7 @@
 // y al final se usa el guion clásico. Todo determinista: misma semilla, mismo nivel.
 import { CONFIG as C } from '../config.js';
 import { buildLevel, SCRIPTS, EXT } from '../tramos.js';
-import { BLOQUES, T1_INTRO, SORPRESAS } from './bloques.js';
+import { BLOQUES, T1_INTRO, SORPRESAS, HORQ } from './bloques.js';
 
 // Respiro sin nada (antes una fila de 5 piezas): con fila, las páginas pasaban de 35% de filas de piezas (tope 20%)
 const RELLENO = (dur) => ({ id: 'relleno', dur, ev: [], dif: 1, tags: ['descanso'] });
@@ -116,7 +116,7 @@ function put(ctx, b) {
   ctx.ids.push(b.id);
   if (b.mec === 'viento') ctx.nViento = (ctx.nViento || 0) + 1;
   if (b.mec === 'timbre') ctx.nTimbre = 1;
-  if (b.elige) (ctx.nElige = (ctx.nElige || 0) + 1), b.ev.forEach(([t, c]) => c === 'C+Aup' && ctx.horq.push(+(ctx.pos - b.dur + t).toFixed(3)));
+  if (b.elige) (ctx.nElige = (ctx.nElige || 0) + 1), b.ev.forEach(([t, c]) => c === HORQ && ctx.horq.push(+(ctx.pos - b.dur + t).toFixed(3)));
   if (b.put) b.put(ctx, b);
   ctx.fasesIds.push([ctx.fase || 'intro', b.id]); // regla (c): qué bloque cayó en qué fase
 }
@@ -191,7 +191,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
     const enViento = vientos.some(([a, b]) => t >= a - 0.3 && t <= b);
     const T = zonas && enZona(zonas.tandas, t) ? DE_TANDA : enZona(picos, t) ? DE_PICO : FACILES;
     // horquilla en calma y respiro (P36): la caja con arco alto, máx. 2 por página (T1 desde el 12, tras el tutorial)
-    const F = (elige && T === FACILES && nuevos.filter(([, c]) => c === 'C+Aup').length < 2 ? [...T[tramo], 'C+Aup'] : T[tramo]).filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))));
+    const F = (elige && T === FACILES && nuevos.filter(([, c]) => c === HORQ).length < 2 ? [...T[tramo], HORQ] : T[tramo]).filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))));
     const F2 = estricto ? F.filter((c) => hasta - t >= (FIN[principal(c)] || 0) + C.minGapSec) : F;
     const ok = [F2.filter((c) => principal(c) !== antes && principal(c) !== despues), F2.filter((c) => principal(c) !== antes), F2, F].find((x) => x.length);
     // Rota (al azar dentro de cada escalón, para no repetir el mismo toque cada página: F3) y gasta poca novedad
@@ -285,7 +285,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
 
 // horquillas de la página: las de los bloques y las cajas con arco alto que puso densificar
 function conHorq(script, ctx, extra = {}) {
-  const horq = ctx.elige ? [...ctx.horq, ...script.filter(([t, c]) => c === 'C+Aup' && !ctx.script.some(([s, d]) => s === t && d === c)).map(([t]) => t)] : ctx.horq;
+  const horq = ctx.elige ? [...ctx.horq, ...script.filter(([t, c]) => c === HORQ && !ctx.script.some(([s, d]) => s === t && d === c)).map(([t]) => t)] : ctx.horq;
   return Object.assign(script, { ids: ctx.ids, fases: ctx.fasesIds, ...extra, horq });
 }
 
