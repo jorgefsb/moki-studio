@@ -12,7 +12,7 @@ const DEBUG = Q.get('audiodebug') === '1';
 // Cadena (AUDIO §3):
 //   música -> musicMix -> musicFilter -> duckGain -> musicBus ─┐
 //   efectos -> sfxMix -> sfxBus ───────────────────────────────┴-> master (0.125) -> compresor -> destino
-const REWARD = new Set(['pickup', 'amber', 'arc', 'timbre']);
+const REWARD = new Set(['pickup', 'amber', 'arc', 'arcAlto', 'timbre']);
 
 // Encime de efectos (T3g2). Los picos de sesión no salían de un sonido solo, sino de piezas con racha + arco, o salto + piezas + bip.
 // En vez de bajarlos todos: (1) el ping nuevo hace que el anterior ceda (baja a cfg.yield) y el arco completo reemplaza al último ping;
@@ -29,7 +29,7 @@ export function routeSfx(ctx, bus, st, name, play, t, o, cfg = C.audio) {
     if (prev && t - prev.t < 0.35) {
       for (const g of [prev.vg, prev.eg]) {
         g.gain.cancelScheduledValues(t);
-        g.gain.setTargetAtTime(name === 'arc' ? 0 : cfg.yield, t, 0.012);
+        g.gain.setTargetAtTime(name === 'arc' || name === 'arcAlto' ? 0 : cfg.yield, t, 0.012);
       }
     }
     st.lastReward = { vg, eg, t };

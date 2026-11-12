@@ -189,6 +189,14 @@ export function arc(ctx, dest, t, o = {}) {
   [84, 88, 91].forEach((n, i) => carton(ctx, P.out, t + i * 0.06, n, 0.05, 0.25, opt));
 }
 
+// P36e: arco alto de la horquilla (especial). Las tres del arco y un escalón más arriba, Do7 a +180 ms
+export function arcAlto(ctx, dest, t, o = {}) {
+  const P = prep(ctx, dest, o);
+  const opt = { atkMin: P.atkMin, vol: P.pk };
+  [84, 88, 91].forEach((n, i) => carton(ctx, P.out, t + i * 0.06, n, 0.05, 0.25, opt));
+  carton(ctx, P.out, t + 0.18, 96, 0.05, 0.25, opt);
+}
+
 // ---------- Stingers (pentatónica de Do) ----------
 
 export function stingerCheckpoint(ctx, dest, t, o = {}) {
@@ -350,5 +358,5 @@ export function casi(ctx, dest, t, o = {}) {
   carton(ctx, P.out, t + 0.03, CASI_SCALE[i], 0.03, 0.14, { atkMin: P.atkMin, vol: P.v * P.pk, detune: P.d });
 }
 
-export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, popAviso, boing, soplido, paso, sello, festejo, casi, caida };
+export const SFX = { jump, jumpHigh, land, pickup, amber, stumble, ui, pause, card, eso, handTic, arc, arcAlto, popAviso, boing, soplido, paso, sello, festejo, casi, caida };
 export const STINGERS = { checkpoint: stingerCheckpoint, fail: stingerFail, record: stingerRecord, final: stingerFinal };

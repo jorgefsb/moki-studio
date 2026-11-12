@@ -1403,7 +1403,7 @@ export class RunScene extends Phaser.Scene {
     const x = this.px + e.D - this.dist;
     const sprite = this.add.image(x, g - e.h, e.amber ? 'tokenAmber' : 'token').setDepth(11);
     const shadow = this.addShadow(x + 4, 26, 0.18);
-    const k = { D: e.D, h: e.h, x, y: g - e.h, arc: e.arc, arcN: e.arcN, amber: !!e.amber, sprite, shadow, taken: false, pie: e.pie, cae: e.cae };
+    const k = { D: e.D, h: e.h, x, y: g - e.h, arc: e.arc, arcN: e.arcN, alto: !!e.alto, amber: !!e.amber, sprite, shadow, taken: false, pie: e.pie, cae: e.cae };
     k.destroy = () => {
       sprite.destroy();
       shadow.destroy();
@@ -2168,15 +2168,18 @@ export class RunScene extends Phaser.Scene {
           P.arcs += 1;
           P.arcsByTramo[this.tramoIdx] = (P.arcsByTramo[this.tramoIdx] || 0) + 1;
         }
-        audio.sfx('arc');
+        audio.sfx(k.alto ? 'arcAlto' : 'arc');
         if (!this.demo) this.ambient.good('arc', this.t);
-        // Arco completo: abanico de papel, brinco grande de la ficha, nubes que tiemblan
+        // Arco completo: abanico de papel, brinco grande de la ficha, nubes que tiemblan.
+        // P36e: el arco alto de la horquilla cierra con corona (una nota más, papel hacia atrás y arriba, ficha más grande)
         arcFull = true;
-        this.particles.burst('arc', k.x, k.y);
-        this.pop(this.hudR, 1.22, 160);
+        if (k.alto) this.particles.burst('arcAlto', k.x - 40, k.y - 88);
+        else this.particles.burst('arc', k.x, k.y);
+        if (k.alto) this.pop(this.hudR, 1.3, 200);
+        else this.pop(this.hudR, 1.22, 160);
         this.shiver();
         this.buzz(12);
-        this.shake(1, 80);
+        this.shake(k.alto ? 2 : 1, 80);
       }
     }
     this.cinta.grow(this.combo, mult, this.pieceValue - valor0);

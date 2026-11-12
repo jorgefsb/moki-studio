@@ -107,7 +107,9 @@ function expand(code, t, speed, tramo, arcSeq) {
       const id = `${tramo}:${arcSeq.n++}`;
       const n = arc.h.length;
       for (let i = 0; i < n; i++) {
-        out.push({ kind: 'pick', D: hint.center + (i - (n - 1) / 2) * arc.gap * k, h: arc.h[i], arc: id, arcN: n, amber: arc.amber === i });
+        const p = { kind: 'pick', D: hint.center + (i - (n - 1) / 2) * arc.gap * k, h: arc.h[i], arc: id, arcN: n, amber: arc.amber === i };
+        if (reward === 'AupH') p.alto = true; // P36e: arco alto de la horquilla, cierra con corona (solo dato, no mueve nada)
+        out.push(p);
       }
     }
   }
