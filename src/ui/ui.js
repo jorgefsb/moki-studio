@@ -471,7 +471,8 @@ export function createUI() {
       });
     },
     unlockFail() {
-      if (!state.fail) return;
+      // P34b: solo la primera vez; si no, el foco vuelve a la píldora cada cuadro y Tab no sale
+      if (!state.fail || !state.fail.pill.disabled) return;
       state.fail.pill.disabled = false;
       if (state.fail.alt) state.fail.alt.disabled = false;
       state.fail.pill.classList.add('ready');
