@@ -220,6 +220,8 @@ export class RunScene extends Phaser.Scene {
     // Moki es un títere recortado (src/art/mokiRig.js). Nunca espejado: ni flipX ni escala negativa.
     this.rig = createMokiRig(this);
     this.vientoG = this.add.graphics().setDepth(9.6);
+    this.arcoG = this.add.graphics().setDepth(9.8); // P4q arco de papel: bajo obstáculos (10), piezas (11) y Moki (12)
+    this.arcoP = [];
     this.vientoK = this.vientoV = 1; // vientoV: el que lleva el mundo (rampa hacia vientoK)
     this.rig.debugOn = ANIM_DEBUG;
     this.particles = new Particles(this);
@@ -2254,6 +2256,17 @@ export class RunScene extends Phaser.Scene {
       const racha2 = this.t - this.lastPickAt <= C.combo.windowMs && C.combo.steps.some(([from, v]) => v >= 2 && this.combo >= from);
       if (C.juice >= 2 || racha2) (this.estelaAt = this.t), this.particles.estela(this.px - 22, this.y - 52, this.speed);
     }
+    // P4q arco de papel: en el aire guarda [dist, y de la bota, t]; cada cuadro dibuja la cola de los últimos ms (msAlto
+    // con salto mantenido), gruesa en la bota y de 2 px en la cola; tras aterrizar ya no entra nada y se apaga sola
+    const Q = C.feelP4q, qp = this.arcoP, qn = Q.on[C.juice], hg = this.highGood, qMs = Q.ms[+hg];
+    const W = Q.ancho[C.juice] * (hg ? Q.altoX : 1), qo = this.px - 6 - this.dist; // lo que sale del lienzo no se ve: sin recorte
+    if (!qn || this.reduced || this.screen != 'play' || this.dead) qp.length = 0;
+    else if (!this.grounded && this.takeoffAt > this.landAt && (qn > 1 || hg)) qp.push([this.dist, this.y - Q.pie, this.t]);
+    while (qp[0] && this.t - qp[0][2] > qMs) qp.shift();
+    this.arcoG.clear();
+    for (const [c, k] of [[0xf4e8d5, 2 * Q.canto], [0xff6b35, 0]]) // canto crema y encima el relleno naranja
+      for (let i = 1, a, b; (b = qp[i]); i++)
+        (a = qp[i - 1]), this.arcoG.lineStyle(2 + ((W - 2) * i) / (qp.length - 1) + k, c, Math.min(1, (1 - (this.t - b[2]) / qMs) / 0.4)).lineBetween(qo + a[0], a[1], qo + b[0], b[1]);
 
     if (this.debugEl) {
       const d = this.rig.debug;
