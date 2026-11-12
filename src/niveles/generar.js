@@ -32,6 +32,10 @@ const isDescanso = (b) => b.tags.includes('descanso');
 export const ELIGE = { libre: true, reto: '2026-11-12' };
 const eligeEn = (seed, modo) => (modo === 'libre' ? ELIGE.libre : modo === 'reto' && /^\d{4}-\d\d-\d\d$/.test(seed) && seed >= ELIGE.reto);
 const PESO_ELIGE = 3;
+// P36d F6 del Reto de nivel 1: la caja-viga (C.V) se guarda para T4 y la estrena cv-torre al abrir su subida
+export const GUARDA = { reto: '2026-11-12', patron: 'C.V', tramo: 4, bloque: 'cv-torre' };
+const guardaEn = (seed, modo, mecanicas) => modo === 'reto' && /^\d{4}-\d\d-\d\d$/.test(seed) && seed >= GUARDA.reto && mecanicas.length > 0 && mecanicas.every((m) => m === 'tramp');
+const guardado = (ctx, tramo, c) => ctx.guarda && tramo < GUARDA.tramo && principal(c) === GUARDA.patron;
 
 function pick(r, items) {
   const total = items.reduce((s, [, w]) => s + w, 0);
@@ -68,6 +72,7 @@ function fill(r, hasta, ctx, tramo, ventana = VENTANA[tramo]) {
     const cands = BLOQUES.filter((b) => {
       if (b.tags.includes('sorpresa')) return false; // G5
       if (b.elige && !ctx.elige) return false; // horquilla: solo con ELIGE
+      if (b.ev.some(([, c]) => guardado(ctx, tramo, c))) return false; // P36d: C.V guardada hasta T4
       if (b.mec && !ctx.mecanicas.includes(b.mec)) return false; // mecánica no destrabada (o Reto/Clásico)
       if (b.soloPico && ctx.fase !== 'pico') return false; // viento-par y viento-ritmo: solo en el pico
       if (b.mec === 'viento' && ctx.nViento >= 2) return false; // máx. 2 bloques de viento por página
@@ -173,7 +178,7 @@ function vientoMezcla(script) {
 // siguiente. Sin viento queda como antes, para que el Reto y el Libre de siempre no cambien.
 // zonas (con forma de página, armarForma): dónde está el pico, dónde empieza el respiro y las ventanas de aire. Sin
 // ellas, las de siempre.
-function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), estricto = false, zonas = null, elige = false) {
+function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), estricto = false, zonas = null, elige = false, guarda = false) {
   const picos = zonas ? zonas.picos : [[14, 24]];
   const respiro = zonas ? zonas.respiro : 24;
   const ev = [...script].sort((a, b) => a[0] - b[0]);
@@ -191,7 +196,7 @@ function densificar(script, tramo, r, antes0 = new Set(), global = new Set(), es
     const enViento = vientos.some(([a, b]) => t >= a - 0.3 && t <= b);
     const T = zonas && enZona(zonas.tandas, t) ? DE_TANDA : enZona(picos, t) ? DE_PICO : FACILES;
     // horquilla en calma y respiro (P36): la caja con arco alto, máx. 2 por página (T1 desde el 12, tras el tutorial)
-    const F = (elige && T === FACILES && nuevos.filter(([, c]) => c === HORQ).length < 2 ? [...T[tramo], HORQ] : T[tramo]).filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))));
+    const F = (elige && T === FACILES && nuevos.filter(([, c]) => c === HORQ).length < 2 ? [...T[tramo], HORQ] : T[tramo]).filter((c) => (principal(c) !== 'U' || t - previo >= C.popup.minGapBeforeSec) && !(enViento && NO_VIENTO.has(principal(c))) && !guardado({ guarda }, tramo, c));
     const F2 = estricto ? F.filter((c) => hasta - t >= (FIN[principal(c)] || 0) + C.minGapSec) : F;
     const ok = [F2.filter((c) => principal(c) !== antes && principal(c) !== despues), F2.filter((c) => principal(c) !== antes), F2, F].find((x) => x.length);
     // Rota (al azar dentro de cada escalón, para no repetir el mismo toque cada página: F3) y gasta poca novedad
@@ -353,9 +358,9 @@ function armarForma(r, ctx, tramo, segs, sorpresa, estrenos, abrePico) {
 
 // Un tramo (1-4) como guion [[s, código]] de 30 s. forma: nombre de formas.js; sin ella, la curva fija de siempre.
 // ajusteReto: reglas de las formas que solo aplican al Reto (Libre se queda como está).
-export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set(), mecanicas = [], forma = null, ajusteReto = false, elige = false) {
+export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(), global = new Set(), mecanicas = [], forma = null, ajusteReto = false, elige = false, guarda = false) {
   const r = rng(hashSeed(`${seed}:${tramo}:${intento}`));
-  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas, fasesIds: [], global, ajusteReto, elige, horq: [] };
+  const ctx = { pos: 2, script: [], p5: 0, used: {}, prev: null, ids: [], filas: 0, reserva: 0, maxFilas: MAX_FILAS, vistos: new Set(patronesPrev), mecanicas, fasesIds: [], global, ajusteReto, elige, guarda, horq: [] };
   if (tramo === 1) {
     ctx.script.push(...T1_INTRO); // el tutorial depende de este inicio
     ctx.filas = T1_INTRO.filter(([, c]) => hasP5(c)).length;
@@ -376,6 +381,7 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   const estrenaViento = tramo === 2 && ctx.mecanicas.includes('viento');
   const estrenos = () => {
     if (tramo === 3) put(ctx, BY_ID['viga-intro']); // la viga se enseña siempre igual, ahora al empezar la subida
+    if (ctx.guarda && tramo === GUARDA.tramo) put(ctx, BY_ID[GUARDA.bloque]); // P36d: estreno seguro de C.V en T4
     if (estrenaViento) put(ctx, BY_ID['viento-intro']); // la primera página con viento lo enseña al abrir la subida
     // el timbre se estrena al abrir la subida de la primera página libre de estrenos (la 2 si no hay viento, si no la 3)
     if (ctx.mecanicas.includes('timbre') && tramo === (ctx.mecanicas.includes('viento') ? 3 : 2)) put(ctx, BY_ID['timbre-intro']);
@@ -386,7 +392,7 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   };
   if (forma) {
     const zonas = armarForma(r, ctx, tramo, fasesDeForma(seed, tramo, intento, forma), sorpresa, estrenos, abrePico);
-    return conHorq(densificar(ctx.script, tramo, r, patronesPrev, global, ctx.mecanicas.includes('viento'), zonas, ctx.elige), ctx, { zonas });
+    return conHorq(densificar(ctx.script, tramo, r, patronesPrev, global, ctx.mecanicas.includes('viento'), zonas, ctx.elige, ctx.guarda), ctx, { zonas });
   }
   ctx.fase = 'suave';
   fase(4, [1, 1], true); // la calma (2-4 s) es relleno que densificar llena con decisiones fáciles
@@ -409,7 +415,7 @@ export function generarTramo(seed, tramo, intento = 0, patronesPrev = new Set(),
   // regla (c): alterna sin nudo (T2, T4) y con nudo suave (T3) para no repetir bloque en la misma fase
   if (ctx.mecanicas.includes('tramp') && tramo > 1 && ctx.pos <= 25 + 1e-9 && ctx.prevTema !== 'trampolin') put(ctx, BY_ID[tramo === 3 ? 'tramp-nudo' : 'tramp-intro']);
   if (ctx.pos < LEN - 1e-9) put(ctx, RELLENO(LEN - ctx.pos));
-  return conHorq(densificar(ctx.script, tramo, r, patronesPrev, global, ctx.mecanicas.includes('viento'), null, ctx.elige), ctx);
+  return conHorq(densificar(ctx.script, tramo, r, patronesPrev, global, ctx.mecanicas.includes('viento'), null, ctx.elige, ctx.guarda), ctx);
 }
 
 // V4 legibilidad: entre obstáculos distintos >= minGapSec (mismo punto en VC; la segunda caja de CC no cuenta).
@@ -547,6 +553,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
   const formas = formasActivas(seed, modo) ? formasDePartida(seed) : null;
   const ajusteReto = !!formas && modo === 'reto';
   const elige = eligeEn(String(seed), modo);
+  const guarda = guardaEn(String(seed), modo, mecanicas);
   const fallbacks = [];
   let prev = new Set();
   const global = new Set();
@@ -564,7 +571,7 @@ export function generarNivel(seed, modo = 'reto', opts = {}) {
     let mejor = Infinity;
     // Reto con formas: una página sin ningún intento válido sigue probando antes de caer al guion clásico
     for (let k = k0; (k < k0 + INTENTOS || (ajusteReto && !t && k < k0 + INTENTOS_RETO)) && mejor > novedadMax; k++) {
-      const script = generarTramo(seed, i + 1, k, prev, global, mecanicas, formas && formas[i], ajusteReto, elige);
+      const script = generarTramo(seed, i + 1, k, prev, global, mecanicas, formas && formas[i], ajusteReto, elige, guarda);
       if (!ajusteReto && !tramoValido(script, tr.speed)) continue;
       // repetir una secuencia larga de una página anterior cuenta como hueco de novedad perdido
       // reglas de no repetir (NIVELES.md flow): (b) el pico no repite la firma del pico anterior; (c) un bloque no
