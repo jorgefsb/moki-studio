@@ -173,5 +173,19 @@
       "es": "No hubo prueba a ciegas del juego, ni cuadros por segundo, ni celular real. La captura de jugador nuevo solo muestra el arranque, que no cambió: lo nuevo está al final del Reto y hay que jugar tres páginas para verlo. Es el Reto de hoy cambiando por tercera vez en un día. Pasó con números y visto del director, no con personas jugando.",
       "en": "There was no blind test of the game, no frames per second and no real phone. The new-player capture only shows the start, which did not change: the new part is at the end of the Challenge and you have to play three pages to see it. It is today's Challenge changing for the third time in one day. It passed on numbers and the director's look, not with people playing."
     }
+  },
+  "p36e": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. En la primera horquilla (a los 20.8 segundos más o menos), por la ruta de arriba: al cobrar la fila de piezas de arriba sale una corona de papel.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. At the first fork (around 20.8 seconds), on the upper route: collecting the upper row of pieces now shows a paper crown."
+    },
+    "cifras": {
+      "es": "Subir por arriba ahora se siente como premio. En la prueba a ciegas con 3 personas nuevas viendo tiras de movimiento, la versión nueva ganó en 'más premio' 3 de 3 a 390 y 3 de 3 a 1280 (la meta era 2 de 3 en cada tamaño; en la primera vuelta fue 1 de 3). La corona tapa la cara 0 veces contra la versión nueva (las dos veces que alguien dijo 'tapa' a 390 apuntaban a la versión de antes). Sin doble cobro, los 6 bots dan igual, los 50 niveles siguen en verde, la consola no muestra errores y el juego pesa 149 bytes más (el tope era 400).",
+      "en": "Going up top now feels like a prize. In the blind test with 3 new people watching motion strips, the new version won 'more reward' 3 of 3 at 390 and 3 of 3 at 1280 (the goal was 2 of 3 at each size; in round 1 it was 1 of 3). The crown covers the face 0 times in the new version (the two 'it covers' answers at 390 pointed at the old one). No double collecting, the 6 bots match, all 50 levels stay green, the console shows no errors and the game weighs 149 bytes more (the cap was 400)."
+    },
+    "la_regamos": {
+      "es": "Costó cinco vueltas del salto 'Escoge tu camino' llegar aquí; la vuelta 1 de este arreglo solo ganó 1 de 3. La meta de esta vuelta se escribió con la base de master ya medida, y pasó a la primera. Sin oído en el sonido nuevo del arco alto, sin cuadros por segundo, sin celular real, y las tiras son de 8 cuadros, no video.",
+      "en": "It took five rounds of the 'Pick your path' jump to get here; round 1 of this fix only won 1 of 3. This round's goal was written with the master baseline already measured, and it passed on the first try. No ear on the new high-arc sound, no frames per second, no real phone, and the strips are 8 frames, not video."
+    }
   }
 }
