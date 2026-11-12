@@ -40,6 +40,9 @@ const ARCS = {
   Aup7: { h: [100, 120, 146, 164, 146, 120, 100], gap: 30 },
   AupAmb: { h: [104, 146, 164, 146, 104], gap: 44, amber: 2 },
   Aup7Amb: { h: [100, 120, 146, 164, 146, 120, 100], gap: 30, amber: 3 },
+  // horquilla (P36b): dos carriles a ±60 px, el alto para quien mantiene y el bajo (a ras) para quien toca
+  AupH: { h: [150, 172, 182, 172, 150], gap: 30 },
+  AdnH: { h: [64, 80, 80, 64], gap: 32 }, // a ras: más bajo y junto que Adn, o quien mantiene lo cobra al subir y al bajar (sonda-p36b)
 };
 
 // EXT: mecánicas diferidas (EXT.z, src/zanja.js, solo Libre) registran aquí sus patrones y reglas
@@ -62,7 +65,8 @@ export const OBS = {
 // Convierte un patrón en entidades (D = px desde el inicio del tramo hasta que el centro llega a Moki).
 function expand(code, t, speed, tramo, arcSeq) {
   const out = [];
-  const [main0, reward] = code.split('+');
+  const [main0, ...rewards] = code.split('+');
+  const reward = rewards[0];
   const sopla = /[<>]$/.test(main0) ? main0.slice(-1) : null;
   const main = sopla ? main0.slice(0, -1) : main0;
   const k = sopla === '>' ? C.viento.favor : sopla === '<' ? C.viento.contra : 1;
@@ -87,7 +91,7 @@ function expand(code, t, speed, tramo, arcSeq) {
     }
     hint.center = main === 'CC' ? base + C.cajaPegadaGapPx / 2 : base;
   }
-  if (reward) {
+  for (const reward of rewards) {
     if (reward === 'B') out.push({ kind: 'obs', type: 'timbre', D: base, plan: 'hold' }, Object.assign(out.pop(), { conTimbre: true }));
     else if (reward === 'Avu') {
       const b = simulateBounce();

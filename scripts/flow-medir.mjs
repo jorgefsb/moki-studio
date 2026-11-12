@@ -77,6 +77,8 @@ const ARCS = {
   Aup7: { h: [100, 120, 146, 164, 146, 120, 100], gap: 30 },
   AupAmb: { h: [104, 146, 164, 146, 104], gap: 44 },
   Aup7Amb: { h: [100, 120, 146, 164, 146, 120, 100], gap: 30 },
+  AupH: { h: [150, 172, 182, 172, 150], gap: 30 },
+  AdnH: { h: [64, 80, 80, 64], gap: 32 },
 };
 
 // Modelo de paso: Moki despega para centrar el salto en el obstáculo (como el bot), con un corrimiento de dms.
@@ -111,6 +113,7 @@ function pasa(tipo, plan, x, v) {
 }
 function piezas(plan, x, v, arco) {
   if (!arco) return 0;
+  if (Array.isArray(arco)) return arco.reduce((n, a) => n + piezas(plan, x, v, a), 0);
   const R = C.pickupReach;
   let n = 0;
   arco.h.forEach((h, i) => {
@@ -144,7 +147,8 @@ function medir(L, grupo = []) {
   let t0 = 0;
   L.tramos.forEach((tr, i) => {
     for (const [t, code] of tr.script) {
-      const [main, reward] = code.split('+');
+      const [main, ...rws] = code.split('+');
+      const reward = rws[0];
       if (main === 'P5') continue;
       // viento (C>, C<, T>): el patrón conserva el sufijo (F1, F6); la física del modelo avanza a speed * k en el aire
       const sopla = /[<>]$/.test(main) ? main.slice(-1) : null;
@@ -157,7 +161,7 @@ function medir(L, grupo = []) {
       const patron = reward === 'B' ? `${main}B` : main;
       eventos.push({ t: t0 + t, patron });
       partes.forEach(([tipo, at], k) => {
-        const arco = k === 0 && reward && ARCS[reward] ? { ...ARCS[reward], gap: ARCS[reward].gap * kv } : null;
+        const arco = k === 0 && rws.some((r) => ARCS[r]) ? rws.filter((r) => ARCS[r]).map((r) => ({ ...ARCS[r], gap: ARCS[r].gap * kv })) : null; // P36b: varios carriles
         // trampolín: pisarlo (none) vuela y cobra el arco del vuelo; saltarlo (tap) no lo cobra. Ambos sobreviven
         // (el validador lo prueba con las dos rutas y ±40 ms).
         // zanja: sin modelo de paso; cuenta como decisión sin elección (F4 y F4b con zanja quedan aproximados, a la baja)
