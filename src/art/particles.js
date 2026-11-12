@@ -181,6 +181,13 @@ export class Particles {
       for (let i = 0; i < n; i++) {
         this.emit(['orange', 'amber', 'paper'][i % 3], x, y, { vx: rand(-80, 80), vy: -rand(140, 240), g: 420, life: 600, spin: 300, osc: 8, fadeFrom: 0.6 });
       }
+    } else if (type === 'arcAlto') {
+      // P36e: corona del arco alto. Nace detrás y arriba de Moki (donde iba el pico) y sale SOLO hacia atrás y arriba:
+      // Moki mira a la derecha, así que nada cruza la visera ni la cara. Reemplaza al abanico en este arco
+      const n = L === 1 ? 6 : L === 2 ? 14 : 22;
+      for (let i = 0; i < n; i++) {
+        this.emit(['orange', 'amber', 'paper'][i % 3], x + rand(-4, 4), y + rand(-6, 6), { vx: -rand(20, 120), vy: -rand(160, 280), g: 420, life: 700, spin: 300, osc: 8, fadeFrom: 0.6 });
+      }
     } else if (type === 'confetti') {
       if (L < 2) return;
       const n = L === 2 ? 16 : 40;
