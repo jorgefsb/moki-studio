@@ -2748,7 +2748,7 @@ export class RunScene extends Phaser.Scene {
     if (H < 480 && W > H) {
       const left = Math.round(zonas.mokiR + 20);
       r = { left, top, width: Math.min(460, W - left - 12), maxHeight: H - top - 8, compact: true, corto: true };
-    } else if (!wide) r = { ...r, top, maxHeight: H - top - 8, corto: true }; // P28: la final puede tapar a Moki parado (director); el fallo no // vertical: datos en 2 columnas para que quepa sin scroll
+    } else if (!wide) r = { ...r, top, maxHeight: H - top - 8, corto: true, mokiT: zonas.mokiT }; // P28: la final puede tapar a Moki parado (director); el fallo no // vertical: datos en 2 columnas para que quepa sin scroll
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(

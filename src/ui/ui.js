@@ -491,7 +491,7 @@ export function createUI() {
     showCuaderno(tira, zonas) {
       ui.hideCuaderno();
       const host = (state.fail || state.final);
-      if (!host || host.pie) return;
+      if (!host || state.fail?.pie) return;
       const { card, scrim } = host;
       const strip = el('div', 'ui-cuaderno');
       strip.setAttribute('role', 'status');
@@ -539,7 +539,7 @@ export function createUI() {
       scrim.append(strip);
       // Caja de la tarjeta en px de pantalla (offset* ignora el transform de la animación de entrada)
       const W = scrim.clientWidth;
-      const H = scrim.clientHeight;
+      const H = host.pie ? host.pie.offsetTop + 8 : scrim.clientHeight; // P33: la tira del Cuaderno va sobre la del voto
       const c = { l: card.offsetLeft, t: card.offsetTop, w: card.offsetWidth, h: card.offsetHeight };
       const w = Math.min(W - 32, Math.max(c.w, 300));
       strip.style.width = `${w}px`;
@@ -691,9 +691,6 @@ export function createUI() {
       // P28 (Jorge, 11-nov): Así lo hicimos y copiar bajan a enlaces chicos en una fila; el voto sube bajo 'Otra vez'
       const how = el('button', 'ui-link ui-chica', t('end.how'));
       how.type = 'button';
-      // P32: 'Qué sigue' vuelve siempre (texto y estilo de antes de P28); si no cabe sin scroll, se quita antes que Vota
-      const sigue = onMenu ? el('p', 'ui-sigue', t('end.sigue')) : null;
-      if (sigue) card.append(sigue);
       card.append(again);
       if (onMenu) {
         const menu = el('button', 'ui-btn secondary', t('menu.volver'));
@@ -731,12 +728,18 @@ export function createUI() {
       scrim.append(card);
       root.appendChild(scrim);
       const sobra = () => card.scrollHeight > card.clientHeight + 1;
-      if (sigue && sobra()) sigue.remove();
       if (vf && horiz() && sobra()) vf.forEach((n) => n.remove()); // no cabe: se oculta
+      // P33: en vertical, si la tarjeta baja hasta la cabeza de Moki, el voto y la fila chica se van a una tira sobre
+      // el suelo, debajo de Moki, como en el fallo (P28): a Moki se le ven cabeza y torso
+      let pie;
+      if (vf && card.offsetTop + card.offsetHeight > rect.mokiT) {
+        (pie = scrim.appendChild(el('div', 'ui-card compact corto ui-voto-pie'))).style.cssText = `left:${rect.left}px;width:${rect.width}px`;
+        pie.append(...vf, chicas);
+      }
       again.addEventListener('click', onAgain);
       how.addEventListener('click', onHow);
       primary = onAgain;
-      state.final = { scrim, card, primary: onAgain };
+      state.final = { scrim, card, pie, primary: onAgain };
       again.focus({ preventScroll: true });
     },
     hideFinal() {
