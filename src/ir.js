@@ -15,6 +15,7 @@ export const DESTINOS = {
   viento: { modo: 'libre', tramo: 1, nivel: null, mec: ['viento'] },
   timbre: { modo: 'libre', tramo: 1, nivel: null, mec: ['timbre'] },
   zanja: { modo: 'reto', tramo: 1, nivel: 2, mec: ['zanja'] }, // P5c: primer nivel del Cuaderno con mecánica nueva (Reto nivel 2)
+  elige: { modo: 'reto', tramo: 0, nivel: null }, // P36: la horquilla (arriba por el arco o abajo a ras), desde la página 1
   formas: { modo: 'reto', tramo: 0, nivel: null }, // formas de página: Libre siempre y el Reto desde hoy
   mega: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj' }, // P8: MODO MEGA (el Clásico a x1.5, C.mega.reloj) aunque el nivel 1 no esté terminado
   mega2: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj2' }, // P8b: MEGA x2.0 (C.mega.reloj2) sin el logro MEGA x1.5

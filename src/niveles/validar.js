@@ -36,7 +36,9 @@ export function validateLevel(level, force = null, jitterMs = 0, ruta = 'arriba'
   const kAt = (d) => (vientos.find((z) => d >= z.D0 && d <= z.D1) || { k: 1 }).k;
   const obs = level.entities.filter((e) => e.kind === 'obs').map((e) => ({ ...e, box: box(e.type, e.W), handled: false }));
   const tramps = obs.filter((o) => o.type === 'tramp');
-  const planDe = (q) => (q.type === 'tramp' ? (ruta === 'abajo' ? 'tap' : 'none') : q.plan);
+  // horquilla (P36): 'arriba' mantiene sobre la caja del arco y cobra; 'abajo' la toca y pasa a ras
+  const horq = ruta === 'abajo' && level.horq ? level.horq : [];
+  const planDe = (q) => (q.type === 'tramp' ? (ruta === 'abajo' ? 'tap' : 'none') : q.type === 'caja' && horq.some((d) => Math.abs(d - q.D) < 1) ? 'tap' : q.plan);
   const salta = (q) => {
     if (force === 'none' || q.caida) return false;
     if (force) return q.plan !== 'skip';
