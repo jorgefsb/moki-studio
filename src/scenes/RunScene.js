@@ -2173,7 +2173,7 @@ export class RunScene extends Phaser.Scene {
         // Arco completo: abanico de papel, brinco grande de la ficha, nubes que tiemblan.
         // P36e: el arco alto de la horquilla cierra con corona (una nota más, papel hacia atrás y arriba, ficha más grande)
         arcFull = true;
-        if (k.alto) this.particles.burst('arcAlto', k.x - 72, k.y - 40);
+        if (k.alto) this.particles.burst('arcAlto', k.x - 40, k.y - 75);
         else this.particles.burst('arc', k.x, k.y);
         if (k.alto) this.pop(this.hudR, 1.3, 200);
         else this.pop(this.hudR, 1.22, 160);
