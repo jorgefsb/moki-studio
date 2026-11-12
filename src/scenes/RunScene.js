@@ -1790,6 +1790,9 @@ export class RunScene extends Phaser.Scene {
     if (this.vientoG) this.drawViento();
     const px = this.px;
     const dist = this.dist;
+    // P20: en el título el obstáculo que va bajo el menú no se pinta hasta salir por su orilla izquierda (a 1280 asomaba
+    // cortado por la derecha de JUGAR como un bloque raro). Solo dibujo: física, guion y demo siguen igual.
+    const mr = this.demo && this.ui.state.menu?.getBoundingClientRect(), z = this.zoom;
     for (const o of this.obstacles) {
       o.x = px + o.D - dist;
       o.sprite.x = o.x + (o.ox || 0); // la torre que cae gira sobre su pie delantero
@@ -1800,6 +1803,10 @@ export class RunScene extends Phaser.Scene {
       if (o.lamina) o.lamina.x = o.x + 30;
       o.shadow.x = o.x + (o.type === 'viga' ? 6 : 9);
       if (o.pop) this.stepPopup(o);
+      if (mr || o.tapa) {
+        const b = o.sprite.getBounds(); // el menú siempre va abajo: basta su orilla izquierda y su borde de arriba
+        o.sprite.visible = o.shadow.visible = !(o.tapa = mr && b.x * z > mr.x && (b.bottom - this.top) * z > mr.y);
+      }
       if (o.threads) {
         o.threads.forEach((h, i) => {
           h.x = o.x + (i ? 34 : -34);
