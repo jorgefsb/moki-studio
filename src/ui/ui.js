@@ -90,7 +90,8 @@ export function createUI() {
     return a;
   };
   // P28: las dos líneas de Jorge y el botón ancho 'Vota lo que sigue' (final y fallo)
-  // Tras votar, el foco regresa al botón principal: Espacio y Enter reinician como en master (vuelta 2, B)
+  // Tras votar, el foco regresa al botón principal: Espacio y Enter reinician como en master (vuelta 2, B).
+  // P34: el enlace suelta el foco al instante; si la píldora sigue en el candado, la toma al liberarse (unlockFail)
   // Embed horizontal bajito (660x372, 640x400): solo el botón, sin las 2 líneas (vuelta 2, A)
   const horiz = () => innerWidth > innerHeight && innerHeight < 480;
   const votoBloque = (v) => {
@@ -98,7 +99,8 @@ export function createUI() {
     a.textContent = t('voto.titulo');
     a.addEventListener('click', () => {
       a.textContent = t('voto.gracias');
-      const p = a.closest('.ui-scrim')?.querySelector('.ui-btn.primary, .ui-pill');
+      a.blur(); // P34: en el candado la píldora no toma foco; sin esto Enter reabría la página de votar
+      const p =a.closest('.ui-scrim')?.querySelector('.ui-btn.primary, .ui-pill');
       if (p) setTimeout(() => p.focus({ preventScroll: true }));
     });
     return horiz() ? [a] : [el('p', 'ui-voto-sub', t('voto.sub')), a];
