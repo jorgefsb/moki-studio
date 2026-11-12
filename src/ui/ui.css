@@ -436,8 +436,7 @@ div.mn-card { cursor: default; }
    no escondida: quien juega embebido también sabe para qué es */
 .ui-menu.corto .mn-voto .tx { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; }
 .ui-menu.corto .mn-voto span { font-size: 14px; line-height: 17px; }
-.ui-voto { display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 44px; margin: 8px 0 0 !important; text-decoration: none; }
-.ui-voto small { font: 13px/16px Inter; }
+.ui-voto { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 44px; margin: 8px 0 0 !important; text-decoration: none; }
 .ui-voto-sub { margin: 10px 0 0; font: 400 16px/21px Inter, sans-serif; }
 .ui-chicas { display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; margin-top: 4px; }
 .ui-card .ui-chica { min-height: 36px; margin: 0; padding: 0 2px; border: 0; background: none; font-size: 14px; cursor: pointer; }

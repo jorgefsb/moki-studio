@@ -699,8 +699,6 @@ export function createUI() {
         card.append(menu);
       }
       const vf = d.voto && votoBloque(d.voto);
-      // P33: 'Qué sigue' va dentro del botón de Vota (una sola acción, un renglón menos)
-      if (vf) vf.at(-1).append(el('small', '', t('end.sigue')));
       if (vf) card.append(...vf);
       if (vf && horiz()) card.classList.add('horiz'); // embed: Vota en la fila de Otra vez
       const chicas = el('div', 'ui-chicas');
