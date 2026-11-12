@@ -1,15 +1,15 @@
 {
-  "fecha": "2026-11-09",
-  "titulo": "Lo nuevo de hoy: una pantalla de inicio nueva",
+  "fecha": "2026-11-12",
+  "titulo": "Lo nuevo de hoy: ahora eliges el camino, un arco de papel en cada salto y Moki sin tapar",
   "lineas": [
-    "Al saltar sale polvo junto a la bota, y si caes de alto se oye el aire.",
-    "Trampolín de tabla, postes de estaca y viento en el nivel 3.",
-    "Desde tu 2.ª visita, el menú explica cada tarjeta y te deja escoger qué sigue."
+    "En Libre y en el Reto del día aparece una horquilla: puedes subir por el arco de papel, con una fila de piezas arriba, o pasar a ras, con otra fila abajo: ahora los dos caminos tienen sus propias piezas. Pruébalo con el botón: la primera horquilla llega a los 20 segundos más o menos. Ojo: el Reto de hoy cambió otra vez por esto. Y el Reto de hoy guarda una sorpresa para la última página: no se ve al empezar, llega al final (liga directa: ?ir=reto). Modo MEGA: el Clásico, pero todo va 1.5 veces más rápido. Al ganarlo se abre MEGA x2.0, el doble de rápido, y ahí en pantalla horizontal la cámara se adelanta: ves venir la caja antes.",
+    "Moki empuja con la pierna al saltar, se inclina al acelerar y se aplasta un poco al caer de un salto fuerte, con el casco duro y más polvo a los lados; en el celular vertical el polvo ya no se corta por el borde. Al aterrizar, Moki se queda agachado un poco más (125 milésimas de segundo en vez de 86), así se nota el peso de cada salto. El primer Moki lejano sale antes y, a los 12 segundos de una partida, aparece un segundo Moki en el fondo. El polvo del aterrizaje ya no es gris: sale crema ámbar con canto kraft, y la mariposa del fondo tiene el ala oscura cálida. A los 12 segundos, el segundo Moki lejano ahora se ve completo en el celular: ya no queda detrás del pino. Desde el primer salto de cualquier partida, una cinta naranja con canto crema sale de la bota de Moki, dibuja la curva del salto y se apaga al aterrizar. En pantalla ancha a veces se ve cargada. Al juntar dos o más piezas seguidas, la cinta de combo detrás de Moki ahora es crema con borde naranja: ya no se ve como un palito café suelto.",
+    "Al terminar una partida, \"Vota lo que sigue\" sale justo debajo de \"Otra vez\", sin bajar la pantalla del celular, y la tarjeta aparece completa desde el primer cuadro. Nueva tarjeta Logros en el menú: 12 logros, cada uno con su pista. Dos son nuevos: Diseñador (tocas \"Vota lo que sigue\") y Embajador (copias o compartes la liga del juego). En el menú del celular, \"Jugar\" y \"Vota\" ya no se aprietan cuando ganas MEGA, y en pantalla baja MEGA se ve completa. Si chocas, el botón de reintento ya no miente: aparece crema pálido y se llena de naranja en un instante; cuando está naranja, ya responde. Desde tu segunda visita, el menú muestra abajo un camino con tus paradas (hechas, la de ahora y las que siguen) y qué abre el siguiente nivel. Al llegar a la meta, la tarjeta final ya no tapa a Moki: se le ve la cabeza y el torso completos en el celular. En ese camino, la siguiente parada lleva un triángulo junto a su nombre, para que se vea cuál sigue. En la pantalla de inicio en computadora, la caja oscura del demo ya no asoma cortada detrás de JUGAR y Vota. Los pinos lejanos del fondo ya no se funden en una mancha donde se juntan dos copias: el corte es limpio (el cambio es sutil). Si juegas con teclado, en la tarjeta de fallo Tab ya llega a Bandera y a Vota y regresa; antes el foco se quedaba pegado en un solo botón."
   ],
-  "ir": "viento",
+  "ir": "reto",
   "donde": [
+    "reto",
     null,
-    "viento",
-    null
+    "logros"
   ]
 }

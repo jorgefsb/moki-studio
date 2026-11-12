@@ -1,0 +1,177 @@
+{
+  "id": "2026-11-12",
+  "fecha": "2026-11-12",
+  "borrador": true,
+  "titulo": {
+    "es": "Un arco de papel en cada salto, y el menú y el fondo se limpian",
+    "en": "A paper arc on every jump, and the menu and background clean up"
+  },
+  "p33": {
+    "donde": {
+      "es": "En la tarjeta final, al llegar a la meta de cualquier partida del Clásico. No hay liga directa: juega hasta la meta.",
+      "en": "On the final card, when you reach the goal in any Classic run. There is no direct link: play until the goal."
+    },
+    "cifras": {
+      "es": "En el celular, la tarjeta final tapaba la cabeza y el torso de Moki (53 píxeles en pantalla de 390x844). Ahora no tapa nada: 0 píxeles en tres tamaños de celular. Para lograrlo quitamos la línea 'Qué sigue: Libre o el Reto del día', que habíamos puesto horas antes. Otra vez y Vota siguen enteros, los bots dan igual en 6 casos, la consola no muestra errores y el juego pesa 42 bytes más.",
+      "en": "On a phone, the final card covered Moki's head and torso (53 pixels on a 390x844 screen). Now it covers nothing: 0 pixels at three phone sizes. To get there we removed the 'What's next: Free or the Daily Challenge' line we had added hours earlier. Play again and Vote are still whole, the bots match in 6 cases, the console shows no errors and the game weighs 42 bytes more."
+    },
+    "la_regamos": {
+      "es": "Primero devolvimos la línea 'Qué sigue' y tapaba casi todo a Moki; la quitamos para arreglarlo y ahora esa línea no está. En pantalla baja (390x700) no cabe el Cuaderno y queda un hueco de unos 85 píxeles. Tampoco lo probamos en un celular real, y en la tarjeta de fallo el teclado sigue fallando seguido. Volver a decir qué sigue, sin tapar a Moki, es la siguiente pieza.",
+      "en": "First we brought back the 'What's next' line and it covered almost all of Moki; we removed it to fix that, so that line is gone now. On a short screen (390x700) the Notebook does not fit and a gap of about 85 pixels is left. We did not test on a real phone either, and on the fail card the keyboard still often fails. Bringing back 'what's next' without covering Moki is the next piece."
+    }
+  },
+  "p19": {
+    "donde": {
+      "es": "En el fondo de toda partida: los pinos lejanos de la capa media. No hay liga directa; se nota poco.",
+      "en": "In the background of every run: the distant pines of the middle layer. There is no direct link; it is hard to notice."
+    },
+    "cifras": {
+      "es": "Los pinos lejanos se armaban con copias que, en la unión, se fundían a la mitad y dejaban un pino fantasma encimado. Ahora la unión corta limpio. En una prueba con imágenes revueltas, quienes miraron mencionaron pinos sucios 1 vez contra 2 antes. El juego pesa 0.9 KB menos, los bots dan igual y la consola no muestra errores.",
+      "en": "The distant pines were built from copies that, at the join, blended at half strength and left a ghost pine on top. Now the join cuts clean. In a test with shuffled images, reviewers mentioned dirty pines 1 time against 2 before. The game weighs 0.9 KB less, the bots match and the console shows no errors."
+    },
+    "la_regamos": {
+      "es": "El cambio es sutil y la prueba fue chica: 2 menciones contra 1 no alcanza para presumir. Donde estaba el pino fantasma quedó un hueco de cielo. Una toma extraña a 390x844 pareció mostrar fantasmas; un revisor miró y no vio diferencias, pero lo hizo a tamaño de celular, sin comparar píxel por píxel y sabiendo cuál imagen era cuál. No lo probamos en un celular real.",
+      "en": "The change is subtle and the test was small: 2 mentions against 1 is not enough to brag about. Where the ghost pine was, a gap of sky is left. One odd shot at 390x844 seemed to show ghosts; a reviewer looked and saw no difference, but did it at phone size, without a pixel-by-pixel comparison and knowing which image was which. We did not test on a real phone."
+    }
+  },
+  "p9c": {
+    "donde": {
+      "es": "En el menú, desde tu segunda visita: en el camino de abajo, la siguiente parada lleva un triángulo. Revisa evidencia/p9c-probador-a6a69d3/VEREDICTO.md para ver cómo se midió.",
+      "en": "In the menu, from your second visit: in the path at the bottom, the next stop has a triangle. See evidence/p9c-probador-a6a69d3/VEREDICTO.md for how it was measured."
+    },
+    "cifras": {
+      "es": "El camino de abajo del menú ahora marca con un triángulo cuál es la siguiente parada (en pantalla de 390 se lee: punto, punto, triángulo Ciudad). Antes, quien lo veía dudaba si Ciudad era la parada de ahora o la que sigue. En una prueba a ciegas, la nueva versión se vio más clara en 5 de 6 pares. Los bots dan igual en 6 casos, la consola no muestra errores y el juego pesa 49 bytes más.",
+      "en": "The path at the bottom of the menu now marks the next stop with a triangle (on a 390 screen it reads: dot, dot, triangle City). Before, people doubted whether City was the current stop or the next one. In a blind test, the new version looked clearer in 5 of 6 pairs. The bots match in 6 cases, the console shows no errors and the game weighs 49 bytes more."
+    },
+    "la_regamos": {
+      "es": "El círculo vacío del final quedó suelto, pegado al borde de la tira. Con el Cuaderno en 8, el pie dice 'Nivel 7' y la lista enseña Nivel 4; eso ya pasaba antes. Solo nos miró una persona, con confianza media-baja, y no probamos en un celular real. En pantalla muy baja (375x667) el menú ya perdía la lista de niveles.",
+      "en": "The empty circle at the end ended up loose, stuck to the edge of the strip. With the Notebook at 8, the footer says 'Level 7' and the list shows Level 4; that already happened before. Only one person looked, with medium-low confidence, and we did not test on a real phone. On a very short screen (375x667) the menu already lost its level list."
+    }
+  },
+  "p20": {
+    "donde": {
+      "es": "En la pantalla de inicio, en computadora (pantalla ancha) y también en una ventana de 660 píxeles. No hay liga especial: se ve al abrir el juego.",
+      "en": "On the start screen, on a computer (wide screen) and also in a 660-pixel window. There is no special link: you see it when you open the game."
+    },
+    "cifras": {
+      "es": "En la pantalla de inicio corre un demo de fondo. Una caja oscura del demo asomaba medio tapada detrás de los botones JUGAR y Vota, y parecía un bloque raro. Ahora no se dibuja hasta que sale por la orilla izquierda del menú. En una prueba a ciegas, quien miró la versión vieja vio un objeto oscuro tapado por Vota y MEGA; la nueva salió limpia. Los botones no se movieron (0 píxeles en cinco tamaños), los bots dan igual en 6 casos, la consola no muestra errores y el juego pesa 60 bytes más.",
+      "en": "On the start screen a demo runs in the background. A dark box in the demo peeked out half-hidden behind the PLAY and Vote buttons and looked like an odd block. Now it is not drawn until it leaves past the left edge of the menu. In a blind test, the person who looked at the old version saw a dark object hidden by Vote and MEGA; the new one came out clean. The buttons did not move (0 pixels at five sizes), the bots match in 6 cases, the console shows no errors and the game weighs 60 bytes more."
+    },
+    "la_regamos": {
+      "es": "Es un arreglo de pulido y se nota poco, sobre todo en computadora. Solo revisamos fotos fijas: no vimos en movimiento cómo reaparece la caja. En celular (390) no cambia nada porque ahí no se veía la caja. A 660 teníamos pedido 'sin cambio' y sí cambió, para bien: ya no asoma la esquina junto a MEGA. El peso quedó justo en el tope (+60 bytes). No lo probamos en un celular real.",
+      "en": "It is a polish fix and is hard to notice, mostly on a computer. We only checked still photos: we did not see the box come back in motion. On a phone (390) nothing changes because the box was not visible there. At 660 we had asked for 'no change' and it did change, for the better: the corner next to MEGA no longer peeks out. The weight landed right at the cap (+60 bytes). We did not test on a real phone."
+    }
+  },
+  "p4q": {
+    "donde": {
+      "es": "En cada salto de cualquier partida, desde el segundo 1. No hay nada que desbloquear ni liga especial: abre el juego y salta.",
+      "en": "On every jump of any run, from second 1. Nothing to unlock and no special link: open the game and jump."
+    },
+    "cifras": {
+      "es": "Mientras Moki está en el aire, una cinta naranja con borde crema sale de su bota, dibuja la curva del salto y se apaga al aterrizar. En una prueba a ciegas con tres personas mirando el movimiento, las tres la vieron y prefirieron la versión con cinta, tanto en celular como en pantalla grande; ninguna dijo que tapara, distrajera o se viera doble. Los bots dan igual en 6 casos, los cuadros por segundo no empeoran, la consola no muestra errores y el juego pesa 361 bytes más.",
+      "en": "While Moki is in the air, an orange ribbon with a cream edge comes out of their boot, draws the curve of the jump and fades after landing. In a blind test with three people watching the motion, all three saw it and preferred the version with the ribbon, on phone and on a big screen; none said it covered, distracted or looked doubled. The bots match in 6 cases, the frame rate is no worse, the console shows no errors and the game weighs 361 bytes more."
+    },
+    "la_regamos": {
+      "es": "La primera vuelta no pasó: el naranja casi no se distinguía del cielo (contraste 1.2 a 1.9) y no mejoraba aunque lo hiciéramos 40 % más grande, porque el problema era el color, no el tamaño. La puerta que pusimos estaba mal escrita: pedía contraste a la cinta y no al borde crema. En la segunda vuelta el borde llegó al 79.6 % de los cuadros con buen contraste cuando pedíamos 80 %; decidimos que 0.4 puntos eran ruido y que la prueba de verdad era la gente. A pantalla grande las tres personas la vieron 'cargada': cruza cajas y monedas y el rastro queda suelto tras aterrizar. Pasó 361 bytes de peso contra un tope de 350. Las pruebas fueron con tiras de cuadros, no video, y sin celular real.",
+      "en": "The first round did not pass: the orange barely stood out from the sky (contrast 1.2 to 1.9) and did not improve even when we made it 40% bigger, because the problem was the color, not the size. The gate we set was badly written: it asked for contrast on the ribbon and not on the cream edge. In the second round the edge reached 79.6% of frames with good contrast when we asked for 80%; we decided 0.4 points was noise and that the real test was people. On a big screen all three found it 'loaded': it crosses boxes and coins and the trail is left loose after landing. It weighs 361 bytes against a cap of 350. The tests used strips of frames, not video, and no real phone."
+    }
+  },
+  "p4r": {
+    "donde": {
+      "es": "En cualquier partida: junta 2 o más piezas seguidas y mira la cinta detrás de Moki. Sin nada que desbloquear.",
+      "en": "In any run: collect 2 or more pieces in a row and look at the ribbon behind Moki. Nothing to unlock."
+    },
+    "cifras": {
+      "es": "La cinta de combo era un palito café que parecía basura suelta. Ahora es crema con borde naranja. En una prueba a ciegas con tres personas, las tres veían el palito café en la versión anterior y ninguna lo ve en la nueva; las tres prefieren la nueva, en celular y en pantalla grande. Los bots dan igual en 6 casos, los cuadros por segundo no empeoran, la consola no muestra errores y el juego pesa 2 bytes más.",
+      "en": "The combo ribbon was a brown stick that looked like loose trash. Now it is cream with an orange edge. In a blind test with three people, all three saw the brown stick in the old version and none sees it in the new one; all three prefer the new one, on phone and on a big screen. The bots match in 6 cases, the frame rate is no worse, the console shows no errors and the game weighs 2 bytes more."
+    },
+    "la_regamos": {
+      "es": "Primero recoloreamos las partículas y no sirvió: las tres personas seguían viendo el palito, porque era la cinta de combo y no el polvo. La prueba falló en una sola cosa: a pantalla grande, 2 de 3 ven un arco 'doble' (con la versión anterior, 1 de 3). Lo causa el arco de papel junto a la cinta, no solo el color; el director lo aceptó y lo vamos a atacar aparte. Pruebas con tiras de cuadros, sin celular real.",
+      "en": "First we recolored the particles and it did not help: all three people still saw the stick, because it was the combo ribbon and not the dust. The test failed on one thing: on a big screen, 2 of 3 see a 'doubled' arc (with the old version, 1 of 3). It comes from the paper arc next to the ribbon, not only the color; the director accepted it and we will tackle it separately. Tests used strips of frames, no real phone."
+    }
+  },
+  "p34b": {
+    "donde": {
+      "es": "En la tarjeta que sale al chocar, usando solo el teclado: pulsa Tab. Pasa de Reintentar a Bandera y a Vota y regresa.",
+      "en": "On the card that appears after a crash, using only the keyboard: press Tab. It moves from Retry to Flag and to Vote and back."
+    },
+    "cifras": {
+      "es": "Antes, el juego le quitaba el foco al teclado en cada cuadro y Tab no salía del botón de reintentar: en 10 pruebas se quedó clavado las 10 veces. Ahora Tab llega y regresa 10 de 10 veces; Enter y Espacio reintentan 40 de 40, sin abrir pestañas de voto por error. Los bots dan igual en 6 casos, la consola no muestra errores y el juego pesa lo mismo.",
+      "en": "Before, the game took keyboard focus away on every frame and Tab never left the retry button: in 10 tests it stayed stuck all 10 times. Now Tab gets there and back 10 of 10 times; Enter and Space retry 40 of 40, with no vote tabs opened by mistake. The bots match in 6 cases, the console shows no errors and the game weighs the same."
+    },
+    "la_regamos": {
+      "es": "Esto ya lo habíamos 'arreglado' una vez (P34) y quedó a medias: soltamos el foco en Vota, pero el juego seguía robándolo en cada cuadro. Es un cambio sin imagen, así que no hubo prueba a ciegas, y el teclado en celular real NO está verificado.",
+      "en": "We had 'fixed' this once already (P34) and it was half done: we released focus on Vote, but the game kept stealing it every frame. It is a change with no image, so there was no blind test, and the keyboard on a real phone is NOT verified."
+    }
+  },
+  "p4s": {
+    "donde": {
+      "es": "No entró al juego: hoy no hay nada nuevo que ver de esta pieza.",
+      "en": "It did not make it into the game: there is nothing new to see from this piece today."
+    },
+    "cifras": {
+      "es": "Probamos un choque de papel: al chocar contra una caja, la caja se aplastaba un poco, con un crujido de papel. Los números salieron bien (la caja se ensancha 7 píxeles en celular y 10 a 11 en pantalla grande, el sonido es claro y no satura, los bots dan igual en 6 casos, la consola no muestra errores). Pero en la prueba a ciegas con tres personas, solo 1 de 3 prefirió la versión nueva en tres de los cuatro casos, y dijeron que se sentía 'goma' y 'gelatina'.",
+      "en": "We tried a paper crash: when hitting a box, the box squashed a little, with a paper crunch. The numbers were fine (the box widens 7 pixels on a phone and 10 to 11 on a big screen, the sound is clear and does not clip, the bots match in 6 cases, the console shows no errors). But in the blind test with three people, only 1 of 3 preferred the new version in three of the four cases, and they said it felt 'rubbery' and 'jelly-like'."
+    },
+    "la_regamos": {
+      "es": "Aprobamos el caso sin preguntar si el aplastamiento se iba a sentir bien, y los números nos engañaron: subían, pero el ojo no lo veía porque Moki tapa casi toda la caja en esos cuadros. La regla era una sola vuelta y cerrar si salía 'goma'; salió y se cerró sin discutir. Lo que rescatamos: el crujido de papel sí sonó bien; si se rehace, va solo el sonido, sin aplastar la caja. Pruebas con tiras de cuadros, sin celular real ni el oído de Jorge.",
+      "en": "We approved the case without asking whether the squash would feel good, and the numbers fooled us: they went up, but the eye could not see it because Moki covers almost the whole box in those frames. The rule was one round and to close if it felt 'rubbery'; it did and we closed it without arguing. What we keep: the paper crunch did sound good; if it is redone, only the sound goes in, without squashing the box. Tests used strips of frames, no real phone and not Jorge's ear."
+    }
+  },
+  "p36": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige (la primera horquilla llega a los 20 segundos más o menos). Sin la liga, se ve en Libre y en el Reto del día desde la segunda partida.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige (the first fork arrives around 20 seconds in). Without the link, it shows up in Free play and the Daily Challenge from the second run."
+    },
+    "cifras": {
+      "es": "Ahora, de vez en cuando, el camino se parte en dos: subes por el arco de papel, con piezas en el aire, o pasas a ras. En una prueba a ciegas con tres personas mirando el movimiento, las tres vieron una elección en la ruta de arriba, en celular y en pantalla grande; en la versión de antes, ninguna. La ruta de abajo todavía no se lee igual de claro: 1 la vio como elección y 2 dudaron. Los 6 bots dan igual o mejor, la consola no muestra errores y el juego pesa 421 bytes más.",
+      "en": "Now, every so often, the path splits in two: you go up the paper arc, with pieces in the air, or you pass along the ground. In a blind test with three people watching the motion, all three saw a choice on the upper route, on phone and on a big screen; in the old version, none did. The lower route is not as clear yet: 1 saw it as a choice and 2 were unsure. The 6 bots match or do better, the console shows no errors and the game weighs 421 bytes more."
+    },
+    "la_regamos": {
+      "es": "El camino de abajo no se lee como elección y por eso queda para otra pieza (P36b); también el arco se ve cortado en celular y a veces las piezas quedan pegadas a la cabeza de Moki en el salto bajo. El Libre se alargó unos 2.5 segundos en el tramo del primer fallo y lo dejamos pasar a propósito porque sigue bajo el límite de 30. No medimos los cuadros por segundo, ni en celular real, ni el sonido. Pruebas con tiras de cuadros, no video.",
+      "en": "The lower route does not read as a choice and is left for another piece (P36b); also the arc looks cut off on a phone and sometimes pieces end up stuck against Moki's head on the low jump. Free play got about 2.5 seconds longer at the first-failure stretch and we let it through on purpose because it is still under the 30-second limit. We did not measure frames per second, a real phone, or the sound. Tests used strips of frames, not video."
+    }
+  },
+  "p36b": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. Se ve en Libre y en el Reto del día; la primera horquilla llega a los 20 segundos más o menos. El Reto de hoy cambió por segunda vez.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. It shows in Free play and the Daily Challenge; the first fork arrives around 20 seconds in. Today's Challenge changed for the second time."
+    },
+    "cifras": {
+      "es": "La horquilla ahora lleva dos filas de piezas: una arriba para quien mantiene el salto y otra a ras para quien solo toca. En una prueba con 12 tiras de movimiento, 'se ven dos caminos con piezas' salió 12 de 12; antes de este cambio, 0 de 12. Revisamos 378 horquillas a tres tiempos distintos y las piezas se cobraron sin fallas, la dificultad se queda igual, los 6 bots dan igual o mejor, la consola no muestra errores y el juego pesa 46 bytes más.",
+      "en": "The fork now carries two rows of pieces: one up top for whoever holds the jump and one at ground level for whoever only taps. In a test with 12 motion strips, 'you can see two paths with pieces' came out 12 of 12; before this change, 0 of 12. We checked 378 forks at three different timings and the pieces were collected with no failures, difficulty stays the same, the 6 bots match or do better, the console shows no errors and the game weighs 46 bytes more."
+    },
+    "la_regamos": {
+      "es": "Todavía no está bien: en las 12 tiras las piezas siguen quedando contra la cabeza o el cuerpo de Moki (antes 11 de 12), y 3 de 3 dicen que no se nota cuál carril cobraste. La condición del director de pedir 'cero' estaba mal puesta: no habíamos medido que la versión anterior ya daba 11 de 12. Entró igual porque el avance de los dos caminos es claro; la vuelta 3 (P36c) mueve la fila para que no tape a Moki y hace que se note el carril cobrado. No medimos cuadros por segundo, celular real ni sonido, y no hubo clip de video.",
+      "en": "It is not right yet: in the 12 strips the pieces still end up against Moki's head or body (before, 11 of 12), and 3 of 3 say you cannot tell which lane you collected from. The director's condition of asking for 'zero' was badly set: we had not measured that the previous version already gave 11 of 12. It went in anyway because the gain of two clear paths is real; round 3 (P36c) moves the row so it does not cover Moki and makes the collected lane noticeable. We did not measure frames per second, a real phone or the sound, and there was no video clip."
+    }
+  },
+  "p36c": {
+    "donde": {
+      "es": "No entró al juego: hoy no hay nada nuevo que ver de esta pieza. La horquilla que se juega es la de P36b.",
+      "en": "It did not make it into the game: there is nothing new to see from this piece today. The fork you can play is the one from P36b."
+    },
+    "cifras": {
+      "es": "Probamos una tercera vuelta de la horquilla: bajar la ruta de abajo y pintar las piezas cobradas delante de Moki. En la prueba a ciegas la ruta de abajo no bajó (unos 11.5 contra unos 11 en la versión de hoy). El carril ya se nombraba solo: 3 de 3 a 1280 y 2 de 3 a 390, igual en las dos versiones. Y la sonda en píxeles (0 contra 11 de 15) no coincidía con lo que ve el ojo. Quitar el pintado delante la dejaba sin aporte medible por 99 bytes más.",
+      "en": "We tried a third round on the fork: lowering the bottom route and painting collected pieces in front of Moki. In the blind test the bottom route did not come down (about 11.5 versus about 11 in today's version). The lane was already being named on its own: 3 of 3 at 1280 and 2 of 3 at 390, the same in both versions. And the pixel probe (0 versus 11 of 15) did not match what the eye sees. Removing the front painting left it with no measurable gain for 99 more bytes."
+    },
+    "la_regamos": {
+      "es": "La rama tenía un defecto real: las piezas cobradas, pintadas delante de Moki, tapaban visera, cara y casco (3 de 3 lo dijeron). Y nos fiamos de una sonda en píxeles que no coincidía con el ojo. Si se rehace, la vara es el ojo, en video, no la sonda. El salto de hoy son P36 y P36b.",
+      "en": "The branch had a real flaw: collected pieces painted in front of Moki covered visor, face and helmet (3 of 3 said so). And we trusted a pixel probe that did not match the eye. If it is redone, the yardstick is the eye, on video, not the probe. Today's jump is P36 and P36b."
+    }
+  },
+  "p36d": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=reto. El Reto de hoy guarda una sorpresa para la última página: NO se ve en los primeros segundos; llega en la página 4, la última del Reto del nivel 1. El Reto de hoy cambió por tercera vez. Clásico, Libre y los Retos anteriores quedan igual.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=reto. Today's Challenge keeps a surprise for the last page: it does NOT show in the first seconds; it arrives on page 4, the last one of the level 1 Challenge. Today's Challenge changed for the third time. Classic, Free play and earlier Challenges stay the same."
+    },
+    "cifras": {
+      "es": "Medimos el Reto de hoy en 30 fechas: el tramo difícil (F6) bajaba de 38.7 a 27.4 segundos en promedio, y el peor caso de 51.8 a 28.3 (la vara era 30 y 36). Lo demás no empeoró: F4 24.9 a 24.7, F2b 11.9 a 11.8. Clásico, Libre y los 14 Retos anteriores salen idénticos byte a byte, los 6 bots dan igual, la consola no muestra errores y el juego pesa 153 bytes más. Qué cambia: la caja pegada a la viga se guarda para la última página, y esa página abre con una torre.",
+      "en": "We measured today's Challenge over 30 dates: the hard stretch (F6) dropped from 38.7 to 27.4 seconds on average, and the worst case from 51.8 to 28.3 (the bar was 30 and 36). Nothing else got worse: F4 24.9 to 24.7, F2b 11.9 to 11.8. Classic, Free play and the 14 earlier Challenges come out byte for byte identical, the 6 bots match, the console shows no errors and the game weighs 153 bytes more. What changes: the box stuck to the beam is saved for the last page, and that page opens with a tower."
+    },
+    "la_regamos": {
+      "es": "No hubo prueba a ciegas del juego, ni cuadros por segundo, ni celular real. La captura de jugador nuevo solo muestra el arranque, que no cambió: lo nuevo está al final del Reto y hay que jugar tres páginas para verlo. Es el Reto de hoy cambiando por tercera vez en un día. Pasó con números y visto del director, no con personas jugando.",
+      "en": "There was no blind test of the game, no frames per second and no real phone. The new-player capture only shows the start, which did not change: the new part is at the end of the Challenge and you have to play three pages to see it. It is today's Challenge changing for the third time in one day. It passed on numbers and the director's look, not with people playing."
+    }
+  }
+}
