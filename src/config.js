@@ -125,6 +125,9 @@ export const CONFIG = {
   // holdMs (fuerte / normal) y luego corren 2..5 hasta los 260 ms. Antes duraban 86 ms. Por nivel de juice
   feelP4k: { on: [0, 1, 1, 1], hold: [125, 130] }, // hold: [normal, fuerte] en ms
   feelP4d: { inclinaMax: 6, accelRef: 15, entraSec: 0.18, saleSec: 0.4 },
+  // P4q (feel, pico del salto; propuestas/p4q-caso.md): cinta naranja con canto crema que sale de la bota en el aire y
+  // dibuja la curva del salto; se apaga sola tras aterrizar. Por nivel de juice (Poquito: solo salto mantenido). ms: [toque, mantenido]
+  feelP4q: { on: [0, 1, 2, 2], pie: 6, ancho: [0, 7, 7, 9], altoX: 1.4, ms: [240, 380], canto: 2 },
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro
