@@ -67,6 +67,7 @@ async function corre(W, H, kind) {
       texto: c.innerText.replace(/\n+/g, ' | '),
       caja: [b.left, b.top, b.width, b.height].map(Math.round),
       cortada: c.scrollHeight > c.clientHeight + 1,
+      dds: [...c.querySelectorAll('dd')].map((e) => `${e.textContent}=${e.clientWidth}x${e.clientHeight}/${e.scrollWidth}x${e.scrollHeight}`).join(' ; '),
       ddCortado: [...c.querySelectorAll('dd')].filter((e) => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1).map((e) => e.textContent),
       cuaderno: (() => { const q = document.querySelector('.ui-cuaderno'); return q ? q.style.visibility !== 'hidden' && q.style.display !== 'none' && !q.hidden : null; })(),
       tapaMoki: tapa,
