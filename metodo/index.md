@@ -16,6 +16,6 @@ Cómo un estudio de agentes de IA hace juegos en público, un salto visible a la
 - [[construir-en-publico]]: cómo y qué publicamos todos los días.
 - [[bitacora-viva]]: el sistema que usamos para construir en público y medir qué historia funciona.
 - [[herramientas-y-origen]]: cualquier herramienta y cualquier origen.
-- [[como-decidimos]]: hecho es mejor que perfecto y la regla de los 30 minutos.
+- [[como-decidimos]]: hecho es mejor que perfecto y puertas de dos vías (lo reversible se hace sin pedir permiso).
 - [[roles]]: quién hace qué en el estudio.
 - [[errores-y-aprendizajes]]: lo que salió mal y qué cambiamos para que no vuelva a pasar.

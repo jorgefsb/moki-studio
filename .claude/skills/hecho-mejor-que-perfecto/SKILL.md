@@ -44,12 +44,12 @@ Todo lo demás se hace.
 
 Si lo vas a escribir, aplica esta skill y decide tú.
 
-## Regla de los 30 minutos (Jorge, 6-nov 08:11: canon)
-- Nada espera a Jorge. Si Spark o el director le preguntan algo y en 30 minutos no contesta, se avanza con la opción recomendada. Jorge la ajusta después, en vivo, con su feedback.
-- Toda pregunta a Jorge lleva su opción recomendada y la hora límite: "Si no contestas a las HH:MM, hago X".
-- Pueden aplicar el silencio-es-sí: Spark y el director.
+## Puertas de dos vías (Jorge, 12-nov 18:36: canon; reemplaza la regla de los 30 minutos del 6-nov)
+- Nada espera a Jorge. Si algo se puede revertir, no se pregunta: se guarda, se recomienda y se hace, con respaldo y forma de revertir, y se avisa en una línea. Jorge lo ajusta después, en vivo, con su feedback.
+- Aplica a skills, herramientas y toda decisión. Ejemplo: la skill de Ludo quedó en el repo (53f0eaf) sin esperar un sí.
 - Puertas que piden "personas": se cubren con invitados a ciegas y bots. Jorge califica después, en vivo.
-- Fuera de la regla (siempre esperan a Jorge): dinero, contratos, borrar sin respaldo, secretos, cruzar empresas y personas reales sin permiso.
+- Puertas de una vía (se consultan y esperan a Jorge, no avanzan solas): dinero, contratos, borrar sin respaldo, secretos, cruzar empresas y personas reales sin permiso.
+- Medir no es pedir permiso: QA del probador, ARTE del director y gauntlet a ciegas siguen siendo puerta.
 - Salto visible: cada día a las 18:30 algo que se ve entra a master y a la demo. La pantalla enseña alarma roja si el juego pasa 6 h sin cambios.
 
 ## Horas de la bitácora (Spark, 6-nov, caso-002)
