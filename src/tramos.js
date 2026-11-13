@@ -108,6 +108,7 @@ function expand(code, t, speed, tramo, arcSeq) {
       const n = arc.h.length;
       for (let i = 0; i < n; i++) {
         const p = { kind: 'pick', D: hint.center + (i - (n - 1) / 2) * arc.gap * k, h: arc.h[i], arc: id, arcN: n, amber: arc.amber === i };
+        if (reward === 'AdnH') p.ras = 1; // P36l-c: arco a ras de la horquilla, cierra con su píldora +5
         if (reward === 'AupH') p.alto = true; // P36e: arco alto de la horquilla, cierra con corona (solo dato, no mueve nada)
         out.push(p);
       }
