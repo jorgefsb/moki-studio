@@ -66,6 +66,7 @@ const ES = {
   'end.dist': 'Distancia',
   'end.pieces': 'Piezas',
   'end.score': 'Puntaje',
+  'end.arriba': 'Arriba',
   'end.best': 'Mejor marca',
   'end.best.clasico': 'Clásico', // la marca es por modo: "Mejor marca · Libre"
   'end.best.dia': 'Reto',

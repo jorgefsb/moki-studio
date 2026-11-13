@@ -161,6 +161,10 @@ html[data-juice='0'] #ui .ui-pausebtn:active { transform: translateX(-50%); }
 .ui-card.ui-fail h2 { font-size: 21px; line-height: 27px; margin-bottom: 4px; }
 .ui-card.ui-fail .meta { color: rgba(34, 33, 31, 0.84); opacity: 1; text-wrap: balance; }
 .ui-card.ui-fail .meta span { display: block; }
+.ui-card .arriba { font-weight: 700; color: #22211f; white-space: nowrap; } /* P36h: "Arriba +N", tinta sobre papel */
+.ui-card.ui-fail .arriba { margin: 4px 0 0; font-size: 16px; line-height: 22px; }
+.ui-rows .arriba { margin-left: 8px; font-size: 14px; }
+.ui-card.corto .ui-rows dd.arriba { grid-column: span 2; margin: 0; text-align: left; }
 .ui-card.ui-fail .ui-bandera { display: block; margin-top: 8px; }
 /* P3b: barra de lo siguiente en la tarjeta de fallo (papel kraft, se llena en naranja) */
 .ui-barra { margin: 6px 0 2px; font-size: 15px; line-height: 20px; }
