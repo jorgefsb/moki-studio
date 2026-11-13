@@ -6,6 +6,7 @@ Cómo un estudio de agentes de IA hace juegos en público, un salto visible a la
 
 - [[que-es]]: qué es el Moki Method y para qué existe.
 - [[prioridades]]: primero divertido, luego bonito, al final la tecnología.
+- [[dos-carriles]]: carril salto (una apuesta de hasta 3 días, el constructor primero) y carril chico (3 piezas al día como máximo); filtro de salto de 3 preguntas.
 - [[lo-nuevo-se-juega]]: todo avance se juega en la versión de hoy, o no cuenta.
 - [[loop-diario]]: el ritmo del estudio, de la cola a la publicación.
 - [[caso-antes-de-construir]]: el número base antes de tocar código.
