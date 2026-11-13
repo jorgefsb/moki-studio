@@ -41,14 +41,15 @@ try {
         const ret = orig(a, b);
         const o = sc.obstacles.find((q) => q.rot);
         if (o && !r.letreros) r.letreros = o.rot.map((h) => h.list.find((c) => c.type === 'Text').text);
-        if (r.pv0 == null && sc.t >= 12000) r.pv0 = sc.pieceValue;
-        if (r.pv1 == null && sc.t >= 15000) r.pv1 = sc.pieceValue;
+        if (r.pv0 == null && sc.t >= 12000) (r.pv0 = sc.pieceValue), (r.a0 = sc.arriba || 0);
+        if (r.pv1 == null && sc.t >= 15000) (r.pv1 = sc.pieceValue), (r.a1 = sc.arriba || 0);
         return ret;
       };
       await window.__moki.moki.bot(bot, 200, null);
       sc.update = orig;
       sc.collect = oc;
       r.pagoVentana = r.pv1 - r.pv0;
+      r.arribaSuma = r.a1 - r.a0; // lo que suma 'Arriba +N' de la tarjeta final y de compartir en esta horquilla
       const mio = r.cierres.find((c) => (bot === 'abajo' ? c.ras : c.alto));
       r.letrero = +((r.letreros || [])[bot === 'abajo' ? 1 : 0] || '').split('+')[1];
       r.pildora = mio ? +String(mio.pildora || '').replace('+', '') : null;
@@ -57,8 +58,8 @@ try {
     }, bot);
     await ctx.close();
   }
-  const v = (R) => ({ letrero: R.letrero, pildora: R.pildora, bonoCobrado: R.bono, ok: R.letrero > 0 && R.letrero === R.pildora && R.pildora === R.bono });
-  out.veredicto = { arriba: v(out.rutas.adjust), aRas: v(out.rutas.abajo) };
+  const v = (R, arriba) => ({ letrero: R.letrero, pildora: R.pildora, bonoCobrado: R.bono, tarjetaArriba: R.arribaSuma, ok: R.letrero > 0 && R.letrero === R.pildora && R.pildora === R.bono && R.arribaSuma === (arriba ? R.bono : 0) });
+  out.veredicto = { arriba: v(out.rutas.adjust, true), aRas: v(out.rutas.abajo, false) }; // a ras: la tarjeta 'Arriba +N' no suma su +5
   console.log(JSON.stringify(out.veredicto));
   writeFileSync(salida, JSON.stringify(out, null, 1));
 } finally { await browser.close(); }
