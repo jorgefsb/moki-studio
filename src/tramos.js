@@ -177,6 +177,13 @@ export function buildLevel(tramos) {
 }
 
 export const GAME_LEVEL = buildLevel(C.tramos.map((tr, i) => ({ speed: tr.speed, len: C.checkpointEverySec, script: SCRIPTS[i] })));
+// P36k: la 1.ª partida de la vida escoge una vez. Es el Clásico con la caja de T1 a 12.5 s en horquilla (niveles/bloques.js
+// HORQ): misma caja, arriba por el arco o abajo a ras. horq lo lee el validador (ruta 'abajo'). Clásico del menú y MEGA no cambian.
+// Vuelta B: la caja lleva rot (RunScene pone un rótulo de papel al final de cada fila: Arriba y A ras).
+const P1 = buildLevel(C.tramos.map((tr, i) => ({ speed: tr.speed, len: C.checkpointEverySec, script: i ? SCRIPTS[i] : T1.map(([t, c]) => [t, t === 12.5 ? 'C+AupH+AdnH' : c]) })));
+const H1 = C.tramos[0].speed * 12.5;
+P1.entities.find((e) => e.kind === 'obs' && e.D === H1).rot = 1;
+export const GAME_PRIMERA = { ...P1, horq: [H1] };
 
 // ---------- Demo (38 s, determinista; variantes A, B, C rotan por vuelta) ----------
 const DEMO_VARIANTS = {
