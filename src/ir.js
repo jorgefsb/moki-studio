@@ -16,6 +16,7 @@ export const DESTINOS = {
   timbre: { modo: 'libre', tramo: 1, nivel: null, mec: ['timbre'] },
   zanja: { modo: 'reto', tramo: 1, nivel: 2, mec: ['zanja'] }, // P5c: primer nivel del Cuaderno con mecánica nueva (Reto nivel 2)
   elige: { modo: 'reto', tramo: 0, nivel: 3 }, // P36: la horquilla (arriba por el arco o abajo a ras), desde la página 1; P36i: en el nivel 3, donde pide 'Sube por arriba 2 veces'
+  primera: { modo: 'reto', tramo: 0, nivel: 1, nueva: true }, // P36k: la 1.ª partida de un jugador nuevo (tutorial y horquilla a 12.5 s)
   formas: { modo: 'reto', tramo: 0, nivel: null }, // formas de página: Libre siempre y el Reto desde hoy
   mega: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj' }, // P8: MODO MEGA (el Clásico a x1.5, C.mega.reloj) aunque el nivel 1 no esté terminado
   mega2: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj2' }, // P8b: MEGA x2.0 (C.mega.reloj2) sin el logro MEGA x1.5
@@ -49,6 +50,7 @@ export const IR_PANTALLA = pide === 'logros' ? 'logros' : null;
 export function estadoIr(guardado) {
   if (!IR) return {};
   const e = { ...guardado, 'moki.primera': '1', 'moki.tutorial': '1', 'moki.modo': IR.modo, 'moki.paseo': '0', 'moki.vuelta': '0' };
+  if (IR.nueva) delete e['moki.primera'], delete e['moki.tutorial']; // P36k: como jugador nuevo
   if (SEMBRAR[IR.nivel - 1]) e['moki.cuaderno'] = JSON.stringify({ v: 2, notas: SEMBRAR[IR.nivel - 1], sellos: [] });
   return e;
 }

@@ -24,7 +24,7 @@ import { EMBED } from '../embed.js';
 import { textoTarjeta, copiar } from '../tarjeta.js';
 import { abrirIntento, cerrarIntento } from '../contador.js';
 import { contarPartida, votoTarjeta, votoMenu } from '../voto.js';
-import { GAME_LEVEL, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
+import { GAME_LEVEL, GAME_PRIMERA, buildDemo, TRAMP_PISA, EXT } from '../tramos.js';
 import { generarNivel, semillaReto, semillaLibre } from '../niveles/generar.js';
 import { airTravel, riseAt, planJump, vientoPaso } from '../jumpmodel.js';
 import mokiLado from '../../assets/moki/moki-lado.webp';
@@ -812,7 +812,7 @@ export class RunScene extends Phaser.Scene {
     // La primera partida de la vida es la clásica (director): el tutorial y la primera impresión, siempre iguales
     if (!seed && !SEED && load('moki.primera') !== '1') {
       save('moki.primera', '1');
-      return GAME_LEVEL;
+      return GAME_PRIMERA; // P36k: el mismo Clásico con una horquilla a 12.5 s, ya pasado el tutorial
     }
     const modo = this.modo;
     // Mecánicas (NIVELES.md flow): en Libre, el trampolín se destraba en el nivel C.tramp.nivel del Cuaderno; el Reto las toma de su fecha (generarNivel).
