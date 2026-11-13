@@ -1,3 +1,3 @@
 Escoge tu camino
 Ahora puedes escoger: subir por el arco de piezas de arriba con más riesgo y llevarte una corona de papel y más puntos, o pasar a ras y seguro cobrando la fila de abajo. Desde hoy también en tu primera partida, con letreros "Arriba" y "A ras".
-Vuelta 11 en master (13-nov 10:55, c5bee1a): la primera partida ya trae la horquilla a los ~12 s, tras el tutorial (?ir=primera). Antes ya entraron la horquilla en Libre y Reto, la corona, el pago de +23 contra +16, "Arriba +N" en la tarjeta final y en el texto para compartir, y la nota del Cuaderno "Sube por arriba 2 veces" (?ir=elige).
+Vuelta 12 en master (13-nov 11:35, 50eeede): los letreros "Arriba" y "A ras" de la primera partida entran completos y se desvanecen al pasar Moki (?ir=primera). Antes ya entraron la horquilla en la 1.ª partida, en Libre y Reto, la corona, el pago de +23 contra +16, "Arriba +N" en la tarjeta final y al compartir, y la nota del Cuaderno "Sube por arriba 2 veces" (?ir=elige).
