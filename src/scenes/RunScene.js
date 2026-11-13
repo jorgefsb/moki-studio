@@ -1368,9 +1368,11 @@ export class RunScene extends Phaser.Scene {
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
     // P36k vuelta B: la horquilla de la 1.ª partida se lee como dos rutas: píldora de papel al final de cada fila
-    if (e.rot) o.rot = [[t('end.arriba'), 186], ['A ras', 92]].map(([s, y], i) => {
+    // P36l-b: cada píldora dice qué paga su ruta (arco alto 12, arco a ras 5)
+    if (e.rot) o.rot = [[t('end.arriba'), 186, C.arcBonusAlto], ['A ras', 92, C.arcBonus]].map(([s, y, n], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
-      this.makeLabel(r, 'left').set(s);
+      this.makeLabel(r, 'left').set(`${s} +${n}`);
+      r.y0 = r.y;
       r.w = r.getBounds().width;
       return r;
     });
@@ -1838,8 +1840,19 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       o.x = px + o.D - dist;
       o.sprite.x = o.x + (o.ox || 0); // la torre que cae gira sobre su pie delantero
-      // P36l: entra con fundido ya dentro de pantalla (nunca cortada) y se va antes de que Moki la alcance (ni a él ni al +12)
-      if (o.rot) o.rot.forEach((h, i) => (h.x = o.x + 80 - 12 * i, h.alpha = clamp(Math.min(this.vw - 12 - h.x - h.w, h.x - this.px - 64) / 36, 0, 1)));
+      // P36l-b: entra con fundido de ~200 ms ya dentro de pantalla (nunca cortada); al llegar Moki a 100 px se dobla como papel
+      // en 100 ms sin perder opacidad (el fundido de salida la dejaba beige casi gris sobre el naranja). Reducido: se quita de golpe.
+      if (o.rot) {
+        const d = this.t - (o.rt ?? this.t);
+        o.rt = this.t;
+        o.rot.forEach((h, i) => {
+          h.x = o.x + 80 - 12 * i;
+          const sal = h.x - this.px < 100;
+          h.alpha = clamp(h.alpha + (sal || this.vw - 12 - h.x - h.w > 0 ? d : -d) / 190, 0, 1);
+          h.scaleY = sal ? clamp(this.reduced ? 0 : h.scaleY - d / 100, 0, 1) : 1;
+          h.y = h.y0 + 20 * (1 - h.scaleY);
+        });
+      }
       if (o.type === 'zanja') {
         o.sprite.x = o.x - o.W / 2;
         continue;
