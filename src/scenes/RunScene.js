@@ -2163,7 +2163,7 @@ export class RunScene extends Phaser.Scene {
     if (k.arc) {
       this.arcGot[k.arc] = (this.arcGot[k.arc] || 0) + 1;
       if (this.arcGot[k.arc] === k.arcN) {
-        this.pieceValue += C.arcBonus; // arco completo
+        this.pieceValue += k.alto ? C.arcBonusAlto : C.arcBonus; // arco completo (P36f: el alto de la horquilla paga más)
         if (P) {
           P.arcs += 1;
           P.arcsByTramo[this.tramoIdx] = (P.arcsByTramo[this.tramoIdx] || 0) + 1;
