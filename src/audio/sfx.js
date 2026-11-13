@@ -116,7 +116,7 @@ export function amber(ctx, dest, t, o = {}) {
   campana(ctx, P.out, t + 0.08, 88, 0.14, e);
 }
 
-// Tropiezo amable: "tum" de cartón, sin agudos
+// Tropiezo amable: "tum" de cartón y (P4t) crujido de papel: 3 granos a 2.2 kHz antes de los 60 ms; la zanja no cruje
 export function stumble(ctx, dest, t, o = {}) {
   const P = prep(ctx, dest, o);
   const nz = noise(ctx, t, 0.16);
@@ -129,6 +129,18 @@ export function stumble(ctx, dest, t, o = {}) {
   f.connect(g);
   g.connect(P.out);
   gl(ctx, P.out, t, 'triangle', 110, 70, 120, 0.36 * P.pk, Math.max(0.004, P.atkMin), 0.12);
+  if (o.tipo === 'zanja') return;
+  const m = P.pk * (P.r ? 0.5 : 1);
+  [0, 0.022, 0.047].forEach((dt, i) => {
+    const s = t + dt, n = noise(ctx, s, 0.012), b = ctx.createBiquadFilter(), gg = ctx.createGain();
+    b.type = 'bandpass';
+    b.frequency.value = 2200 * (1 + (Math.random() * 2 - 1) * 0.15);
+    b.Q.value = 2;
+    shape(gg, s, Math.max(0.002, P.atkMin), [0.4, 0.27, 0.19][i] * m, s + 0.012);
+    n.connect(b);
+    b.connect(gg);
+    gg.connect(P.out);
+  });
 }
 
 // Botón de UI: glissando corto; 'up' sube (activar), 'down' baja (apagar)
