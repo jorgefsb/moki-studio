@@ -1,0 +1,208 @@
+{
+  "id": "2026-11-13",
+  "fecha": "2026-11-13",
+  "borrador": true,
+  "titulo": {
+    "es": "Moki deja de temblar, el choque suena a papel y la tarjeta dice cuánto te dio arriba",
+    "en": "Moki stops shaking, the crash sounds like paper and the card says what the top gave you"
+  },
+  "p37": {
+    "donde": {
+      "es": "En toda partida, al despegar y al aterrizar. No hay liga directa: juega y mira los pies de Moki. No es algo nuevo que aparece: es un temblor que se quita.",
+      "en": "In every run, at takeoff and landing. There is no direct link: play and watch Moki's feet. It is not something new that appears: it is a shake that goes away."
+    },
+    "cifras": {
+      "es": "Al cambiar de pose, los pies de Moki se movían: 1.44 píxeles en pantalla grande y 0.92 en celular. Al aterrizar el hundimiento llegaba a 4.32 y 2.74. Ahora los pies no se mueven: 0.00 píxeles en los cuatro cambios y en los dos tamaños. Los 6 bots dan igual que antes, la consola no muestra errores y el juego pesa 55 bytes más.",
+      "en": "When Moki changed pose, the feet moved: 1.44 pixels on a big screen and 0.92 on a phone. On landing the sink reached 4.32 and 2.74. Now the feet do not move: 0.00 pixels in all four changes and both sizes. The 6 bots match the old version, the console shows no errors and the game weighs 55 bytes more."
+    },
+    "la_regamos": {
+      "es": "El agachado al aterrizar se lee igual que antes, y con pocas ganas: 3 de 3 lo vieron dudoso, a 390 como apoyo y a 1280 casi nada. La regla del agachado que pusimos estaba mal: ni la versión de antes la cumplía. Eso queda como la siguiente pieza, P4u. Sin celular real y sin medir qué tan fluido se mueve.",
+      "en": "The crouch on landing reads the same as before, and weakly: 3 of 3 saw it as doubtful, as a rest on a phone and barely visible on a big screen. The crouch rule we set was wrong: even the old version failed it. That is the next piece, P4u. No real phone and no smoothness measurement."
+    },
+    "pregunta": {
+      "es": "¿Notaste que Moki temblaba al cambiar de pose, o ya lo habías dado por normal?",
+      "en": "Did you notice Moki shaking when changing pose, or had you taken it as normal?"
+    }
+  },
+  "p4t": {
+    "donde": {
+      "es": "En el primer choque de una partida normal: toca JUGAR y no saltes la caja. Suena un crujido de papel. Cruje con caja, torre y viga; con la zanja no. No hay cambio que se vea ni captura: se oye.",
+      "en": "At the first crash of a normal run: press PLAY and do not jump the box. A paper crunch plays. It crunches with box, tower and beam; not with the ditch. Nothing changes visually and there is no capture: you hear it."
+    },
+    "cifras": {
+      "es": "Tres granos de ruido corto suenan al tropezar. Cruje en caja, torre y viga 3 de 3 veces cada una y 0 veces en la zanja. Los 6 bots y los Retos y Libre dan igual que antes. El Clásico queda idéntico. La consola no muestra errores. El juego pesa 88 bytes más.",
+      "en": "Three short noise grains play when you trip. It crunches on box, tower and beam 3 of 3 times each and 0 times on the ditch. The 6 bots and the Challenges and Free mode match the old version, Classic stays identical, the console shows no errors and the game weighs 88 bytes more."
+    },
+    "la_regamos": {
+      "es": "Nadie lo escuchó todavía: la prueba midió el sonido, no el oído. Jorge lo califica. Tampoco medimos el volumen más alto con la música ni la fluidez, ni lo probamos en celular. Se quedó el crujido fijo porque el completo pesaba de más; el tono por tipo de choque queda para P4v.",
+      "en": "Nobody has heard it yet: the test measured the sound, not the ear. Jorge will rate it. We also did not measure the loudest volume with the music, or smoothness, or test on a phone. We kept a fixed crunch because the full one weighed too much; a tone for each crash type is left for P4v."
+    },
+    "pregunta": {
+      "es": "¿Qué tal suena el crujido en tu primer choque: papel, cartón o nada?",
+      "en": "How does the crunch sound on your first crash: paper, cardboard or nothing?"
+    }
+  },
+  "p36h": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. Sube por el arco de arriba en la horquilla y cae en la caja siguiente: la tarjeta de fallo dice \"Arriba +12\" o \"+24\". Si llegas a la meta, sale junto a Puntaje.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. Take the top arc at the fork and crash into the next box: the fail card says \"Up +12\" or \"+24\". If you reach the goal, it shows next to Score."
+    },
+    "cifras": {
+      "es": "Antes la tarjeta del final no decía nada de lo que ganaste por arriba. Les preguntamos a invitados nuevos: \"¿cuánto te dio arriba?\". Con la versión nueva contestaron 2 de 2 en cada tamaño de pantalla (celular de 390, de 375 y pantalla grande). Con la de antes, 0 de 2. Los 6 bots dan igual que antes. La consola no muestra errores. El juego pesa 181 bytes más.",
+      "en": "Before, the end card said nothing about what you earned from the top. We asked new guests: \"how much did the top give you?\". With the new version 2 of 2 answered at every screen size (390 phone, 375 phone and big screen). With the old one, 0 of 2. The 6 bots match the old version. The console shows no errors. The game weighs 181 bytes more."
+    },
+    "la_regamos": {
+      "es": "Pedimos 3 invitados y el probador usó 2 por tamaño: 6 de 6 contra 0 de 6 no deja duda, pero no cumplimos la regla a la letra. El +60 sale chico y gris en pantalla grande. Y el cartel dice +12 y +24, no +240: son las cifras de la píldora, no las del puntaje. Además el cartel \"Reto del 13 nov\" ya se cortaba en celular. Sin celular real y sin medir qué tan fluido se mueve. Y el constructor estuvo parado 50 minutos por un error de conexión sin que nadie lo viera.",
+      "en": "We asked for 3 guests and the tester used 2 per size: 6 of 6 against 0 of 6 leaves no doubt, but we did not meet the rule to the letter. The +60 looks small and grey on a big screen. And the card says +12 and +24, not +240: those are the pill numbers, not the score numbers. Also the \"Challenge of Nov 13\" sign was already cut off on a phone. No real phone and no smoothness measurement. And the builder sat idle for 50 minutes on a connection error that nobody noticed."
+    },
+    "pregunta": {
+      "es": "Al perder, ¿sabías cuánto te había dado subir por arriba, o lo adivinabas?",
+      "en": "When you lost, did you know how much going up top had given you, or did you guess?"
+    }
+  },
+  "p38": {
+    "donde": {
+      "es": "En el primer aterrizaje de cualquier partida: el polvo es de papel crema y sale pegado a la bota de Moki. No hay liga directa; es un gesto corto y se nota poco.",
+      "en": "At the first landing of any run: the dust is cream paper and comes out right next to Moki's boot. There is no direct link; it is a short gesture and hard to notice."
+    },
+    "cifras": {
+      "es": "Antes, la nube de polvo nacía separada de la bota: 5.1 píxeles en celular, 1.6 en pantalla mediana y 2.8 en pantalla grande. Ahora nace pegada: 0 píxeles en los tres. Los colores son crema ámbar con canto kraft, sin gris. Los 6 bots dan igual que antes. El Clásico queda igual. La consola no muestra errores. El juego pesa 18 bytes más.",
+      "en": "Before, the dust cloud was born apart from the boot: 5.1 pixels on a phone, 1.6 on a medium screen and 2.8 on a big screen. Now it is born touching: 0 pixels in all three. The colors are amber cream with a kraft edge, no grey. The 6 bots match the old version. Classic stays the same. The console shows no errors. The game weighs 18 bytes more."
+    },
+    "la_regamos": {
+      "es": "Tres invitados miraron un gesto de una fracción de segundo y no lo distinguieron bien: con la versión nueva 1 de 3 vio gris o humo, con la de antes 2 de 3. Uno prefirió la de antes. Las notas del equipo marcaron la nube \"separada\" en ambas, y era la nube que se aleja, no un hueco. Pusimos \"cero menciones de gris\" sin medir cómo estaba antes: la de antes ya daba 2 de 3. Al final del desvanecido sigue un velo gris. Los dos colores nuevos no están en la tabla de colores del arte. Sin celular real y sin medir qué tan fluido se mueve.",
+      "en": "Three guests watched a gesture of a fraction of a second and could not tell them apart well: with the new version 1 of 3 saw grey or smoke, with the old one 2 of 3. One preferred the old one. The team notes marked the cloud as \"apart\" in both, and it was the cloud drifting away, not a gap. We wrote \"zero mentions of grey\" without measuring the old one first: the old one already gave 2 of 3. A grey veil remains at the end of the fade. The two new colors are not in the art color table. No real phone and no smoothness measurement."
+    },
+    "pregunta": {
+      "es": "Al aterrizar, ¿el polvo se ve de papel o se ve gris?",
+      "en": "When you land, does the dust look like paper or does it look grey?"
+    }
+  },
+  "p36i": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. Entra al Reto, página 1, y mira el Cuaderno en el nivel 3: dice \"Sube por arriba 2 veces\". Solo se tacha si subes por el arco de arriba. Con el sello \"Tres veces arriba\" lo cierras.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. Enter the Challenge, page 1, and look at the Notebook at level 3: it says \"Go up top 2 times\". It only gets crossed out if you take the top arc. The \"Three times up top\" stamp closes it."
+    },
+    "cifras": {
+      "es": "Antes el Cuaderno solo pedía cosas sueltas, como saltar 3 de 5 cajas o juntar 15 piezas. Preguntamos a invitados nuevos: \"¿qué te pide el Cuaderno?\". Con la versión nueva, 3 de 3 nombraron \"arriba\" en celular y 3 de 3 en pantalla grande. Con la de antes, 0 de 3 en celular. La nota se tacha solo subiendo: subiendo contó 5 arcos altos y sin subir contó 0. Los 6 bots dan igual que antes. El Clásico queda igual. La consola no muestra errores. El juego pesa 101 bytes más.",
+      "en": "Before, the Notebook only asked for loose things, like jumping 3 of 5 boxes or collecting 15 pieces. We asked new guests: \"what does the Notebook ask of you?\". With the new version, 3 of 3 named \"up top\" on a phone and 3 of 3 on a big screen. With the old one, 0 of 3 on a phone. The note is only crossed out by going up: going up counted 5 top arcs and not going up counted 0. The 6 bots match the old version. Classic stays the same. The console shows no errors. The game weighs 101 bytes more."
+    },
+    "la_regamos": {
+      "es": "Quien solo juega el Clásico no cierra el nivel 3, porque ahí no hay horquilla: aceptamos ese costo. En pantalla grande no medimos cómo estaba antes, porque la versión de antes no mostró la tarjeta. A la puerta le faltó ese pedazo. En celular la tira queda pegada al borde de abajo en 2 de 3 casos. Sin celular real, sin ver la pantalla de Logros y sin medir qué tan fluido se mueve.",
+      "en": "Anyone who only plays Classic does not close level 3, because there is no fork there: we accepted that cost. On a big screen we did not measure the old version, because it did not show the card. The gate was missing that piece. On a phone the strip sits against the bottom edge in 2 of 3 cases. No real phone, no look at the Achievements screen and no smoothness measurement."
+    },
+    "pregunta": {
+      "es": "¿Subirías por arriba solo porque el Cuaderno te lo pide, o ya lo hacías?",
+      "en": "Would you go up top just because the Notebook asks for it, or did you already?"
+    }
+  },
+  "p36j": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. Sube por el arco de arriba, llega al final y toca Copiar: el texto trae una línea \"⬆️ Arriba +60\", con la misma cifra que la tarjeta. Si no subiste, no trae esa línea.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. Take the top arc, reach the end and tap Copy: the text has a line \"⬆️ Up top +60\", with the same number as the card. If you did not go up, the line is not there."
+    },
+    "cifras": {
+      "es": "Antes el texto para compartir no decía nada de la ruta que escogiste. Les dimos solo el texto a invitados nuevos y preguntamos cómo jugó esa persona. Con la versión nueva, 3 de 3 dijeron \"por arriba\". Con la de antes, 0 de 3 (decían \"no se sabe\"). Los 6 bots dan igual que antes. La consola no muestra errores. El juego pesa 50 bytes más.",
+      "en": "Before, the text to share said nothing about the path you chose. We gave only the text to new guests and asked how that person played. With the new version, 3 of 3 said \"up top\". With the old one, 0 of 3 (they said \"can't tell\"). The 6 bots match the old version. The console shows no errors. The game weighs 50 bytes more."
+    },
+    "la_regamos": {
+      "es": "Nadie tocó el botón Copiar de verdad en un navegador. Lo probamos con la prueba del texto y leyendo el código, que usa el mismo camino. Solo probamos una semilla de partida. Sin celular real y sin medir qué tan fluido se mueve. Y el peso estimado era 61 bytes y midió 50.",
+      "en": "Nobody tapped the real Copy button in a browser. We tested it with the text test and by reading the code, which uses the same path. We only tried one run seed. No real phone and no smoothness measurement. And the estimated weight was 61 bytes and it measured 50."
+    },
+    "pregunta": {
+      "es": "Si alguien te manda su partida y dice \"Arriba +60\", ¿te dan ganas de intentarlo por arriba?",
+      "en": "If someone sends you their run and it says \"Up top +60\", do you feel like trying the top path?"
+    }
+  },
+  "p36k": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=primera. En la primera partida, a los 12 segundos más o menos, la caja del primer tramo se vuelve una horquilla con dos píldoras de papel: 'Arriba' y 'A ras'. El Clásico del menú, MEGA y los Retos viejos no cambian.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=primera. In the first run, around 12 seconds in, the first box becomes a fork with two paper pills: 'Up top' and 'Ground level'. The menu Classic, MEGA and old Challenges do not change."
+    },
+    "cifras": {
+      "es": "Primero probamos la horquilla sola: invitados nuevos viendo una tira en movimiento, 1 de 3 la entendió, igual que antes (la caja no se leía). Con las píldoras, 3 de 3 dijeron que podían escoger; sin ellas, 0 de 3. Los 6 bots dan igual que antes y la consola no muestra errores. El juego pesa 245 bytes más (tope 260).",
+      "en": "First we tested the fork alone: new guests watching a moving strip, 1 of 3 understood it, same as before (the box did not read). With the pills, 3 of 3 said they could choose; without them, 0 of 3. The 6 bots match the old version and the console shows no errors. The game weighs 245 bytes more (cap 260)."
+    },
+    "la_regamos": {
+      "es": "La horquilla sin rótulo no se entendía: el primer intento no sirvió y hubo que rotular. Subimos el tope de peso de 150 a 260 bytes para hacerlo.",
+      "en": "The fork without a label was not understood: the first try did not work and we had to add labels. We raised the weight cap from 150 to 260 bytes to do it."
+    },
+    "commit": "c5bee1a",
+    "area": "mecánica"
+  },
+  "p36l": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=primera. En la primera partida, a los 12 segundos más o menos, las píldoras 'Arriba' y 'A ras' salen enteras, con un fundido, sin tapar a Moki ni al +12.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=primera. In the first run, around 12 seconds in, the 'Up top' and 'Ground level' pills show whole, with a fade, without covering Moki or the +12."
+    },
+    "cifras": {
+      "es": "Antes las píldoras se cortaban en la pantalla (105 casos a 1280 y 42 a 390 en la prueba). Ahora 0 cortadas y 0 sobre Moki. Invitados nuevos viendo una tira en movimiento: 3 de 3 las vieron limpias con la versión nueva, y 3 de 3 las vieron cortadas con la de antes. Los 6 bots dan igual que antes y la consola no muestra errores. El juego pesa 26 bytes más.",
+      "en": "Before, the pills were cut off by the screen (105 cases at 1280 and 42 at 390 in the test). Now 0 cut off and 0 over Moki. New guests watching a moving strip: 3 of 3 saw them clean with the new version, and 3 of 3 saw them cut with the old one. The 6 bots match the old version and the console shows no errors. The game weighs 26 bytes more."
+    },
+    "la_regamos": {
+      "es": "Un reparo nuestro de 11-12 px salió de medir la letra sobre una tira reducida; en el juego real mide 29 px a 1280 y 19 a 390. Aprendimos a medir el texto en pantalla real. Y quedan chicos el 'x2 +8' y el '+12'.",
+      "en": "A 11-12 px complaint of ours came from measuring the text on a shrunken strip; in the real game it is 29 px at 1280 and 19 at 390. We learned to measure text on the real screen. The 'x2 +8' and the '+12' are still small."
+    },
+    "commit": "50eeede",
+    "area": "ux/arte"
+  },
+  "p36m": {
+    "visible": false,
+    "nota": {
+      "es": "Sin cambio que se vea. Ahora el contador anónimo cuenta cuántas horquillas encuentra cada partida y cuántas veces subes por arriba, para saber cuánta gente escoge el riesgo. Todavía no hay cifra: falta que el servidor guarde esos dos datos.",
+      "en": "Nothing visible changes. The anonymous counter now counts how many forks each run meets and how many times you go up top, to learn how many people pick the risk. No number yet: the server still has to store those two fields."
+    },
+    "cifras": {
+      "es": "Pruebas: subiendo 1 de 1, a ras 1 horquilla y 0 subidas, Clásico 0 y 0, Reto 5 y 5. Los 6 bots dan igual que antes y la consola no muestra errores. Pesa 68 bytes más (tope 80).",
+      "en": "Tests: going up 1 of 1, ground level 1 fork and 0 climbs, Classic 0 and 0, Challenge 5 and 5. The 6 bots match the old version and the console shows no errors. It weighs 68 bytes more (cap 80)."
+    },
+    "commit": "5346720",
+    "area": "meta/medición"
+  },
+  "p36lb": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=primera. En la primera partida, a los 12 segundos más o menos, los letreros 'Arriba' y 'A ras' entran en menos de un cuarto de segundo y se van con un fundido que ya no deja gris.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=primera. In the first run, around 12 seconds in, the 'Up top' and 'Ground level' signs come in within a quarter of a second and leave with a fade that no longer leaves grey."
+    },
+    "cifras": {
+      "es": "Al irse, el letrero dejaba 12 cuadros grises en la prueba; ahora 0, a 390 y a 1280. Entra en 183 milésimas de segundo. Invitados nuevos viendo una tira en movimiento: 3 de 3 lo vieron limpio. Los 6 bots dan igual que antes. El juego pesa 59 bytes más.",
+      "en": "When leaving, the sign left 12 grey frames in the test; now 0, at 390 and at 1280. It comes in within 183 thousandths of a second. New guests watching a moving strip: 3 of 3 saw it clean. The 6 bots match the old version. The game weighs 59 bytes more."
+    },
+    "la_regamos": {
+      "es": "La primera entrega traía cifras de puntos en los letreros y se regresó sin ellas; alinear las cifras con el pago real queda para la siguiente pieza.",
+      "en": "The first delivery had point numbers on the signs and went back without them; matching the numbers to the real payout is left for the next piece."
+    },
+    "commit": "8ed804a",
+    "area": "arte/feel"
+  },
+  "p36lc": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=primera. Los letreros dicen 'Arriba +12' y 'A ras +5'. Al cerrar el arco sale una píldora con esa cifra, también si pasas a ras. Se ve en tu primera partida, en Libre y en el Reto.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=primera. The signs say 'Up top +12' and 'Ground level +5'. When you close the arc a pill shows that number, also if you stay low. You see it in your first run, in Free and in the Challenge."
+    },
+    "cifras": {
+      "es": "Antes el letrero no decía cuánto te daba cada camino. Ahora la cifra del letrero, la de la píldora y la que cobras son la misma. Los 6 bots dan igual que antes. El juego pesa 47 bytes más (tope 60). La tarjeta del final sigue sumando solo lo de arriba.",
+      "en": "Before, the sign did not say how much each path gave you. Now the number on the sign, on the pill and what you collect are the same. The 6 bots match the old version. The game weighs 47 bytes more (cap 60). The end card still adds only the up-top bonus."
+    },
+    "la_regamos": {
+      "es": "El +5 de a ras sale chico (6 px de alto del casco) y el primer cuadro de 'Arriba +12' se ve gris a 390; eso va a la siguiente pieza. El chip de combo sigue gris y diminuto, y eso viene de antes.",
+      "en": "The +5 for ground level comes out small (6 px of the helmet height) and the first frame of 'Up top +12' looks grey at 390; that goes to the next piece. The combo chip is still grey and tiny, and that was already there."
+    },
+    "commit": "d1957fd",
+    "area": "ux/meta"
+  },
+  "p36ld": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=primera. En la primera partida (a los 12 segundos más o menos, la horquilla), y también en Libre y en el Reto del día: la píldora 'A ras' sale por delante de Moki, no encima de las monedas ni del casco.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=primera. In the first run (the fork, around 12 seconds in), and also in Free and the Daily Challenge: the 'Ground level' pill appears ahead of Moki, not on top of the coins or the helmet."
+    },
+    "cifras": {
+      "es": "Antes la píldora tapaba 26 cuadros de monedas y casco y dejaba 20 cuadros grises al entrar. Ahora 0 y 0, a 390 y a 1280. Los 6 bots dan igual que antes y la consola no muestra errores. El juego pesa 64 bytes más.",
+      "en": "Before, the pill covered 26 frames of coins and helmet and left 20 grey frames on entry. Now 0 and 0, at 390 and 1280. The 6 bots match and the console shows no errors. The game weighs 64 bytes more."
+    },
+    "la_regamos": {
+      "es": "El '+5' adelantado a veces flota solo sobre un pino y solo se entiende en el primer cuadro; y en 390 'Arriba +12' al entrar se ve como una línea fina al borde. Los dejamos para P36l-e.",
+      "en": "The advance '+5' sometimes floats alone over a pine and only reads in the first frame; and at 390 'Up top +12' looks like a thin line at the edge on entry. Left for P36l-e."
+    }
+  }
+}
