@@ -32,7 +32,8 @@ export const NIVELES = [
   [
     { id: 'pagina2', goal: 1, val: (st) => (st.maxTramo >= 1 ? 1 : 0) },
     { id: 'ambar', goal: 1, val: (st) => st.amber },
-    { id: 'arcoP2', goal: 1, val: (st) => st.arcsByTramo[1] || 0 },
+    // P36i: la ruta de arriba de la horquilla (Libre/Reto); reemplaza a arcoP2 (lo cumplido se mapea abajo)
+    { id: 'arriba2', goal: 2, val: (st) => st.altos || 0 },
   ],
   // 4 · vigas (pasar por debajo sin saltar)
   [
@@ -87,6 +88,7 @@ export const SELLOS = [
   { id: 'sinCaerme', ok: (st) => st.finished && st.crashes === 0 },
   { id: 'coleccionista', ok: (st) => st.finished && st.pieceTotal > 0 && st.maxPieces >= 0.8 * st.pieceTotal },
   { id: 'arcos3', ok: (st) => st.arcs >= 3 },
+  { id: 'arriba3', ok: (st) => st.altos >= 3 }, // P36i: tres arcos altos de la horquilla en una partida
 ];
 
 // Día 2: un sello por nivel completo. Se deriva de las notas (no se guarda aparte): lo guardado no cambia de forma
@@ -97,8 +99,8 @@ const SELLO_IDS = new Set(SELLOS.map((s) => s.id));
 // v1 -> v2: lo ya cumplido se conserva aunque cambie la condición. 'Pasa 3 vigas' no estaba garantizado; queda como 'Pasa 2 vigas'.
 const DE_V1 = { vigas3: 'vigas2' };
 // Cinta de combo (1-nov): la racha se volvió cinta. Quien tenía la racha ya cobró esa cinta (5 seguidas = x2, 7 = x3).
-// Vale para v1 y v2, y se reescribe la primera vez que se lee.
-const DE_RACHA = { racha5: 'cinta2', racha7: 'cinta3' };
+// Vale para v1 y v2, y se reescribe la primera vez que se lee. P36i: arcoP2 dejó su lugar a arriba2 y quien la tenía no pierde nada.
+const DE_RACHA = { racha5: 'cinta2', racha7: 'cinta3', arcoP2: 'arriba2' };
 
 // Lo guardado puede venir roto, viejo (v1) o de otra versión: se filtra a ids conocidos y nunca truena.
 // Un v1 se sube a v2 la primera vez que se lee (si no se puede escribir, la sesión sigue con la copia en memoria).
@@ -147,7 +149,7 @@ export function porTachar(st) {
 // nivel = índice del nivel abierto al empezar: una partida solo cumple encargos de ese nivel (un nivel por partida,
 // como Alto's). El set nuevo cuenta desde la siguiente partida; si no, una partida buena vaciaba el Cuaderno entero.
 export function nuevaPartida() {
-  return { passed: { caja: 0, torre: 0, viga: 0 }, maxTramo: 0, maxCombo: 0, maxPieces: 0, arcs: 0, arcsByTramo: {}, amber: 0, cintas2: 0, cintas3: 0, crashes: 0, crashesByTramo: {}, finished: false, pieceTotal: 0, nivel: nivelDe(leerCuaderno()).hechos };
+  return { passed: { caja: 0, torre: 0, viga: 0 }, maxTramo: 0, maxCombo: 0, maxPieces: 0, arcs: 0, altos: 0, arcsByTramo: {}, amber: 0, cintas2: 0, cintas3: 0, crashes: 0, crashesByTramo: {}, finished: false, pieceTotal: 0, nivel: nivelDe(leerCuaderno()).hechos };
 }
 
 // Revisa la partida contra los encargos activos del nivel con que empezó y los sellos de partida.

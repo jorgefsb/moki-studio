@@ -15,7 +15,7 @@ export const DESTINOS = {
   viento: { modo: 'libre', tramo: 1, nivel: null, mec: ['viento'] },
   timbre: { modo: 'libre', tramo: 1, nivel: null, mec: ['timbre'] },
   zanja: { modo: 'reto', tramo: 1, nivel: 2, mec: ['zanja'] }, // P5c: primer nivel del Cuaderno con mecánica nueva (Reto nivel 2)
-  elige: { modo: 'reto', tramo: 0, nivel: null }, // P36: la horquilla (arriba por el arco o abajo a ras), desde la página 1
+  elige: { modo: 'reto', tramo: 0, nivel: 3 }, // P36: la horquilla (arriba por el arco o abajo a ras), desde la página 1; P36i: en el nivel 3, donde pide 'Sube por arriba 2 veces'
   formas: { modo: 'reto', tramo: 0, nivel: null }, // formas de página: Libre siempre y el Reto desde hoy
   mega: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj' }, // P8: MODO MEGA (el Clásico a x1.5, C.mega.reloj) aunque el nivel 1 no esté terminado
   mega2: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj2' }, // P8b: MEGA x2.0 (C.mega.reloj2) sin el logro MEGA x1.5
@@ -26,8 +26,10 @@ export const DESTINOS = {
 };
 const ALIAS = { tramp: 'trampolin', 'trampolín': 'trampolin', campana: 'timbre', 'libre-ciudad': 'ciudad' };
 
-// Encargos del nivel 1 del Cuaderno (cuaderno.js NIVELES[0]); hechos = nivel 2. Copiados para no importar cuaderno.js aquí.
+// Encargos de los niveles 1 y 2 del Cuaderno (cuaderno.js NIVELES[0-1]), copiados para no importar cuaderno.js aquí.
+// SEMBRAR[n - 1] = lo hecho para abrir el nivel n.
 const NIVEL1 = ['cajas3', 'cajas5', 'piezas15'];
+const SEMBRAR = [[], NIVEL1, [...NIVEL1, 'torre1', 'torres3', 'arco1']];
 
 const pide = (() => {
   try {
@@ -47,7 +49,6 @@ export const IR_PANTALLA = pide === 'logros' ? 'logros' : null;
 export function estadoIr(guardado) {
   if (!IR) return {};
   const e = { ...guardado, 'moki.primera': '1', 'moki.tutorial': '1', 'moki.modo': IR.modo, 'moki.paseo': '0', 'moki.vuelta': '0' };
-  if (IR.nivel === 1) e['moki.cuaderno'] = JSON.stringify({ v: 2, notas: [], sellos: [] });
-  if (IR.nivel === 2) e['moki.cuaderno'] = JSON.stringify({ v: 2, notas: NIVEL1, sellos: [] });
+  if (SEMBRAR[IR.nivel - 1]) e['moki.cuaderno'] = JSON.stringify({ v: 2, notas: SEMBRAR[IR.nivel - 1], sellos: [] });
   return e;
 }

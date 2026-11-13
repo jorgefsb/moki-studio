@@ -138,7 +138,7 @@ const ES = {
   'cu.nota.arco1': 'Arco completo',
   'cu.nota.pagina2': 'Llega a la página 2',
   'cu.nota.ambar': 'Toma una pieza ámbar',
-  'cu.nota.arcoP2': 'Arco completo en la página 2',
+  'cu.nota.arriba2': 'Sube por arriba 2 veces',
   'cu.nota.pagina3': 'Llega a la página 3',
   'cu.nota.viga1': 'Pasa bajo una viga',
   'cu.nota.vigas2': 'Pasa bajo 2 vigas',
@@ -165,6 +165,7 @@ const ES = {
   'cu.sello.sinCaerme': 'Sin caerme',
   'cu.sello.coleccionista': 'Coleccionista',
   'cu.sello.arcos3': 'Arco completo',
+  'cu.sello.arriba3': 'Tres veces arriba',
   // Racha con perdón (GDD §3): Moki saluda; sin culpa ni cuenta regresiva
   'racha.hola.nuevo': '¡Hola! Soy Moki',
   'racha.hola.uno': '¡Hola! ¿Un salto más?',

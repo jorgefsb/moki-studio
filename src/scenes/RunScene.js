@@ -2196,6 +2196,7 @@ export class RunScene extends Phaser.Scene {
         this.pieceValue += k.alto ? C.arcBonusAlto : C.arcBonus; // arco completo (P36f: el alto de la horquilla paga más)
         if (P) {
           P.arcs += 1;
+          if (k.alto) P.altos += 1; // P36i: solo el arco alto de la horquilla (nota arriba2, sello arriba3)
           P.arcsByTramo[this.tramoIdx] = (P.arcsByTramo[this.tramoIdx] || 0) + 1;
         }
         audio.sfx(k.alto ? 'arcAlto' : 'arc');
