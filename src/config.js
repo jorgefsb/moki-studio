@@ -47,6 +47,7 @@ export const CONFIG = {
   combo: { windowMs: 900, steps: [[1, 1], [3, 2], [6, 3]] }, // [desde N piezas seguidas, valor]
   crece: { estelaV: 350, estelaMs: 120, estelaMsHC: 80, estelaAtras: [40, 50], estelaHC: { escala: 3.2, vida: 1.25, colores: ['orange', 'kraft', 'orange'] } }, // CRECE nivel 8: estela desde 350 px/s (tramo 2 en adelante), un recorte cada 120 ms (80 en Hardcore); se queda atrás 40-50 px/s; Hardcore x3.2, vida x1.25, 2 de 3 naranja
   arcBonus: 5,
+  arcBonusAlto: 12, // P36f ARRIBA PAGA MÁS: el arco alto de la horquilla paga 12 (arcBonus 5 = como en master). Ratio arriba/abajo 1.82; puerta del director 12-nov 19:28 (opción B). Ver evidencia/p36f-constructor/NOTA.md
   amberValue: 5,
   scorePerPiece: 10,
   scorePerMeter: 1,
