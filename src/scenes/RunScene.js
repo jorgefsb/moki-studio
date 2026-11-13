@@ -898,9 +898,9 @@ export class RunScene extends Phaser.Scene {
     this.barraD0 = this.dist; // P3b: desde aquí cuenta este intento para la barra
     this.barraP0 = this.pieces;
     // P36m: horquillas vistas (arcos altos que Moki alcanzó, por arriba o a ras) y cuántas subió completas, en este intento
-    this.horqI = new Set();
-    this.altosI = 0;
-    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx, () => ({ horq: this.horqI.size, altos: this.altosI }));
+    this.hq = new Set();
+    this.hqA = 0;
+    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx, () => ({ horq: this.hq.size, altos: this.hqA }));
     contarPartida();
   }
 
@@ -1884,7 +1884,7 @@ export class RunScene extends Phaser.Scene {
       if (!k.taken) {
         k.sprite.x = k.x;
         k.shadow.x = k.x + 4;
-        if (k.alto && k.x <= px) this.horqI?.add(k.arc); // P36m: pasó bajo el arco alto (o lo alcanzó)
+        if (k.alto && k.x < px + 30) this.hq?.add(k.arc); // P36m: Moki alcanzó el arco alto (30 = pickupReach.dx: antes de poder tomarlo)
       }
     }
     for (const cp of this.checkpoints) {
@@ -2183,7 +2183,6 @@ export class RunScene extends Phaser.Scene {
   collect(k) {
     const R = C.combo;
     k.taken = true;
-    if (k.alto) this.horqI?.add(k.arc); // P36m: la tomó por arriba antes de pasarla
     // Racha: cada pieza a menos de 0.9 s de la anterior suma. En el vuelo del trampolín y en las piezas de la torre
     // tumbada por el timbre (tumbarla no es pasarla) no suma ni se rompe.
     const quieto = this.vuelo || k.cae;
@@ -2207,7 +2206,7 @@ export class RunScene extends Phaser.Scene {
     if (k.arc) {
       this.arcGot[k.arc] = (this.arcGot[k.arc] || 0) + 1;
       if (this.arcGot[k.arc] === k.arcN) {
-        if (k.alto) (this.arriba += C.arcBonusAlto), this.altosI++; // P36m: subió esta horquilla
+        if (k.alto) (this.arriba += C.arcBonusAlto), this.hqA++; // P36m: subió esta horquilla
         this.pieceValue += k.alto ? C.arcBonusAlto : C.arcBonus; // arco completo (P36f: el alto de la horquilla paga más)
         if (P) {
           P.arcs += 1;

@@ -26,29 +26,22 @@ let extraDe = null; // P36m (13-nov): { horq, altos } del intento: horquillas vi
 
 // tramo: función que regresa el tramo actual, para saberlo también al salir o volver al inicio
 export function abrirIntento(modo, nivel, tramo, extra) {
-  tramoDe = tramo;
-  extraDe = extra; // también en local, para que la sonda lea armarDatos()
   if (!VIVO) return;
   intento = { modo, nivel };
   n += 1;
   t0 = performance.now();
+  tramoDe = tramo;
+  extraDe = extra;
 }
 
 // Cierra el intento una sola vez: lo que llegue después (salir tras la tarjeta, volver de la caché) ya no cuenta.
 export function cerrarIntento(motivo, causa) {
   if (!intento) return;
-  const datos = armarDatos(motivo, causa);
+  const tramo = Math.min(99, Math.max(0, tramoDe?.() | 0));
+  const datos = { juego: 'un-salto-mas', ...intento, motivo, origen: origen(), intento: n, seg: Math.round((performance.now() - t0) / 1000), tramo, ...extraDe?.() };
+  if (causa) datos.causa = String(causa).replace(/[^a-z-]/g, '').slice(0, 16);
   intento = null;
   navigator.sendBeacon?.(`https://${HOST}/api/partida`, new Blob([JSON.stringify(datos)], { type: 'application/json' }));
-}
-
-// el objeto del beacon (exportado para probarlo en local, donde VIVO es falso y no se manda nada)
-export function armarDatos(motivo, causa) {
-  const tramo = Math.min(99, Math.max(0, tramoDe?.() | 0));
-  const { horq = 0, altos = 0 } = extraDe?.() || {};
-  const datos = { juego: 'un-salto-mas', ...intento, motivo, origen: origen(), intento: n, seg: Math.round((performance.now() - t0) / 1000), tramo, horq: horq | 0, altos: altos | 0 };
-  if (causa) datos.causa = String(causa).replace(/[^a-z-]/g, '').slice(0, 16);
-  return datos;
 }
 
 addEventListener('pagehide', () => cerrarIntento('salir'));
