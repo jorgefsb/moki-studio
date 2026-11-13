@@ -2863,6 +2863,7 @@ export class RunScene extends Phaser.Scene {
       completo: nv.completo,
       racha: leerRacha().racha,
       paseo: !!(this.finalData && this.finalData.paseo),
+      arriba: l.modo ? this.arriba : 0, // P36j: misma cifra que la píldora de la tarjeta final; solo Libre/Reto (Clásico no tiene modo)
     });
   }
 
