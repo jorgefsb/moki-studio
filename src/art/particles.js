@@ -21,8 +21,9 @@ export class Particles {
     // Polvo de papel: tres bolitas crema con canto kraft, nada de gris (ARTE.md l.137). P4B aterrizaje (chipPolvo,
     // canto 1.4) y P4c v2 despegue (chipPolvoK, canto C.feelP4c.contornoPx). P31: el canto del aterrizaje era tinta al 55 %,
     // que sobre el suelo naranja se leía gris; misma forma y tamaño. P31 v2: a 390 de día la crema clara se lavaba y se leía
-    // gris frío; el aterrizaje va en crema un paso ámbar (paper→warm 15 %) con el mismo canto kraft (el canto más oscuro probado bajaba el contraste a 1.75)
-    for (const [k, w, h, o, c, cr, ck] of [['chipPolvo', 22, 16, 0, 1.4, '#F6DEB5', '#B99168'], ['chipPolvoK', 26, 20, 2, C.feelP4c.contornoPx, '#F4E8D5', '#B99168']]) {
+    // gris frío. P38: el canto kraft casi igualaba al suelo (contraste 1.6-1.85) y la orilla se perdía: bolita clara = humo. Canto
+    // kraft oscuro (kraft x 0.75, cálido, ARTE §3 'canto como franja kraft más oscura') y crema con 30 % de ámbar (#F7D495)
+    for (const [k, w, h, o, c, cr, ck] of [['chipPolvo', 22, 16, 0, 1.4, '#F7D495', '#8A5A32'], ['chipPolvoK', 26, 20, 2, C.feelP4c.contornoPx, '#F4E8D5', '#B99168']]) {
       if (scene.textures.exists(k)) continue;
       const t = scene.textures.createCanvas(k, w, h);
       const x = t.context;
@@ -146,7 +147,7 @@ export class Particles {
       const a = opt.duro ? C.art.polvoAnchoDuro : 1; // P4i: el fuerte nace más abierto a los lados
       for (let i = 0; i < m * 2; i++) {
         const s = i % 2 ? 1 : -1;
-        const dx = (s > 0 ? rand(10, 20) : -rand(6, 16)) * a;
+        const dx = (s > 0 ? rand(10, 20) : -rand(6, i ? 16 : 10)) * a; // P38: la primera de la izquierda nace encimada en la bota
         const vx = s * rand(70, 140) * (0.7 + 0.6 * f) + (s > 0 ? v : 0);
         const p = this.emit('polvo', x + dx, g - 4, { vx, vy: -rand(10, 35), g: 40, life: rand(380, 480), spin: rand(-30, 30), fadeFrom: 0.5, scale: rand(1.0, 1.3) * (0.85 + 0.3 * f) });
         p.infla = p.sprite.scaleX; // crece x1.7 en su vida: bocanada, no trozo
