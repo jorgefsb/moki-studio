@@ -843,6 +843,7 @@ export class RunScene extends Phaser.Scene {
     this.score0 = { pieces: 0, pieceValue: 0 };
     this.pieces = 0;
     this.pieceValue = 0;
+    this.arriba = 0; // P36h: suma de los bonos de arcos altos cobrados (la fila "Arriba +N" de la tarjeta donde termina)
     this.cp = { idx: 0, dist: 0, pieces: 0, pieceValue: 0 };
     // Paseo: sin choques y sin mérito (no avanza el Cuaderno ni escribe mejor marca); la decisión es del director, pieza 4
     this.megaOn = this.megaSel || 0; // P8: reloj MEGA (0 = apagado) pedido desde la tarjeta o ?ir=mega / ?ir=mega2; Paseo no aplica en MEGA
@@ -1913,7 +1914,7 @@ export class RunScene extends Phaser.Scene {
       this.tramoIdx++;
       this.speedFrom = this.speed;
       this.accel = 0; // se recalcula hacia la velocidad del tramo con rampa de 2 s
-      this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue };
+      this.cp = { idx: this.tramoIdx, dist: starts[this.tramoIdx], pieces: this.pieces, pieceValue: this.pieceValue, arriba: this.arriba };
       if (this.partida && !this.demo) this.partida.maxTramo = Math.max(this.partida.maxTramo, this.tramoIdx);
       this.showBanner(t('hud.cp'), C.art.checkpointLabelMs);
       this.cpAt = this.t;
@@ -2191,6 +2192,7 @@ export class RunScene extends Phaser.Scene {
     if (k.arc) {
       this.arcGot[k.arc] = (this.arcGot[k.arc] || 0) + 1;
       if (this.arcGot[k.arc] === k.arcN) {
+        if (k.alto) this.arriba += C.arcBonusAlto;
         this.pieceValue += k.alto ? C.arcBonusAlto : C.arcBonus; // arco completo (P36f: el alto de la horquilla paga más)
         if (P) {
           P.arcs += 1;
@@ -2665,7 +2667,7 @@ export class RunScene extends Phaser.Scene {
     this.ultimoFaltan = Math.max(1, Math.ceil((this.level.end - this.dist) / 100)); // metros a la meta (100 px = 1 m)
     const meta = pct > 10 ? [t('fail.faltan', { n: this.ultimoFaltan }), where] : where; // solo pasado el 10%; dos renglones
     this.ui.showFail(
-      { hint: t(`fail.hint.${this.cause}`), meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo', this.gana('disenador')), lock: C.retryLockoutMs - this.deadFor },
+      { hint: t(`fail.hint.${this.cause}`), arriba: this.arriba, meta, prompt: t(this.coarse ? 'fail.go.touch' : 'fail.go.kbd'), rect: this.failRect(), isNew: this.failRecord, barra: this.barraTarjeta(), bandera: this.ayudaD != null ? t('fail.bandera') : null, voto: this.demo ? null : votoTarjeta('fallo', this.gana('disenador')), lock: C.retryLockoutMs - this.deadFor },
       () => this.respawn(),
       () => this.respawn(true)
     );
@@ -2713,6 +2715,7 @@ export class RunScene extends Phaser.Scene {
     const cp = this.cp;
     this.pieces = cp.pieces;
     this.pieceValue = cp.pieceValue;
+    this.arriba = cp.arriba || 0;
     this.resetRun(this.level, bandera && this.ayudaD != null ? this.ayudaD : cp.dist);
     this.screen = 'play';
     this.abreIntento();
@@ -2747,7 +2750,7 @@ export class RunScene extends Phaser.Scene {
     const best = num(this.bestKey(), 0);
     const score = this.score;
     const isNew = !this.paseoRun && score > best;
-    this.finalData = { isNew, hadBest: best > 0, score, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: this.paseoRun ? best : Math.max(best, score), paseo: this.paseoRun };
+    this.finalData = { isNew, hadBest: best > 0, score, arriba: this.arriba, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: this.paseoRun ? best : Math.max(best, score), paseo: this.paseoRun };
     audio.setState('finished'); // la música baja a 0 y suena el stinger del final
     audio.stinger('final');
     if (isNew) save(this.bestKey(), score);
@@ -2804,7 +2807,7 @@ export class RunScene extends Phaser.Scene {
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
-      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, arriba: d.arriba, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => this.compartir(), onMenu: () => this.goHome() },
       r
     );

@@ -349,7 +349,7 @@ export function createUI() {
     },
 
     // Tarjeta de fallo (UX §7). rect: { left, top, width, maxHeight } en px de pantalla.
-    showFail({ hint, meta, prompt, rect, isNew, barra, bandera, voto, lock }, onGo, onBandera) {
+    showFail({ hint, arriba, meta, prompt, rect, isNew, barra, bandera, voto, lock }, onGo, onBandera) {
       ui.hideFail();
       ui.hideTachado(); // la tira de la tarjeta ya enseña lo tachado
       const scrim = el('div', 'ui-scrim');
@@ -362,6 +362,7 @@ export function createUI() {
         head.append(el('h2', '', hint), el('span', 'ui-tag', t('end.new')));
         card.append(head);
       } else card.append(el('h2', '', hint));
+      if (arriba) card.append(el('p', 'arriba', `${t('end.arriba')} +${arriba}`)); // P36h: lo que le dio la ruta de arriba (solo si cobró algún arco alto)
       if (Array.isArray(meta)) {
         const p = el('p', 'meta');
         meta.forEach((m) => p.append(el('span', '', m))); // un renglón cada uno: nunca 'checkpoint' huérfano
@@ -685,6 +686,7 @@ export function createUI() {
       if (!d.paseo) {
         // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
         row(t('end.score'), String(d.score));
+        if (d.arriba) row(t('end.arriba'), `+${d.arriba}`); // P36h: cuánto de ese puntaje fue la ruta de arriba
         row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
       }
       if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
