@@ -1,5 +1,5 @@
 // P36k ciego EN MOVIMIENTO (probador, 13-nov): jugador nuevo (sin localStorage; tutorial saltado como en bots-p36k), bot adjust corre solo;
-// 4 cuadros de pantalla completa (hoja 2x2, tiempo de izquierda a derecha y de arriba abajo) cuando s.dist pasa por 3000/3400/3800/4200 (caja de la horquilla en 4000). Misma jugada en rama y master.
+// 12 cuadros de pantalla completa cada 200 ms de juego desde t=10.5 s (2 s antes de la caja de 12.5 s) hasta ~12.7 s (hoja 4x3, izquierda a derecha y arriba a abajo). Misma jugada en rama y master.
 // Uso: flock /tmp/moki-pesado.lock node herramientas/ciego-p36k.mjs <url> <WxH> <prefijo-salida>
 import { createRequire } from 'node:module';
 const require = createRequire('/home/jorgefsb/.local/share/mise/installs/npm-playwright/latest/node_modules/');
@@ -18,15 +18,17 @@ try {
   await page.waitForFunction(() => window.__moki && window.__moki.moki, null, { timeout: 60000 });
   await page.waitForTimeout(1500);
   const png = await page.evaluate(async () => {
-    const sc = window.__moki.scene.scenes[0], cv = sc.game.canvas, marcas = [3000, 3400, 3800, 4200], cap = [], orig = sc.update.bind(sc);
-    const pinta = () => { const R = sc.game.renderer; R.preRender(); sc.sys.render(R); R.postRender(); const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height; c.getContext('2d').drawImage(cv, 0, 0); return c; };
-    sc.update = (a, b) => { const r = orig(a, b); if (cap.length < 4 && sc.dist >= marcas[cap.length]) cap.push(pinta()); return r; };
+    const sc = window.__moki.scene.scenes[0], cv = sc.game.canvas, orig = sc.update.bind(sc), cap = [], N = 12, t0 = 10500;
+    const sc_ = Math.min(1, 480 / cv.width), cw = Math.round(cv.width * sc_), ch = Math.round(cv.height * sc_);
+    const pinta = () => { const R = sc.game.renderer; R.preRender(); sc.sys.render(R); R.postRender(); const c = document.createElement('canvas'); c.width = cw; c.height = ch; c.getContext('2d').drawImage(cv, 0, 0, cw, ch); return c; };
+    let ult = -1e9;
+    sc.update = (a, b) => { const r = orig(a, b); if (cap.length < N && sc.t >= t0 && sc.t - ult >= 200) { ult = sc.t; cap.push(pinta()); } return r; };
     await window.__moki.moki.bot('adjust', 200, null);
     sc.update = orig;
-    if (cap.length < 4) return null;
-    const w = cv.width, h = cv.height, T = document.createElement('canvas'); T.width = w * 2 + 12; T.height = h * 2 + 12;
+    if (cap.length < N) return null;
+    const cols = 4, rows = 3, T = document.createElement('canvas'); T.width = cols * cw + (cols + 1) * 4; T.height = rows * ch + (rows + 1) * 4;
     const g = T.getContext('2d'); g.fillStyle = '#888'; g.fillRect(0, 0, T.width, T.height);
-    cap.forEach((c, i) => g.drawImage(c, 4 + (i % 2) * (w + 4), 4 + ((i / 2) | 0) * (h + 4)));
+    cap.forEach((c, i) => g.drawImage(c, 4 + (i % cols) * (cw + 4), 4 + ((i / cols) | 0) * (ch + 4)));
     return T.toDataURL('image/png');
   });
   if (!png) throw new Error('faltan cuadros');
