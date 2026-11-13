@@ -19,6 +19,7 @@ const TX = {
   disenador: ['Diseñador', 'Toca Vota lo que sigue al terminar'],
   embajador: ['Embajador', 'Comparte con el botón Copiar'],
   arcos3: ['Tres arcos', 'Junta 3 arcos completos en una partida'],
+  arriba3: ['Tres veces arriba', 'Sube por arriba 3 veces en una partida'],
   sinCaerme: ['Sin un rasguño', 'Termina un nivel sin chocar'],
   coleccionista: ['Coleccionista', 'Llega a la meta con 8 de cada 10 piezas'],
   todas: ['Todas las piezas', 'Llega a la meta con todas las piezas'],

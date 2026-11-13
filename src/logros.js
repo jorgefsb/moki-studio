@@ -15,6 +15,7 @@ export const LOGROS = [
   { id: 'disenador', gana: (c, l) => l.ganados.includes('disenador') }, // P29: tocar 'Vota lo que sigue' desde el juego
   { id: 'embajador', gana: (c, l) => l.ganados.includes('embajador') }, // P29: compartir o copiar la liga desde el juego
   { id: 'arcos3', gana: (c) => c.sellos.includes('arcos3') },
+  { id: 'arriba3', gana: (c) => c.sellos.includes('arriba3') }, // P36i
   { id: 'sinCaerme', gana: (c) => c.sellos.includes('sinCaerme') },
   { id: 'coleccionista', gana: (c) => c.sellos.includes('coleccionista') },
   { id: 'todas', gana: (c, l) => l.ganados.includes('todas') },
