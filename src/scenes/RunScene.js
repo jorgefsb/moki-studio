@@ -1374,6 +1374,7 @@ export class RunScene extends Phaser.Scene {
       this.makeLabel(r, 'left').set(`${s} +${n}`);
       r.y0 = r.y;
       r.w = r.getBounds().width;
+      r.scaleY = 0; // P36l-d: nace doblada y se desdobla al entrar
       return r;
     });
     this.obstacles.push(o);
@@ -1531,8 +1532,10 @@ export class RunScene extends Phaser.Scene {
       this.pagoL = this.makeLabel(this.pago, 'center');
     }
     this.pagoL.set(`+${k.alto ? C.arcBonusAlto : C.arcBonus}`); // P36l-c: a ras también dice lo que pagó
-    this.pagoX = k.x - 40;
-    this.pagoY = k.y - 120; // la pieza va a 44 px de los pies: la píldora queda 12 px arriba de la cabeza (110 px)
+    // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
+    this.pagoX = k.x + (k.alto ? -40 : 80);
+    this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
+    this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
     this.pagoT = this.cinta.avisoT >= 0 ? -200 : 0;
     this.pago.setVisible(false);
   }
@@ -1545,7 +1548,10 @@ export class RunScene extends Phaser.Scene {
     const vivo = k >= 0 && k < 1 && !cartel;
     if (!vivo && this.pagoT >= 0) this.pagoT = -1e9;
     this.pago.setVisible(vivo);
-    if (vivo) this.pago.setPosition(this.pagoX, this.pagoY - (this.reduced ? 0 : 24 * Math.sin(k * 1.571))).setAlpha(k < 0.65 ? 1 : 1 - (k - 0.65) / 0.35);
+    // P36l-d: a 390 la cámara deja a Moki cerca del borde; la píldora nunca queda a menos de 8 px del lienzo (getBounds solo mide el texto: +24 de relleno)
+    if (vivo) this.pagoW = this.pagoW || this.pago.getBounds().width + 24;
+    const cam = this.cameras.main;
+    if (vivo) this.pago.setPosition(Math.max(this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoY - (this.reduced ? 0 : 24 * Math.sin(k * 1.571))).setAlpha(k < 0.65 ? 1 : 1 - (k - 0.65) / 0.35);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
@@ -1848,8 +1854,9 @@ export class RunScene extends Phaser.Scene {
         o.rot.forEach((h, i) => {
           h.x = o.x + 80 - 12 * i;
           const sal = h.x - this.px < 120;
-          h.alpha = clamp(h.alpha + (sal || this.vw - 12 - h.x - h.w > 0 ? d : -d) / 190, 0, 1);
-          h.scaleY = sal ? clamp(this.reduced ? 0 : h.scaleY - d / 60, 0, 1) : 1;
+          // P36l-d: entra desdoblándose ya opaca (el fundido de alpha daba un primer cuadro gris a 390)
+          h.alpha = sal || this.vw - 12 - h.x - h.w > 0 ? 1 : 0;
+          h.scaleY = clamp(this.reduced ? +!sal : h.scaleY + (sal ? -d / 60 : h.alpha ? d / 150 : -1), 0, 1);
           h.y = h.y0 + 20 * (1 - h.scaleY);
         });
       }
