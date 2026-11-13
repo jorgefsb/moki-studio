@@ -17,6 +17,10 @@ const TIRAS = { 'pose-run': [runUrl, 7], 'pose-rise': [riseUrl, 5], 'pose-fall':
 // que el títere (C.player.spriteHeight); origen en los pies.
 const ESCALA = C.player.spriteHeight / 102;
 const ORIGEN = [66 / 128, 123 / 128];
+// P37 la suela no brinca: las tiras no apoyan en la misma fila (correr 121-123, caer 123, aterrizar 124-125). Ajuste
+// vertical por cuadro, en filas de la tira, para que la suela quede en la fila 122 en todos (122 - fila más baja,
+// medido con ludo toolbox sprite metrics). Solo en juego: el choque (golpe) no cambia.
+const DY_FILAS = { 'pose-run': [-1, 1, 1, 1, 0, 1, 1], 'pose-rise': [0, 0, 0, 0, 0], 'pose-fall': [-1], 'pose-land': [-2, -3, 0, 0, 0, 0] };
 const LAND_MS = 260; // los 6 cuadros del aterrizaje
 const FPS_AIRE = 12; // como exporta el kit
 // SALTO NOCHE pieza 5, vuelta final (ciego p5): el filo cálido solo de la cadera para arriba (fila 92 de 128; antes bajaba
@@ -100,17 +104,18 @@ class MokiPoses {
       this.sprite.setTexture(key, frame);
       this.pose = key;
     } else this.sprite.setFrame(frame);
-    this.sprite.setPosition(s.px, s.y + 2);
+    const y = s.y + 2 + DY_FILAS[key][frame] * sq[1]; // con el squash B, a la escala del aplastado
+    this.sprite.setPosition(s.px, y);
     const cu = sq[1] !== ESCALA && C.art.cascoCuello?.[frame];
     if (cu) {
       // el cuerpo se dibuja del cuello para abajo (aplastado); el casco, del cuello para arriba sin aplastar, con el cuello
       // donde quedó el del cuerpo. Gira con el cuerpo alrededor de los pies (P4g)
       this.sprite.setCrop(0, cu, 128, 128 - cu);
       const d = (123 - cu) * (ESCALA - sq[1]), r = (ang * Math.PI) / 180;
-      this.casco.setTexture(key, frame).setCrop(0, 0, 128, cu + 1).setAngle(ang).setPosition(s.px - d * Math.sin(r), s.y + 2 + d * Math.cos(r)).setVisible(true);
+      this.casco.setTexture(key, frame).setCrop(0, 0, 128, cu + 1).setAngle(ang).setPosition(s.px - d * Math.sin(r), y + d * Math.cos(r)).setVisible(true);
     } else if (this.sprite.isCropped) this.sprite.setCrop();
     // P4i: en el squash el rim se recorta al cuello (el casco no aplastado lo tapaba mal: asomaba una banda durazno)
-    this.rim.setTexture(key, frame).setCrop(0, cu | 0, 128, RIM_Y - (cu | 0)).setPosition(s.px - RIM_PX, s.y + 2).setAngle(ang).setScale(...sq).setAlpha(s.rimA || 0);
+    this.rim.setTexture(key, frame).setCrop(0, cu | 0, 128, RIM_Y - (cu | 0)).setPosition(s.px - RIM_PX, y).setAngle(ang).setScale(...sq).setAlpha(s.rimA || 0);
     return true;
   }
 
