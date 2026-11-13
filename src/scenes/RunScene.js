@@ -534,6 +534,7 @@ export class RunScene extends Phaser.Scene {
     this.rig.reset();
     this.particles.clear();
     if (this.cinta) this.cinta.reset();
+    this.pagoT = -1e9; // P36g: píldora "+12" del arco alto, apagada
     this.cpAt = -1e9;
     this.tutSetState('off');
     this.tutArc.setVisible(false);
@@ -1492,6 +1493,7 @@ export class RunScene extends Phaser.Scene {
       if (this.screen !== 'dead' && this.screen !== 'final' && this.screen !== 'pause') this.updateRun(h);
     } else this.updateRun(dtMs);
     this.cinta.update(dtMs, this.px, this.y, this.dist, this.reduced || C.juice === 0);
+    this.stepPago(dtMs);
     if (this.poses) this.poses.update(); // con poses listas, el sprite reemplaza al títere (calma, zanja y meta: títere)
   }
 
@@ -1504,6 +1506,32 @@ export class RunScene extends Phaser.Scene {
     const cap = A.paso / this.zoom;
     this.adX += clamp(this.adMax * k - this.adX, -cap, cap);
     this.px = this.pxBase - this.adX;
+  }
+
+  // P36g EL PAGO DE ARRIBA SE VE: al cerrar el arco alto, píldora de papel "+12" (la del HUD) sobre la cabeza de Moki, en la
+  // corona. Sube 24 px y se va en 900 ms; reducido: sin subida. Si el cartel de la cinta está activo, sale 200 ms después de que se va; si el
+  // cartel sale mientras vive (paso 0: 900 ms después del arco), se quita al instante: nunca se pisan. Clásico no tiene k.alto.
+  showPago(k) {
+    if (!this.pago) {
+      this.pago = this.add.container(0, 0).setDepth(99);
+      this.pagoL = this.makeLabel(this.pago, 'center');
+    }
+    this.pagoL.set(`+${C.arcBonusAlto}`);
+    this.pagoX = k.x - 40;
+    this.pagoY = k.y - 120; // la pieza va a 44 px de los pies: la píldora queda 12 px arriba de la cabeza (110 px)
+    this.pagoT = this.cinta.avisoT >= 0 ? -200 : 0;
+    this.pago.setVisible(false);
+  }
+
+  stepPago(dtMs) {
+    if (!this.pago) return;
+    const cartel = this.cinta.avisoT >= 0;
+    if (this.pagoT > -1e9) this.pagoT = this.pagoT < 0 && cartel ? -200 : this.pagoT + dtMs;
+    const k = this.pagoT / 900;
+    const vivo = k >= 0 && k < 1 && !cartel;
+    if (!vivo && this.pagoT >= 0) this.pagoT = -1e9;
+    this.pago.setVisible(vivo);
+    if (vivo) this.pago.setPosition(this.pagoX, this.pagoY - (this.reduced ? 0 : 24 * Math.sin(k * 1.571))).setAlpha(k < 0.65 ? 1 : 1 - (k - 0.65) / 0.35);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
@@ -2174,6 +2202,7 @@ export class RunScene extends Phaser.Scene {
         // P36e: el arco alto de la horquilla cierra con corona (una nota más, papel hacia atrás y arriba, ficha más grande)
         arcFull = true;
         if (k.alto) this.particles.burst('arcAlto', k.x - 40, k.y - 88);
+        if (k.alto) this.showPago(k);
         else this.particles.burst('arc', k.x, k.y);
         if (k.alto) this.pop(this.hudR, 1.3, 200);
         else this.pop(this.hudR, 1.22, 160);
