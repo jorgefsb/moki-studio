@@ -686,10 +686,12 @@ export function createUI() {
       if (!d.paseo) {
         // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
         row(t('end.score'), String(d.score));
-        if (d.arriba) rows.lastChild.append(el('span', 'arriba', `${t('end.arriba')} +${d.arriba}`)); // P36h: cuánto de ese puntaje fue la ruta de arriba, junto al puntaje (sin fila nueva: la tarjeta no crece)
         row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
       }
       if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
+      // P36h: cuánto de ese puntaje fue la ruta de arriba. Ancha: junto al puntaje. Vertical (corto, 4 columnas): celda que ocupa
+      // la mitad vacía del último renglón (junto a Nivel); en la columna del puntaje se cortaba ("Arr"). La tarjeta no crece.
+      if (d.arriba && !d.paseo) (rect.corto ? rows : rows.children[5]).append(el(rect.corto ? 'dd' : 'span', 'arriba', `${t('end.arriba')} +${d.arriba}`));
       card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));
       again.type = 'button';

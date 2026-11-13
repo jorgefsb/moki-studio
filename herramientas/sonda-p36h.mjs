@@ -71,7 +71,7 @@ async function corre(W, H, kind) {
       cuaderno: (() => { const q = document.querySelector('.ui-cuaderno'); return q ? q.style.visibility !== 'hidden' && q.style.display !== 'none' && !q.hidden : null; })(),
       tapaMoki: tapa,
       moki: Object.values(moki).map(Math.round),
-      arriba: ab ? { txt: arriba.textContent, caja: [ab.left, ab.top, ab.width, ab.height].map(Math.round), visible: ab.bottom <= b0.bottom && ab.height > 0, fontPx: parseFloat(getComputedStyle(arriba).fontSize) } : null,
+      arriba: ab ? { recorte: (() => { const p = arriba.closest('dd, p').getBoundingClientRect(); return Math.round(Math.max(0, ab.right - p.right, p.left - ab.left)); })(), txt: arriba.textContent, caja: [ab.left, ab.top, ab.width, ab.height].map(Math.round), visible: ab.bottom <= b0.bottom && ab.height > 0, fontPx: parseFloat(getComputedStyle(arriba).fontSize) } : null,
       sinC: !C,
     };
   });
