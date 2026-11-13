@@ -1368,9 +1368,10 @@ export class RunScene extends Phaser.Scene {
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
     // P36k vuelta B: la horquilla de la 1.ª partida se lee como dos rutas: píldora de papel al final de cada fila
-    if (e.rot) o.rot = [[t('end.arriba'), 186], ['A ras', 92]].map(([s, y], i) => {
+    // P36l-c: cada letrero dice el bono de su arco, la misma cifra que la píldora al cerrarlo (y la de la tarjeta final). Sonda: herramientas/sonda-p36lc-pago.mjs
+    if (e.rot) o.rot = [[t('end.arriba'), 186, C.arcBonusAlto], ['A ras', 92, C.arcBonus]].map(([s, y, n], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
-      this.makeLabel(r, 'left').set(s);
+      this.makeLabel(r, 'left').set(`${s} +${n}`);
       r.y0 = r.y;
       r.w = r.getBounds().width;
       return r;
@@ -1417,7 +1418,7 @@ export class RunScene extends Phaser.Scene {
     const x = this.px + e.D - this.dist;
     const sprite = this.add.image(x, g - e.h, e.amber ? 'tokenAmber' : 'token').setDepth(11);
     const shadow = this.addShadow(x + 4, 26, 0.18);
-    const k = { D: e.D, h: e.h, x, y: g - e.h, arc: e.arc, arcN: e.arcN, alto: !!e.alto, amber: !!e.amber, sprite, shadow, taken: false, pie: e.pie, cae: e.cae };
+    const k = { D: e.D, h: e.h, x, y: g - e.h, arc: e.arc, arcN: e.arcN, alto: !!e.alto, ras: e.ras, amber: !!e.amber, sprite, shadow, taken: false, pie: e.pie, cae: e.cae };
     k.destroy = () => {
       sprite.destroy();
       shadow.destroy();
@@ -1529,7 +1530,7 @@ export class RunScene extends Phaser.Scene {
       this.pago = this.add.container(0, 0).setDepth(99);
       this.pagoL = this.makeLabel(this.pago, 'center');
     }
-    this.pagoL.set(`+${C.arcBonusAlto}`);
+    this.pagoL.set(`+${k.alto ? C.arcBonusAlto : C.arcBonus}`); // P36l-c: a ras también dice lo que pagó
     this.pagoX = k.x - 40;
     this.pagoY = k.y - 120; // la pieza va a 44 px de los pies: la píldora queda 12 px arriba de la cabeza (110 px)
     this.pagoT = this.cinta.avisoT >= 0 ? -200 : 0;
@@ -2231,8 +2232,8 @@ export class RunScene extends Phaser.Scene {
         // P36e: el arco alto de la horquilla cierra con corona (una nota más, papel hacia atrás y arriba, ficha más grande)
         arcFull = true;
         if (k.alto) this.particles.burst('arcAlto', k.x - 40, k.y - 88);
-        if (k.alto) this.showPago(k);
-        else this.particles.burst('arc', k.x, k.y);
+        if (k.alto || k.ras) this.showPago(k);
+        if (!k.alto) this.particles.burst('arc', k.x, k.y);
         if (k.alto) this.pop(this.hudR, 1.3, 200);
         else this.pop(this.hudR, 1.22, 160);
         this.shiver();
