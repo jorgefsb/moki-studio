@@ -1339,6 +1339,7 @@ export class RunScene extends Phaser.Scene {
       o.sprite.destroy();
       o.shadow.destroy();
       if (o.threads) o.threads.forEach((h) => h.destroy());
+      if (o.rot) o.rot.forEach((h) => h.destroy());
     };
     if (e.pop) {
       // Pop-up: nace bajo el suelo; stepPopup lo asoma, lo sube y lo vuelve sólido según los segundos que le faltan
@@ -1363,6 +1364,12 @@ export class RunScene extends Phaser.Scene {
       this.stepPopup(o);
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
+    // P36k vuelta B: la horquilla de la 1.ª partida se lee como dos rutas: píldora de papel al final de cada fila
+    if (e.rot) o.rot = [[t('end.arriba'), 186], ['A ras', 92]].map(([s, y], i) => {
+      const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
+      this.makeLabel(r, 'left').set(s);
+      return r;
+    });
     this.obstacles.push(o);
   }
 
@@ -1827,6 +1834,7 @@ export class RunScene extends Phaser.Scene {
     for (const o of this.obstacles) {
       o.x = px + o.D - dist;
       o.sprite.x = o.x + (o.ox || 0); // la torre que cae gira sobre su pie delantero
+      if (o.rot) o.rot.forEach((h, i) => (h.x = o.x + 80 - 12 * i));
       if (o.type === 'zanja') {
         o.sprite.x = o.x - o.W / 2;
         continue;

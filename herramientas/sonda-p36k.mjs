@@ -21,7 +21,23 @@ async function corre(nombre, q, vp) {
     if (s.screen !== 'play') s.startGame();
     const l = s.level;
     const caja = l.entities.find((e) => e.kind === 'obs' && Math.abs(e.D - 4000) < 1);
-    return { screen: s.screen, horq: (l.horq || []).length, altos: l.entities.filter((e) => e.alto).length, piezas: l.pieceTotal, caja4000: !!caja, tutStage: s.tut && s.tut.stage, modo: l.modo || 'clasico' };
+    // vuelta B: avanza sin tutorial ni choques hasta que la caja de 4000 px entra y lee sus rótulos
+    s.tut = { stage: 4, state: 'off' };
+    s.god = true;
+    // y desde que entra la caja hasta que sale: ¿la píldora pisa alguna pieza?, ¿queda bajo Moki y las piezas?
+    const caja4 = () => s.obstacles.find((q) => Math.abs(q.D - 4000) < 1);
+    for (let i = 0; i < 4000 && !(caja4() && caja4().x < s.vw - 60); i++) s.update(0, 1000 / 60);
+    const o = caja4();
+    const rot = o && o.rot ? o.rot.map((r) => ({ dx: Math.round(r.x - o.x), y: Math.round(r.y), txt: r.list[1].text, vis: r.visible, depth: r.depth, w: Math.round(r.getBounds().width) })) : null;
+    let pisaPieza = 0;
+    const toca = (a, b) => a.x < b.right && a.right > b.x && a.y < b.bottom && a.bottom > b.y;
+    const mokiDepth = Math.max(...s.children.list.filter((c) => c.texture && /^moki/.test(c.texture.key)).map((c) => c.depth), -1);
+    if (o && o.rot)
+      for (let i = 0; i < 400 && o.x > -200; i++) {
+        s.update(0, 1000 / 60);
+        for (const r of o.rot) for (const k of s.pickups) if (Math.abs(k.D - 4000) < 100 && toca(r.getBounds(), k.sprite.getBounds())) pisaPieza++;
+      }
+    return { rot, pisaPieza, mokiDepth, piezaDepth: 11, vw: s.vw, screen: s.screen, horq: (l.horq || []).length, altos: l.entities.filter((e) => e.alto).length, piezas: l.pieceTotal, caja4000: !!caja, tutStage: s.tut && s.tut.stage, modo: l.modo || 'clasico' };
   });
   console.log(nombre, JSON.stringify(r));
   casos.push({ caso: nombre, ...r });
@@ -29,6 +45,7 @@ async function corre(nombre, q, vp) {
 }
 try {
   await corre('ir=primera 390', '&ir=primera', { width: 390, height: 844 });
+  await corre('ir=primera 375x667', '&ir=primera', { width: 375, height: 667 });
   await corre('ir=primera 1280', '&ir=primera', { width: 1280, height: 720 });
   await corre('nuevo sin liga 1280', '', { width: 1280, height: 720 });
   await corre('nivel=clasico', '&nivel=clasico', { width: 1280, height: 720 });
