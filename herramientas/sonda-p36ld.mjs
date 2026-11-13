@@ -59,6 +59,8 @@ try {
           const g = (kb.y - pb.bottom) * z;
           act.moneda = Math.min(act.moneda, Math.round(g * 10) / 10);
           if (g < 0) act.tapaMoneda++;
+          const R = (o) => [Math.round(o.x), Math.round(o.y), Math.round(o.right), Math.round(o.bottom)];
+          if (g < 0 && !act.foto) act.foto = { t: Math.round(sc.t), pildora: R(pb), moki: R(mb), moneda: R(kb), alto: !!k.alto, arc: k.arc || null, mundo: 'x0,y0,x1,y1 en px de mundo', pagoXY: [Math.round(sc.pagoX), Math.round(sc.pagoY)], vista: [Math.round(v.x), Math.round(v.y), Math.round(v.right), Math.round(v.bottom)], cerca: sc.pickups.filter((q) => q.sprite && q.sprite.visible && !q.taken && Math.abs(q.sprite.x - pb.centerX) < 260).map((q) => [Math.round(q.sprite.x), Math.round(q.sprite.y), q.alto ? 'A' : q.ras ? 'R' : '-']) };
         }
         act.izq = Math.min(act.izq, Math.round((pb.x - v.x) * z));
         return ret;

@@ -1532,7 +1532,8 @@ export class RunScene extends Phaser.Scene {
       this.pagoL = this.makeLabel(this.pago, 'center');
     }
     this.pagoL.set(`+${k.alto ? C.arcBonusAlto : C.arcBonus}`); // P36l-c: a ras también dice lo que pagó
-    this.pagoX = k.x - 40;
+    // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
+    this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
     this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
     this.pagoT = this.cinta.avisoT >= 0 ? -200 : 0;
