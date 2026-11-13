@@ -1368,11 +1368,9 @@ export class RunScene extends Phaser.Scene {
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
     // P36k vuelta B: la horquilla de la 1.ª partida se lee como dos rutas: píldora de papel al final de cada fila
-    // P36l-b: cada píldora dice el pago REAL de su ruta en esta horquilla, entrando sin racha: piezas con racha + bono del arco
-    // (arriba 1+1+2+2+2 + 12 = 20; a ras 1+1+2+2 + 5 = 11). Si cambian combo, arcBonus o los arcos AupH/AdnH: herramientas/sonda-p36lb-pago.mjs
-    if (e.rot) o.rot = [[t('end.arriba'), 186, 20], ['A ras', 92, 11]].map(([s, y, n], i) => {
+    if (e.rot) o.rot = [[t('end.arriba'), 186], ['A ras', 92]].map(([s, y], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
-      this.makeLabel(r, 'left').set(`${s} +${n}`);
+      this.makeLabel(r, 'left').set(s);
       r.y0 = r.y;
       r.w = r.getBounds().width;
       return r;
@@ -1842,7 +1840,7 @@ export class RunScene extends Phaser.Scene {
       o.x = px + o.D - dist;
       o.sprite.x = o.x + (o.ox || 0); // la torre que cae gira sobre su pie delantero
       // P36l-b: entra con fundido de ~200 ms ya dentro de pantalla (nunca cortada); al llegar Moki a 120 px se dobla como papel
-      // en ~60 ms sin perder opacidad (el fundido de salida la dejaba beige casi gris sobre el naranja). Reducido: se quita de golpe.
+      // en ~50 ms sin perder opacidad (el fundido de salida la dejaba beige casi gris sobre el naranja). Reducido: se quita de golpe.
       if (o.rot) {
         const d = this.t - (o.rt ?? this.t);
         o.rt = this.t;
