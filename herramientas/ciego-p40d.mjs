@@ -1,6 +1,6 @@
 // P40d: tira de 8 cuadros a resolución real, cada uno 180 ms después de un cobro (collect) (se ven píldora,
 // contador y cinta en el mismo cuadro). Escenas: 'reto' (Reto 2026-11-14, bot adjust: racha x2/x3 de horquillas y de
-// piezas) y 'primera' (jugador nuevo, 1.ª partida). Cobros a >= 600 ms; en el Reto solo con racha de piezas >= 3 o de horquillas >= 2.
+// piezas) y 'primera' (jugador nuevo, 1.ª partida). Cobros a >= 600 ms; en el Reto solo los cierres de horquilla (Arriba x1/x2/x3, A ras).
 // Uso: flock /tmp/moki-pesado.lock node herramientas/ciego-p40d.mjs <url> <WxH> <escena> <salida.png>
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
@@ -31,8 +31,10 @@ try {
     let quiero = null, ult = -1e9;
     const oCol = sc.collect.bind(sc);
     sc.collect = (k) => {
+      const antes = (k.arc && sc.arcGot[k.arc]) || 0;
       const x = oCol(k);
-      const vale = sc.t - ult >= 600 && (!reto || sc.combo >= 3 || sc.hqRacha >= 2);
+      const cierra = k.arc && antes + 1 === k.arcN && (k.alto || k.ras); // cierre de horquilla: nace la píldora larga
+      const vale = sc.t - ult >= 600 && (!reto || cierra);
       if (quiero == null && vale && cap.length < N) quiero = sc.t + 180;
       return x;
     };

@@ -261,7 +261,7 @@ export class RunScene extends Phaser.Scene {
         const pad = 12;
         const iw = icon ? icon.displayWidth + 8 : 0;
         const h = 40;
-        const vw = Math.max(val.width, label.minW || 0); // P40d: ancho reservado (el contador no salta de ancho)
+        const vw = Math.max(val.width, label.minW | 0); // P40d: ancho reservado (el contador no salta de ancho)
         const w = pad + iw + vw + pad;
         const x0 = align === 'right' ? -w : align === 'center' ? -w / 2 : 0;
         gfx.clear();
@@ -273,7 +273,6 @@ export class RunScene extends Phaser.Scene {
         gfx.strokeRoundedRect(x0 + 1.5, 1.5, w - 3, h - 3, 11);
         if (icon) icon.setPosition(x0 + pad, h / 2);
         val.setPosition(x0 + pad + iw + vw - val.width, (h - val.height) / 2);
-        label.tw = val.width;
       },
     };
     label.set('');
@@ -288,8 +287,7 @@ export class RunScene extends Phaser.Scene {
     this.pieceLabel = this.makeLabel(this.hudR, 'right', 'token');
     this.banner = this.makeLabel(this.hudC, 'center');
     this.distLabel.set(`0 ${t('hud.m')}`);
-    this.pieceLabel.set('000');
-    this.pieceLabel.minW = this.pieceLabel.tw;
+    this.pieceLabel.minW = 44; // P40d: ancho de '000', el más ancho de 3 cifras en Outfit 700 22 px (medido): no salta de ancho hasta 999
     this.pieceLabel.set('0');
     // Paseo activo: etiqueta de papel bajo los metros (tinta #22211F, sin naranja chico; ARTE §5). La pide el líder tras QA de la pieza 4
     this.paseoTagC = this.add.container(0, 48).setVisible(false);
@@ -1544,10 +1542,13 @@ export class RunScene extends Phaser.Scene {
     // P40d: solo = cobro de la 1.ª partida que no cierra horquilla (pieza o arco): también trae su píldora
     this.pagoL.set(solo ? `+${d}` : k.alto ? `${t('end.arriba')}${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
     // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
-    this.pagoX = k.x + (k.alto || solo ? -40 : 80);
+    const z = this.zoom;
+    this.pago.setScale(Math.max(1, 25 / 22 / z)); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
-    this.pago.setScale(Math.max(1, 25 / (22 * this.zoom))); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)
+    this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
+    // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
+    if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 70 * this.hudScale + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
     this.cinta.avisoT = -1;
     this.cinta.aviso.setVisible(false);
