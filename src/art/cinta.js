@@ -69,10 +69,11 @@ export class Cinta {
   showAviso(text, grande) {
     this.etiqueta.set(text);
     this.grande = grande;
-    // chico: mitad de escala, pero nunca menos de 12 px de letra en pantalla (a 375 la cámara aleja)
-    const s = grande ? 1 : Math.max(0.5, 12 / (22 * this.scene.cameras.main.zoom));
+    // chico: mitad de escala, pero nunca menos de 14 px de letra en el lienzo (P39: a 12 px se leía diminuto a 390 y 1280)
+    const s = grande ? 1 : Math.max(0.5, 14.5 / (22 * this.scene.cameras.main.zoom));
+    this.avisoS = s;
     this.avisoAt = this.mid && this.mid[this.mid.length - 1]; // punta de la cinta al cobrar (draw crea puntos nuevos)
-    this.aviso.setScale(s).setPosition(0, 0);
+    this.aviso.setScale(s).setAlpha(1).setPosition(0, 0);
     this.avisoW = this.aviso.getBounds().width + 24 * s; // getBounds ya trae la escala pero solo mide el texto; +24 = relleno
     this.avisoT = 0;
     this.aviso.setVisible(true);
@@ -103,10 +104,12 @@ export class Cinta {
       const G = this.grande || !a;
       // grande: sobre la cabeza y sube; chico: quieto, centrado arriba de la punta de la cinta
       const ax = G ? x - 4 : a.x + this.avisoW / 2;
-      const ay = G ? y - C.player.spriteHeight - 28 - (calma ? 0 : 18 * k) : a.y - 12 - 40 * this.aviso.scaleY;
+      const ay = G ? y - C.player.spriteHeight - 28 - (calma ? 0 : 18 * k) : a.y - 12 - 40 * this.avisoS;
       // a 375 Moki queda cerca del borde: el aviso nunca sale de la pantalla (se recorre a la derecha)
       const borde = this.scene.cameras.main.worldView.x + 8 + this.avisoW;
-      this.aviso.setPosition(Math.max(ax, borde), ay).setAlpha(k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3);
+      // P39: sale doblándose como papel (alto a 0), siempre opaco: el fundido con alfa dejaba un cuadro gris (sombra bajo papel translúcido)
+      const f = k < 0.8 ? 0 : (k - 0.8) / 0.2;
+      this.aviso.setPosition(Math.max(ax, borde), ay).setScale(this.avisoS, this.avisoS * (1 - f * f));
       if (k >= 1) {
         this.avisoT = -1;
         this.aviso.setVisible(false);
