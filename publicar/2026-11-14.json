@@ -1,0 +1,23 @@
+{
+  "id": "2026-11-14",
+  "fecha": "2026-11-14",
+  "borrador": true,
+  "titulo": {
+    "es": "El letrero del combo ya se lee y no tapa a Moki",
+    "en": "The combo sign is now readable and no longer covers Moki"
+  },
+  "p39": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=primera. En tu primera partida, en Libre o en el Reto del día: junta 3 piezas seguidas y deja que se corte el combo. Sale \"x2 +N\" con letra más grande, nace arriba del casco y se dobla al irse.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=primera. In your first run, in Free or the Daily Challenge: grab 3 pieces in a row and let the combo end. \"x2 +N\" appears in bigger letters, starts above the helmet and folds away."
+    },
+    "cifras": {
+      "es": "Antes el letrero dejaba 102 de 402 cuadros grises al irse y, en el celular, caía sobre la espalda de Moki en 369 de 402. Ahora 0 y 0. La letra pasa de 12 a 14.5 px. Los 6 bots dan igual que antes y la consola no muestra errores. El juego pesa 18 bytes más.",
+      "en": "Before, the sign left 102 of 402 frames grey on exit and, on a phone, landed on Moki's back in 369 of 402. Now 0 and 0. The letters grow from 12 to 14.5 px. The 6 bots match and the console shows no errors. The game weighs 18 bytes more."
+    },
+    "la_regamos": {
+      "es": "A 1280 el letrero queda chico y lejos de Moki (a P39b). No medimos el salto alto pegado al techo ni más de una semilla del Reto.",
+      "en": "At 1280 the sign looks small and far from Moki (left for P39b). We did not measure a high jump near the ceiling nor more than one Challenge seed."
+    }
+  }
+}
