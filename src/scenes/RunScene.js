@@ -261,7 +261,8 @@ export class RunScene extends Phaser.Scene {
         const pad = 12;
         const iw = icon ? icon.displayWidth + 8 : 0;
         const h = 40;
-        const w = pad + iw + val.width + pad;
+        const vw = Math.max(val.width, label.minW | 0); // P40d: ancho reservado (el contador no salta de ancho)
+        const w = pad + iw + vw + pad;
         const x0 = align === 'right' ? -w : align === 'center' ? -w / 2 : 0;
         gfx.clear();
         gfx.fillStyle(0x22211f, 0.22);
@@ -271,7 +272,7 @@ export class RunScene extends Phaser.Scene {
         gfx.lineStyle(3, Phaser.Display.Color.HexStringToColor(TONE.kraftDark).color, 1);
         gfx.strokeRoundedRect(x0 + 1.5, 1.5, w - 3, h - 3, 11);
         if (icon) icon.setPosition(x0 + pad, h / 2);
-        val.setPosition(x0 + pad + iw, (h - val.height) / 2);
+        val.setPosition(x0 + pad + iw + (vw - val.width) / 2, (h - val.height) / 2); // P40d: centrado en el ancho reservado (pegado a la derecha dejaba hueco junto a la moneda)
       },
     };
     label.set('');
@@ -286,6 +287,7 @@ export class RunScene extends Phaser.Scene {
     this.pieceLabel = this.makeLabel(this.hudR, 'right', 'token');
     this.banner = this.makeLabel(this.hudC, 'center');
     this.distLabel.set(`0 ${t('hud.m')}`);
+    this.pieceLabel.minW = 44; // P40d: ancho de '000', el más ancho de 3 cifras en Outfit 700 22 px (medido): no salta de ancho hasta 999
     this.pieceLabel.set('0');
     // Paseo activo: etiqueta de papel bajo los metros (tinta #22211F, sin naranja chico; ARTE §5). La pide el líder tras QA de la pieza 4
     this.paseoTagC = this.add.container(0, 48).setVisible(false);
@@ -1061,7 +1063,8 @@ export class RunScene extends Phaser.Scene {
   // Ficha de piezas con la racha visible (DISENO §64: x2 / x3 solo en Mucho o más)
   setPieceLabel(mult = 1) {
     // P40 UN NÚMERO POR COSA: el contador es el papel (pieceValue), lo mismo que suma cada '+N' que flota; pieces queda para Cuaderno y logros
-    this.pieceLabel.set(mult > 1 && C.juice >= 2 && !this.reduced ? `${this.pieceValue}  x${mult}` : String(this.pieceValue));
+    // P40d: un solo multiplicador en pantalla: la racha de piezas vive en la cinta; el contador es solo la cifra
+    this.pieceLabel.set(String(this.pieceValue));
   }
 
   // Pasto de papel cerca de Moki que se dobla al aterrizar fuerte (Mucho o más)
@@ -1530,31 +1533,38 @@ export class RunScene extends Phaser.Scene {
   // P36g EL PAGO DE ARRIBA SE VE: al cerrar el arco alto, píldora de papel "+12" (la del HUD) sobre la cabeza de Moki, en la
   // corona. Sube 24 px y se va en 900 ms; reducido: sin subida. Si el cartel de la cinta está activo, sale 200 ms después de que se va; si el
   // cartel sale mientras vive (paso 0: 900 ms después del arco), se quita al instante: nunca se pisan. Clásico no tiene k.alto.
-  showPago(k, d, hm = 1) {
+  showPago(k, d, hm = 1, solo) {
     if (!this.pago) {
       this.pago = this.add.container(0, 0).setDepth(99);
       this.pagoL = this.makeLabel(this.pago, 'center');
     }
     // P40: la cifra es el salto del contador en este cobro (bono del arco + la pieza que lo cierra con su racha); xN = racha de horquillas
-    this.pagoL.set(k.alto ? `${t('end.arriba')}${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
+    // P40d: solo = cobro de la 1.ª partida que no cierra horquilla (pieza o arco): también trae su píldora
+    this.pagoL.set(solo ? `+${d}` : k.alto ? `${t('end.arriba')}${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
     // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
-    this.pagoX = k.x + (k.alto ? -40 : 80);
+    const z = this.zoom;
+    this.pago.setScale(Math.max(1, 25 / 22 / z)); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
+    this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
-    this.pagoT = this.cinta.avisoT >= 0 ? -200 : 0;
+    // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
+    if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 112 / z + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
+    // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
+    this.cinta.avisoT = -1;
+    this.cinta.aviso.setVisible(false);
+    this.pagoT = 0;
     this.pago.setVisible(false);
   }
 
   stepPago(dtMs) {
     if (!this.pago) return;
-    const cartel = this.cinta.avisoT >= 0;
-    if (this.pagoT > -1e9) this.pagoT = this.pagoT < 0 && cartel ? -200 : this.pagoT + dtMs;
+    if (this.pagoT > -1e9) this.pagoT += dtMs;
     const k = this.pagoT / 900;
-    const vivo = k >= 0 && k < 1 && !cartel;
+    const vivo = k >= 0 && k < 1;
     if (!vivo && this.pagoT >= 0) this.pagoT = -1e9;
     this.pago.setVisible(vivo);
     // P36l-d: a 390 la cámara deja a Moki cerca del borde; la píldora nunca queda a menos de 8 px del lienzo (getBounds solo mide el texto: +24 de relleno)
-    if (vivo) this.pagoW = this.pagoW || this.pago.getBounds().width + 24;
+    if (vivo) this.pagoW = this.pagoW || this.pago.getBounds().width + 24 * this.pago.scaleX;
     const cam = this.cameras.main;
     if (vivo) this.pago.setPosition(Math.max(this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoY - (this.reduced ? 0 : 24 * Math.sin(k * 1.571))).setAlpha(k < 0.65 ? 1 : 1 - (k - 0.65) / 0.35);
   }
@@ -2261,6 +2271,7 @@ export class RunScene extends Phaser.Scene {
         this.shake(k.alto ? 2 : 1, 80);
       }
     }
+    if (this.level === GAME_PRIMERA && !(arcFull && (k.alto || k.ras))) this.showPago(k, this.pieceValue - valor0, 1, 1); // P40d: en la 1.ª partida ningún cobro mudo
     this.cinta.grow(this.combo, mult, this.pieceValue - valor0);
     this.setPieceLabel(mult);
     if (!arcFull) this.pop(this.hudR, 1.08 + 0.02 * Math.min(mult, 3), 120); // la ficha brinca más con la racha
