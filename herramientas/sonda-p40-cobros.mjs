@@ -4,6 +4,7 @@
 // fuera de "x2"/"x3"; el chip del HUD no trae "+". Al final de cada partida, la fila "Piezas" de la tarjeta = HUD.
 // Corridas: Libre 1037 adjust (sube todas: x1, x2, x3), Libre 1037 abajo (a ras), Libre 1037 mixto (sube 2, ras 1: se rompe),
 // Reto 2026-11-14 adjust, 1.ª partida de jugador nuevo adjust (la horquilla P36k paga x1).
+// P40a: corrida 1.ª partida abajo; en las dos de 1.ª partida, letrero de la ruta = píldora al cerrarla (+15 arriba, +7 a ras).
 // Uso: flock /tmp/moki-pesado.lock node herramientas/sonda-p40-cobros.mjs <url> <WxH> <salida.json>
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
@@ -18,10 +19,13 @@ const CORRIDAS = [
   { nombre: 'libre 1037 abajo', ls: { 'moki.modo': 'libre' }, bot: 'abajo', seed: '1037' },
   { nombre: 'libre 1037 mixto', ls: { 'moki.modo': 'libre' }, bot: 'mixto', seed: '1037' },
   { nombre: 'reto 2026-11-14 adjust', ls: { 'moki.modo': 'reto' }, bot: 'adjust', seed: '2026-11-14' },
-  { nombre: 'nuevo 1a partida adjust', ls: null, bot: 'adjust', seed: null },
+  { nombre: 'nuevo 1a partida adjust', ls: null, bot: 'adjust', seed: null, primera: 'arriba' },
+  { nombre: 'nuevo 1a partida abajo', ls: null, bot: 'abajo', seed: null, primera: 'ras' },
 ];
+const SOLO = process.argv[5]; // P40a: filtro opcional por nombre (p. ej. 'nuevo')
 try {
   for (const c of CORRIDAS) {
+    if (SOLO && !c.nombre.includes(SOLO)) continue;
     const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, ...(W < 500 ? { hasTouch: true, isMobile: true } : {}) });
     await ctx.addInitScript((ls) => {
       if (sessionStorage.getItem('s')) return;
@@ -36,14 +40,20 @@ try {
     await page.goto(`${url}/?debug`);
     await page.waitForFunction(() => window.__moki && window.__moki.moki, null, { timeout: 60000 });
     await page.waitForTimeout(1500);
-    const r = await page.evaluate(async ([bot, seed]) => {
+    const r = await page.evaluate(async ([bot, seed, primera]) => {
       const sc = window.__moki.scene.scenes[0];
       const num = (s) => { const m = String(s || '').match(/^\s*(\d+)/); return m ? +m[1] : null; };
       let hudLast = null;
       const oSet = sc.pieceLabel.set;
       sc.pieceLabel.set = (t) => { hudLast = t; return oSet.call(sc.pieceLabel, t); };
       const hudTxt = () => hudLast;
-      const r = { cobros: [], avisos: [], fallos: [], finHud: null, tarjeta: null };
+      const r = { cobros: [], avisos: [], fallos: [], finHud: null, tarjeta: null, letreros: null, letreroCierre: null };
+      // P40a: los letreros de la horquilla de la 1.ª partida (o.rot) dicen la misma cifra que la píldora al cerrar cada ruta
+      const leeLetreros = () => {
+        if (r.letreros) return;
+        const o = sc.obstacles.find((x) => x.rot);
+        if (o) r.letreros = o.rot.map((c) => (c.list.find((q) => q.type === 'Text') || {}).text);
+      };
       let pild = null;
       const oPago = sc.showPago.bind(sc);
       sc.showPago = (...a) => { const x = oPago(...a); pild = (sc.pago.list.find((o) => o.type === 'Text') || {}).text; return x; };
@@ -51,6 +61,7 @@ try {
       sc.cinta.showAviso = (text, g) => { r.avisos.push(text); if (!/^x[23]$/.test(text)) r.fallos.push({ que: 'aviso con cifra', text }); return oAviso(text, g); };
       const oc = sc.collect.bind(sc);
       sc.collect = (k) => {
+        leeLetreros();
         const v0 = sc.pieceValue, h0 = num(hudTxt());
         pild = null;
         const antes = (k.arc && sc.arcGot[k.arc]) || 0;
@@ -67,10 +78,18 @@ try {
           const m = String(pild).match(/\+(\d+)\s*$/);
           if (!m || +m[1] !== d) r.fallos.push({ que: 'pildora != delta', ...row });
         }
+        if (primera && cierre === primera) {
+          const re = primera === 'arriba' ? /^Arriba \+(\d+)$/ : /^A ras \+(\d+)$/;
+          const txt = (r.letreros || []).find((x) => re.test(String(x)));
+          const n = txt ? +String(txt).match(re)[1] : null;
+          r.letreroCierre = { ruta: primera, letrero: txt || null, pild, d };
+          if (n !== d) r.fallos.push({ que: 'letrero != pildora', ...row, letrero: txt || null });
+        }
         if ((cierre === 'arriba' || cierre === 'ras') && pild == null) r.fallos.push({ que: 'cierre sin pildora', ...row });
         return x;
       };
       const res = await window.__moki.moki.bot(bot, 200, seed);
+      if (primera && !r.letreroCierre) r.fallos.push({ que: 'primera sin cierre de su ruta', primera, letreros: r.letreros });
       r.res = { result: res.result, cause: res.cause, meters: res.meters, pieces: res.pieces, valor: sc.pieceValue };
       r.finHud = num(hudTxt());
       if (sc.screen === 'final') {
@@ -89,12 +108,12 @@ try {
       sc.showPago = oPago;
       sc.cinta.showAviso = oAviso;
       return r;
-    }, [c.bot, c.seed]);
+    }, [c.bot, c.seed, c.primera || null]);
     const rutas = {};
     for (const x of r.cobros) rutas[x.ruta + (x.ruta === 'arriba' ? ` hq${x.hq}` : '')] = (rutas[x.ruta + (x.ruta === 'arriba' ? ` hq${x.hq}` : '')] || 0) + 1;
     const pildoras = r.cobros.filter((x) => x.pild != null).map((x) => `${x.ruta}:${x.pild}=${x.d}`);
-    out.corridas.push({ nombre: c.nombre, res: r.res, cobros: r.cobros.length, rutas, pildoras, avisos: r.avisos, tarjeta: r.tarjeta, finHud: r.finHud, fallos: r.fallos.slice(0, 30), nFallos: r.fallos.length });
-    console.log(c.nombre, JSON.stringify({ cobros: r.cobros.length, nFallos: r.fallos.length, tarjeta: r.tarjeta, hud: r.finHud, rutas, pildoras: pildoras.slice(0, 12) }));
+    out.corridas.push({ nombre: c.nombre, res: r.res, cobros: r.cobros.length, rutas, pildoras, avisos: r.avisos, letreros: r.letreros, letreroCierre: r.letreroCierre, tarjeta: r.tarjeta, finHud: r.finHud, fallos: r.fallos.slice(0, 30), nFallos: r.fallos.length });
+    console.log(c.nombre, JSON.stringify({ cobros: r.cobros.length, nFallos: r.fallos.length, tarjeta: r.tarjeta, hud: r.finHud, rutas, pildoras: pildoras.slice(0, 12), letreroCierre: r.letreroCierre, fallos: r.fallos.slice(0, 3) }));
     await ctx.close();
   }
   const total = out.corridas.reduce((a, x) => a + x.cobros, 0);

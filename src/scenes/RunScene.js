@@ -1371,8 +1371,9 @@ export class RunScene extends Phaser.Scene {
     }
     if (e.tid && this.timbres.has(e.tid)) this.tumbar(o, true); // su timbre ya sonó: nace acostada
     // P36k vuelta B: la horquilla de la 1.ª partida se lee como dos rutas: píldora de papel al final de cada fila
-    // P36l-c: cada letrero dice el bono de su arco, la misma cifra que la píldora al cerrarlo (y la de la tarjeta final). Sonda: herramientas/sonda-p36lc-pago.mjs
-    if (e.rot) o.rot = [[t('end.arriba'), 186, C.arcBonusAlto], ['A ras', 92, C.arcBonus]].map(([s, y, n], i) => {
+    // P36l-c: cada letrero dice la misma cifra que la píldora al cerrarlo. Sonda: herramientas/sonda-p40-cobros.mjs (P40a)
+    // P40a: el letrero dice lo que salta el contador al cerrar la ruta (bono + la pieza que lo cierra con su racha), igual que la píldora; cifra en C.rotPago
+    if (e.rot) o.rot = [[t('end.arriba'), 186, C.rotPago[0]], ['A ras', 92, C.rotPago[1]]].map(([s, y, n], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
       this.makeLabel(r, 'left').set(`${s} +${n}`);
       r.y0 = r.y;
