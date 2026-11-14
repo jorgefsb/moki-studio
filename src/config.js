@@ -48,7 +48,9 @@ export const CONFIG = {
   crece: { estelaV: 350, estelaMs: 120, estelaMsHC: 80, estelaAtras: [40, 50], estelaHC: { escala: 3.2, vida: 1.25, colores: ['orange', 'kraft', 'orange'] } }, // CRECE nivel 8: estela desde 350 px/s (tramo 2 en adelante), un recorte cada 120 ms (80 en Hardcore); se queda atrás 40-50 px/s; Hardcore x3.2, vida x1.25, 2 de 3 naranja
   arcBonus: 5,
   arcBonusAlto: 12, // P36f ARRIBA PAGA MÁS: el arco alto de la horquilla paga 12 (arcBonus 5 = como en master). Ratio arriba/abajo 1.82; puerta del director 12-nov 19:28 (opción B). Ver evidencia/p36f-constructor/NOTA.md
+  rotPago: [15, 7], // P40a: letreros de la horquilla de la 1.ª partida (arriba, a ras) = lo que paga la píldora al cerrar cada ruta: bono 12/5 + la pieza que cierra con racha 6/4 (x3/x2). Si cambian arcBonus*, combo o la horquilla, la sonda-p40-cobros (letrero != pildora) lo marca
   amberValue: 5,
+  hq: { steps: [[1, 1], [2, 2], [3, 3]], on: true }, // P40 racha de horquillas: 2.ª subida seguida x2, 3.ª o más x3 del bono alto; on:false la apaga sin revertir
   scorePerPiece: 10,
   scorePerMeter: 1,
   jorgeInterventions: __JORGE_INTERVENTIONS__, // cuenta de BITACORA.md al compilar

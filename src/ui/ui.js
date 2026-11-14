@@ -682,7 +682,7 @@ export function createUI() {
         rows.append(el('dt', '', k), el('dd', '', v));
       };
       row(t('end.dist'), `${d.meters} m`);
-      row(t('end.pieces'), `${d.pieces} / ${d.piecesTotal}`);
+      row(t('end.pieces'), String(d.valor ?? d.pieces)); // P40: la misma cifra del contador del HUD (papel)
       if (!d.paseo) {
         // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
         row(t('end.score'), String(d.score));
