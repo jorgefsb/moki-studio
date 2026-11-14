@@ -60,6 +60,9 @@ export default defineConfig(({ command }) => {
     resolve: custom.resolve,
     define: { __JORGE_INTERVENTIONS__: JSON.stringify(jorgeInterventions()), ...custom.define },
     plugins: [saveEvidence()],
+    // 14-nov (Spark): el vite de la demo (:5180) vigilaba .worktrees (800 mil archivos) y evidencia; se quedaba sin memoria
+    // cada 10 min (SIGABRT y oom-kill). Solo vigila src, public e index.html. Revertir: git revert de este commit.
+    server: { watch: { ignored: ["**/.worktrees/**", "**/evidencia/**", "**/.git/**", "**/referencias/**", "**/herramientas/**", "**/dist/**", "**/*.md"] } },
     build: { outDir: 'dist', chunkSizeWarningLimit: 2000 },
   };
 });
