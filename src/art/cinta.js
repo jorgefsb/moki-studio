@@ -59,7 +59,9 @@ export class Cinta {
   cobrar(aviso, x2ok) {
     if (!this.combo) return 0;
     const mult = this.mult;
-    if (aviso && (mult > 2 || (mult > 1 && x2ok))) this.showAviso(`x${mult}`, mult > 2); // P40: solo el multiplicador; lo que valió ya está en el contador // P5d: el chico decía solo '+N' y se leía como chip fantasma; ahora 'x2 +N'
+    const S = this.scene;
+    // P40d: sin la x2 diminuta sobre Moki; la x3 solo si no vive una píldora de cobro (nunca dos multiplicadores en el mismo cuadro)
+    if (aviso && mult > 2 && !(S.pagoT > -1e9 && S.pagoT < 900)) this.showAviso('x3', true); // P40: solo el multiplicador; lo que valió ya está en el contador // P5d: el chico decía solo '+N' y se leía como chip fantasma; ahora 'x2 +N'
     this.combo = 0;
     this.rollT = 0;
     this.rollFrom = this.len;

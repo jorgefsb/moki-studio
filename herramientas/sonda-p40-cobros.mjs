@@ -5,6 +5,8 @@
 // Corridas: Libre 1037 adjust (sube todas: x1, x2, x3), Libre 1037 abajo (a ras), Libre 1037 mixto (sube 2, ras 1: se rompe),
 // Reto 2026-11-14 adjust, 1.ª partida de jugador nuevo adjust (la horquilla P36k paga x1).
 // P40a: corrida 1.ª partida abajo; en las dos de 1.ª partida, letrero de la ruta = píldora al cerrarla (+15 arriba, +7 a ras).
+// P40d: el contador no trae 'x'; el aviso de la cinta solo 'x3'; en la 1.ª partida todo cobro trae píldora; en ningún cuadro
+// conviven píldora y aviso; la 'x' de la píldora mide >= 12 px de alto en pantalla (pildPxMin).
 // Uso: flock /tmp/moki-pesado.lock node herramientas/sonda-p40-cobros.mjs <url> <WxH> <salida.json>
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
@@ -58,7 +60,22 @@ try {
       const oPago = sc.showPago.bind(sc);
       sc.showPago = (...a) => { const x = oPago(...a); pild = (sc.pago.list.find((o) => o.type === 'Text') || {}).text; return x; };
       const oAviso = sc.cinta.showAviso.bind(sc.cinta);
-      sc.cinta.showAviso = (text, g) => { r.avisos.push(text); if (!/^x[23]$/.test(text)) r.fallos.push({ que: 'aviso con cifra', text }); return oAviso(text, g); };
+      sc.cinta.showAviso = (text, g) => { r.avisos.push(text); if (!/^x3$/.test(text)) r.fallos.push({ que: 'aviso con cifra', text }); return oAviso(text, g); };
+      r.pildPxMin = null;
+      let dos = 0;
+      const oStep = sc.stepPago.bind(sc);
+      sc.stepPago = (dt) => {
+        const x = oStep(dt);
+        if (sc.pago && sc.pago.visible) {
+          const fs = 22 * sc.pago.scaleX * sc.cameras.main.zoom; // P40d: alto real de la 'x' (Outfit 700) en pantalla
+          const g2 = (window.__g2 = window.__g2 || document.createElement('canvas').getContext('2d'));
+          g2.font = `700 ${fs}px Outfit, sans-serif`;
+          const px = g2.measureText('x').actualBoundingBoxAscent;
+          r.pildPxMin = r.pildPxMin == null ? px : Math.min(r.pildPxMin, px);
+          if (sc.cinta.aviso.visible && dos++ < 5) r.fallos.push({ que: 'pildora y aviso en el mismo cuadro', t: Math.round(sc.t) });
+        }
+        return x;
+      };
       const oc = sc.collect.bind(sc);
       sc.collect = (k) => {
         leeLetreros();
@@ -74,6 +91,8 @@ try {
         if (h1 !== sc.pieceValue) r.fallos.push({ que: 'HUD != pieceValue', ...row, pv: sc.pieceValue });
         if (h0 != null && h1 - h0 !== d) r.fallos.push({ que: 'salto HUD != delta', ...row, h0 });
         if (/\+/.test(String(h1txt).replace(/^\s*\d+/, ''))) r.fallos.push({ que: 'chip con +', ...row });
+        if (/x/.test(String(h1txt))) r.fallos.push({ que: 'contador con x', ...row });
+        if (primera && pild == null) r.fallos.push({ que: 'cobro mudo 1a partida', ...row });
         if (pild != null) {
           const m = String(pild).match(/\+(\d+)\s*$/);
           if (!m || +m[1] !== d) r.fallos.push({ que: 'pildora != delta', ...row });
@@ -103,7 +122,9 @@ try {
         r.tarjeta = fila ? fila.nextElementSibling.textContent : null;
         if (num(r.tarjeta) !== r.finHud) r.fallos.push({ que: 'tarjeta != HUD', tarjeta: r.tarjeta, hud: r.finHud });
       }
+      if (r.pildPxMin != null && r.pildPxMin < 12) r.fallos.push({ que: 'x de la pildora < 12 px', px: r.pildPxMin });
       sc.collect = oc;
+      sc.stepPago = oStep;
       sc.pieceLabel.set = oSet;
       sc.showPago = oPago;
       sc.cinta.showAviso = oAviso;
@@ -112,8 +133,8 @@ try {
     const rutas = {};
     for (const x of r.cobros) rutas[x.ruta + (x.ruta === 'arriba' ? ` hq${x.hq}` : '')] = (rutas[x.ruta + (x.ruta === 'arriba' ? ` hq${x.hq}` : '')] || 0) + 1;
     const pildoras = r.cobros.filter((x) => x.pild != null).map((x) => `${x.ruta}:${x.pild}=${x.d}`);
-    out.corridas.push({ nombre: c.nombre, res: r.res, cobros: r.cobros.length, rutas, pildoras, avisos: r.avisos, letreros: r.letreros, letreroCierre: r.letreroCierre, tarjeta: r.tarjeta, finHud: r.finHud, fallos: r.fallos.slice(0, 30), nFallos: r.fallos.length });
-    console.log(c.nombre, JSON.stringify({ cobros: r.cobros.length, nFallos: r.fallos.length, tarjeta: r.tarjeta, hud: r.finHud, rutas, pildoras: pildoras.slice(0, 12), letreroCierre: r.letreroCierre, fallos: r.fallos.slice(0, 3) }));
+    out.corridas.push({ nombre: c.nombre, res: r.res, cobros: r.cobros.length, rutas, pildoras, avisos: r.avisos, letreros: r.letreros, letreroCierre: r.letreroCierre, pildPxMin: r.pildPxMin, tarjeta: r.tarjeta, finHud: r.finHud, fallos: r.fallos.slice(0, 30), nFallos: r.fallos.length });
+    console.log(c.nombre, JSON.stringify({ cobros: r.cobros.length, nFallos: r.fallos.length, pildPx: r.pildPxMin && +r.pildPxMin.toFixed(1), tarjeta: r.tarjeta, hud: r.finHud, rutas, pildoras: pildoras.slice(0, 12), letreroCierre: r.letreroCierre, fallos: r.fallos.slice(0, 3) }));
     await ctx.close();
   }
   const total = out.corridas.reduce((a, x) => a + x.cobros, 0);
