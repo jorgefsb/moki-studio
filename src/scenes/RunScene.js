@@ -1376,7 +1376,8 @@ export class RunScene extends Phaser.Scene {
     // P36k vuelta B: la horquilla de la 1.ª partida se lee como dos rutas: píldora de papel al final de cada fila
     // P36l-c: cada letrero dice la misma cifra que la píldora al cerrarlo. Sonda: herramientas/sonda-p40-cobros.mjs (P40a)
     // P40a: el letrero dice lo que salta el contador al cerrar la ruta (bono + la pieza que lo cierra con su racha), igual que la píldora; cifra en C.rotPago
-    if (e.rot) o.rot = [[t('end.arriba'), 186, C.rotPago[0]], ['A ras', 92, C.rotPago[1]]].map(([s, y, n], i) => {
+    // P36l-e: 16 px más de aire entre los dos (a 390 se leían apilados)
+    if (e.rot) o.rot = [[t('end.arriba'), 198, C.rotPago[0]], ['A ras', 88, C.rotPago[1]]].map(([s, y, n], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
       this.makeLabel(r, 'left').set(`${s} +${n}`);
       r.y0 = r.y;
@@ -1546,27 +1547,30 @@ export class RunScene extends Phaser.Scene {
     this.pago.setScale(Math.max(1, 25 / 22 / z)); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
     this.pagoX = k.x + (k.alto ? -40 : 80);
+    this.pagoDx = !solo && !k.alto; // P36l-f: 'A ras' va amarrada a Moki: sobre su casco, mismo x cada cuadro (la de P36l-e se adelantaba y se veía suelta)
     this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
     // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
     if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 112 / z + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
     this.cinta.avisoT = -1;
     this.cinta.aviso.setVisible(false);
-    this.pagoT = 0;
+    this.pagoT = -370 * this.pagoDx; // P36l-f (opción B del líder): a ras nace cuando el arco alto ya pasó sobre Moki (sus monedas tapaban la 'A' 3 cuadros)
     this.pago.setVisible(false);
   }
 
   stepPago(dtMs) {
     if (!this.pago) return;
     if (this.pagoT > -1e9) this.pagoT += dtMs;
-    const k = this.pagoT / 900;
+    const k = this.pagoT / 1000; // P36l-e: 100 ms más opaca antes del fundido (se fundía sobre un pino)
     const vivo = k >= 0 && k < 1;
     if (!vivo && this.pagoT >= 0) this.pagoT = -1e9;
     this.pago.setVisible(vivo);
     // P36l-d: a 390 la cámara deja a Moki cerca del borde; la píldora nunca queda a menos de 8 px del lienzo (getBounds solo mide el texto: +24 de relleno)
     if (vivo) this.pagoW = this.pagoW || this.pago.getBounds().width + 24 * this.pago.scaleX;
     const cam = this.cameras.main;
-    if (vivo) this.pago.setPosition(Math.max(this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoY - (this.reduced ? 0 : 24 * Math.sin(k * 1.571))).setAlpha(k < 0.65 ? 1 : 1 - (k - 0.65) / 0.35);
+    // P36l-f: 'A ras' va pegada a Moki (x = la suya cada cuadro): su papel (40 px de alto x escala, cuelga del y) termina 18 px de pantalla sobre el casco (108 de mundo sobre los pies) y sube 16; a 390 no pasa de 8 px del borde
+    const s = this.reduced ? 0 : Math.sin(k * 1.571);
+    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 - 40 * this.pago.scaleY - (18 + 16 * s) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
@@ -1866,11 +1870,12 @@ export class RunScene extends Phaser.Scene {
       if (o.rot) {
         const d = this.t - (o.rt ?? this.t);
         o.rt = this.t;
-        o.rot.forEach((h, i) => {
-          h.x = o.x + 80 - 12 * i;
+        // P36l-e: entran juntos, cuando los dos caben (a ras, más angosto y 12 px atrás, entraba ~110 ms antes)
+        const dentro = Math.min(...o.rot.map((h, i) => this.vw - 12 - (h.x = o.x + 80 - 12 * i) - h.w)) > 0;
+        o.rot.forEach((h) => {
           const sal = h.x - this.px < 120;
           // P36l-d: entra desdoblándose ya opaca (el fundido de alpha daba un primer cuadro gris a 390)
-          h.alpha = sal || this.vw - 12 - h.x - h.w > 0 ? 1 : 0;
+          h.alpha = sal || dentro ? 1 : 0;
           h.scaleY = clamp(this.reduced ? +!sal : h.scaleY + (sal ? -d / 60 : h.alpha ? d / 150 : -1), 0, 1);
           h.y = h.y0 + 20 * (1 - h.scaleY);
         });
