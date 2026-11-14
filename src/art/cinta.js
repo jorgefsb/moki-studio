@@ -72,6 +72,7 @@ export class Cinta {
     // chico: mitad de escala, pero nunca menos de 14 px de letra en el lienzo (P39: a 12 px se leía diminuto a 390 y 1280)
     const s = grande ? 1 : Math.max(0.5, 14.5 / (22 * this.scene.cameras.main.zoom));
     this.avisoS = s;
+    this.avisoEncima = null;
     this.avisoAt = this.mid && this.mid[this.mid.length - 1]; // punta de la cinta al cobrar (draw crea puntos nuevos)
     this.aviso.setScale(s).setAlpha(1).setPosition(0, 0);
     this.avisoW = this.aviso.getBounds().width + 24 * s; // getBounds ya trae la escala pero solo mide el texto; +24 = relleno
@@ -103,10 +104,14 @@ export class Cinta {
       const a = this.avisoAt;
       const G = this.grande || !a;
       // grande: sobre la cabeza y sube; chico: quieto, centrado arriba de la punta de la cinta
-      const ax = G ? x - 4 : a.x + this.avisoW / 2;
-      const ay = G ? y - C.player.spriteHeight - 28 - (calma ? 0 : 18 * k) : a.y - 12 - 40 * this.avisoS;
       // a 375 Moki queda cerca del borde: el aviso nunca sale de la pantalla (se recorre a la derecha)
       const borde = this.scene.cameras.main.worldView.x + 8 + this.avisoW;
+      // P39: arriba de la cabeza = 10 px sobre el casco (~112 px sobre los pies); a 390 el chico en la punta caía sobre la espalda de Moki
+      const cabeza = y - 122 - 40 * this.avisoS;
+      if (this.avisoEncima == null) this.avisoEncima = !G && Math.max(a.x + this.avisoW / 2, borde) > x - 34; // se decide al nacer: no brinca a medio cartel
+      const encima = this.avisoEncima;
+      const ax = G ? x - 4 : encima ? x + this.avisoW / 2 : a.x + this.avisoW / 2;
+      const ay = G ? cabeza - (calma ? 0 : 18 * k) : encima ? cabeza : a.y - 12 - 40 * this.avisoS;
       // P39: sale doblándose como papel (alto a 0), siempre opaco: el fundido con alfa dejaba un cuadro gris (sombra bajo papel translúcido)
       const f = k < 0.8 ? 0 : (k - 0.8) / 0.2;
       this.aviso.setPosition(Math.max(ax, borde), ay).setScale(this.avisoS, this.avisoS * (1 - f * f));

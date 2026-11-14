@@ -39,7 +39,16 @@ try {
       const cb = av.getBounds(); // solo mide el texto; la píldora de papel suma ~12 px de relleno a cada lado
       const caja = { x: cb.x - 12 * av.scaleX, y: cb.y - 10 * av.scaleY, right: cb.right + 12 * av.scaleX, bottom: cb.bottom + 10 * av.scaleY };
       const pz = sc.poses && sc.poses.sprite && sc.poses.sprite.visible ? sc.poses.sprite : sc.rig.container;
-      if (sol(caja, pz.getBounds())) r.sobreMoki++;
+      const mb = pz.getBounds(); let pxMoki = 0;
+      if (sol(caja, mb) && pz.type === 'Image') { // pixeles opacos de Moki bajo la caja del chip (muestreo cada 2 px de mundo)
+        const M = pz.getWorldTransformMatrix(), tmp = { x: 0, y: 0 };
+        for (let yy = Math.max(caja.y, mb.y); yy < Math.min(caja.bottom, mb.bottom); yy += 2) for (let xx = Math.max(caja.x, mb.x); xx < Math.min(caja.right, mb.right); xx += 2) {
+          M.applyInverse(xx, yy, tmp); const lx = tmp.x + pz.displayOriginX, ly = tmp.y + pz.displayOriginY;
+          if (lx >= 0 && ly >= 0 && lx < pz.width && ly < pz.height && sc.textures.getPixelAlpha(lx | 0, ly | 0, pz.texture.key, pz.frame.name) > 40) pxMoki++;
+        }
+      }
+      if (pxMoki > 0) r.pxMoki = (r.pxMoki || 0) + pxMoki, act.pxMoki = (act.pxMoki || 0) + pxMoki;
+      if (pxMoki > 0) { r.sobreMoki++; const R = (o) => [Math.round(o.x), Math.round(o.y), Math.round(o.right), Math.round(o.bottom)]; if (!r.foto) r.foto = { chip: R(caja), moki: R(mb), quien: pz.type, t: Math.round(sc.t) }; }
       if (sc.pago && sc.pago.visible && sc.pago.alpha > 0.02 && sol(caja, sc.pago.getBounds())) r.sobrePildora++;
       const lleno = Math.abs(av.scaleY - av.scaleX) < 1e-6;
       if (lleno) {
