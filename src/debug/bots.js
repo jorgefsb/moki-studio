@@ -80,6 +80,9 @@ export function runBot(s, kind, maxSec = 150, seed = null) {
     pieces: s.pieces,
     pieceTotal: s.level.pieceTotal,
     score: s.score,
+    horqNivel: (s.level.horq || []).length, // P40: horquillas que trae el nivel
+    horq: s.hq ? s.hq.size : 0, // P36m: horquillas alcanzadas en este intento
+    altos: s.hqA || 0, // P36m: horquillas subidas completas
   };
 }
 
