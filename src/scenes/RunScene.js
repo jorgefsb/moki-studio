@@ -272,7 +272,7 @@ export class RunScene extends Phaser.Scene {
         gfx.lineStyle(3, Phaser.Display.Color.HexStringToColor(TONE.kraftDark).color, 1);
         gfx.strokeRoundedRect(x0 + 1.5, 1.5, w - 3, h - 3, 11);
         if (icon) icon.setPosition(x0 + pad, h / 2);
-        val.setPosition(x0 + pad + iw + vw - val.width, (h - val.height) / 2);
+        val.setPosition(x0 + pad + iw + (vw - val.width) / 2, (h - val.height) / 2); // P40d: centrado en el ancho reservado (pegado a la derecha dejaba hueco junto a la moneda)
       },
     };
     label.set('');
@@ -1548,7 +1548,7 @@ export class RunScene extends Phaser.Scene {
     this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
     // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
-    if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 70 * this.hudScale + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador
+    if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 112 / z + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
     this.cinta.avisoT = -1;
     this.cinta.aviso.setVisible(false);
