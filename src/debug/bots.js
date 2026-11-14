@@ -47,10 +47,12 @@ export function runBot(s, kind, maxSec = 150, seed = null) {
       s.release();
     }
     if (releaseAt < 0 && s.grounded && kind !== 'pasivo') {
-      const o = s.obstacles.find((q) => !q.handled && q.x > s.px - 4 && q.plan !== 'skip' && ((kind !== 'adjust' && kind !== 'abajo') || q.plan === 'tap' || q.plan === 'hold'));
+      const o = s.obstacles.find((q) => !q.handled && q.x > s.px - 4 && q.plan !== 'skip' && ((kind !== 'adjust' && kind !== 'abajo' && kind !== 'mixto') || q.plan === 'tap' || q.plan === 'hold'));
       if (o) {
         // 'abajo' (P36k): como adjust, pero en la caja de la horquilla toca y pasa a ras (ruta de abajo del validador)
-        const horq = kind === 'abajo' && (s.level.horq || []).some((d) => Math.abs(d - o.D) < 1);
+        // 'mixto' (P40): sube dos horquillas y pasa a ras la tercera (la racha de horquillas sube y se rompe)
+        const hi = (s.level.horq || []).findIndex((d) => Math.abs(d - o.D) < 1);
+        const horq = (kind === 'abajo' && hi >= 0) || (kind === 'mixto' && hi % 3 === 2);
         const mode = kind === 'tap' || horq ? 'tap' : kind === 'hold' ? 'hold' : o.plan;
         // Dos cajas pegadas: un solo salto largo centrado en el par (a media distancia de las dos)
         const pair = s.obstacles.some((q) => q.plan === 'skip' && q.D > o.D && q.D - o.D < 120) ? C.cajaPegadaGapPx / 2 : 0;

@@ -49,6 +49,7 @@ export const CONFIG = {
   arcBonus: 5,
   arcBonusAlto: 12, // P36f ARRIBA PAGA MÁS: el arco alto de la horquilla paga 12 (arcBonus 5 = como en master). Ratio arriba/abajo 1.82; puerta del director 12-nov 19:28 (opción B). Ver evidencia/p36f-constructor/NOTA.md
   amberValue: 5,
+  hq: { steps: [[1, 1], [2, 2], [3, 3]], on: true }, // P40 racha de horquillas: 2.ª subida seguida x2, 3.ª o más x3 del bono alto; on:false la apaga sin revertir
   scorePerPiece: 10,
   scorePerMeter: 1,
   jorgeInterventions: __JORGE_INTERVENTIONS__, // cuenta de BITACORA.md al compilar

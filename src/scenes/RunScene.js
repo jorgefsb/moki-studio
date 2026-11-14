@@ -163,7 +163,7 @@ export class RunScene extends Phaser.Scene {
     // Las fuentes pueden llegar después del primer cuadro: el HUD se vuelve a medir cuando están listas
     document.fonts.ready.then(() => {
       this.lastM = -1;
-      this.pieceLabel.set(String(this.pieces || 0));
+      this.pieceLabel.set(String(this.pieceValue || 0));
       this.distLabel.set(`${Math.floor((this.dist || 0) / 100)} ${t('hud.m')}`);
     });
     performance.mark('moki-ready');
@@ -900,7 +900,9 @@ export class RunScene extends Phaser.Scene {
     // P36m: horquillas vistas (arcos altos que Moki alcanzó, por arriba o a ras) y cuántas subió completas, en este intento
     this.hq = new Set();
     this.hqA = 0;
-    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx, () => ({ horq: this.hq.size, altos: this.hqA }));
+    this.hqRacha = 0; // P40: horquillas subidas seguidas (x1, x2, x3); no se guarda en checkpoint: no castiga, solo no regala
+    this.hqMax = 0;
+    abrirIntento(this.paseoRun ? 'paseo' : this.level.modo || 'clasico', nivelDe(leerCuaderno()).nivel, () => this.tramoIdx, () => ({ horq: this.hq.size, altos: this.hqA, hqMax: this.hqMax }));
     contarPartida();
   }
 
@@ -1058,7 +1060,8 @@ export class RunScene extends Phaser.Scene {
 
   // Ficha de piezas con la racha visible (DISENO §64: x2 / x3 solo en Mucho o más)
   setPieceLabel(mult = 1) {
-    this.pieceLabel.set(mult > 1 && C.juice >= 2 && !this.reduced ? `${this.pieces}  x${mult}` : String(this.pieces));
+    // P40 UN NÚMERO POR COSA: el contador es el papel (pieceValue), lo mismo que suma cada '+N' que flota; pieces queda para Cuaderno y logros
+    this.pieceLabel.set(mult > 1 && C.juice >= 2 && !this.reduced ? `${this.pieceValue}  x${mult}` : String(this.pieceValue));
   }
 
   // Pasto de papel cerca de Moki que se dobla al aterrizar fuerte (Mucho o más)
@@ -1526,12 +1529,13 @@ export class RunScene extends Phaser.Scene {
   // P36g EL PAGO DE ARRIBA SE VE: al cerrar el arco alto, píldora de papel "+12" (la del HUD) sobre la cabeza de Moki, en la
   // corona. Sube 24 px y se va en 900 ms; reducido: sin subida. Si el cartel de la cinta está activo, sale 200 ms después de que se va; si el
   // cartel sale mientras vive (paso 0: 900 ms después del arco), se quita al instante: nunca se pisan. Clásico no tiene k.alto.
-  showPago(k) {
+  showPago(k, d, hm = 1) {
     if (!this.pago) {
       this.pago = this.add.container(0, 0).setDepth(99);
       this.pagoL = this.makeLabel(this.pago, 'center');
     }
-    this.pagoL.set(`+${k.alto ? C.arcBonusAlto : C.arcBonus}`); // P36l-c: a ras también dice lo que pagó
+    // P40: la cifra es el salto del contador en este cobro (bono del arco + la pieza que lo cierra con su racha); xN = racha de horquillas
+    this.pagoL.set(k.alto ? `${t('end.arriba')}${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
     // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
     this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
@@ -2226,8 +2230,16 @@ export class RunScene extends Phaser.Scene {
     if (k.arc) {
       this.arcGot[k.arc] = (this.arcGot[k.arc] || 0) + 1;
       if (this.arcGot[k.arc] === k.arcN) {
-        if (k.alto) (this.arriba += C.arcBonusAlto), this.hqA++; // P36m: subió esta horquilla
-        this.pieceValue += k.alto ? C.arcBonusAlto : C.arcBonus; // arco completo (P36f: el alto de la horquilla paga más)
+        // P40 racha de horquillas: cada subida seguida multiplica el bono alto (x1, x2, x3 tope); a ras la rompe sin quitar nada
+        let hm = 1;
+        if (k.alto && C.hq.on) {
+          this.hqRacha += 1;
+          this.hqMax = Math.max(this.hqMax, this.hqRacha);
+          for (const [from, v] of C.hq.steps) if (this.hqRacha >= from) hm = v;
+        } else if (k.ras) this.hqRacha = 0;
+        const bono = k.alto ? C.arcBonusAlto * hm : C.arcBonus;
+        if (k.alto) (this.arriba += bono), this.hqA++; // P36m: subió esta horquilla
+        this.pieceValue += bono; // arco completo (P36f: el alto de la horquilla paga más)
         if (P) {
           P.arcs += 1;
           if (k.alto) P.altos += 1; // P36i: solo el arco alto de la horquilla (nota arriba2, sello arriba3)
@@ -2239,7 +2251,7 @@ export class RunScene extends Phaser.Scene {
         // P36e: el arco alto de la horquilla cierra con corona (una nota más, papel hacia atrás y arriba, ficha más grande)
         arcFull = true;
         if (k.alto) this.particles.burst('arcAlto', k.x - 40, k.y - 88);
-        if (k.alto || k.ras) this.showPago(k);
+        if (k.alto || k.ras) this.showPago(k, this.pieceValue - valor0, hm); // P40: un cobro, una cifra: bono + la pieza que lo cierra
         if (!k.alto) this.particles.burst('arc', k.x, k.y);
         if (k.alto) this.pop(this.hudR, 1.3, 200);
         else this.pop(this.hudR, 1.22, 160);
@@ -2602,6 +2614,7 @@ export class RunScene extends Phaser.Scene {
     if (atras && !conPoses) this.retroceso = 0;
     if (this.sobre) this.mokiShadow.setDepth(10.5); // su sombra cae sobre la caja, no en el suelo tapado
     this.cobrarCinta(false); // al chocar la cinta se enrolla sin cartel; lo juntado ya contó
+    this.hqRacha = 0; // P40: chocar rompe la racha de horquillas (no quita puntos)
     cerrarIntento(o.type === 'zanja' ? 'zanja' : 'choque', o.type);
     this.dead = true;
     this.screen = 'dead';
@@ -2760,7 +2773,7 @@ export class RunScene extends Phaser.Scene {
     const target = this.tramoSpeed(this.tramoIdx);
     this.speed = FIXED_SPEED || target * C.respawnSpeedMult;
     this.accel = FIXED_SPEED ? 0 : (target - this.speed) / C.respawnEaseSec;
-    this.pieceLabel.set(String(this.pieces));
+    this.pieceLabel.set(String(this.pieceValue));
     this.lastM = -1;
     this.tut = { stage: this.tut.stage === 1 ? 0 : this.tut.stage === 3 ? 2 : this.tut.stage, state: 'off' };
     this.rig.reset();
@@ -2785,7 +2798,7 @@ export class RunScene extends Phaser.Scene {
     const best = num(this.bestKey(), 0);
     const score = this.score;
     const isNew = !this.paseoRun && score > best;
-    this.finalData = { isNew, hadBest: best > 0, score, arriba: this.arriba, meters: Math.floor(this.dist / 100), pieces: this.pieces, best: this.paseoRun ? best : Math.max(best, score), paseo: this.paseoRun };
+    this.finalData = { isNew, hadBest: best > 0, score, arriba: this.arriba, meters: Math.floor(this.dist / 100), pieces: this.pieces, valor: this.pieceValue, best: this.paseoRun ? best : Math.max(best, score), paseo: this.paseoRun };
     audio.setState('finished'); // la música baja a 0 y suena el stinger del final
     audio.stinger('final');
     if (isNew) save(this.bestKey(), score);
@@ -2842,7 +2855,7 @@ export class RunScene extends Phaser.Scene {
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
     this.ui.showFinal(
-      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, piecesTotal: this.level.pieceTotal, score: d.score, arriba: d.arriba, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, valor: d.valor, piecesTotal: this.level.pieceTotal, score: d.score, arriba: d.arriba, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => this.compartir(), onMenu: () => this.goHome() },
       r
     );
