@@ -113,3 +113,14 @@ Gancho de la primera mirada: lo más importante se entiende en un segundo sin le
 2. Vale para todo: una pieza que no entró, un ciego mal hecho, la máquina en ROJO, un asiento caído, un post que salió tarde o que retuvimos de más.
 3. Un FALLA del revisor nunca deja el día sin post: se arregla, y si sigue fallando sale la mejor versión (skill publicar-siempre). Solo frena la seguridad: otra empresa, secretos, personas sin permiso.
 4. Para el cronista: en publicar/<fecha>.json cada bloque ya trae `la_regamos`; úsalo en los posts, no solo en la bitácora. Si además se cambió el sistema por ese error, agrega `lo_cambiamos` {es,en}.
+5. Antes de decir «pruébalo» o «ahora puedes», quien publica revisa que la versión con ese cambio ya esté en línea (el juego en /juegos/un-salto-mas/ trae el commit que lo incluye). Si no está, primero publica la versión (python3 herramientas/publicar-version.py en ~/work/moki-landing de la laptop) o el post dice claro que todavía no se puede jugar y cuándo sale. (Spark, 11-nov 19:20: a mediodía contamos P24 como jugable y el juego en línea seguía en la versión de anoche.)
+
+## 21. La primera línea es el problema, no la novedad (Kaizen 14-nov)
+
+La primera línea de cada post abre con el problema o la duda que vio el jugador (algo que no se veía, no cuadraba, era injusto o no avanzó). Después se cuenta cómo quedó. No se abre con «ya se juega», «hoy entró» ni «son N mejoras».
+
+Por qué: del 8 al 14 de noviembre, las 4 piezas que abrieron con un problema promediaron 657 de alcance sumado; las que abrieron con la novedad, 334 (Metricool, Kaizen 14-nov, fichas en bitacora-viva). El 11-nov, día de dos ganchos de problema, fue el de más partidas: 77 de 167.
+
+Bueno: «En MEGA las cajas llegaban casi sin aviso.» Malo: «Lo de hoy en Moki ya se juega. Son 14 mejoras desde anoche.»
+
+Se revisa el sábado 21-nov: si el promedio de las piezas con esta regla no le gana a 334, se regresa.
