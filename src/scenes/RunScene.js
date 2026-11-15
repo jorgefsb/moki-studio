@@ -1548,7 +1548,7 @@ export class RunScene extends Phaser.Scene {
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
     this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoDx = !solo && !k.alto; // P36l-f: 'A ras' va amarrada a Moki: sobre su casco, mismo x cada cuadro (la de P36l-e se adelantaba y se veía suelta)
-    this.pagoY = k.y - 122; // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas)
+    this.pagoY = k.y - 122 - (z < 1 && 45 * this.pago.scaleX - 40); // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas). P40i: a 390 (escala 1.34) el papel crece hacia arriba y deja 5 px más de aire (hueco ~11 px de pantalla, como 1280); colgado tapaba el casco al nacer
     // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
     if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 112 / z + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
