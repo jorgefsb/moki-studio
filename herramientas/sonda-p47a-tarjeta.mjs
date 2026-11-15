@@ -55,7 +55,18 @@ try {
       if (cajas.aviso && cajas.cuTitulo && cruza(cajas.aviso, cajas.cuTitulo) > 0) enc.push('aviso/tituloCuaderno');
       const card = document.querySelector('.ui-card');
       const fs = card ? Math.min(...[...card.querySelectorAll('.ui-suma dt, .ui-suma dd')].map((e) => parseFloat(getComputedStyle(e).fontSize))) : null;
+      // P47-a QA 390: recorte por celda (scrollWidth > clientWidth) y celdas partidas en 2 renglones (alto > 1.5 renglones)
+      // texto real (Range): corta = el texto se sale de su celda; fuera = se sale del área visible de la tarjeta (se recorta)
+      const cr = card && card.getBoundingClientRect(), padR = card ? parseFloat(getComputedStyle(card).paddingRight) : 0;
+      const celdas = card ? [...card.querySelectorAll('.ui-suma dt, .ui-suma dd')].filter((e) => e.textContent.trim()).map((e) => { const b = e.getBoundingClientRect(), rg = document.createRange(); rg.selectNodeContents(e); const tb = rg.getBoundingClientRect(), lh = parseFloat(getComputedStyle(e).lineHeight) || 20; return { t: e.textContent.trim(), tb: [tb.left, tb.top, tb.right, tb.bottom], dd: e.tagName === 'DD', x: Math.round(b.left), w: Math.round(b.width), corta: e.tagName === 'DD' && (tb.right > b.right + 1 || tb.left < b.left - 1), parte: b.height > lh * 1.5, fuera: tb.right > cr.right - padR + 1 }; }) : [];
+      // (pisa = cajas de texto que se cruzan en x y más de 30 % del alto: la caja de la letra grande del total rebasa su renglón
+      // unos px sin tocar tinta, eso no cuenta) una etiqueta puede correr sobre el hueco libre de la columna de al lado (Mejor marca, incluye Arriba): vale si no pisa otro texto
+      const pisa = [];
+      for (let i = 0; i < celdas.length; i++) for (let j = i + 1; j < celdas.length; j++) { const a = celdas[i].tb, b = celdas[j].tb; if (Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > 0 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > 0.3 * Math.min(a[3] - a[1], b[3] - b[1])) pisa.push(`${celdas[i].t} / ${celdas[j].t}`); }
+      const recortes = [...celdas.filter((c) => c.corta || c.fuera).map((c) => `${c.t} x${c.x} w${c.w}`), ...pisa.map((p) => `pisa ${p}`)];
+      const partidas = celdas.filter((c) => c.parte).map((c) => c.t);
       return {
+        recortes, partidas, celdas,
         cajas, encimados: enc,
         cuadernoTexto: cu ? cu.innerText.replace(/\s+/g, ' ').trim() : null,
         sigue: cu && cu.querySelector('.cu-sigue') ? cu.querySelector('.cu-sigue').textContent : null,

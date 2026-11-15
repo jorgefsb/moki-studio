@@ -431,14 +431,12 @@ div.mn-card { cursor: default; }
 .ui-card.corto h2 { font-size: 24px; line-height: 28px; margin-bottom: 2px; }
 .ui-card.corto .ui-rows { grid-template-columns: auto auto auto auto; gap: 0 10px; font-size: 14px; line-height: 20px; margin: 4px 0 0; }
 .ui-card.corto .ui-rows dd { font-size: 16px; line-height: 20px; }
-/* P47: vertical y bajito, 4 columnas como los datos de master; Arriba bajo Piezas, Puntaje y Mejor marca en un renglón */
-.corto .ui-suma { grid-template-columns: auto auto auto auto; margin: 0; font-size: 14px; line-height: 20px; }
-.corto .ui-suma dd { padding-left: 6px; font-size: 14px; line-height: 20px; }
-.corto .ui-suma dt:nth-of-type(even) { padding-left: 8px; }
-.corto .ui-suma .total { padding-top: 1px; font-size: 16px; line-height: 20px; }
+/* P47: vertical y bajito, 4 columnas en 4 renglones bajitos; 'incluye Arriba' y 'Mejor marca' de la 1.ª a la 3.ª columna (P47-a QA) */
+.corto .ui-suma { grid-template-columns: auto auto 1fr auto; margin: 0; font-size: 14px; line-height: 17px; }
+.corto .ui-suma dd { padding: 0 8px 0 6px; font-size: 14px; line-height: 17px; }
+.corto .ui-suma .total { padding-top: 1px; font-size: 16px; line-height: 17px; }
 .corto .ui-suma dd.total { font-size: 18px; }
-.corto .ui-suma dd.niv { white-space: normal; }
-.corto .ui-suma dt.mejor { width: 0; white-space: nowrap; } /* sin ancho propio: 'Mejor marca · Clásico' corre sobre la columna 4 y no la parte en dos */
+.corto .ui-suma dt.sub, .corto .ui-suma dt.mejor { grid-column: 1 / 4; }
 .bajo .ui-suma dt, .bajo .ui-suma dd { line-height: 18px; white-space: nowrap; }
 .ui-card.corto .ui-btn { min-height: 44px; margin-top: 6px; }
 .ui-card.corto .ui-link { min-height: 32px; margin-top: 2px; font-size: 14px; }

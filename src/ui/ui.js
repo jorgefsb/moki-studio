@@ -690,8 +690,8 @@ export function createUI() {
       } else {
         // P47: la cuenta a la vista sin crecer la tarjeta (P47-a: el Cuaderno de master no se pierde): metros + piezas x10
         // (+ Vuelta rápida) = Puntaje. "incluye Arriba" va en gris y sin signo: es parte de las piezas, no se suma otra vez.
-        // Vertical y bajito (corto): 4 columnas como los datos de master; los huecos se rellenan para que cada par caiga
-        // en su renglón (Arriba a la derecha, bajo Piezas; Puntaje y Mejor marca juntos).
+        // Vertical y bajito (corto, P47-a QA): 4 columnas y 4 renglones bajitos; 'incluye Arriba' y 'Mejor marca' ocupan las
+        // columnas 1 a 3 con su cifra en la 4.ª (bajo la de Piezas): nada se parte ni se corta a 390.
         const s = d.suma;
         const cuenta = el('dl', 'ui-suma');
         const fila = (f) => f && cuenta.append(el('dt', f[2] || '', f[0]), el('dd', f[2] || '', f[1]));
@@ -700,7 +700,7 @@ export function createUI() {
         const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
         const fin = [[t('end.score'), String(d.score), 'total'], [d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
         const no = ['', ''];
-        [[t('end.dist'), `${s.m} m`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.corto ? [...(ar || vu || niv ? [vu || niv || no, ar || no] : []), ...fin, vu && niv] : [ar, vu, ...fin, niv])].forEach(fila);
+        [[t('end.dist'), `${s.m} m`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.corto ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, niv])].forEach(fila);
         card.append(cuenta);
       }
       const again = el('button', 'ui-btn primary', t('end.again'));
