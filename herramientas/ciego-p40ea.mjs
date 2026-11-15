@@ -14,6 +14,8 @@
 // 'cp-primera' y 'cp-reto', +250 ms del checkpoint. P44: 'aterriza' (1.ª partida) y 'aterriza-reto', n-ésimo aterrizaje +55 ms.
 // P40b: 'primera-hq' (1.ª partida, cada cierre de horquilla, +75 ms).
 // Control negativo (P44): NEG=1 siembra el azar de la corrida master con otra semilla; el diff de fondo debe dejar de dar 0.
+// P40e-a (15-nov): TIRA=1 baraja por TIRA (una moneda: cada tira es una sola versión); ANTES=1 captura además cada cierre justo
+// antes del cobro (contador sin el +N) y lo pone a la izquierda del cuadro de +75 ms: el +N se comprueba a ojo.
 // Uso: flock /tmp/moki-pesado.lock node herramientas/ciego-p40ea.mjs <url-rama> <url-master> <WxH> <escena> <dir-salida> [semilla]
 // Prueba A/A: la misma URL en las dos posiciones. Debe dar fondo 0 y total 0 en 8 de 8, y X mezclada.
 import { createRequire } from 'node:module';
@@ -71,7 +73,7 @@ async function captura(url, semBot = 1037) {
   await quieto();
   await page.evaluate(() => window.__moki.moki.jumpTable()); // carga bots.js antes, para que el bot arranque sin esperar red
   await quieto();
-  const r = await page.evaluate(async ([reto, cp, N, DIAG, at, semBot, HQ]) => {
+  const r = await page.evaluate(async ([reto, cp, N, DIAG, at, semBot, HQ, ANTES]) => {
     const sc = window.__moki.scene.scenes[0], cv = sc.game.canvas, orig = sc.update.bind(sc), cap = {};
     const pinta = () => { const R = sc.game.renderer; R.preRender(); sc.sys.render(R); R.postRender(); return cv.toDataURL('image/png'); };
     // Máscara: cajas en px de lienzo de lo que el cambio puede tocar (píldora del pago, aviso de la cinta, aviso del centro)
@@ -111,6 +113,7 @@ async function captura(url, semBot = 1037) {
     const oCol = sc.collect.bind(sc);
     sc.collect = (k) => {
       const antes = (k.arc && sc.arcGot[k.arc]) || 0;
+      if (ANTES && (reto || HQ) && k.arc && antes + 1 === k.arcN && (k.alto || k.ras) && Object.keys(cap).length < N + 4) cap[`horquilla#${cuenta + 1}-0antes`] = { t: Math.round(sc.t), nr: window.__nr, png: pinta(), mask: cajas(), diag: diag() };
       const x = oCol(k);
       const cierra = k.arc && antes + 1 === k.arcN && (k.alto || k.ras);
       if (!cp && !at && ((!reto && !HQ) || cierra)) { cuenta++; pend.push({ key: `${reto || HQ ? 'horquilla' : 'cobro'}#${cuenta}`, at: sc.t + 75 }); }
@@ -133,7 +136,7 @@ async function captura(url, semBot = 1037) {
     sc.collect = oCol;
     sc.startGame = oStart;
     return { cap, w: cv.width, h: cv.height, bot: { score: res.score, seconds: res.seconds, result: res.result }, pre };
-  }, [reto, cp, N, process.env.P40H_DIAG ? process.env.P40H_DIAG.split(',').map(Number) : null, at, semBot, hq]);
+  }, [reto, cp, N, process.env.P40H_DIAG ? process.env.P40H_DIAG.split(',').map(Number) : null, at, semBot, hq, !!process.env.ANTES]);
   await ctx.close();
   return r;
 }
@@ -141,13 +144,14 @@ async function captura(url, semBot = 1037) {
 const R = await captura(urlR);
 const M = await captura(urlM, process.env.NEG ? 4242 : 1037);
 // Pares por nombre de evento: los primeros N que salen en las dos corridas
-const keys = Object.keys(R.cap).filter((k) => M.cap[k]).sort((a, b) => R.cap[a].t - R.cap[b].t).slice(0, N);
+const keys = Object.keys(R.cap).filter((k) => M.cap[k]).sort((a, b) => R.cap[a].t - R.cap[b].t || a.localeCompare(b)).slice(0, N);
 // Moneda por par (mulberry32, semilla registrada)
 let s = semilla >>> 0;
 const moneda = () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 < 0.5; };
-const xRama = keys.map(() => moneda());
+const m1 = moneda();
+const xRama = keys.map(() => (process.env.TIRA ? m1 : moneda()));
 const page = await (await browser.newContext()).newPage();
-const out = await page.evaluate(async ([R, M, keys, xRama]) => {
+const out = await page.evaluate(async ([R, M, keys, xRama, COLS]) => {
   const img = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
   const px = async (src, w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(await img(src), 0, 0); return g.getImageData(0, 0, w, h).data; };
   const diffs = [];
@@ -167,7 +171,7 @@ const out = await page.evaluate(async ([R, M, keys, xRama]) => {
   }
   // Tira X y tira Y: el par i va en la misma celda de las dos; la moneda del par decide de qué corrida sale cada una
   const tira = async (esX) => {
-    const n = keys.length, cols = 4, rows = Math.ceil(n / cols), cw = R.w, ch = R.h;
+    const n = keys.length, cols = COLS, rows = Math.ceil(n / cols), cw = R.w, ch = R.h;
     const T = document.createElement('canvas'); T.width = cols * cw + (cols + 1) * 6; T.height = rows * ch + (rows + 1) * 6;
     const g = T.getContext('2d'); g.fillStyle = '#888'; g.fillRect(0, 0, T.width, T.height);
     for (const [i, k] of keys.entries()) {
@@ -177,7 +181,7 @@ const out = await page.evaluate(async ([R, M, keys, xRama]) => {
     return T.toDataURL('image/png');
   };
   return { diffs, x: await tira(true), y: await tira(false) };
-}, [R, M, keys, xRama]);
+}, [R, M, keys, xRama, process.env.ANTES ? 2 : 4]);
 const nom = `${escena}-${W}`;
 writeFileSync(`${dir}/${nom}-X.png`, Buffer.from(out.x.split(',')[1], 'base64'));
 writeFileSync(`${dir}/${nom}-Y.png`, Buffer.from(out.y.split(',')[1], 'base64'));

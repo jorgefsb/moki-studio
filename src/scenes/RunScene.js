@@ -1557,7 +1557,8 @@ export class RunScene extends Phaser.Scene {
     // P40e: 'Arco alto' (no 'Arriba': 3 de 3 no supieron qué premiaba) + ficha de papel: la cifra es papel que entra al contador
     // P40: la cifra es el salto del contador en este cobro (bono del arco + la pieza que lo cierra con su racha); xN = racha de horquillas
     // P40d: solo = cobro de la 1.ª partida que no cierra horquilla (pieza o arco): también trae su píldora
-    this.pagoL.set(solo ? `+${d}` : k.alto ? `Arco alto${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
+    // P40e-a: 'racha 2', no 'x2': la x solo multiplica el bono (12 x hm) y la pieza suma aparte (+15, +26, +38): 'x2 +26 no es el doble de 15' (2 de 3)
+    this.pagoL.set(solo ? `+${d}` : k.alto ? `Arco alto${hm > 1 ? ` · racha ${hm}` : ''}  +${d}` : `A ras  +${d}`);
     // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
     const z = this.zoom;
     this.pago.setScale(Math.max(1, 25 / 22 / z)); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)
