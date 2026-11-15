@@ -462,7 +462,7 @@ export class RunScene extends Phaser.Scene {
     this.hudScale = hs / z;
     this.hudL.setScale(hs / z).setPosition(m, this.top + m);
     this.hudR.setScale(hs / z).setPosition(this.vw - m, this.top + m);
-    this.hudC.setScale(1 / z).setPosition(this.vw / 2, this.top + m + 52 / z);
+    this.hudC.setScale(1 / z).setPosition(this.vw / 2, this.hudCY());
     // Mano del tutorial: abajo a la derecha, en la zona del pulgar, fuera del carril de juego.
     // Mano y etiqueta junto a Moki, sobre su cabeza (no en la esquina): ahí está la mirada del jugador.
     this.tutC.setScale(1 / z).setPosition(this.px - 34 / z, g - 232 - 60 / z); // 60 px de pantalla más arriba y a la izquierda: ni Moki ni el arco quedan tapados
@@ -1001,8 +1001,20 @@ export class RunScene extends Phaser.Scene {
     }
   }
 
+  // Alto del letrero del centro (px de mundo). Va a 68 px de pantalla (renglón de los metros); P47: a 390 el botón de
+  // sonido baja bajo la pausa, al centro, y tapaba "Si chocas, sigues aquí": entonces el letrero baja 8 px bajo el botón.
+  hudCY() {
+    const z = this.zoom;
+    const sb = this.ui && this.ui.state.soundBtn;
+    const y0 = 68;
+    let dy = 0;
+    if (sb && sb.isConnected && sb.offsetTop < y0 + 40 && sb.offsetTop + sb.offsetHeight > y0 && Math.abs(sb.offsetLeft + sb.offsetWidth / 2 - this.scale.width / 2) < 140) dy = sb.offsetTop + sb.offsetHeight + 8 - y0;
+    return this.top + (y0 + dy) / z;
+  }
+
   showBanner(text, ms) {
     this.tweens.killTweensOf(this.hudC);
+    this.hudC.y = this.hudCY();
     this.banner.set(text);
     this.tweens.add({ targets: this.hudC, alpha: 1, duration: 180, ease: 'Cubic.easeOut' });
     // Entra como papel que se asienta (0.9 -> 1, Back.out); con Nada o movimiento reducido, solo fundido
@@ -1051,7 +1063,7 @@ export class RunScene extends Phaser.Scene {
     const m = 16 / this.zoom;
     this.hudL.setPosition(m + ox, this.top + m + oy);
     this.hudR.setPosition(this.vw - m + ox, this.top + m + oy);
-    this.hudC.setPosition(this.vw / 2 + ox, this.top + m + 52 / this.zoom + oy);
+    this.hudC.setPosition(this.vw / 2 + ox, this.hudCY() + oy);
   }
 
   // Brinco de una ficha del HUD (escala base -> base*s -> base). Nunca se aplica a Moki.
@@ -2877,8 +2889,13 @@ export class RunScene extends Phaser.Scene {
     } else if (!wide) r = { ...r, top, maxHeight: H - top - 8, corto: true, mokiT: zonas.mokiT }; // P28: la final puede tapar a Moki parado (director); el fallo no // vertical: datos en 2 columnas para que quepa sin scroll
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
+    // P47: de dónde sale el Puntaje, con las mismas cifras congeladas en la meta. extra = lo que suma la Vuelta rápida
+    // (x1.25 con piso), así los renglones suman EXACTO el Puntaje. Arriba va en piezas y en puntos (es parte de las piezas).
+    const mP = d.meters * C.scorePerMeter;
+    const pP = d.valor * C.scorePerPiece;
+    const suma = { m: d.meters, mP, p: d.valor, x: C.scorePerPiece, pP, arriba: d.arriba, extra: d.score - mP - pP };
     this.ui.showFinal(
-      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, valor: d.valor, piecesTotal: this.level.pieceTotal, score: d.score, arriba: d.arriba, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
+      { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, valor: d.valor, piecesTotal: this.level.pieceTotal, score: d.score, suma, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => this.compartir(), onMenu: () => this.goHome() },
       r
     );

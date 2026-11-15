@@ -16,6 +16,7 @@ export const DESTINOS = {
   timbre: { modo: 'libre', tramo: 1, nivel: null, mec: ['timbre'] },
   zanja: { modo: 'reto', tramo: 1, nivel: 2, mec: ['zanja'] }, // P5c: primer nivel del Cuaderno con mecánica nueva (Reto nivel 2)
   elige: { modo: 'reto', tramo: 0, nivel: 3 }, // P36: la horquilla (arriba por el arco o abajo a ras), desde la página 1; P36i: en el nivel 3, donde pide 'Sube por arriba 2 veces'
+  meta: { modo: 'reto', tramo: 3, nivel: 1 }, // P47: la última página del Reto: la meta y su tarjeta (de dónde sale el Puntaje) en ~30 s
   primera: { modo: 'reto', tramo: 0, nivel: 1, nueva: true }, // P36k: la 1.ª partida de un jugador nuevo (tutorial y horquilla a 12.5 s)
   formas: { modo: 'reto', tramo: 0, nivel: null }, // formas de página: Libre siempre y el Reto desde hoy
   mega: { modo: 'reto', tramo: 0, nivel: null, mega: 'reloj' }, // P8: MODO MEGA (el Clásico a x1.5, C.mega.reloj) aunque el nivel 1 no esté terminado

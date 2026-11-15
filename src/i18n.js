@@ -67,6 +67,7 @@ const ES = {
   'end.pieces': 'Piezas',
   'end.score': 'Puntaje',
   'end.arriba': 'Arriba',
+  'end.suma.arriba': 'de ellas, Arriba', // P47: renglón chico bajo Piezas en la tarjeta de meta: Arriba en piezas y en puntos
   'end.best': 'Mejor marca',
   'end.best.clasico': 'Clásico', // la marca es por modo: "Mejor marca · Libre"
   'end.best.dia': 'Reto',

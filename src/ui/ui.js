@@ -681,17 +681,25 @@ export function createUI() {
       const row = (k, v) => {
         rows.append(el('dt', '', k), el('dd', '', v));
       };
-      row(t('end.dist'), `${d.meters} m`);
-      row(t('end.pieces'), String(d.valor ?? d.pieces)); // P40: la misma cifra del contador del HUD (papel)
-      if (!d.paseo) {
+      if (d.paseo || !d.suma) {
         // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
-        row(t('end.score'), String(d.score));
+        row(t('end.dist'), `${d.meters} m`);
+        row(t('end.pieces'), String(d.valor ?? d.pieces)); // P40: la misma cifra del contador del HUD (papel)
+      } else {
+        // P47: el resultado primero y la cuenta a la vista: metros + piezas x10 (+ Vuelta rápida) = Puntaje. Cada renglón
+        // dice su cifra en puntos; Arriba es parte de las piezas (P36h) y también se dice en puntos.
+        const s = d.suma;
+        const cuenta = el('dl', 'ui-suma');
+        const fila = (k, v, cls = '') => cuenta.append(el('dt', cls, k), el('dd', cls, v));
+        fila(t('end.dist'), `${s.m} m = ${s.mP}`);
+        fila(t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`);
+        if (s.arriba) fila(t('end.suma.arriba'), `${s.arriba} x${s.x} = ${s.arriba * s.x}`, 'sub');
+        if (s.extra) fila(t('vuelta.name'), `+${s.extra}`);
+        fila(t('end.score'), String(d.score), 'total');
+        card.append(cuenta);
         row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
       }
       if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
-      // P36h: cuánto de ese puntaje fue la ruta de arriba. Ancha: junto al puntaje. Vertical (corto, 4 columnas): celda que ocupa
-      // la mitad vacía del último renglón (junto a Nivel); en la columna del puntaje se cortaba ("Arr"). La tarjeta no crece.
-      if (d.arriba && !d.paseo) (rect.corto ? rows : rows.children[5]).append(el(rect.corto ? 'dd' : 'span', 'arriba', `${t('end.arriba')} +${d.arriba}`));
       card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));
       again.type = 'button';
