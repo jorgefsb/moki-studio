@@ -1392,7 +1392,7 @@ export class RunScene extends Phaser.Scene {
     // P36l-c: cada letrero dice la misma cifra que la píldora al cerrarlo. Sonda: herramientas/sonda-p40-cobros.mjs (P40a)
     // P40a: el letrero dice lo que salta el contador al cerrar la ruta (bono + la pieza que lo cierra con su racha), igual que la píldora; cifra en C.rotPago
     // P36l-e: 16 px más de aire entre los dos (a 390 se leían apilados)
-    if (e.rot) o.rot = [[t('end.arriba'), 198, C.rotPago[0]], ['A ras', 88, C.rotPago[1]]].map(([s, y, n], i) => {
+    if (e.rot) o.rot = [['Arco alto', 198, C.rotPago[0]], ['A ras', 88, C.rotPago[1]]].map(([s, y, n], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
       this.makeLabel(r, 'left').set(`${s} +${n}`);
       r.y0 = r.y;
@@ -1552,11 +1552,12 @@ export class RunScene extends Phaser.Scene {
   showPago(k, d, hm = 1, solo) {
     if (!this.pago) {
       this.pago = this.add.container(0, 0).setDepth(99);
-      this.pagoL = this.makeLabel(this.pago, 'center');
+      this.pagoL = this.makeLabel(this.pago, 'center', 'token'); // P40e: la ficha del contador: la píldora habla en papel, como él
     }
+    // P40e: 'Arco alto' (no 'Arriba': 3 de 3 no supieron qué premiaba) + ficha de papel: la cifra es papel que entra al contador
     // P40: la cifra es el salto del contador en este cobro (bono del arco + la pieza que lo cierra con su racha); xN = racha de horquillas
     // P40d: solo = cobro de la 1.ª partida que no cierra horquilla (pieza o arco): también trae su píldora
-    this.pagoL.set(solo ? `+${d}` : k.alto ? `${t('end.arriba')}${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
+    this.pagoL.set(solo ? `+${d}` : k.alto ? `Arco alto${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
     // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
     const z = this.zoom;
     this.pago.setScale(Math.max(1, 25 / 22 / z)); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)

@@ -110,7 +110,7 @@ try {
           if (!m || +m[1] !== d) r.fallos.push({ que: 'pildora != delta', ...row });
         }
         if (primera && cierre === primera && !r.letreroCierre) { // P40b: el letrero va en la 1.ª horquilla; las siguientes pagan la racha
-          const re = primera === 'arriba' ? /^Arriba \+(\d+)$/ : /^A ras \+(\d+)$/;
+          const re = primera === 'arriba' ? /^Arco alto \+(\d+)$/ : /^A ras \+(\d+)$/;
           const txt = (r.letreros || []).find((x) => re.test(String(x)));
           const n = txt ? +String(txt).match(re)[1] : null;
           r.letreroCierre = { ruta: primera, letrero: txt || null, pild, d };
