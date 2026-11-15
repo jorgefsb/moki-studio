@@ -695,7 +695,7 @@ export function createUI() {
         const s = d.suma;
         const cuenta = el('dl', 'ui-suma');
         const fila = (f) => f && cuenta.append(el('dt', f[2] || '', f[0]), el('dd', f[2] || '', f[1]));
-        const niv = d.modo && [t('end.modo'), d.modo];
+        const niv = d.modo && [t('end.modo'), d.modo, 'niv']; // en vertical puede partirse en dos renglones ("Reto del 15 nov")
         const vu = s.extra && [t('vuelta.name'), `+${s.extra}`];
         const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
         const fin = [[t('end.score'), String(d.score), 'total'], [d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
