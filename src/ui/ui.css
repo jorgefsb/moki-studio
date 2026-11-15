@@ -49,10 +49,9 @@
 .ui-rows dd { margin: 0; font: 700 22px/24px Outfit, sans-serif; text-align: right; }
 .ui-rows dt { align-self: center; }
 /* P47: la cuenta del Puntaje. Renglones en tinta clara y el total abajo, grande, bajo una raya: el resultado manda */
-.ui-suma { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin: 8px 0 2px; font: 400 16px/22px Inter, sans-serif; }
-.ui-suma dd { margin: 0; text-align: right; font: 600 17px/22px Outfit, sans-serif; white-space: nowrap; }
-.ui-suma .sub { font-size: 14px; line-height: 18px; color: #4a4038; padding-left: 12px; }
-.ui-suma dd.sub { padding-left: 0; }
+.ui-suma { display: grid; grid-template-columns: 1fr auto; gap: 2px 0; margin: 8px 0 2px; font: 400 16px/22px Inter, sans-serif; }
+.ui-suma dd { margin: 0; padding-left: 12px; text-align: right; font: 600 17px/22px Outfit, sans-serif; white-space: nowrap; }
+.ui-suma .sub { font-size: 14px; line-height: 18px; color: #3d342c; padding-left: 12px; }
 .ui-suma .total { border-top: 2px solid #22211f; padding-top: 4px; margin-top: 2px; font: 700 20px/26px Outfit, sans-serif; }
 .ui-suma dd.total { font-size: 26px; }
 .ui-tag { display: inline-block; margin: 2px 0 6px; padding: 2px 10px; border: 2px solid #22211f; border-radius: 999px; background: #ff6b35; font: 700 14px/20px Outfit, sans-serif; }
@@ -432,11 +431,17 @@ div.mn-card { cursor: default; }
 .ui-card.corto h2 { font-size: 24px; line-height: 28px; margin-bottom: 2px; }
 .ui-card.corto .ui-rows { grid-template-columns: auto auto auto auto; gap: 0 10px; font-size: 14px; line-height: 20px; margin: 4px 0 0; }
 .ui-card.corto .ui-rows dd { font-size: 16px; line-height: 20px; }
-.ui-card.corto .ui-suma { margin: 4px 0 2px; gap: 0 10px; font-size: 14px; line-height: 19px; }
-.ui-card.corto .ui-suma dd { font-size: 15px; line-height: 19px; }
-.ui-card.corto .ui-suma .sub { font-size: 13px; line-height: 16px; }
-.ui-card.corto .ui-suma .total { padding-top: 2px; font-size: 17px; line-height: 22px; }
-.ui-card.corto .ui-suma dd.total { font-size: 22px; }
+.corto .ui-suma { margin: 4px 0 2px; gap: 0; font-size: 14px; line-height: 19px; }
+.corto .ui-suma dd { font-size: 15px; line-height: 19px; }
+.corto:not(.bajo) .ui-suma + .ui-rows { grid-template-columns: 1fr auto; } /* P47: Mejor marca con la cifra en la columna del total */
+.corto .ui-suma .total { padding-top: 2px; font-size: 17px; line-height: 22px; }
+.corto .ui-suma dd.total { font-size: 22px; }
+/* P47: bajito y ancho (660x372, 640x400) la cuenta va en dos columnas como los datos de antes: Piezas y su Arriba a la derecha */
+.bajo .ui-suma { grid-template-columns: auto 1fr auto auto; grid-auto-flow: row dense; margin: 2px 0 0; }
+.bajo .ui-suma dd, .bajo .ui-suma dt { line-height: 18px; white-space: nowrap; }
+.bajo .ui-suma .total { padding-top: 1px; line-height: 20px; }
+.bajo .ui-suma dt.sub { grid-column: 3; }
+.bajo .ui-suma dt.total { grid-column: 1 / 4; }
 .ui-card.corto .ui-btn { min-height: 44px; margin-top: 6px; }
 .ui-card.corto .ui-link { min-height: 32px; margin-top: 2px; font-size: 14px; }
 .ui-card.corto p.meta { margin: 2px 0 0; font-size: 14px; line-height: 18px; }

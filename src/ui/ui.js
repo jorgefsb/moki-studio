@@ -665,7 +665,7 @@ export function createUI() {
       ui.hideTachado();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
-      const card = el('div', `ui-card${rect.compact ? ' compact' : ''}${rect.corto ? ' corto' : ''}`);
+      const card = el('div', `ui-card${rect.compact ? ' compact' : ''}${rect.corto ? ' corto' : ''}${rect.bajo ? ' bajo' : ''}`);
       // Entra igual que la tarjeta de fallo: sube 18 px con fundido de 250 ms
       const still = reducedMQ.matches || feel.level === 0;
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto', opacity: '0', transform: still ? 'none' : 'translateY(18px)', transition: still ? 'opacity 150ms ease-out' : 'opacity 250ms ease-out, transform 250ms ease-out' });
@@ -693,7 +693,7 @@ export function createUI() {
         const fila = (k, v, cls = '') => cuenta.append(el('dt', cls, k), el('dd', cls, v));
         fila(t('end.dist'), `${s.m} m = ${s.mP}`);
         fila(t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`);
-        if (s.arriba) fila(t('end.suma.arriba'), `${s.arriba} x${s.x} = ${s.arriba * s.x}`, 'sub');
+        if (s.arriba) fila(`de ellas, ${t('end.arriba')}`, `${s.arriba} x${s.x} = ${s.arriba * s.x}`, 'sub');
         if (s.extra) fila(t('vuelta.name'), `+${s.extra}`);
         fila(t('end.score'), String(d.score), 'total');
         card.append(cuenta);

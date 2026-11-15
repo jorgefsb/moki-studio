@@ -1008,7 +1008,7 @@ export class RunScene extends Phaser.Scene {
     const sb = this.ui && this.ui.state.soundBtn;
     const y0 = 68;
     let dy = 0;
-    if (sb && sb.isConnected && sb.offsetTop < y0 + 40 && sb.offsetTop + sb.offsetHeight > y0 && Math.abs(sb.offsetLeft + sb.offsetWidth / 2 - this.scale.width / 2) < 140) dy = sb.offsetTop + sb.offsetHeight + 8 - y0;
+    if (sb && sb.offsetTop < y0 + 40 && sb.offsetTop + sb.offsetHeight > y0 && Math.abs(sb.offsetLeft + sb.offsetWidth / 2 - this.scale.width / 2) < 140) dy = sb.offsetTop + sb.offsetHeight + 8 - y0;
     return this.top + (y0 + dy) / z;
   }
 
@@ -2885,7 +2885,7 @@ export class RunScene extends Phaser.Scene {
     const top = Math.round(Math.max(rect.top, zonas.hudB + 8, sb ? sb.offsetTop + sb.offsetHeight + 8 : 0)); // nunca sobre los metros y las piezas
     if (H < 480 && W > H) {
       const left = Math.round(zonas.mokiR + 20);
-      r = { left, top, width: Math.min(460, W - left - 12), maxHeight: H - top - 8, compact: true, corto: true };
+      r = { left, top, width: Math.min(460, W - left - 12), maxHeight: H - top - 8, compact: true, corto: true, bajo: true };
     } else if (!wide) r = { ...r, top, maxHeight: H - top - 8, corto: true, mokiT: zonas.mokiT }; // P28: la final puede tapar a Moki parado (director); el fallo no // vertical: datos en 2 columnas para que quepa sin scroll
     if (!wide) this.paseoTagC.setVisible(false); // en vertical la tarjeta cae sobre la etiqueta; la tarjeta ya dice 'Paseo completo'
     const d = this.finalData;
