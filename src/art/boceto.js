@@ -328,13 +328,18 @@ function pasoPop(lista, t) {
 
 // §5: al acabar la transición el mundo arranca y lo que ya cabe en pantalla (la ficha y la primera caja, a 1280) saldría de un cuadro
 // a otro. Entra con pop. Solo la imagen: ni su lugar ni su choque leen la escala del sprite.
+// P49: su sombra entra con él (antes salía entera desde el primer cuadro, 67-333 ms antes; a x2.0, 90 px dentro del borde).
 function popDelMundo(s) {
-  const lista = [...s.obstacles, ...s.pickups].map((q) => q.sprite).filter((b) => b && b.visible && b.x < s.vw + b.displayWidth).sort((a, b) => a.x - b.x);
-  lista.forEach((b, i) => {
-    const e = b.scaleX;
-    const alfa = b.alpha;
+  const lista = [...s.obstacles, ...s.pickups].filter((q) => q.sprite && q.sprite.visible && q.sprite.x < s.vw + q.sprite.displayWidth).sort((a, b) => a.sprite.x - b.sprite.x);
+  lista.forEach(({ sprite: b, shadow: h }, i) => {
+    const e = b.scaleX, alfa = b.alpha, ha = h?.alpha, hs = h?.scaleX;
     b.setAlpha(0);
-    s.tweens.addCounter({ from: 0, to: 1, delay: i * POP.paso, duration: POP.ms, onUpdate: (tw) => b.setAlpha(alfa).setScale(e * curvaPop(tw.getValue())) });
+    h?.setAlpha(0);
+    s.tweens.addCounter({ from: 0, to: 1, delay: i * POP.paso, duration: POP.ms, onUpdate: (tw) => {
+      const k = curvaPop(tw.getValue());
+      b.setAlpha(alfa).setScale(e * k);
+      h?.setAlpha(ha).setScale(hs * k, h.scaleY);
+    } });
   });
 }
 

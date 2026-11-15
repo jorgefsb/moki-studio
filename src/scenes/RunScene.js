@@ -1974,7 +1974,7 @@ export class RunScene extends Phaser.Scene {
     }
     const starts = this.level.starts;
     while (this.nextFlag < starts.length && starts[this.nextFlag] - this.dist <= lead + 40) this.spawnFlag(starts[this.nextFlag++], false);
-    if (!this.meta && !this.metaDone && this.level.end - this.dist <= lead + 40 && !this.demo) this.spawnFlag(this.level.end, true);
+    if (!this.meta && !this.metaDone && this.level.end - this.dist <= lead + 140 && !this.demo) this.spawnFlag(this.level.end, true); // P49: el arco mide 220: nace con su orilla izquierda fuera (con +40 asomaba 3 px a 390 en x2.0)
 
     this.placeEntities();
 
