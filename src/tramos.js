@@ -177,22 +177,21 @@ export function buildLevel(tramos) {
   };
 }
 
-// P40b HORQUILLAS EN CLÁSICO: SCRIPTS_CL = SCRIPTS con 3 cajas en horquilla (HORQ de niveles/bloques.js): T1 12.5 s (la
-// de P36k), T2 2.0 s y T2 20.5 s. Clásico, MEGA y la 1.ª partida salen de aquí y la racha llega a x3. SCRIPTS no cambia
-// (respaldo del generador: Reto y Libre iguales). C.hqClasico false = como antes (Clásico sin horquilla, 1.ª con una).
-const HQ = 'C+AupH+AdnH';
-const HQ_CL = [[0, 12.5], [1, 2], [1, 20.5]];
-export const SCRIPTS_CL = SCRIPTS.map((s, i) => s.map(([t, c]) => [t, HQ_CL.some(([j, u]) => j === i && u === t) ? HQ : c]));
-// Vuelta B: la caja de T1 12.5 s lleva rot (RunScene pone un rótulo de papel al final de cada fila: Arriba y A ras).
-function conHorq(scripts, hq) {
-  const L = buildLevel(C.tramos.map((tr, i) => ({ speed: tr.speed, len: C.checkpointEverySec, script: scripts[i] })));
+// P40b HORQUILLAS EN CLÁSICO: el guion clásico con cajas en horquilla (HORQ de niveles/bloques.js, misma caja):
+// T1 12.5 s (la de P36k), T2 2.0 s y T2 20.5 s. Clásico, MEGA y la 1.ª partida salen de aquí y la racha llega a x3.
+// SCRIPTS no cambia (respaldo del generador: Reto y Libre iguales). C.hqClasico false = como antes (Clásico sin
+// horquilla, 1.ª partida con la de 12.5 s). horq lo lee el validador (ruta 'abajo'); la 1.ª horquilla lleva rot
+// (RunScene pone un rótulo de papel al final de cada fila: Arriba y A ras).
+const nivel = (hq) => {
+  const L = buildLevel(C.tramos.map((tr, i) => ({ speed: tr.speed, len: C.checkpointEverySec, script: SCRIPTS[i].map(([t, c]) => [t, hq.some(([j, u]) => j === i && u === t) ? 'C+AupH+AdnH' : c]) })));
+  if (!hq.length) return L;
   const horq = hq.map(([i, t]) => L.starts[i] + C.tramos[i].speed * t);
   L.entities.find((e) => e.kind === 'obs' && e.D === horq[0]).rot = 1;
   return { ...L, horq };
-}
-// P36k: la 1.ª partida de la vida escoge. horq lo lee el validador (ruta 'abajo').
-export const GAME_LEVEL = C.hqClasico ? conHorq(SCRIPTS_CL, HQ_CL) : buildLevel(C.tramos.map((tr, i) => ({ speed: tr.speed, len: C.checkpointEverySec, script: SCRIPTS[i] })));
-export const GAME_PRIMERA = C.hqClasico ? GAME_LEVEL : conHorq(SCRIPTS.map((s, i) => (i ? s : s.map(([t, c]) => [t, t === 12.5 ? HQ : c]))), [[0, 12.5]]);
+};
+const HQ_CL = [[0, 12.5], [1, 2], [1, 20.5]];
+export const GAME_PRIMERA = nivel(C.hqClasico ? HQ_CL : [HQ_CL[0]]);
+export const GAME_LEVEL = C.hqClasico ? GAME_PRIMERA : nivel([]);
 
 // ---------- Demo (38 s, determinista; variantes A, B, C rotan por vuelta) ----------
 const DEMO_VARIANTS = {

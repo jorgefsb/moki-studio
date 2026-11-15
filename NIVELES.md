@@ -686,3 +686,13 @@ export const zonaDe = (tramo, m) => {
 5. La prueba a ciegas pasa a la siguiente vuelta, con la pieza **sin integrar**.
 
 No se recorta: el filtro por zona, las l.288 y l.434, FZ1, el bot y la comparación de idénticos. `C.zonas = false` lo apaga todo sin borrar nada.
+
+## Base de regresión del Clásico con horquillas (P40b, 15-nov)
+Desde P40b, Clásico, MEGA y la 1.ª partida usan el mismo guion. Tiene tres cajas en horquilla: T1 a 12.5 s, T2 a 2.0 s y T2 a 20.5 s (`tramos.js`, `nivel`). El interruptor es `C.hqClasico`.
+- **Base nueva (bots-p15, ruta de arriba): 3002 puntos, 89 de 100 piezas y 3 de 3 horquillas arriba.** Antes era 2142 y 78/78. Se midió en master 5761fd2 y en la rama, a 1280 y a 390, con el mismo resultado.
+- Las 22 piezas nuevas salen de las 3 cajas (5 arriba y 4 a ras cada una). El bot no puede cobrar las dos filas de una misma horquilla, por eso no llega a 100.
+- Ruta de abajo (sonda-p40-cobros, 1.ª partida abajo): termina a 1280 y a 390.
+- tap, hold y pasivo mueren donde mismo que en master (torre a 9.1 s, viga a 63.8 s, caja a 4.2 s).
+- Reto (2362) y Libre 1037 (5492) quedan iguales a master.
+- F4 del Clásico (flow-medir) sube de 5.8 % a 9.6 %. La 1.ª partida también: de 5.8 % a 9.6 %.
+- Con `hqClasico: false`, GAME_LEVEL y GAME_PRIMERA son idénticos a master (md5 de entities, horq y starts).
