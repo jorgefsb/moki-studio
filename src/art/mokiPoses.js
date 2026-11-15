@@ -67,13 +67,15 @@ class MokiPoses {
     s.rig.setVisible(!on);
     this.rim.setVisible(on && !s.dead && s.rimA > 0 && s.scale.width / s.scale.height > C.portrait.maxAspect);
     if (!on) return false;
+    const E = (this.E = ESCALA * (s.mokiF || 1)); // P43: más grande en vertical (C.portrait.mokiF); la caja de choque no cambia
+    this.casco.setScale(E);
     if (s.dead) return this.golpe();
     this.y0 = null;
     const ang = s.inclinaVista || 0; // P4g viento + acelerar (0 con movimiento reducido)
-    this.sprite.setScale(ESCALA).setAngle(ang);
+    this.sprite.setScale(E).setAngle(ang);
     let key = 'pose-run';
     let frame = 0;
-    let sq = [ESCALA, ESCALA];
+    let sq = [E, E];
     const ld = s.t - s.landAt;
     if (!s.grounded) {
       key = s.vy < 0 ? 'pose-rise' : 'pose-fall';
@@ -91,7 +93,7 @@ class MokiPoses {
       const QB = C.art.squashB, lh = s.t - (s.landHardAt ?? -1e9);
       if (QB && !s.reduced && lh >= 0 && lh < QB.ms) {
         const e = 1 - (lh / QB.ms) ** 2;
-        sq = [ESCALA * (1 + (QB.x - 1) * e), ESCALA * (1 + (QB.y - 1) * e)];
+        sq = [E * (1 + (QB.x - 1) * e), E * (1 + (QB.y - 1) * e)];
         this.sprite.setScale(...sq);
       }
     } else {
@@ -106,12 +108,12 @@ class MokiPoses {
     } else this.sprite.setFrame(frame);
     const y = s.y + 2 + DY_FILAS[key][frame] * sq[1]; // con el squash B, a la escala del aplastado
     this.sprite.setPosition(s.px, y);
-    const cu = sq[1] !== ESCALA && C.art.cascoCuello?.[frame];
+    const cu = sq[1] !== E && C.art.cascoCuello?.[frame];
     if (cu) {
       // el cuerpo se dibuja del cuello para abajo (aplastado); el casco, del cuello para arriba sin aplastar, con el cuello
       // donde quedó el del cuerpo. Gira con el cuerpo alrededor de los pies (P4g)
       this.sprite.setCrop(0, cu, 128, 128 - cu);
-      const d = (123 - cu) * (ESCALA - sq[1]), r = (ang * Math.PI) / 180;
+      const d = (123 - cu) * (E - sq[1]), r = (ang * Math.PI) / 180;
       this.casco.setTexture(key, frame).setCrop(0, 0, 128, cu + 1).setAngle(ang).setPosition(s.px - d * Math.sin(r), y + d * Math.cos(r)).setVisible(true);
     } else if (this.sprite.isCropped) this.sprite.setCrop();
     // P4i: en el squash el rim se recorta al cuello (el casco no aplastado lo tapaba mal: asomaba una banda durazno)
@@ -156,7 +158,7 @@ class MokiPoses {
       this.sprite.setTexture(key, frame);
       this.pose = key;
     } else this.sprite.setFrame(frame);
-    this.sprite.setPosition(this.s.px, y + 2).setAngle(ang).setScale(ESCALA * sx, ESCALA * sy); // escala siempre positiva: nunca espejado
+    this.sprite.setPosition(this.s.px, y + 2).setAngle(ang).setScale(this.E * sx, this.E * sy); // escala siempre positiva: nunca espejado
     return true;
   }
 }

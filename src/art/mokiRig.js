@@ -229,7 +229,7 @@ function deadTarget(dm) {
 export function createMokiRig(scene) {
   const A = C.art;
   const R = C.rig;
-  const k = C.player.spriteHeight / R.src.h;
+  const k0 = C.player.spriteHeight / R.src.h; // P43: en update, k = k0 * s.f (Moki más grande en vertical)
   const G = geometry();
   const runFull = makeRunner(G, A.theta0, true);
   const runReduced = makeRunner(G, A.reducedTheta0, false);
@@ -271,13 +271,13 @@ export function createMokiRig(scene) {
   const rimPack = rimTint(piece('moki-pack', ...packPivot));
 
   const layers = [rimBody, rimPack, legFar,bootFar, armFar, shLeg, shBoot, legNear, bootNear, shBody, body, shPack, pack, shArm, armNear].filter(Boolean);
-  const root = scene.add.container(0, 0, layers).setDepth(12).setScale(k);
+  const root = scene.add.container(0, 0, layers).setDepth(12).setScale(k0);
 
   // Celebración: saluda (arte oficial, brazo arriba) en fundido sobre el títere.
   let saluda = null;
   if (scene.textures.exists('mokiSaluda')) {
     const t = tex('mokiSaluda');
-    saluda = scene.add.image(0, 0, 'mokiSaluda').setOrigin(R.hip.x / t.width, 1).setDepth(12.1).setScale(k).setAlpha(0);
+    saluda = scene.add.image(0, 0, 'mokiSaluda').setOrigin(R.hip.x / t.width, 1).setDepth(12.1).setScale(k0).setAlpha(0);
   }
 
   const st = {
@@ -345,6 +345,9 @@ export function createMokiRig(scene) {
       const dt = dtMs / 1000;
       const reduced = s.reduced;
       const runner = reduced ? runReduced : runFull;
+      const F = s.f || 1;
+      const k = k0 * F;
+      const cyc = runner.cyclePx * F; // la zancada crece con el dibujo: los pies no patinan
 
       if (s.dead) {
         if (st.deadT < 0) st.deadT = 0;
@@ -355,7 +358,7 @@ export function createMokiRig(scene) {
       const landed = s.grounded && !st.wasGrounded;
       st.wasGrounded = s.grounded;
       if (landed) st.phi = 0;
-      if (s.grounded && !s.dead && st.hopT < 0) st.phi = (st.phi + (s.speed * dt) / runner.cyclePx) % 1;
+      if (s.grounded && !s.dead && st.hopT < 0) st.phi = (st.phi + (s.speed * dt) / cyc) % 1;
 
       // Celebración (saltito cosmético, cancelable por el jugador).
       let hopY = 0;
@@ -427,7 +430,7 @@ export function createMokiRig(scene) {
       // En carrera cada brazo sale de la fase de la pierna opuesta, retrasada d de ciclo (tope lagMs): senoide de
       // péndulo, sin filtro, así conserva ±18° a toda velocidad. El filtro queda solo para el aire y la transición.
       const maxA = R.arm.maxDeg * (reduced ? 0.5 : 1);
-      const period = runner.cyclePx / Math.max(s.speed, 60); // s por ciclo
+      const period = cyc / Math.max(s.speed, 60); // s por ciclo
       const dLag = Math.min(R.arm.phaseLag, R.arm.lagMs / 1000 / period);
       const wrap = (ph) => ((ph % 1) + 1) % 1;
       const pend = (ph) => clamp(runner.at(wrap(ph), hRun).th / runner.thMax, -1, 1); // pierna opuesta con la fase retrasada
@@ -514,7 +517,7 @@ export function createMokiRig(scene) {
 
       if (saluda) {
         const sal = st.sal;
-        saluda.setPosition(s.x, s.y + 2 - hopY).setAlpha(sal);
+        saluda.setPosition(s.x, s.y + 2 - hopY).setScale(k).setAlpha(sal);
         root.setAlpha(1 - sal * 0.999);
       }
 
@@ -524,8 +527,9 @@ export function createMokiRig(scene) {
       debug.stance = near.stance;
       debug.nTh = nTh;
       debug.fTh = fTh;
-      debug.period = runner.cyclePx / Math.max(s.speed, 1);
-      debug.cyclePx = runner.cyclePx;
+      debug.period = cyc / Math.max(s.speed, 1);
+      debug.cyclePx = cyc;
+      debug.cyclePxFull = runFull.cyclePx * F;
       if (onGround && near.stance) {
         // Punto visible: el centro de la suela de la bota dibujada (no el modelo). Se mide contra el suelo que corre.
         const [vx, vy] = rot(nBw * D2R, R.sole.x - R.boot.ankle.x, R.src.h - 2 - R.boot.ankle.y);
