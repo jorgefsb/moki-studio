@@ -694,28 +694,13 @@ export function createUI() {
         // en su renglón (Arriba a la derecha, bajo Piezas; Puntaje y Mejor marca juntos).
         const s = d.suma;
         const cuenta = el('dl', 'ui-suma');
-        const fila = (k, v, cls = '') => cuenta.append(el('dt', cls, k), el('dd', cls, v));
-        const hueco = () => cuenta.append(el('dt'), el('dd'));
-        const nivel = () => d.modo && fila(t('end.modo'), d.modo);
-        const sub = () => s.arriba && fila(`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub');
-        const vuelta = () => s.extra && fila(t('vuelta.name'), `+${s.extra}`);
-        fila(t('end.dist'), `${s.m} m`);
-        fila(t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`);
-        if (!rect.corto) sub(), vuelta();
-        else if (s.arriba || s.extra || d.modo) {
-          (s.extra ? vuelta : d.modo ? nivel : hueco)();
-          (s.arriba ? sub : hueco)();
-        }
-        fila(t('end.score'), String(d.score), 'total');
-        const mejor = d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'); // la marca es de este modo
-        if (!rect.corto) fila(mejor, String(d.best));
-        else {
-          // una sola celda en las columnas 3 y 4: así "Mejor marca · Clásico" no ensancha la columna ni se parte en dos
-          const m = el('dt', 'mejor', mejor);
-          m.append(el('b', '', String(d.best)));
-          cuenta.append(m);
-        }
-        if (!rect.corto || s.extra) nivel();
+        const fila = (f) => f && cuenta.append(el('dt', f[2] || '', f[0]), el('dd', f[2] || '', f[1]));
+        const niv = d.modo && [t('end.modo'), d.modo];
+        const vu = s.extra && [t('vuelta.name'), `+${s.extra}`];
+        const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
+        const fin = [[t('end.score'), String(d.score), 'total'], [d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
+        const no = ['', ''];
+        [[t('end.dist'), `${s.m} m`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.corto ? [...(ar || vu || niv ? [vu || niv || no, ar || no] : []), ...fin, vu && niv] : [ar, vu, ...fin, niv])].forEach(fila);
         card.append(cuenta);
       }
       const again = el('button', 'ui-btn primary', t('end.again'));

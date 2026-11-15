@@ -1008,10 +1008,8 @@ export class RunScene extends Phaser.Scene {
   hudCY() {
     const z = this.zoom;
     const sb = this.ui && this.ui.state.soundBtn;
-    const y0 = 68;
-    let dy = 0;
-    if (sb && sb.offsetTop < y0 + 40 && sb.offsetTop + sb.offsetHeight > y0 && Math.abs(sb.offsetLeft + sb.offsetWidth / 2 - this.scale.width / 2) < 140) dy = sb.offsetTop + sb.offsetHeight + 8 - y0;
-    return this.top + (y0 + dy) / z;
+    const b = sb ? sb.offsetTop + sb.offsetHeight : 0; // 68 px: renglón de los metros
+    return this.top + (sb && sb.offsetTop < 108 && b > 68 && Math.abs(sb.offsetLeft + sb.offsetWidth / 2 - this.scale.width / 2) < 140 ? b + 8 : 68) / z;
   }
 
   showBanner(text, ms) {
@@ -2895,7 +2893,7 @@ export class RunScene extends Phaser.Scene {
     // (x1.25 con piso), así los renglones suman EXACTO el Puntaje. Arriba va en piezas y en puntos (es parte de las piezas).
     const mP = d.meters * C.scorePerMeter;
     const pP = d.valor * C.scorePerPiece;
-    const suma = { m: d.meters, mP, p: d.valor, x: C.scorePerPiece, pP, arriba: d.arriba, extra: d.score - mP - pP };
+    const suma = { m: d.meters, p: d.valor, x: C.scorePerPiece, pP, arriba: d.arriba, extra: d.score - mP - pP };
     this.ui.showFinal(
       { voto: d.paseo || this.demo ? null : votoTarjeta('final', this.gana('disenador')), isNew: d.isNew, paseo: d.paseo, meters: d.meters, pieces: d.pieces, valor: d.valor, piecesTotal: this.level.pieceTotal, score: d.score, suma, best: d.best, bestModo: t(`end.best.${this.bestMode()}`), modo: this.modoLabel() },
       { onAgain: () => this.playAgain(), onHow: () => this.showAsi(), onCopy: () => this.compartir(), onMenu: () => this.goHome() },
