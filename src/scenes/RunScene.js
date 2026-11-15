@@ -396,6 +396,7 @@ export class RunScene extends Phaser.Scene {
     const g = C.world.groundY;
     const P = C.portrait;
     const portrait = W / H <= P.maxAspect;
+    this.mokiF = portrait ? P.mokiF : 1; // P43: Moki más grande solo en vertical (dibujo y anclas; la caja no)
     const minW = C.world.minVisibleWidth;
     const z = Math.min(H / C.world.height, W / (portrait ? P.visibleWidth : minW));
     this.zoom = z;
@@ -1570,7 +1571,7 @@ export class RunScene extends Phaser.Scene {
     const cam = this.cameras.main;
     // P36l-f: 'A ras' va pegada a Moki (x = la suya cada cuadro): su papel (40 px de alto x escala, cuelga del y) termina 18 px de pantalla sobre el casco (108 de mundo sobre los pies) y sube 16; a 390 no pasa de 8 px del borde
     const s = this.reduced ? 0 : Math.sin(k * 1.571);
-    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 - 40 * this.pago.scaleY - (18 + 16 * s) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
+    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 * this.mokiF - 40 * this.pago.scaleY - (18 + 16 * s) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
@@ -2312,6 +2313,7 @@ export class RunScene extends Phaser.Scene {
         deadMs: this.deadFor,
         reduced: this.reduced,
         dist: this.dist,
+        f: this.mokiF,
       },
       dtMs
     );
@@ -2339,7 +2341,7 @@ export class RunScene extends Phaser.Scene {
     const f = 1 / (1 + air / 150);
     this.mokiShadow.setPosition(this.px + 8, g + 1);
     const chico = this.zoom < 1; // P4z-d (config.js feelP4z): celular P4z-b; escritorio igual a master
-    this.mokiShadow.setTexture(chico ? 'sombraM' : 'shadow').setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.3), 22 * (0.6 + 0.4 * f) * (chico ? 0.75 : 1));
+    this.mokiShadow.setTexture(chico ? 'sombraM' : 'shadow').setDisplaySize(96 * this.mokiF * (0.5 + 0.5 * f) * (1 + sink * 0.3), 22 * this.mokiF * (0.6 + 0.4 * f) * (chico ? 0.75 : 1));
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
     const u = Math.min(1, (1 - f) / 0.44); // 0 en el suelo, 1 del pico para arriba
@@ -2354,7 +2356,7 @@ export class RunScene extends Phaser.Scene {
     const E = C.crece;
     if (this.estela && this.screen === 'play' && !this.dead && this.speed >= E.estelaV && this.t - (this.estelaAt || 0) >= (C.juice >= 3 ? E.estelaMsHC : E.estelaMs)) {
       const racha2 = this.t - this.lastPickAt <= C.combo.windowMs && C.combo.steps.some(([from, v]) => v >= 2 && this.combo >= from);
-      if (C.juice >= 2 || racha2) (this.estelaAt = this.t), this.particles.estela(this.px - 22, this.y - 52, this.speed);
+      if (C.juice >= 2 || racha2) (this.estelaAt = this.t), this.particles.estela(this.px - 22 * this.mokiF, this.y - 52 * this.mokiF, this.speed);
     }
     // P4q arco de papel: en el aire guarda [dist, y de la bota, t]; cada cuadro dibuja la cola de los últimos ms (msAlto
     // con salto mantenido), gruesa en la bota y de 2 px en la cola; tras aterrizar ya no entra nada y se apaga sola
@@ -2655,7 +2657,7 @@ export class RunScene extends Phaser.Scene {
     this.ayudaD = this.puntoAyuda(o);
     // Los trozos salen del punto de contacto; en la zanja, de los pies
     if (o.type === 'zanja') this.particles.burst('crash', this.px + 12, this.y - 10);
-    else this.particles.burst('crash', this.px + C.player.width / 2 + 12, this.y - (o.type === 'viga' ? C.player.spriteHeight : 48));
+    else this.particles.burst('crash', this.px + C.player.width / 2 + 12, this.y - (o.type === 'viga' ? C.player.spriteHeight : 48) * this.mokiF);
     this.buzz(25); // golpe suave, nada que regañe
     this.shake(2, 120);
     // El obstáculo cede al golpe y se queda arrugado 2% (papel apachurrado); al reintentar se crea liso de nuevo
@@ -2709,7 +2711,7 @@ export class RunScene extends Phaser.Scene {
 
   // Cabeza de Moki parado, en px de pantalla (encima de la caja, si el choque lo dejó ahí)
   cabezaY() {
-    return (C.world.groundY - (this.sobre ? this.sobre.size.height : 0) - C.player.spriteHeight - this.top) * this.zoom;
+    return (C.world.groundY - (this.sobre ? this.sobre.size.height : 0) - C.player.spriteHeight * this.mokiF - this.top) * this.zoom;
   }
 
   failRect() {
