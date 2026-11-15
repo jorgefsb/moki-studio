@@ -396,7 +396,8 @@ export class RunScene extends Phaser.Scene {
     const g = C.world.groundY;
     const P = C.portrait;
     const portrait = W / H <= P.maxAspect;
-    this.mokiF = portrait ? P.mokiF : 1; // P43: Moki más grande solo en vertical (dibujo y anclas; la caja no)
+    this.mokiF = portrait ? P.mokiF : 1;
+    this.pildDy = portrait ? P.pildDy : 0; // P43b: la píldora 'Arriba' sube 10 px de pantalla más en vertical (aire con Moki x1.25) // P43: Moki más grande solo en vertical (dibujo y anclas; la caja no)
     const minW = C.world.minVisibleWidth;
     const z = Math.min(H / C.world.height, W / (portrait ? P.visibleWidth : minW));
     this.zoom = z;
@@ -1549,7 +1550,7 @@ export class RunScene extends Phaser.Scene {
     this.pagoW = 0; // P36l-d: se mide al primer cuadro visible
     this.pagoX = k.x + (k.alto ? -40 : 80);
     this.pagoDx = !solo && !k.alto; // P36l-f: 'A ras' va amarrada a Moki: sobre su casco, mismo x cada cuadro (la de P36l-e se adelantaba y se veía suelta)
-    this.pagoY = k.y - 122 - (z < 1 && 45 * this.pago.scaleX - 40); // la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas). P40i: a 390 (escala 1.34) el papel crece hacia arriba y deja 5 px más de aire (hueco ~11 px de pantalla, como 1280); colgado tapaba el casco al nacer
+    this.pagoY = k.y - 122 - (z < 1 && 45 * this.pago.scaleX - 40) - C.player.spriteHeight * (this.mokiF - 1) - this.pildDy / z; // P43b: en vertical sube lo que creció la cabeza (x mokiF) más pildDy px de pantalla; la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas). P40i: a 390 (escala 1.34) el papel crece hacia arriba y deja 5 px más de aire (hueco ~11 px de pantalla, como 1280); colgado tapaba el casco al nacer
     // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
     if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 112 / z + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
@@ -1571,7 +1572,7 @@ export class RunScene extends Phaser.Scene {
     const cam = this.cameras.main;
     // P36l-f: 'A ras' va pegada a Moki (x = la suya cada cuadro): su papel (40 px de alto x escala, cuelga del y) termina 18 px de pantalla sobre el casco (108 de mundo sobre los pies) y sube 16; a 390 no pasa de 8 px del borde
     const s = this.reduced ? 0 : Math.sin(k * 1.571);
-    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 * this.mokiF - 40 * this.pago.scaleY - (18 + 16 * s) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
+    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 * this.mokiF - 40 * this.pago.scaleY - (18 + 16 * s + this.pildDy) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
