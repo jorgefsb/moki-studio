@@ -398,6 +398,7 @@ export class RunScene extends Phaser.Scene {
     const portrait = W / H <= P.maxAspect;
     this.mokiF = portrait ? P.mokiF : 1; // P43: Moki más grande solo en vertical (dibujo y anclas; la caja no)
     this.pildDy = portrait ? P.pildDy : 0; // P43b: las píldoras 'Arriba' y 'A ras' suben pildDy px de pantalla más en vertical (aire con Moki x1.25)
+    this.pildBorde = portrait ? P.pildBorde : 8; // P43d: en vertical la píldora queda a 16 px del borde (8 se leía pegada/cortada en el ciego de P44)
     const minW = C.world.minVisibleWidth;
     const z = Math.min(H / C.world.height, W / (portrait ? P.visibleWidth : minW));
     this.zoom = z;
@@ -1567,12 +1568,12 @@ export class RunScene extends Phaser.Scene {
     const vivo = k >= 0 && k < 1;
     if (!vivo && this.pagoT >= 0) this.pagoT = -1e9;
     this.pago.setVisible(vivo);
-    // P36l-d: a 390 la cámara deja a Moki cerca del borde; la píldora nunca queda a menos de 8 px del lienzo (getBounds solo mide el texto: +24 de relleno)
+    // P36l-d: a 390 la cámara deja a Moki cerca del borde; la píldora nunca queda a menos de pildBorde px del lienzo (8; P43d: 16 en vertical) (getBounds solo mide el texto: +24 de relleno)
     if (vivo) this.pagoW = this.pagoW || this.pago.getBounds().width + 24 * this.pago.scaleX;
     const cam = this.cameras.main;
     // P36l-f: 'A ras' va pegada a Moki (x = la suya cada cuadro): su papel (40 px de alto x escala, cuelga del y) termina 18 px de pantalla sobre el casco (108 de mundo sobre los pies) y sube 16; a 390 no pasa de 8 px del borde
     const s = this.reduced ? 0 : Math.sin(k * 1.571);
-    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + 8 / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 * this.mokiF - 40 * this.pago.scaleY - (18 + 16 * s + this.pildDy) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
+    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + this.pildBorde / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 * this.mokiF - 40 * this.pago.scaleY - (18 + 16 * s + this.pildDy) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
