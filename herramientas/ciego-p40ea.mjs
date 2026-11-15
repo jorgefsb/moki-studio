@@ -11,7 +11,8 @@
 //  Diff por par: pixeles distintos (suma RGB > 24) en todo el lienzo y FUERA de la máscara. La máscara es la caja de la
 //  píldora del pago, del aviso de la cinta y del aviso del centro, en los dos cuadros, con 8 px de margen. "fondo" debe ser 0.
 // Escenas: 'reto-pild' (Reto 2026-11-14, cierres de horquilla), 'primera-pild' (1.ª partida, todo cobro), +75 ms del evento;
-// 'cp-primera' y 'cp-reto', +250 ms del checkpoint.
+// 'cp-primera' y 'cp-reto', +250 ms del checkpoint. P44: 'aterriza' (1.ª partida) y 'aterriza-reto', n-ésimo aterrizaje +55 ms.
+// Control negativo (P44): NEG=1 siembra el azar de la corrida master con otra semilla; el diff de fondo debe dejar de dar 0.
 // Uso: flock /tmp/moki-pesado.lock node herramientas/ciego-p40ea.mjs <url-rama> <url-master> <WxH> <escena> <dir-salida> [semilla]
 // Prueba A/A: la misma URL en las dos posiciones. Debe dar fondo 0 y total 0 en 8 de 8, y X mezclada.
 import { createRequire } from 'node:module';
@@ -28,8 +29,9 @@ const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/b
 const errores = [];
 const reto = escena.endsWith('reto') || escena.startsWith('reto');
 const cp = escena.startsWith('cp');
+const at = escena.startsWith('aterriza');
 
-async function captura(url) {
+async function captura(url, semBot = 1037) {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, ...(W < 500 ? { hasTouch: true, isMobile: true } : {}) });
   await ctx.addInitScript((reto) => {
     let a = 1037;
@@ -67,7 +69,7 @@ async function captura(url) {
   await quieto();
   await page.evaluate(() => window.__moki.moki.jumpTable()); // carga bots.js antes, para que el bot arranque sin esperar red
   await quieto();
-  const r = await page.evaluate(async ([reto, cp, N, DIAG]) => {
+  const r = await page.evaluate(async ([reto, cp, N, DIAG, at, semBot]) => {
     const sc = window.__moki.scene.scenes[0], cv = sc.game.canvas, orig = sc.update.bind(sc), cap = {};
     const pinta = () => { const R = sc.game.renderer; R.preRender(); sc.sys.render(R); R.postRender(); return cv.toDataURL('image/png'); };
     // Máscara: cajas en px de lienzo de lo que el cambio puede tocar (píldora del pago, aviso de la cinta, aviso del centro)
@@ -109,32 +111,33 @@ async function captura(url) {
       const antes = (k.arc && sc.arcGot[k.arc]) || 0;
       const x = oCol(k);
       const cierra = k.arc && antes + 1 === k.arcN && (k.alto || k.ras);
-      if (!cp && (!reto || cierra)) { cuenta++; pend.push({ key: `${reto ? 'horquilla' : 'cobro'}#${cuenta}`, at: sc.t + 75 }); }
+      if (!cp && !at && (!reto || cierra)) { cuenta++; pend.push({ key: `${reto ? 'horquilla' : 'cobro'}#${cuenta}`, at: sc.t + 75 }); }
       return x;
     };
-    let cp0 = sc.cpAt, cps = 0;
+    let cp0 = sc.cpAt, cps = 0, la0 = sc.landAt, nl = 0;
     sc.update = (a, b) => {
       const r = orig(a, b);
       if (cp && sc.cpAt !== cp0) { cp0 = sc.cpAt; cps++; pend.push({ key: `checkpoint#${cps}`, at: sc.t + 250 }); }
+      if (at && sc.screen === 'play' && sc.grounded && sc.landAt !== la0 && sc.t - sc.landAt < 20) { la0 = sc.landAt; nl++; pend.push({ key: `aterrizaje#${nl}`, at: sc.landAt + 55 }); }
       while (pend.length && sc.t >= pend[0].at) { const p = pend.shift(); if (Object.keys(cap).length < N + 4) cap[p.key] = { t: Math.round(sc.t), nr: window.__nr, png: pinta(), mask: cajas(), diag: diag() }; }
       return r;
     };
     const pre = { frame: sc.game.loop.frame, t: Math.round(sc.t || 0), screen: sc.screen, vivas: sc.particles ? sc.particles.items.filter((p) => p.alive).length : null, clock: sc.particles ? Math.round(sc.particles.clock) : null, r: Math.random() };
     // P40h: al arrancar el bot (dentro de runBot, síncrono) se siembra el azar y se vacía la reserva de partículas del demo
     const oStart = sc.startGame.bind(sc);
-    sc.startGame = (...a) => { const x = oStart(...a); window.__sembrar(1037); if (sc.particles) { sc.particles.clear(); sc.particles.cursor = 0; sc.particles.clock = 0; } if (sc.cinta) { sc.cinta.clock = 0; sc.cinta.trail.length = 0; } return x; };
+    sc.startGame = (...a) => { const x = oStart(...a); window.__sembrar(semBot); if (sc.particles) { sc.particles.clear(); sc.particles.cursor = 0; sc.particles.clock = 0; } if (sc.cinta) { sc.cinta.clock = 0; sc.cinta.trail.length = 0; } return x; };
     const res = await window.__moki.moki.bot('adjust', 200, reto ? '2026-11-14' : null);
     sc.update = orig;
     sc.collect = oCol;
     sc.startGame = oStart;
     return { cap, w: cv.width, h: cv.height, bot: { score: res.score, seconds: res.seconds, result: res.result }, pre };
-  }, [reto, cp, N, process.env.P40H_DIAG ? process.env.P40H_DIAG.split(',').map(Number) : null]);
+  }, [reto, cp, N, process.env.P40H_DIAG ? process.env.P40H_DIAG.split(',').map(Number) : null, at, semBot]);
   await ctx.close();
   return r;
 }
 
 const R = await captura(urlR);
-const M = await captura(urlM);
+const M = await captura(urlM, process.env.NEG ? 4242 : 1037);
 // Pares por nombre de evento: los primeros N que salen en las dos corridas
 const keys = Object.keys(R.cap).filter((k) => M.cap[k]).sort((a, b) => R.cap[a].t - R.cap[b].t).slice(0, N);
 // Moneda por par (mulberry32, semilla registrada)
