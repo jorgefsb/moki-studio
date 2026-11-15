@@ -2277,6 +2277,7 @@ export class RunScene extends Phaser.Scene {
       }
     }
     if (this.level === GAME_PRIMERA && !(arcFull && (k.alto || k.ras))) this.showPago(k, this.pieceValue - valor0, 1, 1); // P40d: en la 1.ª partida ningún cobro mudo
+    else if (this.pago && !(arcFull && (k.alto || k.ras))) this.pagoT = -1e9; // P40e-a: cobro sin píldora: la anterior se va (nunca una cifra vieja junto al contador)
     this.cinta.grow(this.combo, mult, this.pieceValue - valor0);
     this.setPieceLabel(mult);
     if (!arcFull) this.pop(this.hudR, 1.08 + 0.02 * Math.min(mult, 3), 120); // la ficha brinca más con la racha

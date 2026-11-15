@@ -58,7 +58,9 @@ try {
       };
       let pild = null;
       const oPago = sc.showPago.bind(sc);
-      sc.showPago = (...a) => { const x = oPago(...a); pild = (sc.pago.list.find((o) => o.type === 'Text') || {}).text; return x; };
+      let pend = false, lastD = null, viejas = 0; // P40e-a: píldora vieja = visible con cifra distinta al último cobro
+      r.nonatas = 0; // P40e-a: píldoras retiradas por otro cobro antes de nacer (a ras espera 370 ms)
+      sc.showPago = (...a) => { const x = oPago(...a); pild = (sc.pago.list.find((o) => o.type === 'Text') || {}).text; pend = true; return x; };
       const oAviso = sc.cinta.showAviso.bind(sc.cinta);
       sc.cinta.showAviso = (text, g) => { r.avisos.push(text); if (!/^x3$/.test(text)) r.fallos.push({ que: 'aviso con cifra', text }); return oAviso(text, g); };
       r.pildPxMin = null;
@@ -73,6 +75,10 @@ try {
           const px = g2.measureText('x').actualBoundingBoxAscent;
           r.pildPxMin = r.pildPxMin == null ? px : Math.min(r.pildPxMin, px);
           if (sc.cinta.aviso.visible && dos++ < 5) r.fallos.push({ que: 'pildora y aviso en el mismo cuadro', t: Math.round(sc.t) });
+          pend = false;
+          const tx = (sc.pago.list.find((o) => o.type === 'Text') || {}).text;
+          const m = String(tx).match(/\+(\d+)\s*$/);
+          if ((!m || +m[1] !== lastD) && viejas++ < 5) r.fallos.push({ que: 'pildora vieja', t: Math.round(sc.t), tx, lastD });
         }
         return x;
       };
@@ -82,8 +88,11 @@ try {
         const v0 = sc.pieceValue, h0 = num(hudTxt());
         pild = null;
         const antes = (k.arc && sc.arcGot[k.arc]) || 0;
+        const pend0 = pend;
         const x = oc(k);
         const d = sc.pieceValue - v0, h1txt = hudTxt(), h1 = num(h1txt);
+        lastD = d;
+        if (pend0 && pild == null) (r.nonatas += 1), (pend = false);
         const cierre = k.arc && antes + 1 === k.arcN ? (k.alto ? 'arriba' : k.ras ? 'ras' : 'arco') : null;
         const ruta = cierre || (k.amber ? 'ambar' : `pieza x${d / (k.amber ? 5 : 1)}`);
         const row = { t: Math.round(sc.t), ruta, d, hud: h1txt, pild, hq: sc.hqRacha };
