@@ -30,7 +30,7 @@
 //   VE  la misma distancia, misma página en semillas consecutivas, promedio de las páginas 2 a 4
 globalThis.__JORGE_INTERVENTIONS__ = 0;
 const { CONFIG: C } = await import('../src/config.js');
-const { GAME_LEVEL, SCRIPTS } = await import('../src/tramos.js');
+const { GAME_LEVEL, GAME_PRIMERA, SCRIPTS } = await import('../src/tramos.js');
 const { generarNivel } = await import('../src/niveles/generar.js');
 const { simulateJump, simulateBounce } = await import('../src/jumpmodel.js');
 
@@ -348,7 +348,8 @@ const decsClasico = [];
 const decsRetos = [];
 const decsLibres = [];
 const clasico = medir(GAME_LEVEL, decsClasico);
+const primera = medir(GAME_PRIMERA); // P40b: la 1.ª partida (JUGAR de un jugador nuevo), aparte del Clásico del menú y MEGA
 const retos = RETOS.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'reto', process.argv[5] ? {} : { mecanicas: [] }), decsRetos) }));
 const libres = LIBRES.map((s) => ({ semilla: s, ...medir(generarNivel(s, 'libre', { mecanicas: MEC }), decsLibres) }));
 const vara = { F1: '>= 7', F2a: '<= 4.5 s', F2b: '<= 12 %', F3: '<= 4 s', F3b: '0', F4: '>= 20 %', F6: '<= 30 s' };
-console.log(JSON.stringify({ fecha: '2026-11-01', libres: N_LIBRES, mecanicas: MEC, vara, resumen: { clasico: resumen([clasico]), reto: resumen(retos), libre: resumen(libres) }, ...(VARIEDAD ? { variedad: { clasico: variedad(decsClasico), reto: variedad(decsRetos), libre: variedad(decsLibres) } } : {}), clasico, retos, libres }, null, 1));
+console.log(JSON.stringify({ fecha: '2026-11-01', libres: N_LIBRES, mecanicas: MEC, vara, resumen: { clasico: resumen([clasico]), primera: resumen([primera]), reto: resumen(retos), libre: resumen(libres) }, ...(VARIEDAD ? { variedad: { clasico: variedad(decsClasico), reto: variedad(decsRetos), libre: variedad(decsLibres) } } : {}), clasico, retos, libres }, null, 1));

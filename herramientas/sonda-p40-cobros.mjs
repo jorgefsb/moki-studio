@@ -23,6 +23,9 @@ const CORRIDAS = [
   { nombre: 'reto 2026-11-14 adjust', ls: { 'moki.modo': 'reto' }, bot: 'adjust', seed: '2026-11-14' },
   { nombre: 'nuevo 1a partida adjust', ls: null, bot: 'adjust', seed: null, primera: 'arriba' },
   { nombre: 'nuevo 1a partida abajo', ls: null, bot: 'abajo', seed: null, primera: 'ras' },
+  // P40b: Clásico y 1.ª partida traen 3 horquillas (sube todas: x1, x2, x3; mixto: sube 2 y pasa a ras la 3.ª)
+  { nombre: 'nuevo 1a partida mixto', ls: null, bot: 'mixto', seed: null },
+  { nombre: 'clasico adjust', ls: {}, bot: 'adjust', seed: null, q: '&nivel=clasico' },
 ];
 const SOLO = process.argv[5]; // P40a: filtro opcional por nombre (p. ej. 'nuevo')
 try {
@@ -39,7 +42,7 @@ try {
     const page = await ctx.newPage();
     page.on('pageerror', (e) => out.errores.push(`${c.nombre} ${String(e).slice(0, 300)}`));
     page.on('console', (m) => m.type() === 'error' && out.errores.push(`${c.nombre} ${m.text().slice(0, 300)}`));
-    await page.goto(`${url}/?debug`);
+    await page.goto(`${url}/?debug${c.q || ''}`);
     await page.waitForFunction(() => window.__moki && window.__moki.moki, null, { timeout: 60000 });
     await page.waitForTimeout(1500);
     const r = await page.evaluate(async ([bot, seed, primera]) => {
@@ -106,7 +109,7 @@ try {
           const m = String(pild).match(/\+(\d+)\s*$/);
           if (!m || +m[1] !== d) r.fallos.push({ que: 'pildora != delta', ...row });
         }
-        if (primera && cierre === primera) {
+        if (primera && cierre === primera && !r.letreroCierre) { // P40b: el letrero va en la 1.ª horquilla; las siguientes pagan la racha
           const re = primera === 'arriba' ? /^Arriba \+(\d+)$/ : /^A ras \+(\d+)$/;
           const txt = (r.letreros || []).find((x) => re.test(String(x)));
           const n = txt ? +String(txt).match(re)[1] : null;

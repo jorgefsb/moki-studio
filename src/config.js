@@ -50,6 +50,7 @@ export const CONFIG = {
   arcBonusAlto: 12, // P36f ARRIBA PAGA MÁS: el arco alto de la horquilla paga 12 (arcBonus 5 = como en master). Ratio arriba/abajo 1.82; puerta del director 12-nov 19:28 (opción B). Ver evidencia/p36f-constructor/NOTA.md
   rotPago: [15, 7], // P40a: letreros de la horquilla de la 1.ª partida (arriba, a ras) = lo que paga la píldora al cerrar cada ruta: bono 12/5 + la pieza que cierra con racha 6/4 (x3/x2). Si cambian arcBonus*, combo o la horquilla, la sonda-p40-cobros (letrero != pildora) lo marca
   amberValue: 5,
+  hqClasico: true, // P40b: false = GAME_LEVEL y la 1.ª partida vuelven a SCRIPTS (Clásico sin horquilla, 2142 78/78; 1.ª con una sola)
   hq: { steps: [[1, 1], [2, 2], [3, 3]], on: true }, // P40 racha de horquillas: 2.ª subida seguida x2, 3.ª o más x3 del bono alto; on:false la apaga sin revertir
   scorePerPiece: 10,
   scorePerMeter: 1,
