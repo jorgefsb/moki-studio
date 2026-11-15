@@ -16,7 +16,7 @@ const SEMBRAR = (o) => {
   for (const [k, v] of Object.entries(o)) localStorage.setItem(k, v);
 };
 async function corre(nombre, q, ls, kind, seed) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: +(process.env.VP || '1280x720').split('x')[0], height: +(process.env.VP || '1280x720').split('x')[1] }, deviceScaleFactor: 1 });
   await ctx.addInitScript(SEMBRAR, { 'moki.primera': '1', 'moki.tutorial': '1', ...ls });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errores.push(`${nombre} ${e}`));

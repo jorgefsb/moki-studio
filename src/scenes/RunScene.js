@@ -405,7 +405,7 @@ export class RunScene extends Phaser.Scene {
     this.vw = W / z;
     this.vh = H / z;
     // Lo que se ve delante de Moki nunca baja de lo que se ve con minVisibleWidth (misma reacción).
-    const ahead = minW - Math.min(C.player.xMax, minW * C.player.xRatio);
+    const ahead = (minW - Math.min(C.player.xMax, minW * C.player.xRatio)) * (portrait ? P.aheadF : 1); // P42c: en vertical se ve 96 % de eso delante (reacción -4 %) para que Moki no corra pegado al borde
     this.pxBase = Math.round(Math.min(C.player.xMax, this.vw * C.player.xRatio, this.vw - ahead));
     this.adMax = portrait ? 0 : Math.max(0, Math.min(C.adelanto.px, this.pxBase - C.adelanto.pisoX)); // P24: en vertical no hay adelanto (P4j)
     this.adX = Math.min(this.adX || 0, this.adMax);
