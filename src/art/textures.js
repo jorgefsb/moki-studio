@@ -215,12 +215,14 @@ const ground = {
   },
 };
 
-function shadowTex(col = PAL.ink, paradas = [[0, 1], [0.7, 0.85], [1, 0]]) {
+function shadowTex(col = PAL.ink, paradas = [[0.7, 0.85]]) {
   const [c, x] = mk(128, 32);
   x.translate(64, 16);
   x.scale(1, 0.25);
   const g = x.createRadialGradient(0, 0, 0, 0, 0, 64);
+  g.addColorStop(0, rgba(col, 1));
   paradas.forEach(([t, a]) => g.addColorStop(t, rgba(col, a)));
+  g.addColorStop(1, rgba(col, 0));
   x.fillStyle = g;
   x.fillRect(-64, -64, 128, 128);
   return c;
@@ -1166,7 +1168,7 @@ export function buildTextures(scene) {
   add('groundFold', ground.fold());
   add('groundFibers', ground.fibrasNoche());
   add('shadow', shadowTex());
-  add('sombraM', shadowTex(C.feelP4z.color, C.feelP4z.paradas)); // P4z-d: la de Moki solo con zoom < 1
+  add('sombraM', shadowTex('#3A1A0C', [[0.25, 0.95], [0.55, 0.7], [0.8, 0.3]])); // P4z-d: la de Moki con zoom < 1 (café quemado, campana sin dona; config.js feelP4z)
   add('caja', caja());
   add('torre', torre());
   add('token', token());
