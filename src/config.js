@@ -198,7 +198,7 @@ export const CONFIG = {
     midClear: { on: true, marginPx: 12, fadePx: 48 },
     foreground: { speed: 1.3, minGapSec: 2.6 },
     vertical: { far: 0.02, mid: 0.04, ground: 0.06, maxPx: 4 },
-    checkpointLabelMs: 1600,
+    checkpointLabelMs: 1000, // P40e-a: 1600 se quedaba mucho (ciego P40d)
     checkpointFlagMs: 280,
     collectMs: 200,
   },

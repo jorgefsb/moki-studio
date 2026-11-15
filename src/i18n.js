@@ -29,7 +29,7 @@ const ES = {
   'tut.hold.touch': 'Mantén',
   'tut.hold.kbd': 'Mantén Espacio',
   'tut.ok': '¡Eso!',
-  'hud.cp': 'Aprendizaje guardado',
+  'hud.cp': 'Si chocas, sigues aquí', // P40e-a: antes 'Aprendizaje guardado' (1 de 3 no supo qué era); mismo verbo que fail.cp
   'hud.m': 'm',
   'aria.pause': 'Pausa',
   'aria.sound': 'Sonido',
