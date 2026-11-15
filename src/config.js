@@ -131,6 +131,10 @@ export const CONFIG = {
   // P4q (feel, pico del salto; propuestas/p4q-caso.md): cinta naranja con canto crema que sale de la bota en el aire y
   // dibuja la curva del salto; se apaga sola tras aterrizar. Por nivel de juice (Poquito: solo salto mantenido). ms: [toque, mantenido]
   feelP4q: { on: [0, 1, 2, 2], pie: 6, ancho: [0, 7, 7, 9], altoX: 1.4, ms: [240, 380], canto: 2 },
+  // P4z-d (look de P4z-b, solo celular): con zoom < 1 la sombra de Moki se ve en el aire: café quemado, campana sin dona, alto x0.75
+  // (cabe en la franja crema). Alfa a[0] en el suelo, +a[1] en el pico, aire reforzado x(1+a[2]). Con zoom >= 1 queda la de master.
+  // Va en línea (textures.js 'sombraM' y RunScene sombra de Moki) por el tope de +30 B gz: color #3A1A0C, paradas 0.25/0.95, 0.55/0.7, 0.8/0.3;
+  // alfa 0.3 en el suelo, +0.14 en el pico, aire x1.4; alto x0.75.
   zanja: { corto: 0.34, largo: 0.56, pie: 10, caePx: 30, subePx: 10, libreSec: 0.75, on: true, nivel: 2 },
   // Casi-choque (DIVERSIÓN 4): pasar a <= px de la caja de choque sin tocarla premia una vez por obstáculo; la racha de
   // casi-choques sube el tono y se corta al chocar o a los rachaSec sin otro
