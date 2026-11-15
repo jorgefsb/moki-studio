@@ -1,3 +1,3 @@
-Escoge tu camino
-Ahora puedes escoger: subir por el arco de piezas de arriba con más riesgo y llevarte una corona de papel y más puntos, o pasar a ras y seguro cobrando la fila de abajo. Desde hoy también en tu primera partida, con letreros "Arriba +12" y "A ras +5".
-Vuelta 16 en master (13-nov 17:07, 4c71745): los letreros y los premios ya no tapan a Moki ni a las monedas, y entran sin gris (?ir=primera). Antes: cada letrero dice cuánto paga y al cerrar el arco sale esa misma cifra, el conteo de cuántas veces subes, la horquilla en Libre y Reto, la corona, "Arriba +N" en la tarjeta final y al compartir, y la nota del Cuaderno "Sube por arriba 2 veces" (?ir=elige).
+La racha de arcos se lee honesta y nada aparece de golpe
+Clásico paga la racha de arcos (15, 26, 38) con 'Arco alto · racha N' y ficha de papel; la sombra entra con su objeto (/?ir=primera, /?ir=mega2).
+Master 57d5166 (P40b + P47-a + P40e + P49). Corte 18:30 cerrado (PARA PUBLICAR HOY 17:30). En curso: P47b2 [ux] con el constructor; entra después de las 20:00 si no llega antes de las 18:00.
