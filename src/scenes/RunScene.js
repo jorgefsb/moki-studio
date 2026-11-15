@@ -396,8 +396,8 @@ export class RunScene extends Phaser.Scene {
     const g = C.world.groundY;
     const P = C.portrait;
     const portrait = W / H <= P.maxAspect;
-    this.mokiF = portrait ? P.mokiF : 1;
-    this.pildDy = portrait ? P.pildDy : 0; // P43b: la píldora 'Arriba' sube 10 px de pantalla más en vertical (aire con Moki x1.25) // P43: Moki más grande solo en vertical (dibujo y anclas; la caja no)
+    this.mokiF = portrait ? P.mokiF : 1; // P43: Moki más grande solo en vertical (dibujo y anclas; la caja no)
+    this.pildDy = portrait ? P.pildDy : 0; // P43b: las píldoras 'Arriba' y 'A ras' suben pildDy px de pantalla más en vertical (aire con Moki x1.25)
     const minW = C.world.minVisibleWidth;
     const z = Math.min(H / C.world.height, W / (portrait ? P.visibleWidth : minW));
     this.zoom = z;
