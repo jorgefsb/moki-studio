@@ -4,7 +4,7 @@
 cd /home/jorgefsb/Work/moki-rig/.worktrees/p40b
 M=/home/jorgefsb/Work/moki-rig/.worktrees/p40b-master
 Q=/home/jorgefsb/Work/moki-rig/.qa-p40b
-E=evidencia/p40b-constructor
+E=${E:-evidencia/p40b-constructor}
 U=http://127.0.0.1:5293
 mkdir -p $Q $E
 until ! grep -q 'semáforo=ROJO' /tmp/moki-recursos.txt; do sleep 20; done
