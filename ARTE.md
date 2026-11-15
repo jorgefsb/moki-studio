@@ -74,6 +74,7 @@ Reglas de Moki
 - **Casco rígido.** Cabeza y casco no se deforman. Squash solo en el cuerpo, máximo 3%.
 - Escala en pantalla: Moki mide 18 a 22% de la altura del área de juego (referencia 96 a 120 px de alto en 1280 px, 64 a 80 px en 375 px). Misma escala en todos los estados.
 - Sombra de contacto siempre presente bajo Moki (elipse #22211F al 20 a 28%). Es lo que lo "pega" al suelo.
+- Excepción celular (P4z-d, director 14-nov 20:35): con zoom < 1, la sombra de contacto en el aire es una campana café #3A1A0C de alto x0.75, con alfa 0.30 en el suelo y 0.44 en el pico. Esto rompe a propósito el tope del 28% y la regla de "se aleja y se aclara" (líneas 37 y 60), solo en celular. Por qué: a 390 px la sombra de tinta al 12-28% no se ve; dos ciegos con este look dieron rama 3 de 3 (P4z-b) y 3 de 3 (P4z-d), y aclararla o angostarla en el aire reprobó (P4y). Escritorio no cambia. Defectos conocidos, pendientes para [feel]/[arte]: no crece ni se oscurece al caer, borde duro y sin fibra de papel.
 - Hitbox más chico que el sprite: el jugador siente justo, no castigado.
 
 ## 7. Mundo: capas de parallax (4)
