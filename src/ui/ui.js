@@ -665,7 +665,7 @@ export function createUI() {
       ui.hideTachado();
       const scrim = el('div', 'ui-scrim');
       scrim.style.background = 'rgba(34,33,31,0.18)';
-      const card = el('div', `ui-card${rect.compact ? ' compact' : ''}${rect.corto ? ' corto' : ''}`);
+      const card = el('div', `ui-card${rect.compact ? ' compact' : ''}${rect.corto ? ' corto' : ''}${rect.bajo ? ' bajo' : ''}`);
       // Entra igual que la tarjeta de fallo: sube 18 px con fundido de 250 ms
       const still = reducedMQ.matches || feel.level === 0;
       Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, maxHeight: `${rect.maxHeight}px`, overflowY: 'auto', opacity: '0', transform: still ? 'none' : 'translateY(18px)', transition: still ? 'opacity 150ms ease-out' : 'opacity 250ms ease-out, transform 250ms ease-out' });
@@ -681,18 +681,28 @@ export function createUI() {
       const row = (k, v) => {
         rows.append(el('dt', '', k), el('dd', '', v));
       };
-      row(t('end.dist'), `${d.meters} m`);
-      row(t('end.pieces'), String(d.valor ?? d.pieces)); // P40: la misma cifra del contador del HUD (papel)
-      if (!d.paseo) {
+      if (d.paseo || !d.suma) {
         // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
-        row(t('end.score'), String(d.score));
-        row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
+        row(t('end.dist'), `${d.meters} m`);
+        row(t('end.pieces'), String(d.valor ?? d.pieces)); // P40: la misma cifra del contador del HUD (papel)
+        if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
+        card.append(rows);
+      } else {
+        // P47: la cuenta a la vista sin crecer la tarjeta (P47-a: el Cuaderno de master no se pierde): metros + piezas x10
+        // (+ Vuelta rápida) = Puntaje. "incluye Arriba" va en gris y sin signo: es parte de las piezas, no se suma otra vez.
+        // Vertical y bajito (corto, P47-a QA): 4 columnas y 4 renglones bajitos; 'incluye Arriba' y 'Mejor marca' ocupan las
+        // columnas 1 a 3 con su cifra en la 4.ª (bajo la de Piezas): nada se parte ni se corta a 390.
+        const s = d.suma;
+        const cuenta = el('dl', 'ui-suma');
+        const fila = (f) => f && cuenta.append(el('dt', f[2] || '', f[0]), el('dd', f[2] || '', f[1]));
+        const niv = d.modo && [t('end.modo'), d.modo, 'niv']; // en vertical puede partirse en dos renglones ("Reto del 15 nov")
+        const vu = s.extra && [t('vuelta.name'), `+${s.extra}`];
+        const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
+        const fin = [[t('end.score'), String(d.score), 'total'], [d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
+        const no = ['', ''];
+        [[t('end.dist'), `${s.m} m`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.corto ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, niv])].forEach(fila);
+        card.append(cuenta);
       }
-      if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
-      // P36h: cuánto de ese puntaje fue la ruta de arriba. Ancha: junto al puntaje. Vertical (corto, 4 columnas): celda que ocupa
-      // la mitad vacía del último renglón (junto a Nivel); en la columna del puntaje se cortaba ("Arr"). La tarjeta no crece.
-      if (d.arriba && !d.paseo) (rect.corto ? rows : rows.children[5]).append(el(rect.corto ? 'dd' : 'span', 'arriba', `${t('end.arriba')} +${d.arriba}`));
-      card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));
       again.type = 'button';
       // P28 (Jorge, 11-nov): Así lo hicimos y copiar bajan a enlaces chicos en una fila; el voto sube bajo 'Otra vez'

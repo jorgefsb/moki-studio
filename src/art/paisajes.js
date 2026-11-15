@@ -666,7 +666,7 @@ export function montarPaisajes(s, pintadas, gy) {
       horaPendiente = null;
     }
     if (cubre && pintadas && amb.n1) {
-      [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio, pintadas.suelo].forEach((v) => v.setVisible(false)); // lo tapado no se dibuja
+      [pintadas.cielo, pintadas.sol, pintadas.lejos, pintadas.medio, pintadas.suelo].forEach((v) => v && v.setVisible(false)); // lo tapado no se dibuja (P47: con ?ir=meta la partida nace tapada y alguna capa pintada aún no existe)
     } else if (cubre) tapar();
     else destapar();
     if (cur && s.bokeh) s.bokeh.forEach((q) => q.im.setAlpha(q.im.alpha * (1 - (prev || k >= 1 ? 1 : k)))); // círculos de luz de la tarde: en otro lugar no van
