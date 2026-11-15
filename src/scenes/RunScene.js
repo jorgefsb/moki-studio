@@ -2338,10 +2338,13 @@ export class RunScene extends Phaser.Scene {
     const air = Math.max(0, g - this.y);
     const f = 1 / (1 + air / 150);
     this.mokiShadow.setPosition(this.px + 8, g + 1);
-    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.3), 22 * (0.6 + 0.4 * f));
+    const Z = C.feelP4z, chico = this.zoom < 1, kz = chico ? 'sombraM' : 'shadow'; // P4z-d: celular P4z-b; escritorio igual a master
+    if (this.mokiShadow.texture.key !== kz) this.mokiShadow.setTexture(kz);
+    this.mokiShadow.setDisplaySize(96 * (0.5 + 0.5 * f) * (1 + sink * 0.3), 22 * (0.6 + 0.4 * f) * (chico ? 0.75 : 1));
     const MR = C.atmosphere.night.moonRim; // de noche la sombra de contacto sube (escalera de valores)
     const nightSh = this.ambient && MR.on ? MR.shadow * (this.ambient.nt || 0) : 0;
-    this.mokiShadow.setAlpha((0.28 + nightSh) * (0.4 + 0.6 * f) * (this.apoyado() || this.paseoRun ? 1 : 0)); // sobre la zanja no hay sombra
+    const u = Math.min(1, (1 - f) / 0.44); // 0 en el suelo, 1 del pico para arriba
+    this.mokiShadow.setAlpha((chico ? (Z.a[0] + nightSh + Z.a[1] * u) * (1 + Z.a[2] * u) : (0.28 + nightSh) * (0.4 + 0.6 * f)) * (this.apoyado() || this.paseoRun ? 1 : 0)); // sobre la zanja no hay sombra
     if (this.sobre) this.mokiShadow.setPosition(this.sobre.x, g - this.sobre.size.height + 1).setDisplaySize(56, 10).setAlpha(0.28 * this.recoilDone); // encima de la caja: aparece conforme llega
     // Pasos de cartón (CRECE, Cuaderno nivel 4): uno por ciclo de la carrera normal (1 de cada 2 pisadas), contado por
     // distancia y no por fase: con movimiento reducido el ciclo es más corto y la fase daba +75 % de pasos
