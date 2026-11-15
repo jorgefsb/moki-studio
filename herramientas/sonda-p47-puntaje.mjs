@@ -66,10 +66,10 @@ try {
       const suma = card && card.querySelector('.ui-suma');
       if (!suma) { r.cuenta = null; r.texto = card ? card.innerText.replace(/\s+/g, ' ').slice(0, 200) : null; return r; }
       const dts = [...suma.querySelectorAll('dt')];
-      const filas = dts.map((dt) => ({ k: dt.textContent, v: dt.nextElementSibling.textContent, cls: dt.className }));
+      const filas = dts.map((dt) => ({ k: dt.textContent, v: dt.nextElementSibling && dt.nextElementSibling.tagName === 'DD' ? dt.nextElementSibling.textContent : '', cls: dt.className })); // P47-a: 'Mejor marca' en vertical es una sola celda
       r.cuenta = filas;
-      const cifra = (v) => { const m = String(v).match(/(?:=|\+)\s*(\d+)\s*$/); return m ? +m[1] : null; };
-      const sumandos = filas.filter((f) => !/sub|total/.test(f.cls));
+      const cifra = (v) => { const m = String(v).match(/(?:=|\+)\s*(\d+)\s*$/) || String(v).match(/^(\d+) m$/); return m ? +m[1] * 1 : null; }; // P47-a: 'N m' vale N (1 punto por metro)
+      const sumandos = filas.filter((f) => !/sub|total/.test(f.cls) && /Distancia|Distance|Piezas|Pieces|Vuelta|Fast/.test(f.k)); // P47-a: Mejor marca y Nivel viven en la misma lista y no suman
       const tot = filas.find((f) => /total/.test(f.cls));
       const s = sumandos.reduce((a, f) => a + (cifra(f.v) ?? NaN), 0);
       r.sumaRenglones = s;
@@ -80,12 +80,12 @@ try {
       const mp = pz && String(pz.v).match(/^(\d+) x(\d+) = (\d+)$/);
       if (!mp || +mp[1] !== d.valor || +mp[1] * +mp[2] !== +mp[3]) fallos.push({ que: 'renglón de piezas mal', v: pz && pz.v, valor: d.valor });
       const ds = sumandos.find((f) => /Distancia|Distance/.test(f.k));
-      const md = ds && String(ds.v).match(/^(\d+) m = (\d+)$/);
-      if (!md || +md[1] !== d.meters || +md[2] !== d.meters * porM) fallos.push({ que: 'renglón de metros mal', v: ds && ds.v });
+      const md = ds && String(ds.v).match(/^(\d+) m$/);
+      if (!md || +md[1] !== d.meters) fallos.push({ que: 'renglón de metros mal', v: ds && ds.v });
       const sub = filas.find((f) => /sub/.test(f.cls));
       if (d.arriba) {
-        const ma = sub && String(sub.v).match(/^(\d+) x(\d+) = (\d+)$/);
-        if (!ma || +ma[1] !== d.arriba || +ma[3] !== d.arriba * porP || d.arriba > d.valor) fallos.push({ que: 'renglón Arriba mal', v: sub && sub.v, arriba: d.arriba });
+        const ka = sub && String(sub.k).match(/(\d+)$/), ma = sub && String(sub.v).match(/^= (\d+)$/); // P47-a: 'incluye Arriba N' / '= N*10'
+        if (!ka || !ma || +ka[1] !== d.arriba || +ma[1] !== d.arriba * porP || d.arriba > d.valor) fallos.push({ que: 'renglón Arriba mal', v: sub && sub.v, arriba: d.arriba });
       } else if (sub) fallos.push({ que: 'renglón Arriba sin arriba', v: sub.v });
       if (d.isNew && d.best !== r.total) fallos.push({ que: 'mejor marca != total', best: d.best });
       // nada se corta: cada renglón cabe en la tarjeta (sin scroll horizontal ni texto desbordado)

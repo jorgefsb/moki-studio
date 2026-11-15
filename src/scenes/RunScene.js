@@ -747,6 +747,8 @@ export class RunScene extends Phaser.Scene {
     const W = this.scale.width;
     const st = this.ui.state;
     const card = (st.final && st.final.card) || (st.fail && st.fail.card);
+    // P47-a: en vertical, con la tarjeta de meta, el aviso sube arriba (como a 1280): bajo la tarjeta tapaba el título del Cuaderno
+    if (st.final && W < this.scale.height) return { left: 16, right: W - 16, top: 8 };
     if (card) return { left: Math.round(this.saludoZonas().mokiR + 12), right: W - 16, top: Math.round(card.getBoundingClientRect().bottom + 8) };
     return { left: 16, right: W - 16, top: Math.round(sb ? sb.offsetTop + sb.offsetHeight + 10 : 72) };
   }

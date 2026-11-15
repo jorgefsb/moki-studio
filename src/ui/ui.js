@@ -685,22 +685,39 @@ export function createUI() {
         // Paseo no compite: sin puntaje ni mejor marca (director, pieza 4)
         row(t('end.dist'), `${d.meters} m`);
         row(t('end.pieces'), String(d.valor ?? d.pieces)); // P40: la misma cifra del contador del HUD (papel)
+        if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
+        card.append(rows);
       } else {
-        // P47: el resultado primero y la cuenta a la vista: metros + piezas x10 (+ Vuelta rápida) = Puntaje. Cada renglón
-        // dice su cifra en puntos; Arriba es parte de las piezas (P36h) y también se dice en puntos.
+        // P47: la cuenta a la vista sin crecer la tarjeta (P47-a: el Cuaderno de master no se pierde): metros + piezas x10
+        // (+ Vuelta rápida) = Puntaje. "incluye Arriba" va en gris y sin signo: es parte de las piezas, no se suma otra vez.
+        // Vertical y bajito (corto): 4 columnas como los datos de master; los huecos se rellenan para que cada par caiga
+        // en su renglón (Arriba a la derecha, bajo Piezas; Puntaje y Mejor marca juntos).
         const s = d.suma;
         const cuenta = el('dl', 'ui-suma');
         const fila = (k, v, cls = '') => cuenta.append(el('dt', cls, k), el('dd', cls, v));
-        fila(t('end.dist'), `${s.m} m = ${s.mP}`);
+        const hueco = () => cuenta.append(el('dt'), el('dd'));
+        const nivel = () => d.modo && fila(t('end.modo'), d.modo);
+        const sub = () => s.arriba && fila(`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub');
+        const vuelta = () => s.extra && fila(t('vuelta.name'), `+${s.extra}`);
+        fila(t('end.dist'), `${s.m} m`);
         fila(t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`);
-        if (s.arriba) fila(`de ellas, ${t('end.arriba')}`, `${s.arriba} x${s.x} = ${s.arriba * s.x}`, 'sub');
-        if (s.extra) fila(t('vuelta.name'), `+${s.extra}`);
+        if (!rect.corto) sub(), vuelta();
+        else if (s.arriba || s.extra || d.modo) {
+          (s.extra ? vuelta : d.modo ? nivel : hueco)();
+          (s.arriba ? sub : hueco)();
+        }
         fila(t('end.score'), String(d.score), 'total');
+        const mejor = d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'); // la marca es de este modo
+        if (!rect.corto) fila(mejor, String(d.best));
+        else {
+          // una sola celda en las columnas 3 y 4: así "Mejor marca · Clásico" no ensancha la columna ni se parte en dos
+          const m = el('dt', 'mejor', mejor);
+          m.append(el('b', '', String(d.best)));
+          cuenta.append(m);
+        }
+        if (!rect.corto || s.extra) nivel();
         card.append(cuenta);
-        row(d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best)); // la marca es de este modo
       }
-      if (d.modo) row(t('end.modo'), d.modo); // "Reto del 29 oct" o "Libre" (NIVELES.md §10)
-      card.append(rows);
       const again = el('button', 'ui-btn primary', t('end.again'));
       again.type = 'button';
       // P28 (Jorge, 11-nov): Así lo hicimos y copiar bajan a enlaces chicos en una fila; el voto sube bajo 'Otra vez'
