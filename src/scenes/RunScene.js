@@ -1392,7 +1392,7 @@ export class RunScene extends Phaser.Scene {
     // P36l-c: cada letrero dice la misma cifra que la píldora al cerrarlo. Sonda: herramientas/sonda-p40-cobros.mjs (P40a)
     // P40a: el letrero dice lo que salta el contador al cerrar la ruta (bono + la pieza que lo cierra con su racha), igual que la píldora; cifra en C.rotPago
     // P36l-e: 16 px más de aire entre los dos (a 390 se leían apilados)
-    if (e.rot) o.rot = [[t('end.arriba'), 198, C.rotPago[0]], ['A ras', 88, C.rotPago[1]]].map(([s, y, n], i) => {
+    if (e.rot) o.rot = [['Arco alto', 198, C.rotPago[0]], ['A ras', 88, C.rotPago[1]]].map(([s, y, n], i) => {
       const r = this.add.container(x + 80 - 12 * i, g - y).setDepth(10.6).setAlpha(0); // sobre la caja, bajo piezas (11) y Moki: nunca los tapa
       this.makeLabel(r, 'left').set(`${s} +${n}`);
       r.y0 = r.y;
@@ -1552,11 +1552,13 @@ export class RunScene extends Phaser.Scene {
   showPago(k, d, hm = 1, solo) {
     if (!this.pago) {
       this.pago = this.add.container(0, 0).setDepth(99);
-      this.pagoL = this.makeLabel(this.pago, 'center');
+      this.pagoL = this.makeLabel(this.pago, 'center', 'token'); // P40e: la ficha del contador: la píldora habla en papel, como él
     }
+    // P40e: 'Arco alto' (no 'Arriba': 3 de 3 no supieron qué premiaba) + ficha de papel: la cifra es papel que entra al contador
     // P40: la cifra es el salto del contador en este cobro (bono del arco + la pieza que lo cierra con su racha); xN = racha de horquillas
     // P40d: solo = cobro de la 1.ª partida que no cierra horquilla (pieza o arco): también trae su píldora
-    this.pagoL.set(solo ? `+${d}` : k.alto ? `${t('end.arriba')}${hm > 1 ? ` x${hm}` : ''}  +${d}` : `A ras  +${d}`);
+    // P40e-a: 'racha 2', no 'x2': la x solo multiplica el bono (12 x hm) y la pieza suma aparte (+15, +26, +38): 'x2 +26 no es el doble de 15' (2 de 3)
+    this.pagoL.set(solo ? `+${d}` : k.alto ? `Arco alto${hm > 1 ? ` · racha ${hm}` : ''}  +${d}` : `A ras  +${d}`);
     // P36l-d: a ras el arco alto sigue arriba de Moki; la píldora nace adelante de él y del arco (el mundo corre a la izquierda: las monedas se alejan)
     const z = this.zoom;
     this.pago.setScale(Math.max(1, 25 / 22 / z)); // P40d: la 'x' de 'x2' mide >= 12 px en pantalla (Outfit: x-height ~0.49 em; a 390 la cámara aleja)
@@ -1565,7 +1567,8 @@ export class RunScene extends Phaser.Scene {
     this.pagoDx = !solo && !k.alto; // P36l-f: 'A ras' va amarrada a Moki: sobre su casco, mismo x cada cuadro (la de P36l-e se adelantaba y se veía suelta)
     this.pagoY = k.y - 122 - (z < 1 && 45 * this.pago.scaleX - 40) - C.player.spriteHeight * (this.mokiF - 1) - this.pildDy / z; // P43b: en vertical sube lo que creció la cabeza (x mokiF) más pildDy px de pantalla; la pieza va a 44 px de los pies: la píldora queda 14 px arriba de la cabeza (P36l-d: +2, no pega al casco ni tapa monedas). P40i: a 390 (escala 1.34) el papel crece hacia arriba y deja 5 px más de aire (hueco ~11 px de pantalla, como 1280); colgado tapaba el casco al nacer
     // P40d: el '+N' suelto de la 1.ª partida nace bajo el contador, alineado a su derecha, y sube hacia él (sobre Moki tapaba casco y monedas)
-    if (solo) (this.pagoX = this.vw - 48 / z), (this.pagoY = this.top + 112 / z + 24); // centro a 48 px del borde: '+1' termina a ~16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
+    // P40e-b: en vertical 'Si chocas, sigues aquí' baja bajo el botón de sonido (P47) y la ficha le tapaba la orilla: llega 8 px bajo su papel (40 + sombra 5). A 1280 no cambia.
+    if (solo) (this.pagoX = this.vw - 80 / z), (this.pagoY = (z < 1 ? this.hudCY() + 53 / z : this.top + 112 / z) + 24); // P40e-b: centro a 80 px del borde (48 con la moneda cortaba '+10' 16 px a 1280): '+10' termina a 16 px, como el contador; llega a 112 px, bajo el renglón de 'Aprendizaje guardado' (68 a 108)
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
     this.cinta.avisoT = -1;
     this.cinta.aviso.setVisible(false);

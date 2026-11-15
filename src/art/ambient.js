@@ -459,13 +459,16 @@ export class Ambient {
       this.once.moki = true;
     } else if (kind === 'balloon') {
       // nace ya sobre la zona de lectura (su base queda sobre groundY-185, más arriba de las piezas más altas) y entra con un fundido: nunca cruza la banda de juego
-      const sp = s.add.image(s.vw * (0.55 + r() * 0.25), C.world.groundY - 245, 'ambBalloon').setDepth(2.5).setAlpha(0);
+      // P40e-a: en vertical la píldora del cierre vive en y 252-334 de pantalla (x < 272) y el '+N' suelto en y 103-185 (x > 322):
+      // el globo nace ya arriba (centro a y 150-195, x 0.45-0.62 del ancho) y no sube cruzando esa franja (la tapaba 54 cuadros)
+      const v = s.zoom < 1, yv = v && s.top + (150 + r() * 45) / s.zoom; // a 1280 el azar se consume igual que en master
+      const sp = s.add.image(s.vw * (v ? 0.45 + r() * 0.17 : 0.55 + r() * 0.25), v ? yv + 12 / s.zoom : C.world.groundY - 245, 'ambBalloon').setDepth(2.5).setAlpha(0);
       ev.sprites.push(sp);
       ev.life = 22000 + r() * 6000;
       ev.x0 = sp.x;
       ev.d0 = s.dist;
       ev.y0 = sp.y;
-      ev.y1 = band[0] + (band[1] - band[0]) * (0.35 + r() * 0.3);
+      ev.y1 = v ? yv : band[0] + (band[1] - band[0]) * (0.35 + r() * 0.3);
       this.slow = ev;
       this.log.push([Math.round(ms / 100) / 10, kind]);
       return true;
