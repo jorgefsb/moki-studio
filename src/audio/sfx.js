@@ -130,17 +130,22 @@ export function stumble(ctx, dest, t, o = {}) {
   g.connect(P.out);
   gl(ctx, P.out, t, 'triangle', 110, 70, 120, 0.36 * P.pk, Math.max(0.004, P.atkMin), 0.12);
   if (o.tipo === 'zanja') return;
-  const m = P.pk * (P.r ? 0.5 : 1);
-  [0, 0.022, 0.047].forEach((dt, i) => {
-    const s = t + dt, n = noise(ctx, s, 0.012), b = ctx.createBiquadFilter(), gg = ctx.createGain();
+  // P4v: el material manda (caja de cartón grave y seca; torre, viga y timbre más agudos y largos), nunca dos crujidos
+  // seguidos con el mismo número de granos (2 a 4) ni la misma separación, y más rápido = más fuerte y brillante
+  // (v = velocidad / la de arranque; a velocidad base, k = 0: igual que P4t)
+  const k = Math.min(1, Math.max(0, (o.v || 1) - 1)), caja = o.tipo === 'caja', d = caja ? 0.009 : 0.014;
+  const m = P.pk * (P.r ? 0.5 : 1) * (1 + 0.18 * k);
+  const n = (stumble.n = 2 + ((stumble.n || 2) - 1 + ((Math.random() * 2) | 0)) % 3);
+  for (let i = 0, s = t; i < n; i++, s += 0.016 + Math.random() * 0.016) {
+    const z = noise(ctx, s, d), b = ctx.createBiquadFilter(), gg = ctx.createGain();
     b.type = 'bandpass';
-    b.frequency.value = 2200 * (1 + (Math.random() * 2 - 1) * 0.15);
+    b.frequency.value = (caja ? 1700 : 2600) * (1 + 0.2 * k) * (1 + (Math.random() * 2 - 1) * 0.15);
     b.Q.value = 2;
-    shape(gg, s, Math.max(0.002, P.atkMin), [0.4, 0.27, 0.19][i] * m, s + 0.012);
-    n.connect(b);
+    shape(gg, s, Math.max(0.002, P.atkMin), 0.4 * 0.68 ** i * m, s + d);
+    z.connect(b);
     b.connect(gg);
     gg.connect(P.out);
-  });
+  }
 }
 
 // Botón de UI: glissando corto; 'up' sube (activar), 'down' baja (apagar)
