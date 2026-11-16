@@ -67,77 +67,20 @@ function hornear(s) {
 // sus edificios, se quitó (cook/ROUNDS.md, Decisiones r02).
 const HORA = {
   cima: [0x7e3a3c, 0.62], horizonte: [0xffe2a6, 0.55], resplandor: [0xffd58a, 0.62], halo: [0xfff0b8, 0.9], sobre: 345, // r03: arriba de las copas de los pinos cercanos (g - 318 a 1280), sin que lo muerdan
-  lejos: [0xffc584, 0.6], valle: [0xffdcaa, 0.75], medio: [0xf0b07a, 0.3], cerca: [0x6a3a26, 0.72], frente: [0x1e0f0a, 0.62], tierra: [0x2a160e, 0.92], // r02: cerca y frente un paso más claros (crítico: «pesada»)
+  lejos: [0xffc584, 0.6], valle: [0xffdcaa, 0.75], medio: [0xf0b07a, 0.3], cerca: [0x6a3a26, 0.72], frente: [0x1e0f0a, 0.62], // r02: cerca y frente un paso más claros (crítico: «pesada»)
 };
 // Pinos cercanos: la misma capa pintada de pinos, más grande y más rápida, en un valor más oscuro; la de siempre queda como pinos
 // lejanos con aire. Así la masa café se parte en dos planos (crítico r01). Nunca más oscuros que la caja (ARTE 2.0).
 const CERCA = { k: 1.45, par: 0.82, pie: 60, dx: 1333 }; // r02b: más grande y corrida para no calcar el dibujo de los lejanos
-// Primer plano propio: matas y piedras de tinta abajo de la línea del suelo (nunca entra a la banda de juego), a 1.5x. Solo en la
-// página 1: en la Ciudad y la Playa no pega con el empedrado ni la arena (r02), se recorta al borde de la hoja que entra.
-const TIERRA = { par: 1.5, arriba: 10, w: 1400, h: 220 };
-const TIERRA_K = 'luz_tierra';
-
-// Matas, pastos altos y piedras en silueta (blanco para teñir), con huecos: azar propio y fijo, sin tocar el del juego
-function hornearTierra(s) {
-  if (s.textures.exists(TIERRA_K)) return;
-  const { w, h } = TIERRA;
-  const [c, x] = mk(w, h);
-  let a = 9173;
-  const r = () => ((a = (a * 16807) % 2147483647) / 2147483647);
-  x.fillStyle = '#fff';
-  x.fillRect(0, h - 5, w, 5); // r02b: pie corrido fino (26 px se leía franja negra)
-  let px = 40;
-  while (px < w - 160) {
-    const tipo = r();
-    const alto = h * (0.45 + r() * 0.55);
-    if (tipo < 0.45) {
-      // mata: lomas encimadas
-      const n = 3 + Math.floor(r() * 3);
-      for (let i = 0; i < n; i++) {
-        const rr = 26 + r() * 46;
-        x.beginPath();
-        x.ellipse(px + i * rr * 0.8, h - 20, rr * 1.1, Math.min(alto, rr * 2), 0, Math.PI, 0);
-        x.fill();
-      }
-      px += n * 50;
-    } else if (tipo < 0.8) {
-      // pasto alto: hojas finas y curvas
-      const n = 7 + Math.floor(r() * 8);
-      for (let i = 0; i < n; i++) {
-        const bx = px + i * 6 + r() * 4;
-        const hh = alto * (0.5 + r() * 0.5);
-        const ld = (r() - 0.35) * 40;
-        x.beginPath();
-        x.moveTo(bx - 3, h);
-        x.quadraticCurveTo(bx + ld * 0.3, h - hh * 0.6, bx + ld, h - hh);
-        x.quadraticCurveTo(bx + ld * 0.3 + 2, h - hh * 0.55, bx + 4, h);
-        x.fill();
-      }
-      px += n * 6 + 30;
-    } else {
-      // piedra plana
-      const pw = 60 + r() * 70;
-      const ph = 24 + r() * 30;
-      x.beginPath();
-      x.moveTo(px, h);
-      x.lineTo(px + pw * 0.12, h - ph * 0.8);
-      x.lineTo(px + pw * 0.45, h - ph);
-      x.lineTo(px + pw * 0.85, h - ph * 0.7);
-      x.lineTo(px + pw, h);
-      x.fill();
-      px += pw + 10;
-    }
-    px += 60 + r() * 240; // hueco
-  }
-  s.textures.addCanvas(TIERRA_K, c);
-}
+// r04: el primer plano de matas (r02-r04) y el aire o sombra detrás de Moki (r03-r04) se probaron y se QUITARON: las matas se
+// leían como manchas o arbustos y a 390 desaparecían; la elipse detrás de Moki, clara, llevaba el fondo al valor del traje
+// (contraste 1.12) y, oscura, se leía como aura. Ver cook/ROUNDS.md, Decisiones r04.
 
 export function montarLuz(s, c) {
   if (!LUZ.on || !c) return;
   let o = null;
   const crear = () => {
     hornear(s);
-    hornearTierra(s);
     const img = (k, d, add) => {
       const v = s.add.image(0, 0, k).setDepth(d).setVisible(false);
       if (add) v.setBlendMode('ADD');
@@ -155,9 +98,7 @@ export function montarLuz(s, c) {
       valle: banda(2.5),
       medio: copia('capa_medio', 3.061),
       cerca: copia('capa_medio', 3.5),
-      claro: img(RAD, 3.505).setTint(0xffd9a2), // r03: aire claro detrás de Moki (sobre los pinos cercanos, bajo cajas y Moki)
       frente: banda(4.64),
-      tierra: s.add.tileSprite(0, 0, 10, 10, TIERRA_K).setOrigin(0, 0).setDepth(19.5).setVisible(false),
     };
   };
   const igual = (v, L) => {
@@ -212,19 +153,9 @@ export function montarLuz(s, c) {
     const [ec, ea] = H('cerca');
     o.cerca.setPosition(0, g + CERCA.pie * ms - alto).setSize(Math.max(1, borde), alto).setVisible(borde > 0).setTileScale(kx, ky).setTintFill(ec).setAlpha(ea * st);
     o.cerca.tilePositionX = ((s.reduced ? 0 : s.dist * CERCA.par) + CERCA.dx) / kx;
-    // Aire claro detrás de Moki: elipse fija en pantalla, de la cintura de los pinos cercanos al suelo. El traje (L ~55) queda más
-    // oscuro que lo que tiene detrás (L ~75) y se separa por valor; las cajas (cuerpo #452B1C) ganan aún más.
-    o.claro.setPosition(s.px, g - 70 * ms).setDisplaySize(420 * ms, 300 * ms).setAlpha(0.85 * st).setVisible(borde > s.px);
     const vert = s.vh > s.vw; // en vertical hay ~280 px de suelo: con el mismo alfa quedaba un bloque casi negro
     const [fc, fa] = H('frente');
     tira(o.frente, g + LUZ.frente.de * ms, s.bottom + 2, fa * (vert ? 0.6 : 1) * st).setTintFill(fc);
     o.frente.setDisplaySize(Math.max(1, borde), o.frente.displayHeight).setVisible(borde > 0);
-    // primer plano de tinta: de g + arriba al borde de abajo, a 1.5x; nunca sube a la banda de juego
-    const ty = g + TIERRA.arriba * ms;
-    const th = Math.max(1, s.bottom - ty + 2);
-    const tk = Math.min(th, TIERRA.h * 0.85 * ms * (vert ? 1.4 : 1)) / TIERRA.h;
-    const [tc, ta] = H('tierra');
-    o.tierra.setPosition(0, s.bottom + 2 - TIERRA.h * tk).setSize(Math.max(1, borde), TIERRA.h * tk).setVisible(borde > 0).setTileScale(tk, tk).setTint(tc).setAlpha(ta * st);
-    o.tierra.tilePositionX = (s.reduced ? 0 : s.dist * TIERRA.par) / tk;
   };
 }

@@ -456,8 +456,8 @@ const esLugar = (L) => typeof L === 'string' && L !== 'N';
 // una banda que sube del horizonte al cielo para que no quede borde duro arriba (r03a). sol.cielo: y del cielo en px de la textura, donde
 // iba el sol de 17 px (alto); sol.horizonte: px arriba del borde de la capa lejana (bajo, sobre el mar). medio: velo de las casitas.
 const ATM = {
-  c: { sol: { x: 0.76, cielo: 40, r: 30, c: 0xfffaf0, propio: true }, resplandor: [0xfff6e6, 0.16, 0.3], lejos: ['silueta', 0xe6e3d8, 0.5], medio: [0xd9d6cc, 0.2], valle: [0xe8e4d8, 0.6, 150] },
-  p: { sol: { x: 0.56, horizonte: 120, r: 36, c: 0xfffbea }, resplandor: [0xfff1c4, 0.5, 0.5], lejos: ['bruma', 0xfdf4d8, 0.34], hondo: [0x2e6e8e, 0.38, 80], valle: [0xf6f0dc, 0.4, 120] },
+  c: { sol: { x: 0.76, cielo: 40, r: 30, c: 0xfffaf0, propio: true }, resplandor: [0xfff6e6, 0.34, 0.13], lejos: ['silueta', 0xe2e2da, 0.55], suelo: 0xa89a88, valle: [0xe8e4d8, 0.5, 150] }, // r04: edificios al cielo, banqueta un paso abajo, halo chico y marcado
+  p: { sol: { x: 0.56, horizonte: 120, r: 36, c: 0xfffbea }, resplandor: [0xfff1c4, 0.32, 0.2], lejos: ['bruma', 0xfdf4d8, 0.62, 0.45], hondo: [0x1f5878, 0.72, 30], valle: [0xf6f0dc, 0.35, 120] }, // r04: mar lejano claro, cercano hondo
 };
 const ATM_RAD = 'atm_rad';
 const ATM_DISCO = 'atm_disco';
@@ -475,12 +475,11 @@ function hornearAtm(s) {
   });
   add(ATM_DISCO, () => {
     const R = 40;
-    const E = 52;
+    const E = 46; // r04: borde casi duro (con 52 se leía parche borroso)
     const [c, x] = mk(E * 2 + 2, E * 2 + 2);
     const g = x.createRadialGradient(E + 1, E + 1, 0, E + 1, E + 1, E);
     g.addColorStop(0, '#fff');
-    g.addColorStop((R * 0.75) / E, '#fff');
-    g.addColorStop(R / E, 'rgba(255,255,255,0.85)');
+    g.addColorStop(R / E, '#fff');
     g.addColorStop(1, 'rgba(255,255,255,0)');
     x.fillStyle = g;
     x.fillRect(0, 0, E * 2 + 2, E * 2 + 2);
@@ -626,10 +625,11 @@ export function montarPaisajes(s, pintadas, gy) {
       P.velo.tilePositionY = L.tilePositionY;
       P.velo.setAlpha(A.lejos[2] * a);
     } else {
-      P.velo.setPosition(x0, L.y).setDisplaySize(w, Math.max(1, g - L.y)).setAlpha(A.lejos[2] * a);
+      P.velo.setPosition(x0, L.y).setDisplaySize(w, Math.max(1, (g - L.y) * (A.lejos[3] || 1))).setAlpha(A.lejos[2] * a); // r04: solo la mitad lejana del mar
       P.sube.setPosition(x0, L.y - 70 * ms).setDisplaySize(w, 70 * ms + 1).setAlpha(A.lejos[2] * a); // mismo alfa que el velo en el horizonte: sin escalón (r03b)
       if (P.hondo) P.hondo.setPosition(x0, L.y + A.hondo[2] * ms).setDisplaySize(w, Math.max(1, g - L.y - A.hondo[2] * ms)).setAlpha(A.hondo[1] * a);
     }
+    if (A.suelo) P.suelo.setTint(A.suelo); // multiplicado: la banqueta baja un paso y se separa de las casitas
     if (P.veloM) {
       const M = P.medio;
       P.veloM.setPosition(M.x, M.y).setSize(M.width, M.height).setTileScale(M.tileScaleX, M.tileScaleY);

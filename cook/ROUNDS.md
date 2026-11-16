@@ -18,6 +18,9 @@ Mejor hasta ahora: ronda 00 = master 8b97696 (línea base)
 - 11:20 (constructor, r01) La luz va en un módulo propio, src/art/luz.js, montado sobre las capas pintadas (envuelve capas.colocar) en el chunk diferido del atardecer: el JS inicial no crece y con st = 0 nada existe. Se pinta ENCIMA de los webp con velos (copia de la capa con setTintFill) y bandas de degradado, en vez de repintar los webp: es reversible con LUZ.on = false.
 - 11:20 (constructor, r01) Los «pinos translúcidos» eran los recortes sueltos de la capa media de código (stepMidProps), que seguían dibujándose con la capa media oculta detrás de los pinos pintados. Se apagan cuando s.mid no se ve. Fuera de las capas pintadas no cambia nada.
 - 11:20 (constructor, r01) Niebla al pie de los pinos apagada (alfa 0): aclaraba justo detrás del traje y le quitaba valor a Moki. Lo que separa a Moki es bajar los pinos a café-tinta y un borde de luz.
+- 17:30 (constructor, r04) Primer plano de matas QUITADO. En r03 eran lomas rellenas (manchas o agujeros); en r04 pasaron a pasto en abanico y se leyeron como arbustos de hoja ancha a 1280 y casi invisibles a 390. Mejor sin primer plano que con agujeros (foco del director).
+- 17:30 (constructor, r04) Elipse detrás de Moki QUITADA, medida con números (traje L 0.29, mediana del anillo de fondo, contraste de luminancia): master S01 1.86 / S02 1.25; aire claro r03 1.36 / 1.10, r04a 1.12 / 1.23; sombra oscura r04b 2.88 / 1.65, pero el invitado la vio como «aura» que ensucia el pino. Sin elipse (r02 y r04): S01 2.38, S02 1.01. Acortar la niebla de valle no movió S02 (1.01), así que lo que queda detrás del traje en S02 no viene de la niebla; queda abierto.
+- 17:30 (constructor, r04) La franja café dura de abajo a 390 en S03 y S05 viene de master: la rama y r00b-master-390 son idénticas pixel a pixel en y 784-844 (MAE 0). Línea base vertical nueva: cook/stills/r00b-master-390.
 - 13:20 (constructor, r02) ARNÉS: los stills de r00 y r01 tenían el fondo CONGELADO. El bot llama a update(0, DT) a mano y Phaser no emite 'postupdate', que es donde se colocan capas pintadas, luz, bokeh, hojas, vida y paisajes: entre M1 y M6 el suelo no se movía ni 1 px, y S01-S06 mostraban el fondo del arranque. Además la Playa (página 3) nunca se horneaba, porque se hornea en ratos libres (requestIdleCallback) y el bot no deja ninguno. Se arregló en herramientas/cook-stills.mjs (emite postupdate cuando a === 0 y hornea los 4 paisajes antes del bot), no en src/. Nueva línea base de master con el arnés arreglado: cook/stills/r00b-master. Las notas de r00 y r01 sobre movimiento y sobre que las 6 tomas son el mismo fondo salen de ese defecto.
 - 13:20 (constructor, r02) Paralaje: el juego ya estaba escalonado (cielo 0.03, cerros 0.3, pinos 0.6, suelo 1.0). A 320 px/s en 500 ms son 5, 48, 96 y 160 px. Se agregan los pinos cercanos (0.82, 131 px) y las matas de tinta (1.5, 240 px; medido 213 px entre M1 y M6).
 - 13:20 (constructor, r02) La hora fría de la página 2 se probó (r02a) y se QUITÓ: con el arnés arreglado, la página 2 de la 1.ª partida es la Ciudad y la 3 es la Playa (paisajes.js, RUTA[0] = 0, c, p, n), que ya son otro lugar. El azul sobre los edificios cálidos daba tres temperaturas peleadas. La luz de luz.js queda solo en la página 1. Los pinos cercanos y el suelo a tinta, que van encima de la pila del paisaje, se recortan al borde de la hoja que entra.
@@ -148,3 +151,19 @@ Lo que no funcionó: la tabla ATM de Ciudad y Playa casi no se ve (+1 de luz, pr
 Defectos nuevos: (1) las matas de tinta abajo de la página 1 se leen como manchas o agujeros, peor a 390 (S02, una mancha de ~330 px; S01 con un destello circular dentro). (2) Lectura de Moki en la página 1 baja 8→7: pinos cercanos marrón sobre marrón detrás de Moki (S02, x 0-250). (3) A 390: franja marrón dura abajo en S03 y S05 (y ≈ 785-844), suelo enorme y vacío en S03; el cartel «Si chocas…» tapa el sol (fuera del cook: UI). No hay línea base de master a 390 para saber qué viene de master.
 
 Foco ronda 04: (1) matas: que se lean como plantas y no como agujeros (tamaño máximo, forma con huecos, valor) a 1280 y sobre todo a 390; (2) Ciudad y Playa con valores por plano de verdad (lejano claro hacia el cielo, medio, cercano oscuro), olas por distancia en la Playa y banqueta/casitas separadas en la Ciudad; (3) sacar r00b-master-390 para tener la línea base vertical.
+
+---
+## Ronda 04 (constructor): matas fuera, valores por plano en Ciudad y Playa
+
+Hora: 17:00 a 18:00 MX | Stills: `cook/stills/r04/`, `r04-390/` (r04a y r04b en disco) | Lado a lado contra master: `cook/compare/r04/todas.jpg` (izquierda master), `vertical.jpg` (390), `movimiento.jpg`
+Qué cambió:
+- `src/art/luz.js`: fuera el primer plano de matas y la elipse detrás de Moki (ver Decisiones r04).
+- `src/art/paisajes.js` (ATM):
+  - Ciudad: edificios lejanos aclarados hacia el cielo (silueta al 55 %), banqueta multiplicada un paso abajo (#A89A88) y halo chico y marcado en su sol.
+  - Playa: la bruma cubre solo la mitad lejana del mar, el agua cercana se va a hondo (#1F5878 al 72 %) y el disco del sol tiene borde casi duro.
+FPS (fps-p6d con ?ir=ciudad, 375x812): 60.0 de promedio, p95 16.7 ms, 0 cuadros largos en 840.
+Invitado Sonnet interno (1 solo): rama / master (comp, luz, prof, color, lectura):
+- S01: 6/6/6/7/6 contra 7/7/6/8/8.
+- S03: 6/6/6/7/7 contra 6/6/6/7/7.
+- S05: 6/7/6/7/7 contra 6/6/6/7/7.
+OJO: su última lectura de S01 dice que «siguen la sombra y las matas». Los pixeles lo contradicen: la franja de abajo de r04 difiere 3 % de r03 (matas rellenas) y la zona de Moki difiere 3 % de r04b (sombra). Lo oscuro de hoja ancha que ve abajo son, probablemente, las piezas de pasto y piedra del suelo que ya trae master (gp-*, profundidad 20). Su S01 queda en duda.
