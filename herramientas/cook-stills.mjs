@@ -50,11 +50,16 @@ const r = await page.evaluate(async ([TOMAS, MOV0]) => {
   const pend = [...Object.entries(TOMAS), ...[0, 1, 2, 3, 4, 5].map((i) => [`M${i + 1}`, MOV0 + i * 100])].sort((a, b) => a[1] - b[1]);
   sc.update = (a, b) => {
     const x = orig(a, b);
+    // r02 (constructor): el bot llama a update(0, DT) a mano y Phaser no emite 'postupdate'; ahí se colocan capas pintadas, luz,
+    // bokeh, hojas, vida y paisajes. Sin esto el fondo salía congelado (M1-M6 sin paralaje y S01-S06 con el mismo fondo).
+    if (a === 0) sc.events.emit('postupdate', 0, b);
     while (pend.length && sc.screen === 'play' && sc.t >= pend[0][1]) { const [k] = pend.shift(); cap[k] = { t: Math.round(sc.t), tramo: sc.tramo ?? sc.tramoI ?? null, png: pinta() }; }
     return x;
   };
   const oStart = sc.startGame.bind(sc);
   sc.startGame = (...a) => { const x = oStart(...a); window.__sembrar(1037); if (sc.particles) { sc.particles.clear(); sc.particles.cursor = 0; sc.particles.clock = 0; } if (sc.cinta) { sc.cinta.clock = 0; sc.cinta.trail.length = 0; } return x; };
+  // r02: los paisajes de las páginas 2-4 se hornean en ratos libres (requestIdleCallback) y el bot no deja ninguno: se hornean antes
+  if (sc.hornearPaisaje) for (let i = 0; i < 4; i++) sc.hornearPaisaje(i);
   const res = await window.__moki.moki.bot('adjust', 200, null);
   sc.update = orig; sc.startGame = oStart;
   return { cap, bot: { score: res.score, seconds: res.seconds, result: res.result }, faltan: pend.map((p) => p[0]) };
