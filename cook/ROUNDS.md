@@ -94,3 +94,22 @@ Qué cambió: `src/art/luz.js` (pinos cercanos, matas de tinta, recorte al borde
 - Primer plano propio: matas, pasto alto y piedras en silueta café-tinta, abajo de la línea del suelo +10 px (nunca entran a la banda de juego), a 1.5x. Solo en la página 1.
 - Páginas 2 y 3: son la Ciudad y la Playa. La franja de abajo de S03, S05 y S06 es igual a master pixel a pixel (MAE 0).
 Invitado Sonnet interno (1 solo, en las 3 vueltas): S01 rama 8 / 8 / 7.5 / 7.5 / 7.5 contra master con el arnés arreglado 7 / 6.5 / 7.5 / 8 / 8.5 (comp / luz / prof / color / lectura). Movimiento: rama 7.5 y master 6.5.
+
+---
+## Ronda 02 · críticos (director)
+
+Commit a4710de. El arnés estaba congelando el fondo en r00 y r01 (no se emitía postupdate y la Playa no se horneaba); los arregló el constructor y la línea base honesta es `cook/stills/r00b-master`. Las notas de r00 y r01 no se comparan con estas.
+1 crítico Sonnet de contexto cero (modo ahorro), a ciegas: X = r02, Y = r00b-master; la clave se abrió después de su respuesta. A ojo, sin calibrar.
+
+| Toma | r02 Comp/Luz/Prof/Color/Lect | r00b-master |
+|---|---|---|
+| S01 | 5 / 6 / 6 / 6 / 7 | 4 / 6 / 4 / 6 / 7 |
+| S02 | 5 / 6 / 6 / 6 / 7 | 4 / 6 / 4 / 6 / 7 |
+| S03-S04 | 4 / 4 / 3 / 4 / 6 | idénticas |
+| S05-S06 | 3 / 4 / 3 / 5 / 6 | idénticas |
+Movimiento: r02 6, master 5. Prefiere r02, confianza media (solo la página 1 cambia; profundidad +2 y composición +1).
+
+Defectos de r02 según el crítico: (1) Ciudad y Playa (S03-S06) muy por debajo de la referencia: pared de cajas marrones de un solo valor, playa como muro azul plano, sin sol, sin niebla, sin capas que se pierdan en bruma. (2) Página 1: el primer plano de matas casi no se lee; falta encuadre con siluetas oscuras grandes a los lados; el suelo es una línea recta. (3) Página 1: el sol es un parche difuso sin disco; pinos de un café casi igual al cielo; la separación de planos es solo por opacidad. Master hace mejor: suelo de papel rasgado más claro y con textura; pinos más suaves que dejan el cielo limpio.
+Coincide con lo que el constructor marcó como más flojo (lectura de Moki contra pinos cercanos, sol tras el pino, Ciudad y Playa planas).
+
+Foco ronda 03: atmósfera de la Ciudad y la Playa (las 4 de 6 tomas en 3-4 de profundidad y luz): sol o fuente de luz con disco, bruma entre planos que aclare hacia el cielo y al menos 3 valores por paisaje. En la página 1, poco: disco al sol con hueco fijo y pinos cercanos más claros en la franja de Moki.
