@@ -76,7 +76,8 @@ try {
           const g2 = (window.__g2 = window.__g2 || document.createElement('canvas').getContext('2d'));
           g2.font = `700 ${fs}px Outfit, sans-serif`;
           const px = g2.measureText('x').actualBoundingBoxAscent;
-          r.pildPxMin = r.pildPxMin == null ? px : Math.min(r.pildPxMin, px);
+          // P40g (declarado antes de correr): la 'x' >= 12 px se mide solo en la espera (pagoT < 520); en el vuelo se encoge a propósito
+          if (sc.pagoT < 520) r.pildPxMin = r.pildPxMin == null ? px : Math.min(r.pildPxMin, px);
           if (sc.cinta.aviso.visible && dos++ < 5) r.fallos.push({ que: 'pildora y aviso en el mismo cuadro', t: Math.round(sc.t) });
           pend = false;
           const tx = (sc.pago.list.find((o) => o.type === 'Text') || {}).text;
