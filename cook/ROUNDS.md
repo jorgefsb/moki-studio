@@ -64,3 +64,20 @@ Mecánica propuesta: `LUZ.horas[tramo]` con las mismas perillas de arriba (cima,
 - Página 2 (tramo 1, mediodía con bruma fría): cima #2E6191 al 55 %; horizonte #EAF8FF; sol blanco #FFFFFF r 46 más alto (sobre 300) con doble halo celeste #BFE0EA; velo de cerros #A8D0E6 al 70 % (la atmósfera se come el valor); pinos con tinte #28372E; capas pintadas setTint #C8DCE8 (enfriar el ámbar); niebla de valle #BFE0EA. El naranja de Moki y el kraft ganan por temperatura. Lluvia fina de la receta 8 queda para después.
 - Página 3 (tramo 2, crepúsculo a noche): cima #1F2250 al 80 %; banda violeta #8B5E96; horizonte #D98A8F al 15 % del alto; luna #E9E6F5 con halo #6A6FB8 al 35 % en lugar del sol; capas pintadas setTint #6A6FB8 (cerros) y #3A3460 (pinos); suelo a L 25 con canto crema intacto; 80 estrellas en una textura y 3 grupos de parpadeo; fichas con halo aditivo de 6 px solo aquí; borde de luz de Moki en lila claro.
 - Riesgo a medir: los obstáculos (#452B1C con canto crema) contra pinos azul-noche: se necesita la sonda de contraste de ARTE 2.0 en cada hora.
+
+## Ronda 01 · críticos (director)
+
+Commit e5884e4. Lado a lado: cook/compare/r01/todas.jpg y movimiento.jpg. 1 crítico Sonnet de contexto cero (modo ahorro), a ojo, sin calibrar:
+
+| Toma | Comp | Luz | Prof | Color | Lectura | vs r00 (mediana de 3) |
+|---|---|---|---|---|---|---|
+| S01 | 5.0 | 6.0 | 4.0 | 5.5 | 6.0 | luz +1.5, lectura +1, prof −1.5 |
+| S02 | 4.5 | 5.5 | 3.5 | 4.5 | 6.0 | luz +1.5, lectura +1, prof −1.5 |
+| S03 | 5.5 | 6.5 | 4.5 | 6.0 | 6.0 | |
+| S04 | 4.5 | 3.5 | 3.5 | 3.5 | 5.5 | |
+| S05 | 5.0 | 5.0 | 3.5 | 4.5 | 6.0 | |
+| S06 | 5.0 | 5.5 | 3.5 | 4.5 | 5.5 | |
+Movimiento: 4.0.
+
+Ojo: un solo crítico; la baja de profundidad puede ser ruido de crítico (r00 tuvo 3). Lo que sí es claro: luz y lectura subieron en la página 1. Lo más flojo ahora: profundidad (pinos medios y cercanos son una sola masa café; no hay primer plano casi negro; el crítico dice que en 600 ms las capas no se mueven) y que las 6 tomas son el mismo fondo.
+Foco ronda 02: profundidad de la página 1 (partir la masa de pinos en 2-3 valores con aire entre ellas, silueta cercana oscura propia, revisar con números que el paralaje de cada capa se mueva) y aplicar el guion de hora a la página 2 (S03-S04) para que deje de ser el mismo fondo.
