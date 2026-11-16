@@ -167,3 +167,20 @@ Invitado Sonnet interno (1 solo): rama / master (comp, luz, prof, color, lectura
 - S03: 6/6/6/7/7 contra 6/6/6/7/7.
 - S05: 6/7/6/7/7 contra 6/6/6/7/7.
 OJO: su última lectura de S01 dice que «siguen la sombra y las matas». Los pixeles lo contradicen: la franja de abajo de r04 difiere 3 % de r03 (matas rellenas) y la zona de Moki difiere 3 % de r04b (sombra). Lo oscuro de hoja ancha que ve abajo son, probablemente, las piezas de pasto y piedra del suelo que ya trae master (gp-*, profundidad 20). Su S01 queda en duda.
+
+---
+## Ronda 04 · críticos (director)
+
+Commit 2d4c059. 1 crítico Sonnet de contexto cero (modo ahorro), a ciegas: X = r04, Y = r00b-master, con verticales de las dos; clave abierta después. A ojo, sin calibrar.
+
+| Toma | r04 Comp/Luz/Prof/Color/Lect | r00b-master |
+|---|---|---|
+| S01-S02 | 5 / 6 / 5 / 6 / 6 | 4 / 4 / 3 / 5 / 6 |
+| S03-S04 | 4 / 4 / 4 / 5 / 7 | 4 / 3 / 3 / 5 / 7 |
+| S05-S06 | 4 / 5 / 3 / 5 / 8 | 4 / 3 / 2 / 5 / 8 |
+Movimiento 5 y 5 (solo miró M3: no vale). Vertical: r04 5, master 4. Prefiere r04, confianza media.
+
+Ojo con el ruido: es otro crítico; master sacó aquí 3-4 donde el de la 03 le puso 4-5. Lo que se repite en 3 rondas y 3 críticos: (1) Ciudad y Playa siguen planas; teñir capas ya pintadas no crea valores (el constructor llegó a lo mismo); (2) falta el primer plano oscuro grande que enmarque (las matas se quitaron porque se leían como agujeros); (3) en el bosque el traje naranja se come contra pinos y cielo naranja-café, y solo el casco lo salva (S02 contraste 1.01 medido).
+La franja dura de abajo a 390 en S03 y S05 y el suelo vacío de S03 vienen de master (MAE 0): fuera del cook.
+
+Foco ronda 05 (la última antes del tope de 20:05): Ciudad y Playa repintando capas en código (mar en 3 bandas que aclaran con la distancia y horizonte que se pierde en bruma; palmas en 2 valores; edificios lejanos claros con ventanas en otro valor, cercanos oscuros). La página 1 se congela en r04.
