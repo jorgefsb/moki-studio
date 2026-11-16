@@ -448,6 +448,57 @@ const esLugar = (L) => typeof L === 'string' && L !== 'N';
 
 // pintadas: el fondo pintado del nivel 1 (capas.js), null en los demás; gy: y del suelo en el mundo. Corre después de colocar y de bokeh,
 // en el mismo postupdate.
+// COOK 1 r03: aire y luz de la Ciudad y la Playa (crítico r02: «pared de cajas de un solo valor», «muro azul plano sin luz»). Encima de
+// cada pila, en código y con la temperatura que ya trae el paisaje: resplandor aditivo y disco del sol, velo del color del horizonte
+// sobre la capa lejana (los edificios o el mar se van al cielo) y niebla baja entre lejos y medio. Solo los lugares base c y p; sus
+// variantes de otra hora (pA, cB...) y la Noche no cambian. sol: x parte del ancho, y px arriba del suelo, r radio del disco.
+// lejos: 'silueta' tiñe solo las formas de la capa lejana (edificios); 'bruma' es un degradado que aclara hacia el horizonte (mar), con
+// una banda que sube del horizonte al cielo para que no quede borde duro arriba (r03a). sol.cielo: y del cielo en px de la textura, donde
+// iba el sol de 17 px (alto); sol.horizonte: px arriba del borde de la capa lejana (bajo, sobre el mar). medio: velo de las casitas.
+const ATM = {
+  c: { sol: { x: 0.76, cielo: 40, r: 30, c: 0xfffaf0, propio: true }, resplandor: [0xfff6e6, 0.16, 0.3], lejos: ['silueta', 0xe6e3d8, 0.5], medio: [0xd9d6cc, 0.2], valle: [0xe8e4d8, 0.6, 150] },
+  p: { sol: { x: 0.56, horizonte: 120, r: 36, c: 0xfffbea }, resplandor: [0xfff1c4, 0.5, 0.5], lejos: ['bruma', 0xfdf4d8, 0.34], hondo: [0x2e6e8e, 0.38, 80], valle: [0xf6f0dc, 0.4, 120] },
+};
+const ATM_RAD = 'atm_rad';
+const ATM_DISCO = 'atm_disco';
+const ATM_VERT = 'atm_vert';
+function hornearAtm(s) {
+  const add = (k, fn) => s.textures.exists(k) || s.textures.addCanvas(k, fn());
+  add(ATM_RAD, () => {
+    const n = 256;
+    const [c, x] = mk(n, n);
+    const g = x.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2 - 1);
+    for (let i = 0; i <= 16; i++) g.addColorStop(i / 16, `rgba(255,255,255,${(1 - i / 16) ** 2.2})`);
+    x.fillStyle = g;
+    x.fillRect(0, 0, n, n);
+    return c;
+  });
+  add(ATM_DISCO, () => {
+    const R = 40;
+    const E = 52;
+    const [c, x] = mk(E * 2 + 2, E * 2 + 2);
+    const g = x.createRadialGradient(E + 1, E + 1, 0, E + 1, E + 1, E);
+    g.addColorStop(0, '#fff');
+    g.addColorStop((R * 0.75) / E, '#fff');
+    g.addColorStop(R / E, 'rgba(255,255,255,0.85)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, E * 2 + 2, E * 2 + 2);
+    return c;
+  });
+  add(ATM_VERT, () => {
+    const [c, x] = mk(3, 250); // no potencia de 2: estirada no repite el borde de arriba abajo
+    const g = x.createLinearGradient(0, 0, 0, 250);
+    for (let i = 0; i <= 8; i++) {
+      const q = i / 8;
+      g.addColorStop(q, `rgba(255,255,255,${q * q * (3 - 2 * q)})`); // 0 arriba, 1 abajo
+    }
+    x.fillStyle = g;
+    x.fillRect(0, 0, 3, 250);
+    return c;
+  });
+}
+
 export function montarPaisajes(s, pintadas, gy) {
   if (!PAISAJE.on) return;
   const amb = s.ambient;
@@ -511,6 +562,15 @@ export function montarPaisajes(s, pintadas, gy) {
     P.cielo.setDepth(d);
     if (P.astro) P.astro.setDepth(d + 0.0002);
     P.lejos.setDepth(d + 0.0005);
+    if (P.atm) {
+      P.resplandor.setDepth(d + 0.0001); // sobre el cielo, bajo el astro y las siluetas
+      P.disco.setDepth(d + 0.00015);
+      P.velo.setDepth(d + 0.0006); // sobre la capa lejana
+      P.valle.setDepth(d + 0.0008); // entre lejos y medio
+      if (P.sube) P.sube.setDepth(d + 0.0006);
+      if (P.hondo) P.hondo.setDepth(d + 0.00055); // el agua cercana más honda, bajo la bruma
+      if (P.veloM) P.veloM.setDepth(d + 0.0011); // sobre las casitas
+    }
     P.medio.setDepth(d + 0.001);
     P.suelo.setDepth(SUELO.depth + n * 0.001); // arriba de capa_suelo (4.62) y debajo de lo que corre sobre él
   };
@@ -522,6 +582,20 @@ export function montarPaisajes(s, pintadas, gy) {
     const [cielo, lejos, medio, suelo, astro] = pz.map(([k]) => k);
     const P = { cielo: capa(cielo), lejos: capa(lejos), medio: capa(medio), suelo: capa(suelo) };
     if (astro) P.astro = s.add.image(0, 0, astro).setVisible(false);
+    const A = ATM[key];
+    if (A) {
+      hornearAtm(s);
+      P.resplandor = s.add.image(0, 0, ATM_RAD).setBlendMode('ADD').setTint(A.resplandor[0]).setVisible(false);
+      P.disco = s.add.image(0, 0, ATM_DISCO).setTint(A.sol.c).setVisible(false);
+      P.velo = A.lejos[0] === 'silueta'
+        ? s.add.tileSprite(0, 0, 10, 10, lejos).setOrigin(0, 0).setTintFill(A.lejos[1]).setVisible(false)
+        : s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setFlipY(true).setTint(A.lejos[1]).setVisible(false);
+      P.valle = s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setTint(A.valle[0]).setVisible(false);
+      if (A.hondo) P.hondo = s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setTint(A.hondo[0]).setVisible(false);
+      if (A.lejos[0] === 'bruma') P.sube = s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setTint(A.lejos[1]).setVisible(false);
+      if (A.medio) P.veloM = s.add.tileSprite(0, 0, 10, 10, medio).setOrigin(0, 0).setTintFill(A.medio[0]).setVisible(false);
+      P.atm = A;
+    }
     profundidad(P, 0);
     pilas[key] = P;
     return true;
@@ -531,11 +605,45 @@ export function montarPaisajes(s, pintadas, gy) {
     L.setPosition(x0, y).setSize(w, h).setTileScale(kx, ky);
     L.tilePositionX = (tile + x0) / kx;
   };
+  const capasDe = (P) => Object.values(P).filter((v) => v && v.setVisible);
+  // COOK 1 r03 (ATM): luz y aire de la pila, recortados a lo que se ve de su hoja (x0 a x1)
+  const atmosfera = (P, g, x0, x1, a, hC) => {
+    const A = P.atm;
+    const ms = s.midS || 1;
+    const w = x1 - x0;
+    const sx = s.vw * A.sol.x;
+    const L = P.lejos;
+    const sy = A.sol.cielo ? s.top + (hC * A.sol.cielo) / H : L.y - A.sol.horizonte * ms;
+    const dentro = sx >= x0 && sx <= x1; // el sol pasa entero con su hoja, como el astro
+    const rr = s.vh * A.resplandor[2] * 2;
+    P.resplandor.setPosition(sx, sy).setDisplaySize(rr, rr).setAlpha(A.resplandor[1] * a).setVisible(dentro);
+    // Ciudad (propio): se queda su sol de disco nítido (r03b: el nuestro se leía mancha) y solo suma un resplandor tenue
+    P.disco.setPosition(sx, sy).setScale((A.sol.r * ms) / 40).setAlpha(a).setVisible(dentro && !A.sol.propio);
+    if (!A.sol.propio && P.astro && P.astro.texture.key === 'paisajeSol') P.astro.setVisible(false);
+    if (A.lejos[0] === 'silueta') {
+      P.velo.setPosition(L.x, L.y).setSize(L.width, L.height).setTileScale(L.tileScaleX, L.tileScaleY);
+      P.velo.tilePositionX = L.tilePositionX;
+      P.velo.tilePositionY = L.tilePositionY;
+      P.velo.setAlpha(A.lejos[2] * a);
+    } else {
+      P.velo.setPosition(x0, L.y).setDisplaySize(w, Math.max(1, g - L.y)).setAlpha(A.lejos[2] * a);
+      P.sube.setPosition(x0, L.y - 70 * ms).setDisplaySize(w, 70 * ms + 1).setAlpha(A.lejos[2] * a); // mismo alfa que el velo en el horizonte: sin escalón (r03b)
+      if (P.hondo) P.hondo.setPosition(x0, L.y + A.hondo[2] * ms).setDisplaySize(w, Math.max(1, g - L.y - A.hondo[2] * ms)).setAlpha(A.hondo[1] * a);
+    }
+    if (P.veloM) {
+      const M = P.medio;
+      P.veloM.setPosition(M.x, M.y).setSize(M.width, M.height).setTileScale(M.tileScaleX, M.tileScaleY);
+      P.veloM.tilePositionX = M.tilePositionX;
+      P.veloM.tilePositionY = M.tilePositionY;
+      P.veloM.setAlpha(A.medio[1] * a);
+    }
+    P.valle.setPosition(x0, g - A.valle[2] * ms).setDisplaySize(w, A.valle[2] * ms + 14).setAlpha(A.valle[1] * a);
+  };
   // Se ve de x0 a x1 (px de pantalla), opaco. El cruce de lugar es un cambio de escena de papel que entra por la derecha, no un fundido:
   // con alfa, el cielo claro que entraba lavaba los edificios y veleros del que se iba (doble exposición, ARTE pasada de color de LA SUMA B)
   // aC, aR: alfa del cielo y del resto; solo el fundido de movimiento reducido los baja (el cielo antes, para que tape lo que se va sin fantasmas)
   const colocar = (P, g, x0, x1, aC = 1, aR = 1) => {
-    if (x1 - x0 <= 0 || aR <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
+    if (x1 - x0 <= 0 || aR <= 0) return void capasDe(P).forEach((v) => v.visible && v.setVisible(false));
     const w = x1 - x0;
     const ms = s.midS || 1;
     const quieto = s.reduced;
@@ -549,8 +657,9 @@ export function montarPaisajes(s, pintadas, gy) {
     // Mismo lugar y corrimiento que el suelo pintado del nivel 1 (capas.js), esté o no cargado
     const S = sueloEn(s, g);
     pon(P.suelo, x0, S.y, w, S.h, S.kx * SUELO.k, S.ky * SUELO.k, s.dist);
-    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(aR));
+    capasDe(P).forEach((v) => v.setVisible(true).setAlpha(aR));
     P.cielo.setAlpha(aC);
+    if (P.atm) atmosfera(P, g, x0, x1, aR, hC);
     if (P.astro) {
       if (P.astro.texture.key === 'paisajeSol') P.astro.setPosition(s.vw * 0.76, s.top + (hC * 40) / H).setScale(hC / H);
       else P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
@@ -605,7 +714,7 @@ export function montarPaisajes(s, pintadas, gy) {
   let horaPendiente = null; // hora de ambient que espera a que el paisaje tape todo
   const apagar = () => {
     horaPendiente = null;
-    Object.values(pilas).forEach((P) => Object.values(P).forEach((v) => v.setVisible(false)));
+    Object.values(pilas).forEach((P) => capasDe(P).forEach((v) => v.setVisible(false)));
     if (amb.conPaisaje) {
       amb.conPaisaje = false;
       amb.applyDay(0);

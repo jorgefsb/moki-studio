@@ -113,3 +113,21 @@ Defectos de r02 según el crítico: (1) Ciudad y Playa (S03-S06) muy por debajo 
 Coincide con lo que el constructor marcó como más flojo (lectura de Moki contra pinos cercanos, sol tras el pino, Ciudad y Playa planas).
 
 Foco ronda 03: atmósfera de la Ciudad y la Playa (las 4 de 6 tomas en 3-4 de profundidad y luz): sol o fuente de luz con disco, bruma entre planos que aclare hacia el cielo y al menos 3 valores por paisaje. En la página 1, poco: disco al sol con hueco fijo y pinos cercanos más claros en la franja de Moki.
+
+---
+## Ronda 03 (constructor): aire y luz de la Ciudad y la Playa
+
+Hora: 15:00 a 16:00 MX | Stills: `cook/stills/r03/`, `r03-390/` (iteraciones r03a y r03b en disco) | Lado a lado contra r00b-master: `cook/compare/r03/todas.jpg` (izquierda master, derecha rama), `movimiento.jpg`
+Qué cambió:
+- `src/art/paisajes.js`, tabla ATM, solo los lugares base c y p (sus variantes de otra hora y la Noche no cambian). Encima de cada pila de paisaje, recortado a su hoja:
+  - Ciudad: conserva su sol nítido con un resplandor aditivo tenue, velo del color del horizonte sobre los edificios lejanos (solo sus formas), velo ligero sobre las casitas y niebla baja entre planos.
+  - Playa: sol con resplandor arriba del horizonte, bruma que sube del mar al cielo sin borde, el agua cercana se oscurece hacia abajo y niebla baja.
+- `src/art/luz.js` (página 1): el sol queda en un hueco fijo (x 0.62, arriba de las copas de los pinos cercanos) y ya no viaja con la mancha vieja. Lleva aire claro detrás de Moki, una elipse fija en pantalla bajo cajas y Moki.
+Decisiones:
+- r03 Ciudad: nuestro disco grande se leía «mancha beige» contra el disco nítido de master, así que se queda su sol y solo se suma resplandor (0.16).
+- r03 Playa: con la bruma en un solo degradado (alfa 1 arriba) quedaba un borde duro sobre el cielo; ahora sube del horizonte al cielo con el mismo alfa, sin escalón.
+- r03 «3 valores» en la Ciudad: lejos se aclara bien; las casitas y la banqueta siguen casi en el mismo café (el velo de 0.2 sobre las casitas no alcanza a separarlas).
+Invitado Sonnet interno (1 solo, en 3 vueltas), rama / master (comp, luz, prof, color, lectura):
+- S01: 7/8/7/7/7 contra 6/6/6/6/7.
+- S03: 6/6/6/6/7 contra 6/5/5/6/7.
+- S05: 6/6/5/6/8 contra 5/3/4/6/8.

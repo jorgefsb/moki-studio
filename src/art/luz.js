@@ -8,7 +8,7 @@ import { mk } from './textures.js';
 // Perillas. y: px del mundo arriba del suelo (g). Colores: del horizonte de la tarde (TARDE.cieloHorizonte #FFD27A), nunca gris.
 export const LUZ = {
   on: true,
-  sol: { r: 60, dx: -0.12, disco: '#FFFFF6', canto: '#FFF3C2', halo: { k: 2.6 } }, // r01: grande, casi blanco y más adentro
+  sol: { r: 60, x: 0.62, disco: '#FFFFF6', canto: '#FFF3C2', halo: { k: 2.6 } }, // r01: grande, casi blanco y más adentro
   resplandor: { k: 0.7 }, // radio = k * alto de pantalla, aditivo detrás de todo menos el cielo
   horizonte: { de: 360, a: 90 }, // banda clara pegada al horizonte (de g-de a g-a)
   valle: { de: 190, a: -15 }, // niebla entre cerros y pinos
@@ -66,7 +66,7 @@ function hornear(s) {
 // ya son otro lugar (Ciudad y Playa, paisajes.js), que tapa todo esto: la hora fría sobre la Ciudad se probó (r02a) y peleaba con
 // sus edificios, se quitó (cook/ROUNDS.md, Decisiones r02).
 const HORA = {
-  cima: [0x7e3a3c, 0.62], horizonte: [0xffe2a6, 0.55], resplandor: [0xffd58a, 0.62], halo: [0xfff0b8, 0.9], sobre: 205, // r02: más alto, sobre las copas de los pinos cercanos
+  cima: [0x7e3a3c, 0.62], horizonte: [0xffe2a6, 0.55], resplandor: [0xffd58a, 0.62], halo: [0xfff0b8, 0.9], sobre: 345, // r03: arriba de las copas de los pinos cercanos (g - 318 a 1280), sin que lo muerdan
   lejos: [0xffc584, 0.6], valle: [0xffdcaa, 0.75], medio: [0xf0b07a, 0.3], cerca: [0x6a3a26, 0.72], frente: [0x1e0f0a, 0.62], tierra: [0x2a160e, 0.92], // r02: cerca y frente un paso más claros (crítico: «pesada»)
 };
 // Pinos cercanos: la misma capa pintada de pinos, más grande y más rápida, en un valor más oscuro; la de siempre queda como pinos
@@ -155,6 +155,7 @@ export function montarLuz(s, c) {
       valle: banda(2.5),
       medio: copia('capa_medio', 3.061),
       cerca: copia('capa_medio', 3.5),
+      claro: img(RAD, 3.505).setTint(0xffd9a2), // r03: aire claro detrás de Moki (sobre los pinos cercanos, bajo cajas y Moki)
       frente: banda(4.64),
       tierra: s.add.tileSprite(0, 0, 10, 10, TIERRA_K).setOrigin(0, 0).setDepth(19.5).setVisible(false),
     };
@@ -181,7 +182,8 @@ export function montarLuz(s, c) {
     const borde = P && P.lugar ? s.vw * (1 - Math.min(1, P.k)) : s.vw;
     const ms = s.midS || 1;
     const vh = s.vh;
-    const x = c.sol.x + s.vw * LUZ.sol.dx;
+    // r03: hueco fijo. El sol ya no viaja con c.sol (de 0.8 a 0.2 del ancho): en x fija y arriba de las copas de los pinos cercanos
+    const x = s.vw * LUZ.sol.x;
     const y = g - HORA.sobre * ms;
     o.disco.setPosition(x, y).setScale(ms).setAlpha(st);
     const R = LUZ.sol.r * ms;
@@ -210,6 +212,9 @@ export function montarLuz(s, c) {
     const [ec, ea] = H('cerca');
     o.cerca.setPosition(0, g + CERCA.pie * ms - alto).setSize(Math.max(1, borde), alto).setVisible(borde > 0).setTileScale(kx, ky).setTintFill(ec).setAlpha(ea * st);
     o.cerca.tilePositionX = ((s.reduced ? 0 : s.dist * CERCA.par) + CERCA.dx) / kx;
+    // Aire claro detrás de Moki: elipse fija en pantalla, de la cintura de los pinos cercanos al suelo. El traje (L ~55) queda más
+    // oscuro que lo que tiene detrás (L ~75) y se separa por valor; las cajas (cuerpo #452B1C) ganan aún más.
+    o.claro.setPosition(s.px, g - 70 * ms).setDisplaySize(420 * ms, 300 * ms).setAlpha(0.85 * st).setVisible(borde > s.px);
     const vert = s.vh > s.vw; // en vertical hay ~280 px de suelo: con el mismo alfa quedaba un bloque casi negro
     const [fc, fa] = H('frente');
     tira(o.frente, g + LUZ.frente.de * ms, s.bottom + 2, fa * (vert ? 0.6 : 1) * st).setTintFill(fc);
