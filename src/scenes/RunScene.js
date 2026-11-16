@@ -1574,23 +1574,31 @@ export class RunScene extends Phaser.Scene {
     // P40d: la píldora gana: el cartel x3 de la cinta se quita y no sale mientras ella vive (nunca dos multiplicadores)
     this.cinta.avisoT = -1;
     this.cinta.aviso.setVisible(false);
+    this.pagoS = solo;
     this.pagoT = -370 * this.pagoDx; // P36l-f (opción B del líder): a ras nace cuando el arco alto ya pasó sobre Moki (sus monedas tapaban la 'A' 3 cuadros)
     this.pago.setVisible(false);
   }
 
+  // P40g 'el papel entra al contador': opaca y amarrada a Moki 520 ms (sube 24 px), luego vuela 420 ms al contador de piezas
+  // (Sine.InOut, arco de 28 px hacia arriba) encogiéndose a 0.35 (Quad.In); el alfa baja solo cuando la escala ya es <= 0.45 (u >= 0.92, ~34 ms), ya bajo el
+  // contador (depth 100 > 99). Sin fundido sobre el fondo (gris de master) ni corte opaco (golpe de P40f-b). 'Arco alto' también
+  // va con Moki (x - 40): ya no se queda pegada al vidrio. Reducido: opaca 700 ms, sin subida ni vuelo, y se oculta.
   stepPago(dtMs) {
     if (!this.pago) return;
     if (this.pagoT > -1e9) this.pagoT += dtMs;
-    const k = this.pagoT / 1000; // P36l-e: 100 ms más opaca antes del fundido (se fundía sobre un pino)
-    const vivo = k >= 0 && k < 1;
-    if (!vivo && this.pagoT >= 0) this.pagoT = -1e9;
+    const t = this.pagoT, r = this.reduced, vivo = t >= 0 && t < (r ? 700 : 940);
+    if (!vivo && t >= 0) this.pagoT = -1e9;
     this.pago.setVisible(vivo);
+    if (!vivo) return;
     // P36l-d: a 390 la cámara deja a Moki cerca del borde; la píldora nunca queda a menos de pildBorde px del lienzo (8; P43d: 16 en vertical) (getBounds solo mide el texto: +24 de relleno)
-    if (vivo) this.pagoW = this.pagoW || this.pago.getBounds().width + 24 * this.pago.scaleX;
-    const cam = this.cameras.main;
+    this.pagoW = this.pagoW || this.pago.getBounds().width + 24 * this.pago.scaleX;
+    // P40g: una sola fórmula: la posición amarrada (u = 0) se mezcla hacia el centro del contador con Sine.InOut, más el arco
+    const cam = this.cameras.main, z = cam.zoom, u = r ? 0 : Math.max(0, (t - 520) / 420), b = this.hudR.getBounds(), e = (1 - Math.cos(Math.PI * u)) / 2;
     // P36l-f: 'A ras' va pegada a Moki (x = la suya cada cuadro): su papel (40 px de alto x escala, cuelga del y) termina 18 px de pantalla sobre el casco (108 de mundo sobre los pies) y sube 16; a 390 no pasa de 8 px del borde
-    const s = this.reduced ? 0 : Math.sin(k * 1.571);
-    if (vivo) this.pago.setPosition(Math.max(this.pagoDx ? this.px : this.pagoX, cam.worldView.x + this.pildBorde / cam.zoom + this.pagoW / 2), this.pagoDx ? this.y - 108 * this.mokiF - 40 * this.pago.scaleY - (18 + 16 * s + this.pildDy) / cam.zoom : this.pagoY - 24 * s).setAlpha(k < 0.685 ? 1 : 1 - (k - 0.685) / 0.315);
+    const s = r ? 0 : Math.sin(Math.min(1, t / 520) * 1.571), S = Math.max(1, 25 / 22 / this.zoom);
+    const x = Math.max(this.pagoS ? this.pagoX : this.px - !this.pagoDx * 40, cam.worldView.x + this.pildBorde / z + this.pagoW / 2);
+    const y = this.pagoDx ? this.y - 108 * this.mokiF - 40 * S - (18 + 16 * s + this.pildDy) / z : this.pagoY - 24 * s;
+    this.pago.setPosition(x + (b.centerX - x) * e, y + (b.centerY - y) * e - (28 / z) * Math.sin(Math.PI * u)).setScale(S - 0.65 * S * u * u).setAlpha(u < 0.92 ? 1 : 12.5 - 12.5 * u);
   }
 
   // Se corta el combo: la cinta se cobra (aviso de papel salvo al chocar) y el Cuaderno cuenta las de x2 y x3.
