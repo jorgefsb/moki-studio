@@ -80,8 +80,8 @@ try {
       const mp = pz && String(pz.v).match(/^(\d+) x(\d+) = (\d+)$/);
       if (!mp || +mp[1] !== d.valor || +mp[1] * +mp[2] !== +mp[3]) fallos.push({ que: 'renglón de piezas mal', v: pz && pz.v, valor: d.valor });
       const ds = sumandos.find((f) => /Distancia|Distance/.test(f.k));
-      const md = ds && String(ds.v).match(/^(\d+) m$/);
-      if (!md || +md[1] !== d.meters) fallos.push({ que: 'renglón de metros mal', v: ds && ds.v });
+      const md = ds && String(ds.v).match(/^(\d+) m(?: = (\d+))?$/); // P47b2: 'N m = N' (1 punto por metro, dicho)
+      if (!md || +md[1] !== d.meters || (md[2] != null && +md[2] !== d.meters * porM)) fallos.push({ que: 'renglón de metros mal', v: ds && ds.v });
       const sub = filas.find((f) => /sub/.test(f.cls));
       if (d.arriba) {
         const ka = sub && String(sub.k).match(/(\d+)$/), ma = sub && String(sub.v).match(/^= (\d+)$/); // P47-a: 'incluye Arriba N' / '= N*10'

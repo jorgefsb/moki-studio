@@ -700,7 +700,7 @@ export function createUI() {
         const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
         const fin = [[t('end.score'), String(d.score), 'total'], [d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
         const no = ['', ''];
-        [[t('end.dist'), `${s.m} m`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.corto ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, niv])].forEach(fila);
+        [[t('end.dist'), `${s.m} m = ${s.m}`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.bajo ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, niv])].forEach(fila); // P47b2: 1 punto por metro, dicho; en vertical (no bajo) un par por renglón: la suma baja por una sola columna
         card.append(cuenta);
       }
       const again = el('button', 'ui-btn primary', t('end.again'));

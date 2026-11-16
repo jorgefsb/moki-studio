@@ -74,6 +74,7 @@ function uno(el, root, titulo, linea, sfx, ms, zona) {
   setTimeout(() => {
     const a = el('div', 'ui-logro');
     if (zona) Object.assign(a.style, { top: `${zona.top}px`, right: `${root.clientWidth - zona.right}px`, maxWidth: `${Math.max(140, zona.right - zona.left)}px` });
+    if (zona && zona.cerca) a.classList.add('cerca'); // P47b2
     a.setAttribute('role', 'status');
     const tx = el('div', 'tx');
     tx.append(el('b', '', titulo), el('span', '', linea));

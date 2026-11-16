@@ -51,7 +51,7 @@
 /* P47: la cuenta del Puntaje: el total grande bajo una raya; 'incluye Arriba' en gris (parte de las piezas, no sumando) */
 .ui-suma { display: grid; grid-template-columns: 1fr auto; margin: 8px 0 2px; font: 400 16px/22px Inter, sans-serif; }
 .ui-suma dd { margin: 0; padding-left: 12px; text-align: right; font: 600 18px/22px Outfit, sans-serif; white-space: nowrap; }
-.ui-suma .sub { font-size: 14px; line-height: 18px; color: #6b5d50; }
+.ui-suma .sub { font-size: 14px; line-height: 18px; color: #22211f; } /* P47b2: tinta (token); ningún gris de ARTE.md pasa 4.5:1 sobre el papel */
 .ui-suma .total { border-top: 2px solid #22211f; padding-top: 3px; font: 700 20px/24px Outfit, sans-serif; }
 .ui-suma dd.total { font-size: 24px; }
 .ui-tag { display: inline-block; margin: 2px 0 6px; padding: 2px 10px; border: 2px solid #22211f; border-radius: 999px; background: #ff6b35; font: 700 14px/20px Outfit, sans-serif; }
@@ -431,12 +431,17 @@ div.mn-card { cursor: default; }
 .ui-card.corto h2 { font-size: 24px; line-height: 28px; margin-bottom: 2px; }
 .ui-card.corto .ui-rows { grid-template-columns: auto auto auto auto; gap: 0 10px; font-size: 14px; line-height: 20px; margin: 4px 0 0; }
 .ui-card.corto .ui-rows dd { font-size: 16px; line-height: 20px; }
-/* P47: vertical y bajito, 4 columnas en 4 renglones bajitos; 'incluye Arriba' y 'Mejor marca' de la 1.ª a la 3.ª columna (P47-a QA) */
-.corto .ui-suma { grid-template-columns: auto auto 1fr auto; margin: 0; font-size: 14px; line-height: 17px; }
-.corto .ui-suma dd { padding: 0 8px 0 6px; font-size: 14px; line-height: 17px; }
-.corto .ui-suma .total { padding-top: 1px; font-size: 16px; line-height: 17px; }
-.corto .ui-suma dd.total { font-size: 18px; }
-.corto .ui-suma dt.sub, .corto .ui-suma dt.mejor { grid-column: 1 / 4; }
+/* P47: bajito (660x372, 640x400), 4 columnas en 4 renglones bajitos; 'incluye Arriba' y 'Mejor marca' de la 1.ª a la 3.ª columna (P47-a QA) */
+.bajo .ui-suma { grid-template-columns: auto auto 1fr auto; margin: 0; font-size: 14px; line-height: 17px; }
+.bajo .ui-suma dd { padding: 0 8px 0 6px; font-size: 14px; line-height: 17px; }
+.bajo .ui-suma .total { padding-top: 1px; font-size: 16px; line-height: 17px; }
+.bajo .ui-suma dd.total { font-size: 18px; }
+.bajo .ui-suma dt.sub, .bajo .ui-suma dt.mejor { grid-column: 1 / 4; }
+/* P47b2: vertical (390), un par por renglón: la suma baja por una columna y el Puntaje se distingue (18 y 20 px) */
+.corto:not(.bajo) .ui-suma { margin: 0; font-size: 14px; line-height: 18px; }
+.corto:not(.bajo) .ui-suma dd { font-size: 15px; line-height: 18px; }
+.corto:not(.bajo) .ui-suma .total { padding-top: 2px; font-size: 18px; line-height: 22px; }
+.corto:not(.bajo) .ui-suma dd.total { font-size: 20px; }
 .bajo .ui-suma dt, .bajo .ui-suma dd { line-height: 18px; white-space: nowrap; }
 .ui-card.corto .ui-btn { min-height: 44px; margin-top: 6px; }
 .ui-card.corto .ui-link { min-height: 32px; margin-top: 2px; font-size: 14px; }
@@ -457,6 +462,8 @@ div.mn-card { cursor: default; }
 .ui-menu.corto .mn-voto span { font-size: 14px; line-height: 17px; }
 .ui-voto { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 44px; margin: 8px 0 0 !important; text-decoration: none; }
 .ui-voto-sub { margin: 10px 0 0; font: 400 16px/21px Inter, sans-serif; }
+.ui-card:not(.compact) .ui-voto-sub { margin-top: 16px; } /* P47b2: '.ui-card p' lo dejaba en 0: el foco de 'Otra vez' tocaba 'Sabemos que' */
+.ui-card > .ui-btn { vertical-align: top; } /* P47b2: 'Volver' bajaba 10 px por la línea base y pisaba el renglón de abajo */
 .ui-chicas { display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; margin-top: 4px; }
 .ui-card .ui-chica { min-height: 36px; margin: 0; padding: 0 2px; border: 0; background: none; font-size: 14px; cursor: pointer; }
 .ui-card.compact .ui-voto-sub { margin-top: 8px; font-size: 13px; line-height: 16px; }
