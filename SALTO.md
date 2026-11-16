@@ -1,3 +1,3 @@
-La racha de arcos se lee honesta y nada aparece de golpe
-Clásico paga la racha de arcos (15, 26, 38) con 'Arco alto · racha N' y ficha de papel; la sombra entra con su objeto (/?ir=primera, /?ir=mega2).
-Master 57d5166 (P40b + P47-a + P40e + P49). Corte 18:30 cerrado (PARA PUBLICAR HOY 17:30). En curso: P47b2 [ux] con el constructor; entra después de las 20:00 si no llega antes de las 18:00.
+La tarjeta de meta cuadra la cuenta y el crujido va a cambiar
+Tarjeta de meta: '442 m = 442', un dato por renglón a 390 y el aviso de logros ya no tapa el contador (/?ir=meta). En curso: P4v [audio/feel] el crujido cambia, con el constructor.
+Master f120312 (P40b + P47-a + P40e + P49 + P47b2). Corte del 15-nov publicado a las 18:30. P4v en v2/p4v, tope 1 h desde 21:10; ciego de números lo corre el director.
