@@ -698,9 +698,11 @@ export function createUI() {
         const niv = d.modo && [t('end.modo'), d.modo, 'niv']; // en vertical puede partirse en dos renglones ("Reto del 15 nov")
         const vu = s.extra && [t('vuelta.name'), `+${s.extra}`];
         const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
-        const fin = [[t('end.score'), String(d.score), 'total'], [d.bestModo ? `${t('end.best')} · ${d.bestModo}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
+        const v1 = rect.corto && !rect.bajo; // P47b2-b: en vertical el Nivel va en el renglón de la marca (un renglón menos: el Cuaderno cabe como en master)
+        const bm = (v1 && d.modo) || d.bestModo;
+        const fin = [[t('end.score'), String(d.score), 'total'], [bm ? `${t('end.best')} · ${bm}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
         const no = ['', ''];
-        [[t('end.dist'), `${s.m} m = ${s.m}`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.bajo ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, niv])].forEach(fila); // P47b2: 1 punto por metro, dicho; en vertical (no bajo) un par por renglón: la suma baja por una sola columna
+        [[t('end.dist'), `${s.m} m = ${s.m}`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.bajo ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, !v1 && niv])].forEach(fila); // P47b2: 1 punto por metro, dicho; en vertical (no bajo) un par por renglón: la suma baja por una sola columna
         card.append(cuenta);
       }
       const again = el('button', 'ui-btn primary', t('end.again'));

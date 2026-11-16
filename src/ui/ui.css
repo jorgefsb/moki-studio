@@ -438,10 +438,11 @@ div.mn-card { cursor: default; }
 .bajo .ui-suma dd.total { font-size: 18px; }
 .bajo .ui-suma dt.sub, .bajo .ui-suma dt.mejor { grid-column: 1 / 4; }
 /* P47b2: vertical (390), un par por renglón: la suma baja por una columna y el Puntaje se distingue (18 y 20 px) */
-.corto:not(.bajo) .ui-suma { margin: 0; font-size: 14px; line-height: 18px; }
-.corto:not(.bajo) .ui-suma dd { font-size: 15px; line-height: 18px; }
-.corto:not(.bajo) .ui-suma .total { padding-top: 2px; font-size: 18px; line-height: 22px; }
+.corto:not(.bajo) .ui-suma { margin: 0; font-size: 14px; line-height: 15px; }
+.corto:not(.bajo) .ui-suma dd, .corto:not(.bajo) .ui-suma .sub { font-size: 14px; line-height: 15px; }
+.corto:not(.bajo) .ui-suma .total { padding-top: 1px; font-size: 18px; line-height: 20px; }
 .corto:not(.bajo) .ui-suma dd.total { font-size: 20px; }
+.ui-card.corto:not(.bajo) { padding-block: 6px; } .ui-card.corto:not(.bajo) .ui-btn { margin-top: 3px; } /* P47b2-b: aire, no contenido: la tarjeta no pasa de su alto de master (el Cuaderno cabe) */
 .bajo .ui-suma dt, .bajo .ui-suma dd { line-height: 18px; white-space: nowrap; }
 .ui-card.corto .ui-btn { min-height: 44px; margin-top: 6px; }
 .ui-card.corto .ui-link { min-height: 32px; margin-top: 2px; font-size: 14px; }
@@ -462,7 +463,7 @@ div.mn-card { cursor: default; }
 .ui-menu.corto .mn-voto span { font-size: 14px; line-height: 17px; }
 .ui-voto { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 44px; margin: 8px 0 0 !important; text-decoration: none; }
 .ui-voto-sub { margin: 10px 0 0; font: 400 16px/21px Inter, sans-serif; }
-.ui-card:not(.compact) .ui-voto-sub { margin-top: 16px; } /* P47b2: '.ui-card p' lo dejaba en 0: el foco de 'Otra vez' tocaba 'Sabemos que' */
+.ui-card:not(.compact) .ui-voto-sub { margin: 12px 0 0; } .ui-card:not(.compact) .ui-voto { margin-top: 2px !important; } .ui-card:not(.compact) .ui-chicas { margin-top: 0; } /* P47b2: '.ui-card p' lo dejaba en 0: el foco de 'Otra vez' tocaba 'Sabemos que'. P47b2-b: 12 px y sin margen abajo: la tarjeta crece 4, no 16 (el Cuaderno cabe) */
 .ui-card > .ui-btn { vertical-align: top; } /* P47b2: 'Volver' bajaba 10 px por la línea base y pisaba el renglón de abajo */
 .ui-chicas { display: flex; flex-wrap: wrap; align-items: center; column-gap: 14px; margin-top: 4px; }
 .ui-card .ui-chica { min-height: 36px; margin: 0; padding: 0 2px; border: 0; background: none; font-size: 14px; cursor: pointer; }
