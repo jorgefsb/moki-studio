@@ -131,3 +131,20 @@ Invitado Sonnet interno (1 solo, en 3 vueltas), rama / master (comp, luz, prof, 
 - S01: 7/8/7/7/7 contra 6/6/6/6/7.
 - S03: 6/6/6/6/7 contra 6/5/5/6/7.
 - S05: 6/6/5/6/8 contra 5/3/4/6/8.
+
+---
+## Ronda 03 · críticos (director)
+
+Commit c859522. 1 crítico Sonnet de contexto cero (modo ahorro), a ciegas: X = r00b-master, Y = r03 (orden invertido contra la 02); clave abierta después. A ojo, sin calibrar.
+
+| Toma | r03 Comp/Luz/Prof/Color/Lect | r00b-master |
+|---|---|---|
+| S01-S02 | 6 / 7 / 6 / 7 / 7 | 5 / 4 / 4 / 6 / 8 |
+| S03-S04 | 4 / 4 / 3 / 4 / 8-7 | 4 / 3 / 3 / 4 / 8-7 |
+| S05-S06 | 4 / 4 / 3 / 6 / 8 | 4 / 3 / 3 / 6 / 8 |
+Movimiento: r03 5, master 4. Prefiere r03, confianza ALTA (página 1: sol real, halo, pinos en dos planos).
+
+Lo que no funcionó: la tabla ATM de Ciudad y Playa casi no se ve (+1 de luz, profundidad igual en 3): edificios de un solo marrón, playa con tres azules/arena que chocan sin fondo lejano, sol de Ciudad sin halo y el de Playa como parche borroso. Un velo encima no crea valores: hay que cambiar el valor de cada plano.
+Defectos nuevos: (1) las matas de tinta abajo de la página 1 se leen como manchas o agujeros, peor a 390 (S02, una mancha de ~330 px; S01 con un destello circular dentro). (2) Lectura de Moki en la página 1 baja 8→7: pinos cercanos marrón sobre marrón detrás de Moki (S02, x 0-250). (3) A 390: franja marrón dura abajo en S03 y S05 (y ≈ 785-844), suelo enorme y vacío en S03; el cartel «Si chocas…» tapa el sol (fuera del cook: UI). No hay línea base de master a 390 para saber qué viene de master.
+
+Foco ronda 04: (1) matas: que se lean como plantas y no como agujeros (tamaño máximo, forma con huecos, valor) a 1280 y sobre todo a 390; (2) Ciudad y Playa con valores por plano de verdad (lejano claro hacia el cielo, medio, cercano oscuro), olas por distancia en la Playa y banqueta/casitas separadas en la Ciudad; (3) sacar r00b-master-390 para tener la línea base vertical.
