@@ -82,15 +82,19 @@ try {
       const ds = sumandos.find((f) => /Distancia|Distance/.test(f.k));
       const md = ds && String(ds.v).match(/^(\d+) m(?: = (\d+))?$/); // P47b2: 'N m = N' (1 punto por metro, dicho)
       if (!md || +md[1] !== d.meters || (md[2] != null && +md[2] !== d.meters * porM)) fallos.push({ que: 'renglón de metros mal', v: ds && ds.v });
-      const sub = filas.find((f) => /sub/.test(f.cls));
+      // P47b2-c: 'incluye Arriba N = N*10' en una sola celda (span en el renglón de Piezas a lo ancho; renglón propio con sangría
+      // y sin cifra en la columna de sumandos en vertical y bajito). Vale también el formato de antes (dt 'incluye Arriba N', dd '= N*10').
+      const subEl = [...suma.querySelectorAll('.sub')].find((e) => e.textContent.trim());
+      const sub = subEl && { k: subEl.textContent.trim(), v: (subEl.nextElementSibling && subEl.nextElementSibling.tagName === 'DD' && subEl.nextElementSibling.textContent.trim()) || '' };
       if (d.arriba) {
-        const ka = sub && String(sub.k).match(/(\d+)$/), ma = sub && String(sub.v).match(/^= (\d+)$/); // P47-a: 'incluye Arriba N' / '= N*10'
+        const una = sub && !sub.v && sub.k.match(/(\d+) = (\d+)$/);
+        const ka = una ? [0, una[1]] : sub && String(sub.k).match(/(\d+)$/), ma = una ? [0, una[2]] : sub && String(sub.v).match(/^= (\d+)$/); // P47-a: 'incluye Arriba N' / '= N*10'
         if (!ka || !ma || +ka[1] !== d.arriba || +ma[1] !== d.arriba * porP || d.arriba > d.valor) fallos.push({ que: 'renglón Arriba mal', v: sub && sub.v, arriba: d.arriba });
       } else if (sub) fallos.push({ que: 'renglón Arriba sin arriba', v: sub.v });
       if (d.isNew && d.best !== r.total) fallos.push({ que: 'mejor marca != total', best: d.best });
       // nada se corta: cada renglón cabe en la tarjeta (sin scroll horizontal ni texto desbordado)
       const cb = card.getBoundingClientRect();
-      for (const e of suma.children) { const b = e.getBoundingClientRect(); if (b.right > cb.right + 0.5 || b.left < cb.left - 0.5) fallos.push({ que: 'renglón fuera de la tarjeta', t: e.textContent }); }
+      for (const e of suma.children) { const b = e.getBoundingClientRect(); if (!b.width) continue; /* P47b2-c: dd vacío oculto */ if (b.right > cb.right + 0.5 || b.left < cb.left - 0.5) fallos.push({ que: 'renglón fuera de la tarjeta', t: e.textContent }); }
       if (card.scrollHeight > card.clientHeight + 1) r.scroll = card.scrollHeight - card.clientHeight;
       return r;
     }, [c.bot, c.seed, !!c.vuelta, !!c.q]);
