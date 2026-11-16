@@ -47,7 +47,7 @@ try {
     // 7: el aviso de logros nace a ~500 ms y dura 2.4 s: se muestrea su caja contra la del contador de piezas cada 100 ms por 3.5 s
     await page.evaluate(() => { window.__av = (async () => {
       const sc = window.__moki.scene.scenes[0], cv = sc.game.canvas.getBoundingClientRect();
-      let max = 0, visto = 0;
+      let max = 0, visto = 0, aT = null, aS = null; // P47b2-c: aire mínimo del aviso a la tarjeta y al botón de sonido (px)
       for (let i = 0; i < 35; i++) {
         const a = document.querySelector('.ui-logro');
         if (a) {
@@ -57,10 +57,14 @@ try {
           const hy0 = cv.top + (h.y - cam.worldView.y) * cam.zoom * k - 8, hy1 = cv.top + (h.bottom - cam.worldView.y) * cam.zoom * k + 8;
           const px = Math.min(Math.max(0, Math.min(b.right, hx1) - Math.max(b.left, hx0)), Math.max(0, Math.min(b.bottom, hy1) - Math.max(b.top, hy0)));
           max = Math.max(max, Math.round(px));
+          const cd = document.querySelector('.ui-card'), so = sc.ui.state.soundBtn;
+          const sep = (p, q) => { const dx = Math.max(q.left - p.right, p.left - q.right), dy = Math.max(q.top - p.bottom, p.top - q.bottom); return Math.round(dx > 0 && dy > 0 ? Math.hypot(dx, dy) : Math.max(dx, dy)); };
+          if (cd) { const g = sep(b, cd.getBoundingClientRect()); aT = aT === null ? g : Math.min(aT, g); }
+          if (so && so.offsetWidth) { const g = sep(b, so.getBoundingClientRect()); aS = aS === null ? g : Math.min(aS, g); }
         }
         await new Promise((ok) => setTimeout(ok, 100));
       }
-      return { visto, max };
+      return { visto, max, aireTarjeta: aT, aireSonido: aS };
     })(); });
     await page.waitForTimeout(1300); // como sonda-p47a: las transiciones de entrada ya acabaron
     const r = await page.evaluate(() => {
@@ -105,7 +109,7 @@ try {
       const aireOtraVez = otra && vs ? Math.round(vs.getBoundingClientRect().top - otra.getBoundingClientRect().bottom) : null;
       const tot = card ? [...card.querySelectorAll('.ui-suma .total')] : [];
       const puntajePx = tot.length ? Math.min(...tot.map((e) => parseFloat(getComputedStyle(e).fontSize))) : null;
-      const suman = card ? [...card.querySelectorAll('.ui-suma dd')].filter((dd) => { const dt = dd.previousElementSibling; return dt && /Distancia|Piezas|incluye|Puntaje|Vuelta/.test(dt.textContent); }) : [];
+      const suman = card ? [...card.querySelectorAll('.ui-suma dd')].filter((dd) => { const dt = dd.previousElementSibling; return dd.textContent.trim() && dt && /Distancia|Piezas|incluye|Puntaje|Vuelta/.test(dt.textContent); }) : [];
       const ders = suman.map((e) => e.getBoundingClientRect().right);
       const cruzaCol = ders.length ? Math.round(Math.max(...ders) - Math.min(...ders)) : null;
       const md = card && [...card.querySelectorAll('.ui-suma dt')].find((e) => /Distancia/.test(e.textContent));
@@ -113,6 +117,20 @@ try {
       const metrosPuntos = !!(metrosTexto && /=\s*\d+/.test(metrosTexto));
       return {
         p47b2: { pares, gris, aireOtraVez, puntajePx, cruza: cruzaCol, metrosTexto, metrosPuntos },
+        // P47b2-c: el renglón 'incluye' fuera de la columna de sumandos: su texto (dt + dd) termina a la izquierda de donde
+        // empieza la cifra más ancha de los sumandos (gap px > 0); y aire del Cuaderno con el borde de abajo
+        p47b2c: (() => {
+          const sumandos = card ? [...card.querySelectorAll('.ui-suma dd')].filter((dd) => dd.textContent.trim() && /Distancia|Piezas|Puntaje|Vuelta/.test(dd.previousElementSibling.textContent)) : [];
+          const izq = (e) => { const rg = document.createRange(); rg.selectNodeContents(e); return rg.getBoundingClientRect(); };
+          // la columna de sumandos = la de la cifra de Piezas (en bajito hay dos columnas de cifras: 'incluye' va bajo Piezas)
+          const pz = sumandos.find((dd) => /Piezas/.test(dd.previousElementSibling.textContent));
+          const col = pz ? sumandos.filter((dd) => Math.abs(dd.getBoundingClientRect().right - pz.getBoundingClientRect().right) < 3) : [];
+          const colIzq = col.length ? Math.round(Math.min(...col.map((e) => izq(e).left))) : null;
+          const inc = card && [...card.querySelectorAll('.ui-suma .sub')].filter((e) => e.textContent.trim());
+          const incDer = inc && inc.length ? Math.round(Math.max(...inc.map((e) => izq(e).right))) : null;
+          const cb = cu && cu.getBoundingClientRect();
+          return { incluyeTexto: inc && inc.length ? inc.map((e) => e.textContent.trim()).join(' ') : null, incluyeDer: incDer, colSumandosIzq: colIzq, incluyeFuera: incDer !== null && colIzq !== null ? colIzq - incDer : null, cuadernoBorde: cb ? Math.round(innerHeight - cb.bottom) : null };
+        })(),
         recortes, partidas, celdas,
         cajas, encimados: enc,
         cuadernoTexto: cu ? cu.innerText.replace(/\s+/g, ' ').trim() : null,
@@ -125,7 +143,7 @@ try {
     });
     r.p47b2.avisoContador = await page.evaluate(() => window.__av);
     out.corridas.push({ nombre: c.nombre, ...r });
-    console.log(c.nombre, JSON.stringify({ recortes: r.recortes, encimados: r.encimados, scroll: r.scroll, ...r.p47b2 }));
+    console.log(c.nombre, JSON.stringify({ recortes: r.recortes, encimados: r.encimados, scroll: r.scroll, ...r.p47b2, ...r.p47b2c }));
     await ctx.close();
   }
   console.log('consola', out.errores.length, out.errores.slice(0, 3));

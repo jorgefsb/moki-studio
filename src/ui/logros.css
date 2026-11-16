@@ -24,7 +24,7 @@
 .ui-logro .lg-sello::after { left: 9px; top: 4px; }
 .ui-logro.out { animation: lg-sube 260ms ease-in both; }
 /* P47b2: bajo el HUD (390 con la tarjeta de meta): sin sello, letra chica y 6 px de recorrido (caer 80 o subir 30 cruzaba el contador) */
-.cerca { padding: 4px 8px; animation-name: lg-cerca; } .cerca.out { animation: lg-cerca .26s reverse both; } .cerca .lg-sello { display: none; } .cerca b { font-size: 14px; line-height: 17px; } .cerca span { font-size: 12px; line-height: 15px; }
+.cerca { padding: 3px 5px; animation-name: lg-cerca; } .cerca.out { animation: lg-cerca .26s reverse both; } .cerca .lg-sello { display: none; } .cerca b { font-size: 14px; line-height: 17px; } .cerca span { font-size: 12px; line-height: 15px; }
 @keyframes lg-cerca { from { transform: translateY(-6px); opacity: 0; } }
 @keyframes lg-baja { from { transform: translateY(-80px); } to { transform: translateY(0); } }
 @keyframes lg-sube { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-30px); opacity: 0; } }

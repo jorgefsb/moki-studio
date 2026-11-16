@@ -697,12 +697,18 @@ export function createUI() {
         const fila = (f) => f && cuenta.append(el('dt', f[2] || '', f[0]), el('dd', f[2] || '', f[1]));
         const niv = d.modo && [t('end.modo'), d.modo, 'niv']; // en vertical puede partirse en dos renglones ("Reto del 15 nov")
         const vu = s.extra && [t('vuelta.name'), `+${s.extra}`];
-        const ar = s.arriba && [`incluye ${t('end.arriba')} ${s.arriba}`, `= ${s.arriba * s.x}`, 'sub'];
+        // P47b2-c: 3/3 críticos leían 'incluye Arriba … = N' como tercer sumando. Ya no tiene cifra en la columna de la suma:
+        // a lo ancho va chico en el renglón de Piezas (y la tarjeta baja un renglón: el Cuaderno respira); en vertical y bajito,
+        // renglón propio con sangría bajo Piezas, todo en la columna de las etiquetas.
+        const arT = s.arriba && `incluye ${t('end.arriba')} ${s.arriba} = ${s.arriba * s.x}`;
+        const enP = arT && !rect.corto;
+        const ar = arT && !enP && [arT, '', 'sub'];
         const v1 = rect.corto && !rect.bajo; // P47b2-b: en vertical el Nivel va en el renglón de la marca (un renglón menos: el Cuaderno cabe como en master)
         const bm = (v1 && d.modo) || d.bestModo;
         const fin = [[t('end.score'), String(d.score), 'total'], [bm ? `${t('end.best')} · ${bm}` : t('end.best'), String(d.best), 'mejor']]; // la marca es de este modo
         const no = ['', ''];
         [[t('end.dist'), `${s.m} m = ${s.m}`], [t('end.pieces'), `${s.p} x${s.x} = ${s.pP}`], ...(rect.bajo ? [ar, fin[0], niv || vu || no, fin[1], niv && vu] : [ar, vu, ...fin, !v1 && niv])].forEach(fila); // P47b2: 1 punto por metro, dicho; en vertical (no bajo) un par por renglón: la suma baja por una sola columna
+        if (enP) cuenta.children[2].append(' ', el('span', 'sub', arT));
         card.append(cuenta);
       }
       const again = el('button', 'ui-btn primary', t('end.again'));
