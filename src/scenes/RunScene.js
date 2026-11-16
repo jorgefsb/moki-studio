@@ -2686,7 +2686,7 @@ export class RunScene extends Phaser.Scene {
     if (isNew) save(this.bestKey(), this.score);
     this.failRecord = isNew && prevBest > 0;
     // Sonido: tropiezo amable, la música baja (ducking), stinger de fallo a los 80 ms y, si hay récord, el de récord después
-    audio.sfx('stumble', { tipo: o.type }); // P4t: crujido de papel; la zanja no cruje
+    audio.sfx('stumble', { tipo: o.type, v: (this.speed * (this.megaRun ? this.megaOn : 1)) / C.runSpeedStart }); // P4t: crujido de papel; la zanja no cruje. P4v: tono por material y fuerza por velocidad
     audio.setState('dead');
     audio.setStreak(0);
     audio.stinger('fail');
