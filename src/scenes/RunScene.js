@@ -2227,7 +2227,7 @@ export class RunScene extends Phaser.Scene {
         q.a = a;
         const x = (k * MID_WRAP + p.ox - tp) * ms;
         const y = y0 + p.oy * ms;
-        q.body.setTexture(p.key).setPosition(x, y).setScale(ms).setTint(bodyTint).setAlpha(this.mid.alpha * a).setVisible(a > 0);
+        q.body.setTexture(p.key).setPosition(x, y).setScale(ms).setTint(bodyTint).setAlpha(this.mid.alpha * a).setVisible(a > 0 && this.mid.visible); // Cook 1: con las capas pintadas (mid oculta) los recortes sueltos quedaban de fantasma
         q.veil.setTexture(p.key).setPosition(x, y).setScale(ms).setTintFill(veilTint).setAlpha(this.midVeil.alpha * a)
           .setVisible(a > 0 && this.midVeil.visible);
       }

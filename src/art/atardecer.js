@@ -12,6 +12,7 @@ import { montarBokeh } from './bokeh.js';
 import { montarVida } from './vida.js';
 import { montarHojas } from './hojas.js';
 import { montarCapas } from './capas.js';
+import { montarLuz } from './luz.js'; // Cook 1: sol con halo, aire y niebla sobre las capas pintadas
 import { montarKit } from './kitAmbiente.js';
 import { montarPaisajes } from './paisajes.js';
 import { SOMBRA_K, conFibra, conSombra, hornear, sombra, labioSuelo, sombraSuelo } from './cantoPapel.js';
@@ -341,6 +342,7 @@ export function montar(s) {
   };
   const enReposo = window.requestIdleCallback || ((fn) => setTimeout(fn, 60));
   const pintadas = TARDE.capas && amb.n1 ? montarCapas(s) : null; // solo el nivel 1 pide los webp
+  montarLuz(s, pintadas);
   const calienta = (cola) => {
     if (!cola.length || !amb.n1 || s.esc || s.screen !== 'demo' || (pintadas && (pintadas.cargando || pintadas.cargadas))) return;
     if (s.texQueue) return void s.time.delayedCall(250, () => calienta(cola));
