@@ -22,7 +22,7 @@ async function corre(nombre, q, ls, kind, seed) {
   page.on('pageerror', (e) => errores.push(`${nombre} ${e}`));
   page.on('console', (m) => m.type() === 'error' && errores.push(`${nombre} ${m.text()}`));
   await page.goto(`${base}/?debug${q}`);
-  await page.waitForFunction(() => window.__moki && window.__moki.moki, null, { timeout: 60000 });
+  await page.waitForFunction(() => window.__moki && window.__moki.moki, null, { timeout: 60000, polling: 250 });
   await page.waitForTimeout(1500);
   const r = await page.evaluate(async ([k, sd]) => window.__moki.moki.bot(k, 200, sd), [kind, seed]);
   console.log(nombre, JSON.stringify({ result: r.result, cause: r.cause, score: r.score, pieces: r.pieces, seconds: r.seconds }));
