@@ -1,5 +1,7 @@
 // Perillas del juego. Todo lo que se "siente" se ajusta aquí (BRIEF.md sección 5).
 export const CONFIG = {
+  // COOK-c: solo atmósfera. Horizonte existente de TARDE; sin canto nuevo ni mezcla aditiva.
+  cookAtmosfera: { ocultarBokehCalidoSuperior: true, pinosHaciaHorizonte: 0.20, horizonte: 0xffd27a },
   // Salto
   gravity: 2200, // px/s² (trampolín y saltito del títere; el salto usa jumpG/fallG)
   // P4 FEEL BASE (9-nov): caída 1.4x más pesada que la subida. Subida recalibrada para que el salto mantenido siga con

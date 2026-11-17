@@ -14,6 +14,7 @@ mkdirSync(dir, { recursive: true });
 const TOMAS = { S01: 6000, S02: 19000, S03: 36000, S04: 49000, S05: 66000, S06: 80000 };
 const MOV0 = 11000; // inicio de la secuencia de movimiento (p1)
 const browser = await chromium.launch({ executablePath: '/home/jorgefsb/.local/bin/microsoft-edge-stable', args: ['--headless=new'] });
+try {
 const errores = [];
 const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, ...(W < 500 ? { hasTouch: true, isMobile: true } : {}) });
 await ctx.addInitScript(() => {
@@ -42,7 +43,11 @@ for (let i = 0; i < 600 && !listo; i++) { await quieto(); listo = await page.eva
 if (!listo) throw new Error('el juego no arrancó con el reloj falso');
 for (let i = 0; i < 94; i++) { await quieto(); await page.clock.runFor(16); }
 await quieto();
-await page.evaluate(() => window.__moki.moki.jumpTable());
+await page.evaluate(() => {
+  // El montaje diferido atrapa errores: consola 0 no basta si Phaser vuelve al paisaje de respaldo.
+  if (!window.__moki.scene.scenes[0].capas?.cargadas) throw new Error('CAPAS PINTADAS AUSENTES: montaje diferido falló');
+  return window.__moki.moki.jumpTable();
+});
 await quieto();
 const r = await page.evaluate(async ([TOMAS, MOV0]) => {
   const sc = window.__moki.scene.scenes[0], cv = sc.game.canvas, orig = sc.update.bind(sc), cap = {};
@@ -68,4 +73,6 @@ const meta = { url, tam, bot: r.bot, faltan: r.faltan, errores, tomas: {} };
 for (const [k, v] of Object.entries(r.cap)) { writeFileSync(`${dir}/${k}.png`, Buffer.from(v.png.split(',')[1], 'base64')); meta.tomas[k] = { t: v.t, tramo: v.tramo }; }
 writeFileSync(`${dir}/meta.json`, JSON.stringify(meta, null, 1));
 console.log(tam, 'tomas', Object.keys(r.cap).length, 'faltan', r.faltan.join(',') || '-', 'bot', JSON.stringify(r.bot), 'errores', errores.length);
-await browser.close();
+} finally {
+  await browser.close();
+}

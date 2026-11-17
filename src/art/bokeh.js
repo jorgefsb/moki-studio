@@ -5,6 +5,7 @@
 // juice Nada: ningún objeto. Azar propio, sin tocar el del juego.
 import { rng } from './palette.js';
 import { mk } from './textures.js';
+import { CONFIG } from '../config.js';
 
 const KEY = 'bokeh';
 const TEX = 128;
@@ -74,7 +75,7 @@ export function montarBokeh(s) {
     quitar();
     if (!s.textures.exists(KEY)) s.textures.addCanvas(KEY, textura());
     const tabla = s.midS !== 1 ? VERTICAL : ANCHO;
-    items = tabla.map((b) => {
+    items = tabla.filter((b) => !(CONFIG.cookAtmosfera.ocultarBokehCalidoSuperior && b.z === 0 && b.c !== PAPEL)).map((b) => {
       const r = b.d / 2 / z;
       const im = s.add.image(b.x * s.vw, 0, KEY).setDepth(20).setScale(b.d / z / TEX).setTint(b.c);
       return { ...b, r, im, wx: b.x * s.vw };

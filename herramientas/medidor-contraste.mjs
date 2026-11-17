@@ -12,7 +12,7 @@ import { writeFileSync } from 'node:fs';
 const require = createRequire('/home/jorgefsb/.local/share/mise/installs/npm-playwright/latest/node_modules/');
 const { chromium } = require('playwright');
 
-const [url, w, h, outPath, diasArg = '0,3', modo = 'fijo'] = process.argv.slice(2);
+const [url, w, h, outPath, diasArg = '0,3', modo = 'fijo', escena = 'tramos'] = process.argv.slice(2);
 const dias = diasArg.split(',').map(Number);
 const fijo = modo === 'fijo';
 // Tamaños canónicos. 375x812 da OTRO zoom y otras posiciones: caja/torre de noche 4.69/5.63 contra 4.27/5.34 a 375x667
@@ -41,7 +41,7 @@ const initRng = () => {
 
 // Todo lo que corre dentro de la página. Copia de run() de src/debug/contrast.js (rama v2/salto-noche, con la sonda
 // 'suelo'), con las mismas fórmulas; solo cambia CÓMO se avanza el juego y se toma la foto.
-const enPagina = async ({ type, days, probe, fijo, seed }) => {
+const enPagina = async ({ type, days, probe, fijo, seed, escena }) => {
   const g = window.__moki;
   const s = g.scene.scenes[0];
   const R = g.renderer;
@@ -99,7 +99,7 @@ const enPagina = async ({ type, days, probe, fijo, seed }) => {
     s.startGame();
     s.tut = { stage: 4, state: 'off' };
     s.god = true;
-    s.resetRun(s.level, s.level.starts[day]);
+    s.resetRun(s.level, s.level.starts[escena === 'primera' ? 0 : day]);
     s.ambient.setDay(day, true);
     s.ambient.nextRoll = 1e9;
     s.ambient.cloudNext = 1e9;
@@ -185,6 +185,7 @@ const enPagina = async ({ type, days, probe, fijo, seed }) => {
       min: +Math.min(...rs).toFixed(2),
       borde: +(es.reduce((a, b) => a + b, 0) / es.length).toFixed(2),
       porD,
+      cobertura: { n1: s.ambient.n1, st: s.ambient.st, capas: !!s.capas?.cargadas, activa: !!s.capas?.activa, boceto: !!s.boceto, pinos: s.children.list.filter(v => v.depth === 3.5 && v.displayTexture?.key === 'capa_medio').map(v => ({visible:v.visible,alpha:v.alpha,tint:v.tintTopLeft,width:v.width,dist:s.dist,paisaje:s.paisaje?.lugar})) },
       ...(probe === 'suelo' && { bordeMin: +Math.min(...es).toFixed(2), pieMin: +Math.min(...pie).toFixed(2) }),
     };
   }
@@ -196,7 +197,7 @@ const enPagina = async ({ type, days, probe, fijo, seed }) => {
 // Varios builds separados por coma se miden en la misma corrida y el mismo navegador, uno después del otro (una pestaña a
 // la vez): así master contra rama sale de la misma corrida.
 const medir = async (browser, url) => {
-const out = { url, w: +w, h: +h, modo, dias, medidas: {}, errs: [] };
+const out = { url, w: +w, h: +h, modo, escena, dias, medidas: {}, errs: [] };
 const page = await browser.newPage({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1 });
 try {
   page.on('pageerror', (e) => out.errs.push(String(e)));
@@ -204,19 +205,19 @@ try {
   page.on('response', (r) => r.status() >= 400 && out.errs.push('HTTP ' + r.status() + ' ' + r.url()));
   if (fijo) await page.addInitScript(initRng);
   await page.goto(url + '?debug&seed=1');
-  await page.waitForFunction(() => window.__moki && window.__moki.moki && window.__moki.scene.scenes[0].level, null, { timeout: 60000 });
+  await page.waitForFunction(() => window.__moki && window.__moki.moki && window.__moki.scene.scenes[0].level, null, { timeout: 60000, polling: 250 });
   await page.waitForTimeout(3000);
   if (fijo) {
     // Calentar: pasar por las 4 horas con el bucle vivo para que se pidan los archivos diferidos (noche), esperar a la red
     // y luego dormir el bucle. Desde aquí solo avanza con g.step(T, 16.667) dado a mano.
     for (const day of [0, 1, 2, 3]) {
-      await page.evaluate((day) => {
+      await page.evaluate(([day, escena]) => {
         const s = window.__moki.scene.scenes[0];
         s.screen = 'play';
         s.startGame();
-        s.resetRun(s.level, s.level.starts[day]);
+        s.resetRun(s.level, s.level.starts[escena === 'primera' ? 0 : day]);
         s.ambient.setDay(day, true);
-      }, day);
+      }, [day, escena]);
       await page.waitForTimeout(800);
     }
     await page.waitForLoadState('networkidle');
@@ -225,7 +226,7 @@ try {
   }
   for (const [k, type, probe] of MEDIDAS) {
     const t0 = Date.now();
-    const m = await page.evaluate(enPagina, { type, days: dias, probe, fijo, seed: 1 });
+    const m = await page.evaluate(enPagina, { type, days: dias, probe, fijo, seed: 1, escena });
     out.medidas[k] = m;
     const f = (x) => (x ? (probe === 'suelo' ? 'bordeMin ' + x.bordeMin : 'min ' + x.min) + ' porD ' + x.porD.join(',') : '-');
     console.log(url, k, Date.now() - t0, 'ms', dias.map((d) => ['man', 'med', 'tar', 'noc'][d] + ' ' + f(m[['manana', 'mediodia', 'tarde', 'noche'][d]])).join(' | '));
