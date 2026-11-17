@@ -4,6 +4,7 @@
 // horneadas una vez en canvas, cero imágenes. Solo existe con las capas pintadas (nivel 1, tarde): se apaga con su mismo alfa.
 // Viaja en el chunk diferido del atardecer: el JS inicial no crece.
 import { mk } from './textures.js';
+import { CONFIG } from '../config.js';
 
 // Perillas. y: px del mundo arriba del suelo (g). Colores: del horizonte de la tarde (TARDE.cieloHorizonte #FFD27A), nunca gris.
 export const LUZ = {
@@ -151,7 +152,10 @@ export function montarLuz(s, c) {
     const ky = M.tileScaleY * CERCA.k;
     const alto = M.height * CERCA.k;
     const [ec, ea] = H('cerca');
-    o.cerca.setPosition(0, g + CERCA.pie * ms - alto).setSize(Math.max(1, borde), alto).setVisible(borde > 0).setTileScale(kx, ky).setTintFill(ec).setAlpha(ea * st);
+    // Director COOK-c: valor atmosférico hacia el horizonte cálido ya existente, sin velo ni objetos nuevos.
+    const mezcla = (a, b, k) => [16, 8, 0].reduce((c, n) => c | (Math.round(((a >> n) & 255) * (1 - k) + ((b >> n) & 255) * k) << n), 0);
+    const atmo = CONFIG.cookAtmosfera;
+    o.cerca.setPosition(0, g + CERCA.pie * ms - alto).setSize(Math.max(1, borde), alto).setVisible(borde > 0).setTileScale(kx, ky).setTintFill(mezcla(ec, atmo.horizonte, atmo.pinosHaciaHorizonte)).setAlpha(ea * st);
     o.cerca.tilePositionX = ((s.reduced ? 0 : s.dist * CERCA.par) + CERCA.dx) / kx;
     const vert = s.vh > s.vw; // en vertical hay ~280 px de suelo: con el mismo alfa quedaba un bloque casi negro
     const [fc, fa] = H('frente');
