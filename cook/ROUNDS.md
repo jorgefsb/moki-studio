@@ -18,6 +18,8 @@ Mejor hasta ahora: ronda 00 = master 8b97696 (línea base)
 - 11:20 (constructor, r01) La luz va en un módulo propio, src/art/luz.js, montado sobre las capas pintadas (envuelve capas.colocar) en el chunk diferido del atardecer: el JS inicial no crece y con st = 0 nada existe. Se pinta ENCIMA de los webp con velos (copia de la capa con setTintFill) y bandas de degradado, en vez de repintar los webp: es reversible con LUZ.on = false.
 - 11:20 (constructor, r01) Los «pinos translúcidos» eran los recortes sueltos de la capa media de código (stepMidProps), que seguían dibujándose con la capa media oculta detrás de los pinos pintados. Se apagan cuando s.mid no se ve. Fuera de las capas pintadas no cambia nada.
 - 11:20 (constructor, r01) Niebla al pie de los pinos apagada (alfa 0): aclaraba justo detrás del traje y le quitaba valor a Moki. Lo que separa a Moki es bajar los pinos a café-tinta y un borde de luz.
+- 19:15 (constructor, r05) Ciudad y Playa repintadas EN SUS CAPAS (paisajes.js, TRAMOS), no con velo. Ojo: la textura lejana de la Ciudad (paisaje1_lejos) y las capas de la Playa (paisaje2_*) las comparten sus variantes de otra hora (cA, cB, pA, pB) en otros niveles; esas variantes también cambian. No se revisaron en stills.
+- 19:15 (constructor, r05) Al repintar, los velos de la tabla ATM se bajaron (Ciudad 0.15, Playa bruma 0.18). La banda honda de la Playa sube encima del mar cercano (profundidad d + 0.0012); abajo de la capa media no se veía nada (en r03 y r04 tampoco se veía, por eso «el mar no cambia»).
 - 17:30 (constructor, r04) Primer plano de matas QUITADO. En r03 eran lomas rellenas (manchas o agujeros); en r04 pasaron a pasto en abanico y se leyeron como arbustos de hoja ancha a 1280 y casi invisibles a 390. Mejor sin primer plano que con agujeros (foco del director).
 - 17:30 (constructor, r04) Elipse detrás de Moki QUITADA, medida con números (traje L 0.29, mediana del anillo de fondo, contraste de luminancia): master S01 1.86 / S02 1.25; aire claro r03 1.36 / 1.10, r04a 1.12 / 1.23; sombra oscura r04b 2.88 / 1.65, pero el invitado la vio como «aura» que ensucia el pino. Sin elipse (r02 y r04): S01 2.38, S02 1.01. Acortar la niebla de valle no movió S02 (1.01), así que lo que queda detrás del traje en S02 no viene de la niebla; queda abierto.
 - 17:30 (constructor, r04) La franja café dura de abajo a 390 en S03 y S05 viene de master: la rama y r00b-master-390 son idénticas pixel a pixel en y 784-844 (MAE 0). Línea base vertical nueva: cook/stills/r00b-master-390.
@@ -184,3 +186,31 @@ Ojo con el ruido: es otro crítico; master sacó aquí 3-4 donde el de la 03 le 
 La franja dura de abajo a 390 en S03 y S05 y el suelo vacío de S03 vienen de master (MAE 0): fuera del cook.
 
 Foco ronda 05 (la última antes del tope de 20:05): Ciudad y Playa repintando capas en código (mar en 3 bandas que aclaran con la distancia y horizonte que se pierde en bruma; palmas en 2 valores; edificios lejanos claros con ventanas en otro valor, cercanos oscuros). La página 1 se congela en r04.
+
+---
+## Ronda 05 (constructor, última): Ciudad y Playa repintadas en código
+
+Hora: 19:00 a 19:30 MX | Stills: `cook/stills/r05/`, `r05-390/` (r05a en disco) | Lado a lado contra master: `cook/compare/r05/todas.jpg` (izquierda master), `vertical.jpg`, `movimiento.jpg`. La página 1 es idéntica a r04 (MAE 0 en S01 y S02).
+Qué cambió (src/art/paisajes.js, TRAMOS):
+- Ciudad, edificios lejanos: claros y fríos, teñidos al cielo (#BDC4C3, caras #D5DAD7 / #A9B1B2), con ventanas en otro valor (crema #F7EBD2 o gris azul #8C99A0) y sombra de mosaico más tenue.
+- Playa:
+  - mar en bandas que aclaran con la distancia: #A9D2DE arriba, #8CC0D2 y el cercano #5496B8, más la banda honda encima;
+  - horizonte: línea fina #7FB2C4 donde se apoyan los veleros, con bruma pegada debajo;
+  - palmas lejanas claras del color del aire (#86AFB5) y palmas cercanas un paso más oscuras (#2C6170);
+  - cascos de los veleros un paso hacia el aire.
+
+Valor medio por plano (mediana de luminancia relativa por franja, x 400-1260, a 1280; master -> r05):
+
+| Toma | Plano | master | r05 |
+|---|---|---|---|
+| S03 Ciudad | edificios lejanos (y 320-360) | 0.33-0.38 | 0.42-0.43 |
+| S03 Ciudad | casitas (y 380-560) | 0.16-0.19 | 0.16-0.19 (sin cambio) |
+| S03 Ciudad | banqueta y calle (y 600-700) | 0.10-0.13 | 0.04-0.05 |
+| S05 Playa | cielo junto al horizonte (y 340) | 0.71 | 0.67 |
+| S05 Playa | mar lejano, 3 franjas (y 360-400) | 0.40 / 0.41 / 0.40 | 0.58 / 0.49 / 0.42 |
+| S05 Playa | mar cercano (y 420-560) | 0.25 a 0.22 | 0.21 a 0.15 |
+| S05 Playa | arena (y 580-700) | 0.18-0.23 | 0.18-0.23 (sin cambio) |
+Invitado Sonnet interno (1 solo), rama / master (comp, luz, prof, color, lectura):
+- S03: 6/6/7/6/7 contra 5/5/4/5/6.
+- S05: 6/7/6/7/7 contra 6/6/6/6/7.
+Medidas: bots = master (6 corridas), consola 0, +2380 B gz diferido contra master (inicial -5 B). FPS en la Playa (?ir=libre-playa, 375x812, build r05a): 58.9 de promedio, p95 16.8 ms, 10 cuadros de más de 33 ms en 824 (sin comparar contra master).
