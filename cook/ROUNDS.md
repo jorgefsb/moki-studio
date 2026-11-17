@@ -214,3 +214,18 @@ Invitado Sonnet interno (1 solo), rama / master (comp, luz, prof, color, lectura
 - S03: 6/6/7/6/7 contra 5/5/4/5/6.
 - S05: 6/7/6/7/7 contra 6/6/6/6/7.
 Medidas: bots = master (6 corridas), consola 0, +2380 B gz diferido contra master (inicial -5 B). FPS en la Playa (?ir=libre-playa, 375x812, build r05a): 58.9 de promedio, p95 16.8 ms, 10 cuadros de más de 33 ms en 824 (sin comparar contra master).
+
+## Ronda 05 · críticos (director) y cierre del Cook 1
+
+Commit 393b112. 1 crítico Sonnet de contexto cero (modo ahorro), a ciegas y con el orden invertido: X = r00b-master, Y = r05. Vio las 12 S horizontales, M1/M3/M6 y las verticales S01/S03/S05. A ojo, sin calibrar.
+
+| Toma | r05 Comp/Luz/Prof/Color/Lect | r00b-master |
+|---|---|---|
+| S01-S02 | 7 / 8 / 7 / 7 / 7 | 6 / 4 / 4 / 6 / 7 |
+| S03-S04 | 6 / 5 / 6 / 5 / 7 | 6 / 3 / 4 / 5 / 7 |
+| S05-S06 | 6 / 6 / 6 / 6 / 7 | 5 / 3 / 3 / 6 / 7 |
+Movimiento 6 contra 5; vertical 6 contra 5. Prefiere r05, confianza ALTA. Primera ronda en que Ciudad y Playa suben de profundidad (4→6 y 3→6), coherente con la tabla de valores del constructor.
+
+Defectos de r05 según el crítico: (1) el disco del sol en S01, S02 y M3 se ve blanco quemado, con halo amarillo-verdoso y grano: compite con Moki y no se lee como papel; (2) en la Ciudad el cielo frío y plano contra edificios cafés sin luz cálida, y los rascacielos lejanos sin contorno; en la vertical S03 el sol casi desaparece; (3) los árboles de primer plano semitransparentes en S02, M3 y M6 hacen manchas detrás de Moki. Menores: el polvo del aterrizaje tapa parte de la caja en S03; el borde del sol en la vertical S01 se ve duro. Moki no aparece espejado ni ilegible.
+
+**Cierre (19:15 MX, antes del tope de 20:05):** no hay ronda 06, porque el modo ahorro permite una ronda cada 2 h. Resultado: r05 le gana a master en luz y profundidad en las 3 páginas, con lo mejor en 6-8. La meta de 8.5 en cada punto NO se alcanzó: solo la luz de la página 1 llega a 8. Tampoco se corrió el ciego 3/3 (modo ahorro: 1 crítico por ronda). Nada entra a master sin el sí de Jorge con stills: cook/compare/r05/todas.jpg (master a la izquierda), vertical.jpg y movimiento.jpg. Antes de integrar faltan: QA del probador, revisar las variantes de otra hora (cA, cB, pA, pB), que comparten capas y no se vieron en stills, y FPS de la Playa contra master. Para un Cook 2: sol que se lea como papel, luz cálida en la Ciudad, primer plano opaco que enmarque sin manchar.
