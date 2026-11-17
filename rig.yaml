@@ -1,0 +1,71 @@
+version: "0.2"
+name: estudio-moki
+culture_file: CULTURE.md
+pods:
+  - id: estudio
+    label: Estudio Moki
+    members:
+      - id: lider
+        agent_ref: local:agents/lider
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        model: claude-sonnet-5-5
+        restore_policy: resume_if_possible
+      - id: constructor
+        agent_ref: local:agents/constructor
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        model: claude-sonnet-5-5  # 16-nov Spark: ahorro de tokens hasta jue 19-nov 11:00; antes claude-opus-5-5
+        restore_policy: resume_if_possible
+      - id: probador
+        agent_ref: local:agents/probador
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        model: claude-sonnet-5-5
+        restore_policy: resume_if_possible
+      - id: director
+        agent_ref: path:/home/jorgefsb/.npm-global/lib/node_modules/@openrig/cli/daemon/specs/agents/orchestration/orchestrator
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        model: claude-sonnet-5-5
+        restore_policy: resume_if_possible
+      - id: niveles
+        agent_ref: path:/home/jorgefsb/.npm-global/lib/node_modules/@openrig/cli/daemon/specs/agents/orchestration/orchestrator
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        restore_policy: resume_if_possible
+      - id: feel
+        agent_ref: path:/home/jorgefsb/.npm-global/lib/node_modules/@openrig/cli/daemon/specs/agents/orchestration/orchestrator
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        restore_policy: resume_if_possible
+      - id: investigador
+        agent_ref: path:/home/jorgefsb/.npm-global/lib/node_modules/@openrig/cli/daemon/specs/agents/orchestration/orchestrator
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        restore_policy: resume_if_possible
+      - id: cronista
+        agent_ref: path:/home/jorgefsb/.npm-global/lib/node_modules/@openrig/cli/daemon/specs/agents/orchestration/orchestrator
+        profile: default
+        runtime: claude-code
+        cwd: /home/jorgefsb/Work/moki-rig
+        model: claude-sonnet-5-5
+        restore_policy: resume_if_possible
+    edges:
+      - kind: delegates_to
+        from: lider
+        to: constructor
+      - kind: delegates_to
+        from: lider
+        to: probador
+      - kind: delegates_to
+        from: constructor
+        to: probador
+edges: []
