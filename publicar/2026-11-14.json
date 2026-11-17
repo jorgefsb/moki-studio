@@ -3,8 +3,8 @@
   "fecha": "2026-11-14",
   "borrador": true,
   "titulo": {
-    "es": "El letrero del combo ya se lee y no tapa a Moki",
-    "en": "The combo sign is now readable and no longer covers Moki"
+    "es": "Subir tres veces seguidas ya paga +15, +27 y +38",
+    "en": "Three high paths in a row now pay +15, +27 and +38"
   },
   "p39": {
     "donde": {
@@ -19,5 +19,106 @@
       "es": "A 1280 el letrero queda chico y lejos de Moki (a P39b). No medimos el salto alto pegado al techo ni más de una semilla del Reto.",
       "en": "At 1280 the sign looks small and far from Moki (left for P39b). We did not measure a high jump near the ceiling nor more than one Challenge seed."
     }
+  },
+  "p39b": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=reto. En pantalla ancha (1280), junta 2 piezas seguidas: el \"x2 +N\" sale pegado al casco de Moki.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=reto. On a wide screen (1280), grab 2 pieces in a row: the \"x2 +N\" appears right next to Moki's helmet."
+    },
+    "cifras": {
+      "es": "A 1280 el chip pasa de 164 a 27 px del casco. 0 de 402 cuadros grises, 0 sobre Moki, letra de 14.7 px. A 390 queda igual. Los 6 bots dan igual y la consola no muestra errores. El juego pesa 36 bytes menos.",
+      "en": "At 1280 the sign goes from 164 to 27 px from the helmet. 0 of 402 frames grey, 0 over Moki, letters 14.7 px. At 390 it is unchanged. The 6 bots match and the console shows no errors. The game weighs 36 bytes less."
+    },
+    "la_regamos": {
+      "es": "No lo medimos en un celular real. Queda un detalle: a 1280 el chip casi roza el casco (a P39c).",
+      "en": "Not measured on a real phone. One detail left: at 1280 the sign almost touches the helmet (P39c)."
+    }
+  },
+  "p40": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=reto. Sube por arriba en horquillas seguidas: Arriba +15, la segunda seguida x2 +27, la tercera x3 +38. Ir a ras (+7) o chocar rompe la racha. En tu primera partida los letreros dicen lo mismo que la píldora.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=reto. Take the high path on forks in a row: Up +15, the second in a row x2 +27, the third x3 +38. Staying low (+7) or crashing breaks the streak. In your first run the signs say the same as the pill."
+    },
+    "cifras": {
+      "es": "Antes, arriba flotaba +12 y el contador subía +1, +5 o +6: no cuadraba. Ahora el contador muestra lo que flota. 609 cobros a 390 y 156 en la primera partida a 1280, 0 fallos. Un ciego de 3 personas simuladas: 3 de 3 eligen la nueva, con seguridad alta. Los 6 bots igual que antes. El juego pesa 108 bytes más.",
+      "en": "Before, +12 floated up and the counter rose +1, +5 or +6: it did not add up. Now the counter shows what floats. 609 payouts at 390 and 156 in the first run at 1280, 0 failures. A blind panel of 3: 3 of 3 pick the new one, with high confidence. The 6 bots match. The game weighs 108 bytes more."
+    },
+    "la_regamos": {
+      "es": "Con racha de 5 el letrero dice +15 y se cobra +14. En Libre los récords viejos cuestan más (+40 %). Dos multiplicadores a la vez en pantalla confunden: queda para P40d. No lo medimos en celular real.",
+      "en": "With a streak of 5 the sign says +15 and +14 is paid. In Free, old records are harder to beat (+40 %). Two multipliers on screen at once confuse: left for P40d. Not measured on a real phone."
+    }
+  },
+  "disyuntiva": {
+    "es": "P4z, la sombra en el aire: A cerrar el feel hoy, B un corte más. Elegimos B porque a 1280 por fin se ve (3 de 3), aunque a 390 no (0 de 3). La versión P4z no entró.",
+    "en": "P4z, the shadow in the air: A close feel today, B one more cut. We picked B because at 1280 it finally shows (3 of 3), though at 390 it does not (0 of 3). P4z did not ship."
+  },
+  "p40d": {
+    "donde": {
+      "es": "Ligas directas: moki.jorgesuarez.com.mx/?ir=primera (tu primera partida) y /?ir=reto (cada vez que cierras una horquilla por arriba). Mira el contador: solo trae la cifra, y la píldora \"+N\" va justo debajo.",
+      "en": "Direct links: moki.jorgesuarez.com.mx/?ir=primera (your first run) and /?ir=reto (each time you close a fork on the high path). Look at the counter: it shows only the number, and the \"+N\" pill sits right below it."
+    },
+    "historia": {
+      "es": "Una jugadora sube por arriba tres veces seguidas y cree que lo está haciendo bien. En pantalla el contador dice x2 y la píldora dice x3. ¿Cuál vale? Ninguna se entiende sola. Ahora hay un solo multiplicador por cuadro: el contador cuenta, la píldora paga. Lo que cambió es que ya no hay que adivinar cuál número manda.",
+      "en": "A player takes the high path three times in a row and thinks she is doing well. On screen the counter says x2 and the pill says x3. Which one counts? Neither explains itself. Now there is one multiplier per frame: the counter counts, the pill pays. What changed is that nobody has to guess which number rules."
+    },
+    "cifras": {
+      "es": "Probamos con 3 críticos nuevos que no habían visto el juego: la versión nueva gana 3 de 3 en los 4 pares de capturas. En la actual, 8 de 8 cuadros del Reto dejaban a los 3 sin saber cuál número valía; en la nueva, 0. 1218 cobros medidos, 0 fallos, los 6 bots igual, consola sin errores. El juego pesa 67 bytes más.",
+      "en": "We tested with 3 new critics who had never seen the game: the new version wins 3 of 3 in all 4 pairs of captures. In the current one, 8 of 8 Challenge frames left all 3 unsure which number counted; in the new one, 0. 1218 payouts measured, 0 failures, the 6 bots match, no console errors. The game weighs 67 bytes more."
+    },
+    "la_regamos": {
+      "es": "El primer ciego fue de una sola persona y la regla pedía 3: lo repetimos antes de integrar. Pasamos 7 bytes del tope de peso (+67 contra +60) y lo aceptamos. Quedan detalles: la píldora a veces parece vieja, el contador se ve chico a 1280 y \"Aprendizaje guardado\" no se entiende (P40e). No lo medimos en celular real.",
+      "en": "The first blind test was one person and the rule asks for 3: we redid it before shipping. We went 7 bytes over the weight cap (+67 vs +60) and accepted it. Left: the pill sometimes looks old, the counter looks small at 1280 and \"Aprendizaje guardado\" is unclear (P40e). Not measured on a real phone."
+    },
+    "disyuntiva": {
+      "es": "A integrar con el ciego de una persona, B repetirlo con 3 críticos nuevos. Elegimos B: tardó unos 5 minutos y la puerta pedía 3.",
+      "en": "A ship with the one-person blind test, B redo it with 3 new critics. We picked B: it took about 5 minutes and the gate asks for 3."
+    },
+    "pregunta": {
+      "es": "Cuando juegas, ¿miras el contador o lo que flota sobre Moki?",
+      "en": "When you play, do you look at the counter or at what floats over Moki?"
+    },
+    "juega": "?ir=reto"
+  },
+  "p36lf": {
+    "donde": {
+      "es": "Ligas directas: moki.jorgesuarez.com.mx/?ir=primera y /?ir=reto. Pasa a ras en la horquilla y cobra: la píldora \"A ras +N\" sale sobre el casco de Moki y sube con él.",
+      "en": "Direct links: moki.jorgesuarez.com.mx/?ir=primera and /?ir=reto. Take the low path at the fork and collect: the \"A ras +N\" pill appears over Moki's helmet and rises with him."
+    },
+    "historia": {
+      "es": "Un jugador pasa a ras, cobra, y la píldora sale quieta en un punto de la pantalla mientras Moki ya siguió. Parece un letrero viejo. Ahora la píldora nace sobre el casco: el pago está donde está Moki.",
+      "en": "A player takes the low path, collects, and the pill appears frozen at one spot while Moki has already moved on. It looks like an old sign. Now the pill appears over the helmet: the payout is where Moki is."
+    },
+    "cifras": {
+      "es": "Probamos con 3 críticos nuevos, en 4 pares de capturas. La versión anterior se leía \"suelta\" en 3 de 3 a 390; la nueva, en 0 de 3. 0 fallos en los cobros, los 6 bots igual que antes. El juego pesa 59 bytes más (el director aceptó pasar el tope).",
+      "en": "We tested with 3 new critics on 4 pairs of captures. The previous version read as \"loose\" in 3 of 3 at 390; the new one in 0 of 3. 0 payout failures, the 6 bots match. The game weighs 59 bytes more (the director accepted going over the cap)."
+    },
+    "la_regamos": {
+      "es": "No lo jugamos a mano: puede \"sentirse tarde\" (nace 370 ms después del cobro). A 390 queda de 10 a 40 px adelante del casco. No lo medimos en celular real.",
+      "en": "We did not play it by hand: it may \"feel late\" (it appears 370 ms after the payout). At 390 it sits 10 to 40 px ahead of the helmet. Not measured on a real phone."
+    },
+    "disyuntiva": {
+      "es": "A dejar la píldora fija donde cobras, B que siga a Moki. Elegimos B: en el ciego, la fija se leía suelta en 3 de 3.",
+      "en": "A leave the pill fixed where you collect, B make it follow Moki. We picked B: in the blind test the fixed one read as loose in 3 of 3."
+    },
+    "pregunta": {
+      "es": "¿Prefieres que el pago se quede donde cobraste o que te siga?",
+      "en": "Do you prefer the payout to stay where you collected or to follow you?"
+    },
+    "juega": "?ir=primera",
+    "imagen": "evidencia/p36lf-post/tira-rama-390x844-primera.png"
+  },
+  "grafico": {
+    "es": "Tres barras: primera subida +15, segunda +27, tercera +38; a ras +7 rompe la racha. Fuente: BITACORA 14-nov 08:50.",
+    "en": "Three bars: first high path +15, second +27, third +38; low path +7 breaks the streak. Source: BITACORA 14-nov 08:50."
+  },
+  "imagen": "evidencia/p40d/post2-cuadro3-390x844.png",
+  "pregunta": {
+    "es": "¿Miras el contador o lo que flota sobre Moki cuando juegas?",
+    "en": "Do you look at the counter or at what floats over Moki when you play?"
+  },
+  "juega": "?ir=reto",
+  "no_entro": {
+    "es": "Sombra en el aire (P4z): cuatro intentos, se veía en celular y no en pantalla grande; cierra sin cambio. Salida del letrero sin gris (P40f): dos intentos, el ojo cambió \"gris\" por \"golpe\"; cierra sin cambio.",
+    "en": "Shadow in the air (P4z): four tries, visible on phone but not on a big screen; closed without change. Sign exit without grey (P40f): two tries, the eye swapped \"grey\" for \"jolt\"; closed without change."
   }
 }

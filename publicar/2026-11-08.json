@@ -80,5 +80,66 @@
       "en": "The paper star did not go in until it stopped dropping frames; an excess of 352 bytes was accepted in return."
     }
   ],
-  "fuente_datos": "BITACORA 7-nov 22:24 a 8-nov 01:40; evidencia/diversion-1/RESULTADO.md (bot, caso-009: 60.9 a 43.2 % en T2 del Reto, hitbox caja 22 a 23); evidencia/diversion-3/pasada-bandera (bandera 102 m = choque 102 m; probador PASS). Integrados: casi-choque 7253359, muro 9e115c6, chispa 2282f02, ¿Otra? d20fce3. Todo es bot, sin celular real ni personas; sin dato público aún. Suma 8-nov: ESTRELLA NOCHE 2 606d297 (ciego 3 de 3, BITACORA 8-nov 11:45 a 14:05) y MÚSICA 1 36c3371 (BITACORA 8-nov 22:35; evidencia/musica-1/RESULTADO.md: 80 s a 300 s o más en 200 semillas, 14.7 % de notas, -15.4 dBFS). Sin oído, sin celular real."
+  "fuente_datos": "BITACORA 7-nov 22:24 a 8-nov 01:40; evidencia/diversion-1/RESULTADO.md (bot, caso-009: 60.9 a 43.2 % en T2 del Reto, hitbox caja 22 a 23); evidencia/diversion-3/pasada-bandera (bandera 102 m = choque 102 m; probador PASS). Integrados: casi-choque 7253359, muro 9e115c6, chispa 2282f02, ¿Otra? d20fce3. Todo es bot, sin celular real ni personas; sin dato público aún. Suma 8-nov: ESTRELLA NOCHE 2 606d297 (ciego 3 de 3, BITACORA 8-nov 11:45 a 14:05) y MÚSICA 1 36c3371 (BITACORA 8-nov 22:35; evidencia/musica-1/RESULTADO.md: 80 s a 300 s o más en 200 semillas, 14.7 % de notas, -15.4 dBFS). Sin oído, sin celular real.",
+  "graficos": [
+    {
+      "titulo": {
+        "es": "Segundos hasta que la música repite el primer tramo (200 partidas simuladas)",
+        "en": "Seconds until the music repeats its first phrase (200 simulated games)"
+      },
+      "datos": [
+        {
+          "etiqueta": "Antes",
+          "valor": 80
+        },
+        {
+          "etiqueta": "Ahora (peor caso)",
+          "valor": 300
+        }
+      ]
+    }
+  ],
+  "imagenes": [
+    {
+      "ruta": "evidencia/diversion-3/pasada-bandera/capturas/j-def-375-bandera.png",
+      "pie": {
+        "es": "La bandera de papel, donde chocaste la vez pasada (ya revisada por el invitado de arte).",
+        "en": "The paper flag, where you crashed last time (already reviewed by the art guest)."
+      }
+    }
+  ],
+  "disyuntiva": {
+    "titulo": {
+      "es": "La estrella de papel pasó el tope de peso por 352 bytes. ¿Se queda fuera o entra?",
+      "en": "The paper star went over the weight cap by 352 bytes. Leave it out or let it in?"
+    },
+    "a": {
+      "es": "Entra con el exceso: el panel a ciegas la eligió 3 de 3 y ya no tira cuadros.",
+      "en": "It goes in with the excess: the blind panel chose it 3 of 3 and it no longer drops frames."
+    },
+    "b": {
+      "es": "Se queda fuera hasta recortar peso.",
+      "en": "It stays out until we trim weight."
+    },
+    "elegimos": "a",
+    "porque": {
+      "es": "352 bytes es poco frente a lo que se ve. Sí vigilamos que no baje los cuadros por segundo.",
+      "en": "352 bytes is small next to what you see. We do keep watching that it does not lower the frame rate."
+    }
+  },
+  "la_regamos": {
+    "es": "La primera estrella tiraba cuadros en celulares: dibujaba los hilos de nuevo en cada cuadro. Los cocinamos una sola vez y se arregló. Y un parche de luz que probamos dos veces no ganó a ciegas; lo paramos.",
+    "en": "The first star dropped frames on phones: it redrew the strings every frame. We baked them once and it was fixed. And a light patch we tried twice did not win blind; we stopped it."
+  },
+  "pregunta": {
+    "es": "¿Notaste que la música cambia después de la primera vuelta? Cuéntanos qué tal suena.",
+    "en": "Did you notice the music changes after the first lap? Tell us how it sounds."
+  },
+  "juega": {
+    "href": "https://moki.jorgesuarez.com.mx/",
+    "texto": {
+      "es": "Juega y aguanta más de 80 segundos para oír la música nueva; la noche del nivel 2 trae las estrellas de papel. Aún no hay liga directa a cada cosa.",
+      "en": "Play past 80 seconds to hear the new music; level 2 night has the paper stars. There is no direct link to each item yet."
+    }
+  }
 }

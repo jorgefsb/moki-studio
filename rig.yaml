@@ -31,7 +31,7 @@ pods:
         profile: default
         runtime: claude-code
         cwd: /home/jorgefsb/Work/moki-rig
-        model: claude-sonnet-5-5
+        model: claude-opus-5-5  # canon: el director planea en Opus (16-nov Jorge)
         restore_policy: resume_if_possible
       - id: niveles
         agent_ref: path:/home/jorgefsb/.npm-global/lib/node_modules/@openrig/cli/daemon/specs/agents/orchestration/orchestrator
@@ -56,7 +56,7 @@ pods:
         profile: default
         runtime: claude-code
         cwd: /home/jorgefsb/Work/moki-rig
-        model: claude-sonnet-5-5
+        model: claude-haiku-5-5  # 16-nov Spark: crónica en Haiku, el revisor cuida la calidad
         restore_policy: resume_if_possible
     edges:
       - kind: delegates_to

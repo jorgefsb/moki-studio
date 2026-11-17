@@ -1,5 +1,6 @@
-# nombre	tipo	patron (ERE)	dueno	se usa cuando	desde
-antes-despues	herramienta	antes-despues	cronista	cada post con un cambio visible	2026-11-09
-mutantes	metodo	mutante	probador	cada puerta nueva o que cambia	2026-11-09
-shader-art-coding	metodo	shader-art-coding|moki-shaders|glsl_tools|shader	director y constructor	piezas de arte con papel, luz o cielo	2026-11-09
-contrato-de-estilo	metodo	contrato de estilo	director	antes de crecer un paisaje o un juego nuevo	2026-11-09
+# nombre	tipo	patron (ERE)	dueno	se usa cuando	desde	licencia	estado (adoptada|probando|no sirvió)	para qué	evidencia o razón
+antes-despues	herramienta	antes-despues	cronista	cada post con un cambio visible	2026-11-09	propia (estudio)	adoptada	imagen de antes y después para los posts	herramientas/antes-despues.sh
+mutantes	metodo	mutante	probador	cada puerta nueva o que cambia	2026-11-09	propia (estudio)	adoptada	probar que la puerta atrapa un cambio malo	BITACORA (mutantes)
+shader-art-coding	metodo	shader-art-coding|moki-shaders|glsl_tools|shader	director y constructor	piezas de arte con papel, luz o cielo	2026-11-09	skill (ver su SKILL.md)	adoptada	efectos de luz y papel en Phaser	.claude/skills/shader-art-coding
+contrato-de-estilo	metodo	contrato de estilo	director	antes de crecer un paisaje o un juego nuevo	2026-11-09	propia (estudio)	adoptada	fijar el estilo antes de crecer	ARTE.md
+ludo-toolbox	metodo	ludo toolbox|ludo-toolbox	probador y cronista	puerta de cada animación nueva de Moki; GIF de los posts	2026-11-12	MIT, gratis (solo toolbox; sin login ni generar arte; LUDO_TELEMETRY=0)	probando	medir sprites (tamaño, línea de piso, pivote), revisar si un ciclo cierra y sacar GIF ligero	probador 12-nov 18:29: run 100 px contra jump/land 102 y pivote 2 px corrido (P37 en COLA); GIF de correr 10 KB; skill .claude/skills/ludo (53f0eaf)

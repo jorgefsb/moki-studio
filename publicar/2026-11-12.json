@@ -187,5 +187,33 @@
       "es": "Costó cinco vueltas del salto 'Escoge tu camino' llegar aquí; la vuelta 1 de este arreglo solo ganó 1 de 3. La meta de esta vuelta se escribió con la base de master ya medida, y pasó a la primera. Sin oído en el sonido nuevo del arco alto, sin cuadros por segundo, sin celular real, y las tiras son de 8 cuadros, no video.",
       "en": "It took five rounds of the 'Pick your path' jump to get here; round 1 of this fix only won 1 of 3. This round's goal was written with the master baseline already measured, and it passed on the first try. No ear on the new high-arc sound, no frames per second, no real phone, and the strips are 8 frames, not video."
     }
+  },
+  "p36f": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. Sube por el arco de arriba en la primera horquilla (a los 20 segundos más o menos) y mira el cartel que sale al cobrarlo: dice +23, antes decía +16. El marcador de arriba cuenta monedas y no muestra el pago; solo se ve en el cartel.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. Go up the top arc at the first fork (around 20 seconds) and look at the sign that appears when you collect it: it says +23, it used to say +16. The counter at the top counts coins and does not show the payout; it only shows on the sign."
+    },
+    "cifras": {
+      "es": "Subir por arriba ahora paga más: cada arco de arriba suma 70 puntos extra. Un bot que siempre sube gana entre 8.9 y 14.7 % más en el Reto de hoy y entre 9.8 y 16.6 % más en Libre. Por cada vez que alguien sube, baja 1.8 veces más que por abajo (antes 1.2). Tres personas nuevas vieron tiras de movimiento y las tres dijeron que la nueva paga más. El Clásico y el Reto del 31 de octubre salen idénticos, y la consola no muestra errores.",
+      "en": "Going up top now pays more: each top arc adds 70 extra points. A bot that always goes up scores between 8.9 and 14.7% more in today's Challenge and between 9.8 and 16.6% more in Free play. For every time someone goes up, the payout is 1.8 times the bottom route (before it was 1.2). Three new people watched motion strips and all three said the new one pays more. Classic and the October 31 Challenge come out identical, and the console shows no errors."
+    },
+    "la_regamos": {
+      "es": "El primer intento no pasó: con el bono en 12 y la meta original de no subir más de 6 % en el Reto, no cabían las dos cosas. Cambiamos la meta, no el juego, y el director eligió aceptar hasta +15 %. Eso significa que quien sube siempre tendrá marcas más altas (las marcas viejas no bajan). El ciego fue solo a pantalla grande, no a celular, y no medimos sonido ni qué tan fluido se mueve.",
+      "en": "The first attempt did not pass: with the bonus at 12 and the original goal of no more than 6% in the Challenge, both could not fit. We changed the goal, not the game, and the director chose to accept up to +15%. That means whoever always goes up will have higher scores (old scores do not drop). The blind test was only on a big screen, not a phone, and we did not measure sound or how smoothly it moves."
+    }
+  },
+  "p36g": {
+    "donde": {
+      "es": "Liga directa: moki.jorgesuarez.com.mx/?ir=elige. Sube por el arco de arriba en la primera horquilla (a los 20 segundos más o menos) y ciérralo: sobre Moki sale un +12 en una píldora de papel que sube y se desvanece en menos de 1 segundo.",
+      "en": "Direct link: moki.jorgesuarez.com.mx/?ir=elige. Go up the top arc at the first fork (around 20 seconds) and close it: a +12 on a paper pill appears above Moki, floats up and fades in under 1 second."
+    },
+    "cifras": {
+      "es": "Antes el pago de arriba se veía tarde: el cartel salía casi 1 segundo después (900 milésimas, las 42 veces que medimos) y no decía cuánto pagabas. Ahora sale un +12 sobre Moki al cerrar el arco. Tres personas nuevas vieron tiras de movimiento: con la versión nueva, 3 de 3 dijeron que arriba pagó más, tanto en pantalla grande como en celular vertical; con la de antes, 0 de 3 (decían 'solo confeti, sin valor'). La píldora no tapa la cara de Moki (0 de 3) ni el cartel (0 de 42). El Clásico y los 6 bots salen iguales, la consola no muestra errores y el juego pesa 245 bytes más.",
+      "en": "Before, the top payout showed up late: the sign came almost 1 second later (900 milliseconds, all 42 times we measured) and did not say how much you earned. Now a +12 appears above Moki when the arc closes. Three new people watched motion strips: with the new version, 3 of 3 said the top paid more, on a big screen and on a vertical phone; with the old one, 0 of 3 (they said 'just confetti, no value'). The pill does not cover Moki's face (0 of 3) or the sign (0 of 42). Classic and the 6 bots come out the same, the console shows no errors and the game weighs 245 bytes more."
+    },
+    "la_regamos": {
+      "es": "El peso pasa el tope de la lista (300 bytes) pero no el del caso (150). Quien probó vio la píldora un poco cortada arriba en una tira de pantalla grande (puede ser el recorte de la tira, no lo medimos). El código tiene un punto frágil y conviene dejarlo más claro. Y es la vuelta 7 de 'Escoge tu camino': cada vuelta arregló una cosa y apareció otra. Sin celular real, sin medir qué tan fluido se mueve, y el modo de movimiento reducido solo se revisó leyendo el código.",
+      "en": "The weight passes the list cap (300 bytes) but not the case cap (150). The tester saw the pill slightly cut off at the top in one big-screen strip (it may be the strip crop, not measured). The code has a fragile spot and should be made clearer. And it is round 7 of 'Pick your path': each round fixed one thing and something else showed up. No real phone, no measure of how smoothly it moves, and reduced-motion mode was only checked by reading the code."
+    }
   }
 }

@@ -22,3 +22,9 @@ Spark revisó los repos públicos de gokayfem (Head of Creative Engineering en f
 Del 9 al 11-nov vimos que lo que entró a la COLA se hizo (el primer shader, P6a, quedó en master el mismo día) y lo que solo quedó como regla casi no se usó: el video de antes y después nunca salió en un post y los mutantes se usaron una vez.
 
 Por eso cada herramienta o método que adopta el estudio entra a `herramientas/ADOPTADAS.tsv` con su dueño y cuándo se usa. Cada viernes, sin IA, `herramientas/uso-herramientas.sh --cola` cuenta su uso de la semana. Lo que esté en 0 entra a la COLA como pieza KAIZEN: o una pieza lo usa con evidencia, o el director lo archiva con su razón. Así ninguna herramienta vive de adorno.
+
+## Gratis y open source, todo anotado (12-nov-2026)
+
+Pedido de Jorge del 12-nov a las 18:37: juntamos las mejores herramientas gratis y open source, y siempre en su versión gratis. Lo que el estudio usa se va a enseñar en la sección «Moki probando» de gamedev.jorgesuarez.com.mx.
+- Cada herramienta gratis que se adopta o se prueba se anota el mismo día en `herramientas/ADOPTADAS.tsv`: licencia, estado (adoptada, probando o no sirvió), para qué y la evidencia. Si no sirvió, también se anota, con su razón.
+- Primera en la lista nueva: **Ludo** (caja de herramientas `ludo toolbox`, MIT), como probando. Solo lo gratis: sin cuenta, sin internet y sin generar arte.

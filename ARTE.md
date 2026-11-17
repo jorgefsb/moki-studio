@@ -59,8 +59,9 @@ Poses disponibles en `assets/moki/` (mismos .webp que `assets/juice/1.2.0/moki/`
 | Saltar (anticipar) | Perfil | `moki-lado.webp` | 80 a 100 ms de agachar: squash 2 a 3%, sombra se ensancha. |
 | Saltar (en el aire) | Perfil | `moki-lado.webp` | Sube con ease-out, inclinación de 0 a -6 grados hacia adelante, sombra se aleja y se aclara. |
 | Caer | Perfil | `moki-lado.webp` | Ease-in, inclinación de hasta +6 grados, sombra se acerca y se oscurece. |
-| Aterrizar | Perfil | `moki-lado.webp` | Squash 2 a 3% por 100 a 140 ms, polvo de papel (3 a 5 trozos kraft), asienta con ease-out. |
-| Fallar | Tres cuartos o parado | `moki-tres-cuartos.webp` (preferida) o `moki-parado.webp` | Corta a la pose, cae 6 a 10 px, sin rebote. Luego tarjeta de lección. |
+| Aterrizar | Perfil | `moki-lado.webp` | Toque: pose de aterrizaje, sombra que se ensancha y polvo chico, sin squash. Fuerte: squash 1.08x0.93 por 100 ms (excepción declarada como el Fallar, DECISIONES 9-nov 09:03) y polvo en nubecitas a los dos lados, con contraste sobre el suelo naranja. Asienta con ease-out. Los trozos kraft se probaron y el ciego los leyó como basura (P4B, 9-nov). |
+| Fallar (obstáculo) | Poses del kit: carrera y aterrizaje | `pose-run`, `pose-land` | Aplastado al contacto, sale en arco con los brazos recogidos, retrocede 56 px y se asienta agachado. Luego tarjeta de lección. Excepción declarada solo aquí (DECISIONES 4-nov 21:02 y 22:55): squash 18 y 14 % contra el tope de §10 y §13.6; giro de -9° en el arco contra el tope de 6°. Cajas pegadas: termina encima de la que ya pasó. |
+| Fallar (zanja) | Títere, igual que master | Títere encogido | Retroceso 28 px, sin pose ni rebote. Defecto con nombre: no se lee como caída, sino como parado en la orilla (DECISIONES 4-nov 23:59). |
 | Checkpoint | Bandera | `moki-bandera.webp` | Entra sobre la base ámbar, asienta en 280 ms. |
 | Inicio / saludo | Saluda | `moki-saluda.webp` | Pantalla de inicio y retorno tras fallar. |
 | Récord / celebrar | Saluda o bandera | `moki-saluda.webp`, `moki-bandera.webp` | Sin brincos extra; confeti de papel según nivel de juice. |
@@ -173,3 +174,17 @@ Una sola de estas basta para ARTE: RECHAZADO.
 - Tamaño de Moki: a 1280 mide ~145 px (§6 pedía 96-120). Se acepta: escala con la altura de la pantalla y a 375 queda en ~78 px. Manda el celular.
 - "Así lo hicimos" va en papel crema con tarjetas de cartón, no en #0A0A0A (§9). Aceptado en T3a2.
 - Legibilidad de obstáculos: borde del obstáculo contra el fondo pegado (moki.contrast) ≥2.0 en las 4 horas, medido a 375 px, que es el tamaño principal. Caja, torre y viga.
+
+### Decisiones del director (4-nov, DECISIONES 09:12)
+- Solo nivel 1 con capas pintadas (SALTO CAPAS): el cielo naranja con degradado y sol pintado es excepción a §4 y §13.3, porque la vara de ese nivel es el video norte que pidió Jorge (DECISIONES 03:56). Sin aros, sin mezcla aditiva ni brillo en tiempo real. El bokeh también, por la dirección C, fuera de la banda de juego.
+- El morado NO entra en la excepción: §13.4 sigue vigente para los cerros.
+
+### Decisión del director (4-nov, DECISIONES 11:17; reemplaza la línea anterior solo para SALTO CAPAS)
+- Solo nivel 1 con capas pintadas: los cerros malva (capa-lejos-malva.webp) son excepción declarada a §13.4 y defecto con nombre para Jorge. No es look aprobado. Los cerros cálidos fallaron la regla de 09:12 y nadie probó otro tono. En el resto del juego §13.4 sigue vigente.
+
+### Decisión del director (4-nov, DECISIONES 12:32)
+- Solo nivel 1 con capas pintadas: caja y torre en café casi negro #452B1C con canto claro son excepción declarada a §8. Es decisión de legibilidad: el obstáculo es lo más oscuro del paisaje (atardecer.js) y sostiene los pisos de cuerpo y canto. Defecto con nombre para Jorge: "no se ven de cartón".
+- Pinos y lomas en café plano, sin canto ni pliegues: defecto con nombre contra §7, S2, para Jorge. No es look aprobado.
+
+### Decisión del director (4-nov, 16:16; evidencia/salto-capas/v6/ARTE-director.md)
+- Solo nivel 1 con capas pintadas: franja dorada saturada de ~24 px en el borde del suelo y cantos amarillos en nubes, defectos con nombre contra §7 y duda contra §13.3, para Jorge. No es look aprobado. Sin revisar en código si usan mezcla aditiva.

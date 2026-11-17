@@ -2,3 +2,9 @@ node_modules/
 dist/
 .worktrees/
 evidencia/referencia/
+.venv-arte/
+referencias/altos-odyssey/stills/
+cook/refs/
+cook/stills/
+cook/compare/
+evidencia/cook-mundo/

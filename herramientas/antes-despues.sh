@@ -22,6 +22,13 @@ for f in "$ANTES" "$AHORA"; do
   [ -f "$f" ] || { echo "No existe: $f"; exit 1; }
 done
 
+# Aplana transparencias sobre el crema del kit: sin esto ffmpeg rellena de negro las zonas con alfa.
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/antes-despues.XXXXXX")"
+trap 'rm -rf "$TMP"' EXIT
+magick "$ANTES" -background '#F5EBDD' -alpha remove -alpha off "$TMP/antes.png"
+magick "$AHORA" -background '#F5EBDD' -alpha remove -alpha off "$TMP/ahora.png"
+ANTES="$TMP/antes.png"; AHORA="$TMP/ahora.png"
+
 # Letra: Outfit del brandkit si está en node_modules; si no, la de sistema.
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 FUENTE="$(ls "$DIR"/node_modules/@fontsource/outfit/files/outfit-latin-700-normal.woff 2>/dev/null | head -1 || true)"

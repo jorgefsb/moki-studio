@@ -107,8 +107,8 @@
       "en": "Three new blind critics preferred the new landing. The first try, with geometric chunks, read as trash and we threw it out."
     },
     "la_regamos": {
-      "es": "El aplastón del cuerpo está en el código pero nadie lo nota: 0 de 9 críticos. Falta decidir si lo hacemos más fuerte.",
-      "en": "The body squash is in the code but nobody notices it: 0 of 9 critics. We still have to decide whether to make it stronger."
+      "es": "El aplastón del cuerpo no se ve en partida: el muñeco al que se le aplica va oculto (auditoría del 10-nov). Desde el 10-nov (pieza P4h) ya se ve. El polvo sí se ve.",
+      "en": "The body squash is not visible in a run: the puppet it is applied to stays hidden (audit of Nov 10). Since Nov 10 (piece P4h) it is visible. The dust does show."
     }
   },
   "p3e": {
@@ -378,6 +378,20 @@
     "la_regamos": {
       "es": "Era un defecto nuestro: la línea estaba oculta en pantalla baja desde que se escribió. Es un arreglo de claridad, no un cambio que se note a simple vista.",
       "en": "This was our own defect: the line was hidden on short screens since it was written. It is a clarity fix, not a change you notice at a glance."
+    }
+  },
+  "p7": {
+    "donde": {
+      "es": "Menú de inicio, tarjeta Logros (también para el jugador nuevo), a un toque; o la liga moki.jorgesuarez.com.mx/?ir=logros. Ganas un logro y baja una etiqueta de papel con un sello; la tarjeta lleva 'Nuevo' hasta que la abres.",
+      "en": "Start menu, Achievements card (also for new players), one tap away; or the link moki.jorgesuarez.com.mx/?ir=logros. Earn one and a paper tag drops with a stamp; the card shows 'New' until you open it."
+    },
+    "cifras": {
+      "es": "Rejilla de 8 logros (6 salen del Cuaderno que ya tenías, sin migrar nada). Probador PASS: bots igual que master, consola 0, 0 solapes nuevos, JS +0.68 kB. ARTE del director con vuelta chica cumplida.",
+      "en": "Grid of 8 achievements (6 come from the Notebook you already had, nothing migrated). Prober PASS: bots match master, console 0, 0 new overlaps, JS +0.68 kB. Art director approved after one small round."
+    },
+    "la_regamos": {
+      "es": "NO CUMPLIDO: el sonido del sello no se oyó a ciegas, el parche MOKI no se revisó a esa escala y no se probó en celular real. El aviso a 390 px va bajo la tarjeta porque arriba no cabe.",
+      "en": "NOT MET: the stamp sound was not heard blind, the MOKI patch was not checked at that scale and it was not tested on a real phone. On 390 px the notice sits under the card because there is no room above."
     }
   }
 }

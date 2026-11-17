@@ -3,6 +3,8 @@
 Reglas en la skill build-in-public (sección "Sugerencias de la gente"). Estados: anotada, probando, entró, no por ahora. Siempre con razón. Nunca prometer.
 Solo usuario público de la red, nunca datos personales. La más nueva arriba.
 
+> 13-nov: esta semana no llegaron comentarios nuevos (Spark no dejó ninguno y el director tampoco los tiene). Se muestran las 3 sugerencias que ya había, con su estado de la tabla; no se revisó de nuevo si la de whoisalesg ya entró.
+
 | Fecha | Red | Quién | Sugerencia (sus palabras) | Estado | Razón o siguiente paso |
 |---|---|---|---|---|---|
 | 3-nov | Instagram (encuesta 1) | jnogcopy | "El que lo ha creado por un humano" | anotada | Pide ver la mano humana. Jorge decide el gusto y la última palabra; la IA dibuja y programa. Cabe en "El estudio por dentro": contar qué hace Jorge y qué hace la IA. |

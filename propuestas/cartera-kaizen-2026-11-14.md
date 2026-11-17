@@ -79,3 +79,6 @@ Por qué: la decisión arriba-contra-a-ras ya está en master y es lo único que
 - Cinta: horquillas arriba por partida (nuevo campo). Se confirma si pasa de X a 2X en la 1.ª semana; se mata si a ras sigue siendo más de 80% con la cinta.
 - Camino secreto: días distintos de juego por jugador en 7. Se confirma si sube al doble; se mata si menos de 1 de cada 10 lo encuentra tras 3 días.
 - Mi marca, tu turno: visitas con `?desde=reto` por semana. Se mata si en 3 días hay menos de 5 y se confirma con 30 o más (hoy el total de primeras visitas es ~27 por semana).
+
+## Pregunta extra para el Kaizen (director, 13-nov 15:22): un número por cosa
+P36n se descartó tras 3 vueltas: en pantalla conviven el bono del arco (+12/+5), la pieza con racha (+3), la cinta (x2 +8) y el contador de piezas, y cada uno vive en una variable distinta. Los ciegos dan 3/3 'no cuadra' cada vez que se arregla uno. Antes de sumar la Cinta (otro número más), decidir qué número ve el jugador y de qué es. Referencia: rama v2/p36n y BITACORA 13-nov 14:50-15:22.
