@@ -155,28 +155,30 @@ const TRAMOS = [
         x.fillRect(0, 90, W, H);
         bloques.forEach(([u, t, a]) => x.fillRect(u, t, a, H));
       });
-      const p = encima(papel(c, '#B5A389', 203, 2), (x) => {
+      // COOK 1 r05: repintada al aire. Edificios lejanos claros y fríos, teñidos al cielo (#A9B8C0 a #DCDDD6); ventanas en otro valor
+      // (prendidas crema, apagadas gris azul). Las casitas (medio, #8F7558) y la banqueta quedan como el escalón medio y el oscuro.
+      const p = encima(papel(c, '#BDC4C3', 203, 2), (x) => {
         x.globalCompositeOperation = 'source-atop'; // solo sobre el papel: el borde rasgado no deja asomar el canto
         // luz de arriba a la derecha: cara derecha más clara, izquierda en sombra
         bloques.forEach(([u, t, a]) => {
-          x.fillStyle = '#CDBC9E';
+          x.fillStyle = '#D5DAD7';
           x.fillRect(u + a - 7, t, 7, H);
-          x.fillStyle = '#9E8D74';
+          x.fillStyle = '#A9B1B2';
           x.fillRect(u, t, 6, H);
         });
-        x.fillStyle = '#93826A';
+        x.fillStyle = '#A2ABAD';
         bloques.forEach(([u, t, a]) => x.fillRect(u + 1, t + 3, a - 2, 2));
         const r = rng(216);
         bloques.forEach(([u, t, a]) => {
           for (let y = t + 12; y < 84; y += 14) {
             for (let v = u + 7; v + 6 < u + a - 4; v += 12) {
-              x.fillStyle = r() < 0.4 ? '#F4E8D5' : '#9C8A70';
+              x.fillStyle = r() < 0.4 ? '#F7EBD2' : '#8C99A0';
               x.fillRect(v, y, 6, 8);
             }
           }
         });
       });
-      return conSombraMosaico(p, 0.2, 6, -3, -2);
+      return conSombraMosaico(p, 0.12, 6, -3, -2);
     },
     medio() {
       const fila = (fn) => {
@@ -272,10 +274,44 @@ const TRAMOS = [
       },
     }),
     lejos() {
+      // COOK 1 r05: el mar en bandas que aclaran y pierden saturación con la distancia; el horizonte se va en bruma contra el cielo
+      // (#D8EEE4); palmas lejanas en un valor claro, teñidas al cielo. La banda cercana es la capa media (#5496B8).
       const c = silueta((x) => x.fillRect(0, 72, W, H));
-      return encima(papel(c, '#86BBCF', 206), (x) => {
+      return encima(papel(c, '#8CC0D2', 206), (x) => {
+        x.globalCompositeOperation = 'source-atop';
+        x.fillStyle = '#A9D2DE'; // banda media del mar
+        x.fillRect(0, 72, W, 46);
+        const g = x.createLinearGradient(0, 74, 0, 94); // bruma pegada al horizonte, debajo de su línea
+        g.addColorStop(0, '#CBE7E6');
+        g.addColorStop(1, 'rgba(201,230,232,0)');
+        x.fillStyle = g;
+        x.fillRect(0, 74, W, 20);
+        x.fillStyle = '#7FB2C4'; // línea del horizonte: los veleros se apoyan en ella (r05a: flotaban en la bruma)
+        x.fillRect(0, 72, W, 2);
+        x.globalCompositeOperation = 'source-over';
+        x.fillStyle = '#86AFB5'; // palmas lejanas: claras, del color del aire
+        [330, 600, 940].forEach((u, i) => {
+          const k = 0.55 + (i % 2) * 0.12;
+          x.beginPath();
+          x.moveTo(u - 3 * k, 112);
+          x.quadraticCurveTo(u - 3 * k, 112 - 50 * k, u + 4 * k, 112 - 80 * k);
+          x.lineTo(u + 7 * k, 112 - 79 * k);
+          x.quadraticCurveTo(u + 2 * k, 112 - 45 * k, u + 4 * k, 112);
+          x.fill();
+          [-2.7, -2.0, -1.1, -0.4, 0.2].forEach((a) => {
+            x.save();
+            x.translate(u + 6 * k, 112 - 80 * k);
+            x.rotate(a);
+            x.beginPath();
+            x.moveTo(0, 0);
+            x.quadraticCurveTo(14 * k, -8 * k, 28 * k, 4 * k);
+            x.quadraticCurveTo(14 * k, 1, 0, 3 * k);
+            x.fill();
+            x.restore();
+          });
+        });
         [90, 410, 760].forEach((u, i) => {
-          x.fillStyle = '#6B4630';
+          x.fillStyle = '#8A7566'; // casco lejano: un paso hacia el aire
           x.fillRect(u - 16, 64, 34, 8);
           x.fillStyle = '#F4E8D5';
           x.beginPath();
@@ -305,7 +341,7 @@ const TRAMOS = [
           }
         });
         // palmeras: tronco hasta detrás del suelo (a media agua flotaba y se leía como peligro), verde azul un paso bajo el mar, L sobre 0.111
-        x.fillStyle = '#3F8191';
+        x.fillStyle = '#2C6170'; // COOK 1 r05: palmas cercanas un paso más oscuras (el escalón oscuro contra las lejanas claras)
         [230, 690].forEach((u) => {
           x.beginPath();
           x.moveTo(u - 8, H);
@@ -448,6 +484,56 @@ const esLugar = (L) => typeof L === 'string' && L !== 'N';
 
 // pintadas: el fondo pintado del nivel 1 (capas.js), null en los demás; gy: y del suelo en el mundo. Corre después de colocar y de bokeh,
 // en el mismo postupdate.
+// COOK 1 r03: aire y luz de la Ciudad y la Playa (crítico r02: «pared de cajas de un solo valor», «muro azul plano sin luz»). Encima de
+// cada pila, en código y con la temperatura que ya trae el paisaje: resplandor aditivo y disco del sol, velo del color del horizonte
+// sobre la capa lejana (los edificios o el mar se van al cielo) y niebla baja entre lejos y medio. Solo los lugares base c y p; sus
+// variantes de otra hora (pA, cB...) y la Noche no cambian. sol: x parte del ancho, y px arriba del suelo, r radio del disco.
+// lejos: 'silueta' tiñe solo las formas de la capa lejana (edificios); 'bruma' es un degradado que aclara hacia el horizonte (mar), con
+// una banda que sube del horizonte al cielo para que no quede borde duro arriba (r03a). sol.cielo: y del cielo en px de la textura, donde
+// iba el sol de 17 px (alto); sol.horizonte: px arriba del borde de la capa lejana (bajo, sobre el mar). medio: velo de las casitas.
+const ATM = {
+  c: { sol: { x: 0.76, cielo: 40, r: 30, c: 0xfffaf0, propio: true }, resplandor: [0xfff6e6, 0.34, 0.13], lejos: ['silueta', 0xe2e2da, 0.15], suelo: 0xa89a88, valle: [0xe8e4d8, 0.5, 150] }, // r04: edificios al cielo, banqueta un paso abajo, halo chico y marcado
+  p: { sol: { x: 0.56, horizonte: 120, r: 36, c: 0xfffbea }, resplandor: [0xfff1c4, 0.32, 0.2], lejos: ['bruma', 0xfdf4d8, 0.18, 0.25], hondo: [0x1f5878, 0.45, 30], valle: [0xf6f0dc, 0.35, 120] }, // r04: mar lejano claro, cercano hondo
+};
+const ATM_RAD = 'atm_rad';
+const ATM_DISCO = 'atm_disco';
+const ATM_VERT = 'atm_vert';
+function hornearAtm(s) {
+  const add = (k, fn) => s.textures.exists(k) || s.textures.addCanvas(k, fn());
+  add(ATM_RAD, () => {
+    const n = 256;
+    const [c, x] = mk(n, n);
+    const g = x.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2 - 1);
+    for (let i = 0; i <= 16; i++) g.addColorStop(i / 16, `rgba(255,255,255,${(1 - i / 16) ** 2.2})`);
+    x.fillStyle = g;
+    x.fillRect(0, 0, n, n);
+    return c;
+  });
+  add(ATM_DISCO, () => {
+    const R = 40;
+    const E = 46; // r04: borde casi duro (con 52 se leía parche borroso)
+    const [c, x] = mk(E * 2 + 2, E * 2 + 2);
+    const g = x.createRadialGradient(E + 1, E + 1, 0, E + 1, E + 1, E);
+    g.addColorStop(0, '#fff');
+    g.addColorStop(R / E, '#fff');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, E * 2 + 2, E * 2 + 2);
+    return c;
+  });
+  add(ATM_VERT, () => {
+    const [c, x] = mk(3, 250); // no potencia de 2: estirada no repite el borde de arriba abajo
+    const g = x.createLinearGradient(0, 0, 0, 250);
+    for (let i = 0; i <= 8; i++) {
+      const q = i / 8;
+      g.addColorStop(q, `rgba(255,255,255,${q * q * (3 - 2 * q)})`); // 0 arriba, 1 abajo
+    }
+    x.fillStyle = g;
+    x.fillRect(0, 0, 3, 250);
+    return c;
+  });
+}
+
 export function montarPaisajes(s, pintadas, gy) {
   if (!PAISAJE.on) return;
   const amb = s.ambient;
@@ -511,6 +597,15 @@ export function montarPaisajes(s, pintadas, gy) {
     P.cielo.setDepth(d);
     if (P.astro) P.astro.setDepth(d + 0.0002);
     P.lejos.setDepth(d + 0.0005);
+    if (P.atm) {
+      P.resplandor.setDepth(d + 0.0001); // sobre el cielo, bajo el astro y las siluetas
+      P.disco.setDepth(d + 0.00015);
+      P.velo.setDepth(d + 0.0006); // sobre la capa lejana
+      P.valle.setDepth(d + 0.0008); // entre lejos y medio
+      if (P.sube) P.sube.setDepth(d + 0.0006);
+      if (P.hondo) P.hondo.setDepth(d + 0.0012); // r05: encima del mar cercano (capa media); bajo 0.001 la tapaba entera
+      if (P.veloM) P.veloM.setDepth(d + 0.0011); // sobre las casitas
+    }
     P.medio.setDepth(d + 0.001);
     P.suelo.setDepth(SUELO.depth + n * 0.001); // arriba de capa_suelo (4.62) y debajo de lo que corre sobre él
   };
@@ -522,6 +617,20 @@ export function montarPaisajes(s, pintadas, gy) {
     const [cielo, lejos, medio, suelo, astro] = pz.map(([k]) => k);
     const P = { cielo: capa(cielo), lejos: capa(lejos), medio: capa(medio), suelo: capa(suelo) };
     if (astro) P.astro = s.add.image(0, 0, astro).setVisible(false);
+    const A = ATM[key];
+    if (A) {
+      hornearAtm(s);
+      P.resplandor = s.add.image(0, 0, ATM_RAD).setBlendMode('ADD').setTint(A.resplandor[0]).setVisible(false);
+      P.disco = s.add.image(0, 0, ATM_DISCO).setTint(A.sol.c).setVisible(false);
+      P.velo = A.lejos[0] === 'silueta'
+        ? s.add.tileSprite(0, 0, 10, 10, lejos).setOrigin(0, 0).setTintFill(A.lejos[1]).setVisible(false)
+        : s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setFlipY(true).setTint(A.lejos[1]).setVisible(false);
+      P.valle = s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setTint(A.valle[0]).setVisible(false);
+      if (A.hondo) P.hondo = s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setTint(A.hondo[0]).setVisible(false);
+      if (A.lejos[0] === 'bruma') P.sube = s.add.image(0, 0, ATM_VERT).setOrigin(0, 0).setTint(A.lejos[1]).setVisible(false);
+      if (A.medio) P.veloM = s.add.tileSprite(0, 0, 10, 10, medio).setOrigin(0, 0).setTintFill(A.medio[0]).setVisible(false);
+      P.atm = A;
+    }
     profundidad(P, 0);
     pilas[key] = P;
     return true;
@@ -531,11 +640,46 @@ export function montarPaisajes(s, pintadas, gy) {
     L.setPosition(x0, y).setSize(w, h).setTileScale(kx, ky);
     L.tilePositionX = (tile + x0) / kx;
   };
+  const capasDe = (P) => Object.values(P).filter((v) => v && v.setVisible);
+  // COOK 1 r03 (ATM): luz y aire de la pila, recortados a lo que se ve de su hoja (x0 a x1)
+  const atmosfera = (P, g, x0, x1, a, hC) => {
+    const A = P.atm;
+    const ms = s.midS || 1;
+    const w = x1 - x0;
+    const sx = s.vw * A.sol.x;
+    const L = P.lejos;
+    const sy = A.sol.cielo ? s.top + (hC * A.sol.cielo) / H : L.y - A.sol.horizonte * ms;
+    const dentro = sx >= x0 && sx <= x1; // el sol pasa entero con su hoja, como el astro
+    const rr = s.vh * A.resplandor[2] * 2;
+    P.resplandor.setPosition(sx, sy).setDisplaySize(rr, rr).setAlpha(A.resplandor[1] * a).setVisible(dentro);
+    // Ciudad (propio): se queda su sol de disco nítido (r03b: el nuestro se leía mancha) y solo suma un resplandor tenue
+    P.disco.setPosition(sx, sy).setScale((A.sol.r * ms) / 40).setAlpha(a).setVisible(dentro && !A.sol.propio);
+    if (!A.sol.propio && P.astro && P.astro.texture.key === 'paisajeSol') P.astro.setVisible(false);
+    if (A.lejos[0] === 'silueta') {
+      P.velo.setPosition(L.x, L.y).setSize(L.width, L.height).setTileScale(L.tileScaleX, L.tileScaleY);
+      P.velo.tilePositionX = L.tilePositionX;
+      P.velo.tilePositionY = L.tilePositionY;
+      P.velo.setAlpha(A.lejos[2] * a);
+    } else {
+      P.velo.setPosition(x0, L.y).setDisplaySize(w, Math.max(1, (g - L.y) * (A.lejos[3] || 1))).setAlpha(A.lejos[2] * a); // r04: solo la mitad lejana del mar
+      P.sube.setPosition(x0, L.y - 70 * ms).setDisplaySize(w, 70 * ms + 1).setAlpha(A.lejos[2] * a); // mismo alfa que el velo en el horizonte: sin escalón (r03b)
+      if (P.hondo) P.hondo.setPosition(x0, L.y + A.hondo[2] * ms).setDisplaySize(w, Math.max(1, g - L.y - A.hondo[2] * ms)).setAlpha(A.hondo[1] * a);
+    }
+    if (A.suelo) P.suelo.setTint(A.suelo); // multiplicado: la banqueta baja un paso y se separa de las casitas
+    if (P.veloM) {
+      const M = P.medio;
+      P.veloM.setPosition(M.x, M.y).setSize(M.width, M.height).setTileScale(M.tileScaleX, M.tileScaleY);
+      P.veloM.tilePositionX = M.tilePositionX;
+      P.veloM.tilePositionY = M.tilePositionY;
+      P.veloM.setAlpha(A.medio[1] * a);
+    }
+    P.valle.setPosition(x0, g - A.valle[2] * ms).setDisplaySize(w, A.valle[2] * ms + 14).setAlpha(A.valle[1] * a);
+  };
   // Se ve de x0 a x1 (px de pantalla), opaco. El cruce de lugar es un cambio de escena de papel que entra por la derecha, no un fundido:
   // con alfa, el cielo claro que entraba lavaba los edificios y veleros del que se iba (doble exposición, ARTE pasada de color de LA SUMA B)
   // aC, aR: alfa del cielo y del resto; solo el fundido de movimiento reducido los baja (el cielo antes, para que tape lo que se va sin fantasmas)
   const colocar = (P, g, x0, x1, aC = 1, aR = 1) => {
-    if (x1 - x0 <= 0 || aR <= 0) return void Object.values(P).forEach((v) => v.visible && v.setVisible(false));
+    if (x1 - x0 <= 0 || aR <= 0) return void capasDe(P).forEach((v) => v.visible && v.setVisible(false));
     const w = x1 - x0;
     const ms = s.midS || 1;
     const quieto = s.reduced;
@@ -549,8 +693,9 @@ export function montarPaisajes(s, pintadas, gy) {
     // Mismo lugar y corrimiento que el suelo pintado del nivel 1 (capas.js), esté o no cargado
     const S = sueloEn(s, g);
     pon(P.suelo, x0, S.y, w, S.h, S.kx * SUELO.k, S.ky * SUELO.k, s.dist);
-    Object.values(P).forEach((v) => v.setVisible(true).setAlpha(aR));
+    capasDe(P).forEach((v) => v.setVisible(true).setAlpha(aR));
     P.cielo.setAlpha(aC);
+    if (P.atm) atmosfera(P, g, x0, x1, aR, hC);
     if (P.astro) {
       if (P.astro.texture.key === 'paisajeSol') P.astro.setPosition(s.vw * 0.76, s.top + (hC * 40) / H).setScale(hC / H);
       else P.astro.setPosition(s.vw * 0.74, s.top + hC * 0.2).setScale(ms);
@@ -605,7 +750,7 @@ export function montarPaisajes(s, pintadas, gy) {
   let horaPendiente = null; // hora de ambient que espera a que el paisaje tape todo
   const apagar = () => {
     horaPendiente = null;
-    Object.values(pilas).forEach((P) => Object.values(P).forEach((v) => v.setVisible(false)));
+    Object.values(pilas).forEach((P) => capasDe(P).forEach((v) => v.setVisible(false)));
     if (amb.conPaisaje) {
       amb.conPaisaje = false;
       amb.applyDay(0);
